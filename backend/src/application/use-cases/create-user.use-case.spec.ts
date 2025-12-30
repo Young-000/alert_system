@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create-user.use-case';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
@@ -32,7 +33,7 @@ describe('CreateUserUseCase', () => {
     expect(userRepository.save).toHaveBeenCalled();
   });
 
-  it('should throw error if user already exists', async () => {
+  it('should throw ConflictException if user already exists', async () => {
     const dto: CreateUserDto = {
       email: 'user@example.com',
       name: 'John Doe',
@@ -40,6 +41,7 @@ describe('CreateUserUseCase', () => {
     const existingUser = new User('user@example.com', 'John Doe');
     userRepository.findByEmail.mockResolvedValue(existingUser);
 
+    await expect(useCase.execute(dto)).rejects.toThrow(ConflictException);
     await expect(useCase.execute(dto)).rejects.toThrow('User already exists');
   });
 

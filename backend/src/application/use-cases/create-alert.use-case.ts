@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { Alert } from '@domain/entities/alert.entity';
@@ -13,7 +13,7 @@ export class CreateAlertUseCase {
   async execute(dto: CreateAlertDto): Promise<Alert> {
     const user = await this.userRepository.findById(dto.userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const alert = new Alert(

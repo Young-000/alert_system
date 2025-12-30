@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { CreateAlertUseCase } from './create-alert.use-case';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
@@ -45,7 +46,7 @@ describe('CreateAlertUseCase', () => {
     expect(alertRepository.save).toHaveBeenCalled();
   });
 
-  it('should throw error if user not found', async () => {
+  it('should throw NotFoundException if user not found', async () => {
     const dto: CreateAlertDto = {
       userId: 'non-existent-id',
       name: '출근 알림',
@@ -54,6 +55,7 @@ describe('CreateAlertUseCase', () => {
     };
     userRepository.findById.mockResolvedValue(undefined);
 
+    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
     await expect(useCase.execute(dto)).rejects.toThrow('User not found');
   });
 
