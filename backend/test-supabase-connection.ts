@@ -32,6 +32,13 @@ async function testConnection() {
   const urlObj = new URL(supabaseUrl);
   const password = decodeURIComponent(urlObj.password);
   
+  console.log(`🔍 연결 정보:`);
+  console.log(`   Host: ${urlObj.hostname}`);
+  console.log(`   Port: ${urlObj.port}`);
+  console.log(`   Database: ${urlObj.pathname.slice(1)}`);
+  console.log(`   Username: ${urlObj.username}`);
+  console.log(`   Password: ${password.substring(0, 3)}*** (비밀번호 확인됨)`);
+  
   const dataSource = new DataSource({
     type: 'postgres',
     host: urlObj.hostname,
@@ -42,10 +49,6 @@ async function testConnection() {
     ssl: { rejectUnauthorized: false },
     entities: [UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity],
     synchronize: false, // 테스트용이므로 false
-    extra: {
-      // IPv4 강제
-      family: 4,
-    },
   });
 
   try {
