@@ -7,6 +7,22 @@ export interface PushSubscription {
 }
 
 export class PushService {
+  private async getVapidPublicKey(): Promise<string> {
+    // 환경 변수가 있으면 사용, 없으면 API에서 가져오기
+    if (process.env.VITE_VAPID_PUBLIC_KEY) {
+      return process.env.VITE_VAPID_PUBLIC_KEY;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/notifications/vapid-public-key');
+      const data = await response.json();
+      return data.publicKey;
+    } catch (error) {
+      console.error('Failed to get VAPID public key:', error);
+      throw new Error('Failed to get VAPID public key from server');
+    }
+  }
+
   async requestPermission(): Promise<NotificationPermission> {
     if (!('Notification' in window)) {
       throw new Error('This browser does not support notifications');
@@ -20,12 +36,16 @@ export class PushService {
       throw new Error('Service Worker is not supported');
     }
 
+    const publicKey = await this.getVapidPublicKey();
+    
+    if (!publicKey) {
+      throw new Error('VAPID public key is not available');
+    }
+
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: this.urlBase64ToUint8Array(
-        process.env.VITE_VAPID_PUBLIC_KEY || ''
-      ),
+      applicationServerKey: this.urlBase64ToUint8Array(publicKey),
     });
 
     return {

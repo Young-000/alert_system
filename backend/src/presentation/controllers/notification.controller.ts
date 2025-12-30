@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Inject } from '@nestjs/common';
+import { Controller, Post, Body, Inject, Get } from '@nestjs/common';
 import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
 import { PushSubscription } from '@infrastructure/push/push-notification.service';
 
@@ -18,6 +18,13 @@ export class NotificationController {
     private pushSubscriptionRepository: IPushSubscriptionRepository
   ) {}
 
+  @Get('vapid-public-key')
+  getVapidPublicKey() {
+    return {
+      publicKey: process.env.VAPID_PUBLIC_KEY || '',
+    };
+  }
+
   @Post('subscribe')
   async subscribe(@Body() dto: PushSubscriptionDto) {
     const subscription: PushSubscription = {
@@ -34,4 +41,3 @@ export class NotificationController {
     return { message: 'Subscription removed' };
   }
 }
-

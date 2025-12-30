@@ -13,7 +13,25 @@ describe('NotificationController', () => {
       delete: jest.fn(),
     };
 
+    // VAPID_PUBLIC_KEY 환경 변수 설정
+    process.env.VAPID_PUBLIC_KEY = 'test-public-key';
+
     controller = new NotificationController(pushSubscriptionRepository);
+  });
+
+  afterEach(() => {
+    delete process.env.VAPID_PUBLIC_KEY;
+  });
+
+  it('should return VAPID public key', () => {
+    const result = controller.getVapidPublicKey();
+    expect(result).toEqual({ publicKey: 'test-public-key' });
+  });
+
+  it('should return empty string if VAPID_PUBLIC_KEY not set', () => {
+    delete process.env.VAPID_PUBLIC_KEY;
+    const result = controller.getVapidPublicKey();
+    expect(result).toEqual({ publicKey: '' });
   });
 
   it('should subscribe to push notifications', async () => {
