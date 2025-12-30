@@ -35,8 +35,12 @@ import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
       synchronize: process.env.NODE_ENV === 'development',
       extra: process.env.SUPABASE_URL
         ? {
-            // IPv4 강제
+            // IPv4 강제 및 연결 옵션
             family: 4,
+            // 연결 타임아웃 증가
+            connect_timeout: 10000,
+            // 재시도 옵션
+            keepAlive: true,
           }
         : {},
     }),
