@@ -1,0 +1,10 @@
+# Git 설정 예시
+# 이 파일을 참고하여 로컬에서 다음 명령어를 실행하세요:
+#
+# git config user.name "Your Name"
+# git config user.email "your.email@example.com"
+#
+# 또는 전역 설정:
+# git config --global user.name "Your Name"
+# git config --global user.email "your.email@example.com"
+
