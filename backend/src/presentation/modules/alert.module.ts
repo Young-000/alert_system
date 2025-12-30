@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { AlertController } from '../controllers/alert.controller';
 import { CreateAlertUseCase } from '@application/use-cases/create-alert.use-case';
 import { DatabaseModule } from '@infrastructure/persistence/database.module';
+import { QueueModule } from '@infrastructure/queue/queue.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { DataSource } from 'typeorm';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, QueueModule],
   controllers: [AlertController],
   providers: [
     {

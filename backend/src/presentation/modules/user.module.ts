@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UserController } from '../controllers/user.controller';
 import { CreateUserUseCase } from '@application/use-cases/create-user.use-case';
+import { UpdateUserLocationUseCase } from '@application/use-cases/update-user-location.use-case';
 import { DatabaseModule } from '@infrastructure/persistence/database.module';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { DataSource } from 'typeorm';
@@ -17,6 +18,7 @@ import { DataSource } from 'typeorm';
       inject: [DataSource],
     },
     CreateUserUseCase,
+    UpdateUserLocationUseCase,
   ],
 })
 export class UserModule {}

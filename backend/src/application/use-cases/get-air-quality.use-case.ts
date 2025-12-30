@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { IAirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { AirQuality } from '@domain/entities/air-quality.entity';
 import { IUserRepository } from '@domain/repositories/user.repository';
@@ -11,8 +11,12 @@ export class GetAirQualityUseCase {
 
   async execute(userId: string): Promise<AirQuality> {
     const user = await this.userRepository.findById(userId);
-    if (!user || !user.location) {
-      throw new Error('User location not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.location) {
+      throw new NotFoundException('User location not found');
     }
 
     return this.airQualityApiClient.getAirQuality(

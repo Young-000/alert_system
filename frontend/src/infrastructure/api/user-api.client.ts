@@ -21,6 +21,12 @@ export interface CreateUserDto {
   };
 }
 
+export interface UserLocation {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
 export class UserApiClient {
   constructor(private apiClient: ApiClient) {}
 
@@ -30,6 +36,10 @@ export class UserApiClient {
 
   async getUser(id: string): Promise<User> {
     return this.apiClient.get<User>(`/users/${id}`);
+  }
+
+  async updateUserLocation(userId: string, location: UserLocation): Promise<User> {
+    return this.apiClient.put<User>(`/users/${userId}/location`, location);
   }
 }
 

@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 import { UserEntity } from './src/infrastructure/persistence/typeorm/user.entity';
 import { AlertEntity } from './src/infrastructure/persistence/typeorm/alert.entity';
+import { AlertAlertTypeEntity } from './src/infrastructure/persistence/typeorm/alert-alert-type.entity';
 import { PushSubscriptionEntity } from './src/infrastructure/persistence/typeorm/push-subscription.entity';
 
 // .env 파일 로드
@@ -27,11 +28,26 @@ async function testConnection() {
   console.log('🔄 Supabase 연결 테스트 중...');
   console.log(`📍 Host: db.ayibvijmjygujjieueny.supabase.co`);
 
+  // URL 파싱하여 개별 옵션으로 설정
+  const urlObj = new URL(supabaseUrl);
+  const password = decodeURIComponent(urlObj.password);
+  
+  console.log(`🔍 연결 정보:`);
+  console.log(`   Host: ${urlObj.hostname}`);
+  console.log(`   Port: ${urlObj.port}`);
+  console.log(`   Database: ${urlObj.pathname.slice(1)}`);
+  console.log(`   Username: ${urlObj.username}`);
+  console.log(`   Password: ${password.substring(0, 3)}*** (비밀번호 확인됨)`);
+  
   const dataSource = new DataSource({
     type: 'postgres',
-    url: supabaseUrl,
+    host: urlObj.hostname,
+    port: parseInt(urlObj.port),
+    username: urlObj.username,
+    password: password,
+    database: urlObj.pathname.slice(1), // '/' 제거
     ssl: { rejectUnauthorized: false },
-    entities: [UserEntity, AlertEntity, PushSubscriptionEntity],
+    entities: [UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity],
     synchronize: false, // 테스트용이므로 false
   });
 

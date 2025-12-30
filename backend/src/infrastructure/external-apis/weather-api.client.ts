@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { Logger } from '@nestjs/common';
 import { Weather } from '@domain/entities/weather.entity';
 
 export interface IWeatherApiClient {
@@ -7,6 +8,7 @@ export interface IWeatherApiClient {
 
 export class WeatherApiClient implements IWeatherApiClient {
   private client: AxiosInstance;
+  private readonly logger = new Logger(WeatherApiClient.name);
 
   constructor(private apiKey: string) {
     this.client = axios.create({
@@ -32,7 +34,9 @@ export class WeatherApiClient implements IWeatherApiClient {
         response.data.wind.speed
       );
     } catch (error) {
-      throw new Error(`Failed to fetch weather: ${error}`);
+      this.logger.error(`Failed to fetch weather for lat: ${lat}, lng: ${lng}`, error);
+      // 에러 상세 정보는 로그에만 남기고, 클라이언트에는 일반적인 메시지만 전달
+      throw new Error('Failed to fetch weather data');
     }
   }
 }

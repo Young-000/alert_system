@@ -13,8 +13,14 @@ export interface IPushNotificationService {
 }
 
 export class PushNotificationService implements IPushNotificationService {
-  constructor(private publicKey: string, private privateKey: string) {
-    webpush.setVapidDetails('mailto:admin@example.com', publicKey, privateKey);
+  constructor(
+    private publicKey: string,
+    private privateKey: string,
+    private subject: string = 'mailto:admin@example.com'
+  ) {
+    if (publicKey && privateKey) {
+      webpush.setVapidDetails(this.subject, publicKey, privateKey);
+    }
   }
 
   async sendNotification(subscription: PushSubscription, payload: string): Promise<void> {

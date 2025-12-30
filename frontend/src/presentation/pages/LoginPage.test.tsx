@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginPage } from './LoginPage';
 import { UserApiClient } from '@infrastructure/api/user-api.client';
-import { ApiClient } from '@infrastructure/api/api-client';
 
 jest.mock('@infrastructure/api/user-api.client');
 jest.mock('@infrastructure/api/api-client');

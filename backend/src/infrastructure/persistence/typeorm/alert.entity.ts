@@ -5,15 +5,10 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
-
-export enum AlertTypeEnum {
-  WEATHER = 'weather',
-  AIR_QUALITY = 'airQuality',
-  BUS = 'bus',
-  SUBWAY = 'subway',
-}
+import { AlertAlertTypeEntity } from './alert-alert-type.entity';
 
 @Entity('alerts')
 export class AlertEntity {
@@ -33,8 +28,11 @@ export class AlertEntity {
   @Column()
   schedule: string;
 
-  @Column({ type: 'jsonb' })
-  alertTypes: string[];
+  @OneToMany(() => AlertAlertTypeEntity, (alertType) => alertType.alert, {
+    cascade: true,
+    eager: true,
+  })
+  alertTypes: AlertAlertTypeEntity[];
 
   @Column({ default: true })
   enabled: boolean;

@@ -25,7 +25,9 @@ describe('PostgresUserRepository', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   });
 
   it('should save a user', async () => {

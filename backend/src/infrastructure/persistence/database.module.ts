@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './typeorm/user.entity';
 import { AlertEntity } from './typeorm/alert.entity';
+import { AlertAlertTypeEntity } from './typeorm/alert-alert-type.entity';
 import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 
 @Module({
@@ -30,10 +31,20 @@ import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
       ssl: process.env.SUPABASE_URL
         ? { rejectUnauthorized: false }
         : false,
-      entities: [UserEntity, AlertEntity, PushSubscriptionEntity],
+      entities: [UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity],
       synchronize: process.env.NODE_ENV === 'development',
+      extra: process.env.SUPABASE_URL
+        ? {
+            // IPv4 강제 및 연결 옵션
+            family: 4,
+            // 연결 타임아웃 증가
+            connect_timeout: 10000,
+            // 재시도 옵션
+            keepAlive: true,
+          }
+        : {},
     }),
-    TypeOrmModule.forFeature([UserEntity, AlertEntity, PushSubscriptionEntity]),
+    TypeOrmModule.forFeature([UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity]),
   ],
   exports: [TypeOrmModule],
 })
