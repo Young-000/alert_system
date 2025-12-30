@@ -1,15 +1,15 @@
 import { Inject, NotFoundException } from '@nestjs/common';
-import { IAirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
-import { AirQuality } from '@domain/entities/air-quality.entity';
+import { IWeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
+import { Weather } from '@domain/entities/weather.entity';
 import { IUserRepository } from '@domain/repositories/user.repository';
 
-export class GetAirQualityUseCase {
+export class GetWeatherUseCase {
   constructor(
-    @Inject('IAirQualityApiClient') private airQualityApiClient: IAirQualityApiClient,
+    @Inject('IWeatherApiClient') private weatherApiClient: IWeatherApiClient,
     @Inject('IUserRepository') private userRepository: IUserRepository
   ) {}
 
-  async execute(userId: string): Promise<AirQuality> {
+  async execute(userId: string): Promise<Weather> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -19,14 +19,13 @@ export class GetAirQualityUseCase {
       throw new NotFoundException('User location not found');
     }
 
-    return this.airQualityApiClient.getAirQuality(
+    return this.weatherApiClient.getWeather(
       user.location.lat,
       user.location.lng
     );
   }
 
-  async executeByLocation(lat: number, lng: number): Promise<AirQuality> {
-    return this.airQualityApiClient.getAirQuality(lat, lng);
+  async executeByLocation(lat: number, lng: number): Promise<Weather> {
+    return this.weatherApiClient.getWeather(lat, lng);
   }
 }
-

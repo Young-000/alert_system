@@ -1,3 +1,4 @@
+import { Inject, NotFoundException } from '@nestjs/common';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { IWeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
@@ -9,19 +10,19 @@ import { AlertType } from '@domain/entities/alert.entity';
 
 export class SendNotificationUseCase {
   constructor(
-    private alertRepository: IAlertRepository,
-    private userRepository: IUserRepository,
-    private weatherApiClient: IWeatherApiClient,
-    private airQualityApiClient: IAirQualityApiClient,
-    private busApiClient: IBusApiClient,
-    private subwayApiClient: ISubwayApiClient,
-    private pushNotificationService: IPushNotificationService
+    @Inject('IAlertRepository') private alertRepository: IAlertRepository,
+    @Inject('IUserRepository') private userRepository: IUserRepository,
+    @Inject('IWeatherApiClient') private weatherApiClient: IWeatherApiClient,
+    @Inject('IAirQualityApiClient') private airQualityApiClient: IAirQualityApiClient,
+    @Inject('IBusApiClient') private busApiClient: IBusApiClient,
+    @Inject('ISubwayApiClient') private subwayApiClient: ISubwayApiClient,
+    @Inject('IPushNotificationService') private pushNotificationService: IPushNotificationService
   ) {}
 
   async execute(alertId: string): Promise<void> {
     const alert = await this.alertRepository.findById(alertId);
     if (!alert) {
-      throw new Error('Alert not found');
+      throw new NotFoundException('Alert not found');
     }
 
     if (!alert.enabled) {
@@ -29,8 +30,12 @@ export class SendNotificationUseCase {
     }
 
     const user = await this.userRepository.findById(alert.userId);
-    if (!user || !user.location) {
-      throw new Error('User location not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.location) {
+      throw new NotFoundException('User location not found');
     }
 
     const data: any = {};
