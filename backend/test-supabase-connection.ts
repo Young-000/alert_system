@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 import { UserEntity } from './src/infrastructure/persistence/typeorm/user.entity';
 import { AlertEntity } from './src/infrastructure/persistence/typeorm/alert.entity';
+import { AlertAlertTypeEntity } from './src/infrastructure/persistence/typeorm/alert-alert-type.entity';
 import { PushSubscriptionEntity } from './src/infrastructure/persistence/typeorm/push-subscription.entity';
 
 // .env 파일 로드
@@ -31,7 +32,7 @@ async function testConnection() {
     type: 'postgres',
     url: supabaseUrl,
     ssl: { rejectUnauthorized: false },
-    entities: [UserEntity, AlertEntity, PushSubscriptionEntity],
+    entities: [UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity],
     synchronize: false, // 테스트용이므로 false
   });
 
