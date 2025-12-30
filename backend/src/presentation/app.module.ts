@@ -7,6 +7,7 @@ import { AirQualityModule } from './modules/air-quality.module';
 import { WeatherModule } from './modules/weather.module';
 import { BusModule } from './modules/bus.module';
 import { SubwayModule } from './modules/subway.module';
+import { HealthModule } from './modules/health.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SubwayModule } from './modules/subway.module';
     WeatherModule,
     BusModule,
     SubwayModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

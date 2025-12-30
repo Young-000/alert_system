@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AlertSettingsPage } from './AlertSettingsPage';
 import { AlertApiClient } from '@infrastructure/api/alert-api.client';
-import { ApiClient } from '@infrastructure/api/api-client';
+import type { Alert, AlertType } from '@infrastructure/api/alert-api.client';
 
 jest.mock('@infrastructure/api/alert-api.client');
 jest.mock('@infrastructure/api/api-client');
@@ -31,13 +31,13 @@ describe('AlertSettingsPage', () => {
   });
 
   it('should load existing alerts', async () => {
-    const mockAlerts = [
+    const mockAlerts: Alert[] = [
       {
         id: 'alert-1',
         userId: 'user-1',
         name: '출근 알림',
         schedule: '0 8 * * *',
-        alertTypes: ['weather'],
+        alertTypes: ['weather'] as AlertType[],
         enabled: true,
       },
     ];

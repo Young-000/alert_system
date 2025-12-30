@@ -12,8 +12,11 @@ export default defineConfig({
       manifest: {
         name: 'Alert System',
         short_name: 'Alert',
-        description: 'Daily commute alert system',
-        theme_color: '#ffffff',
+        description: '출근/퇴근 시 필요한 정보를 통합 제공하는 알림 시스템',
+        theme_color: '#3B82F6',
+        background_color: '#F9FAFB',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -26,6 +29,9 @@ export default defineConfig({
             type: 'image/png'
           }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       }
     })
   ],
