@@ -8,6 +8,9 @@ import { MobileCard } from '../components/MobileCard';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Loading } from '../components/Loading';
+import { SearchInput } from '../components/SearchInput';
+import { BusApiClient } from '@infrastructure/api/bus-api.client';
+import { SubwayApiClient } from '@infrastructure/api/subway-api.client';
 
 const ALERT_TYPE_LABELS: Record<string, { label: string; icon: string }> = {
   weather: { label: '날씨', icon: '🌤️' },
@@ -24,12 +27,20 @@ export function AlertSettingsPage() {
   const [minute, setMinute] = useState('0');
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [alertTypes, setAlertTypes] = useState<string[]>([]);
+  const [busStopId, setBusStopId] = useState<string>('');
+  const [subwayStationId, setSubwayStationId] = useState<string>('');
+  const [busSearchResults, setBusSearchResults] = useState<Array<{ id: string; name: string; description?: string }>>([]);
+  const [subwaySearchResults, setSubwaySearchResults] = useState<Array<{ id: string; name: string; description?: string }>>([]);
+  const [busSearchLoading, setBusSearchLoading] = useState(false);
+  const [subwaySearchLoading, setSubwaySearchLoading] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [alertsLoading, setAlertsLoading] = useState(true);
   
   const apiClient = new ApiClient();
   const alertApiClient = new AlertApiClient(apiClient);
+  const busApiClient = new BusApiClient(apiClient);
+  const subwayApiClient = new SubwayApiClient(apiClient);
   const userId = localStorage.getItem('userId') || '';
   const { permission, subscribe, requestPermission } = usePushNotification();
 
@@ -98,11 +109,23 @@ export function AlertSettingsPage() {
     try {
       setLoading(true);
       const schedule = convertToCron(hour, minute, selectedDays);
+      // 버스/지하철 선택 검증
+      if (alertTypes.includes('bus') && !busStopId) {
+        setError('버스 정류장을 선택해주세요.');
+        return;
+      }
+      if (alertTypes.includes('subway') && !subwayStationId) {
+        setError('지하철 역을 선택해주세요.');
+        return;
+      }
+
       const dto: CreateAlertDto = {
         userId,
         name: name || `알림 ${new Date().toLocaleTimeString()}`,
         schedule,
         alertTypes: alertTypes as any,
+        busStopId: alertTypes.includes('bus') ? busStopId : undefined,
+        subwayStationId: alertTypes.includes('subway') ? subwayStationId : undefined,
       };
       await alertApiClient.createAlert(dto);
       setName('');
@@ -110,6 +133,10 @@ export function AlertSettingsPage() {
       setMinute('0');
       setSelectedDays([]);
       setAlertTypes([]);
+      setBusStopId('');
+      setSubwayStationId('');
+      setBusSearchResults([]);
+      setSubwaySearchResults([]);
       loadAlerts();
     } catch (err: any) {
       setError(err.response?.data?.message || '알림 생성에 실패했습니다.');
@@ -134,9 +161,69 @@ export function AlertSettingsPage() {
   const toggleAlertType = (type: string) => {
     if (alertTypes.includes(type)) {
       setAlertTypes(alertTypes.filter((t) => t !== type));
+      if (type === 'bus') {
+        setBusStopId('');
+        setBusSearchResults([]);
+      }
+      if (type === 'subway') {
+        setSubwayStationId('');
+        setSubwaySearchResults([]);
+      }
     } else {
       setAlertTypes([...alertTypes, type]);
     }
+  };
+
+  const handleBusSearch = async (keyword: string) => {
+    if (keyword.length < 2) {
+      setBusSearchResults([]);
+      return;
+    }
+    try {
+      setBusSearchLoading(true);
+      const result = await busApiClient.searchStops(keyword);
+      setBusSearchResults(
+        result.stops.map((stop) => ({
+          id: stop.stopId,
+          name: stop.stopName,
+          description: stop.direction,
+        }))
+      );
+    } catch (err) {
+      setBusSearchResults([]);
+    } finally {
+      setBusSearchLoading(false);
+    }
+  };
+
+  const handleSubwaySearch = async (keyword: string) => {
+    if (keyword.length < 2) {
+      setSubwaySearchResults([]);
+      return;
+    }
+    try {
+      setSubwaySearchLoading(true);
+      const result = await subwayApiClient.searchStations(keyword);
+      setSubwaySearchResults(
+        result.stations.map((station) => ({
+          id: station.stationId,
+          name: station.stationName,
+          description: `${station.lineName}호선`,
+        }))
+      );
+    } catch (err) {
+      setSubwaySearchResults([]);
+    } finally {
+      setSubwaySearchLoading(false);
+    }
+  };
+
+  const handleBusSelect = (item: { id: string; name: string }) => {
+    setBusStopId(item.id);
+  };
+
+  const handleSubwaySelect = (item: { id: string; name: string }) => {
+    setSubwayStationId(item.id);
   };
 
   const toggleDay = (day: number) => {
@@ -244,23 +331,79 @@ export function AlertSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">알림 타입</label>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(ALERT_TYPE_LABELS).map(([type, { label, icon }]) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => toggleAlertType(type)}
-                    className={`p-3 rounded-xl border-2 transition-all active:scale-98 ${
-                      alertTypes.includes(type)
-                        ? 'border-primary bg-blue-50'
-                        : 'border-gray-200 bg-white active:bg-gray-50'
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">{icon}</div>
-                    <div className="text-xs font-medium">{label}</div>
-                  </button>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-2">알림 받을 정보</label>
+              <div className="space-y-3">
+                {/* 날씨/미세먼지 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {['weather', 'airQuality'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => toggleAlertType(type)}
+                      className={`p-3 rounded-xl border-2 transition-all active:scale-98 ${
+                        alertTypes.includes(type)
+                          ? 'border-primary bg-blue-50'
+                          : 'border-gray-200 bg-white active:bg-gray-50'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{ALERT_TYPE_LABELS[type]?.icon}</div>
+                      <div className="text-xs font-medium">{ALERT_TYPE_LABELS[type]?.label}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* 버스 */}
+                {alertTypes.includes('bus') && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-gray-600">버스 정류장 검색</label>
+                    <SearchInput
+                      placeholder="정류장 이름 검색 (예: 강남역)"
+                      onSearch={handleBusSearch}
+                      onSelect={handleBusSelect}
+                      results={busSearchResults}
+                      isLoading={busSearchLoading}
+                    />
+                    {busStopId && (
+                      <p className="text-xs text-green-600">✓ 정류장이 선택되었습니다</p>
+                    )}
+                  </div>
+                )}
+
+                {/* 지하철 */}
+                {alertTypes.includes('subway') && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-gray-600">지하철 역 검색</label>
+                    <SearchInput
+                      placeholder="역 이름 검색 (예: 강남역)"
+                      onSearch={handleSubwaySearch}
+                      onSelect={handleSubwaySelect}
+                      results={subwaySearchResults}
+                      isLoading={subwaySearchLoading}
+                    />
+                    {subwayStationId && (
+                      <p className="text-xs text-green-600">✓ 역이 선택되었습니다</p>
+                    )}
+                  </div>
+                )}
+
+                {/* 버스/지하철 선택 버튼 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {['bus', 'subway'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => toggleAlertType(type)}
+                      className={`p-3 rounded-xl border-2 transition-all active:scale-98 ${
+                        alertTypes.includes(type)
+                          ? 'border-primary bg-blue-50'
+                          : 'border-gray-200 bg-white active:bg-gray-50'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{ALERT_TYPE_LABELS[type]?.icon}</div>
+                      <div className="text-xs font-medium">{ALERT_TYPE_LABELS[type]?.label}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

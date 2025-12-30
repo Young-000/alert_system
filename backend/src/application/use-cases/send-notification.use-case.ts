@@ -8,6 +8,7 @@ import { IBusApiClient } from '@infrastructure/external-apis/bus-api.client';
 import { ISubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 import { IPushNotificationService } from '@infrastructure/push/push-notification.service';
 import { AlertType } from '@domain/entities/alert.entity';
+import { NotificationFormatterService } from '../services/notification-formatter.service';
 
 export class SendNotificationUseCase {
   constructor(
@@ -18,7 +19,8 @@ export class SendNotificationUseCase {
     @Inject('IAirQualityApiClient') private airQualityApiClient: IAirQualityApiClient,
     @Inject('IBusApiClient') private busApiClient: IBusApiClient,
     @Inject('ISubwayApiClient') private subwayApiClient: ISubwayApiClient,
-    @Inject('IPushNotificationService') private pushNotificationService: IPushNotificationService
+    @Inject('IPushNotificationService') private pushNotificationService: IPushNotificationService,
+    private notificationFormatter: NotificationFormatterService
   ) {}
 
   async execute(alertId: string): Promise<void> {
@@ -60,12 +62,12 @@ export class SendNotificationUseCase {
 
     if (alert.alertTypes.includes(AlertType.BUS) && alert.busStopId) {
       const busArrivals = await this.busApiClient.getBusArrival(alert.busStopId);
-      data.busArrivals = busArrivals;
+      data.bus = Array.isArray(busArrivals) ? busArrivals : [busArrivals];
     }
 
     if (alert.alertTypes.includes(AlertType.SUBWAY) && alert.subwayStationId) {
       const subwayArrivals = await this.subwayApiClient.getSubwayArrival(alert.subwayStationId);
-      data.subwayArrivals = subwayArrivals;
+      data.subway = Array.isArray(subwayArrivals) ? subwayArrivals : [subwayArrivals];
     }
 
     const subscriptions = await this.pushSubscriptionRepository.findByUserId(user.id);
@@ -74,9 +76,13 @@ export class SendNotificationUseCase {
       return;
     }
 
+    // Format notification message
+    const title = this.notificationFormatter.formatTitle(alert.name);
+    const body = this.notificationFormatter.formatBody(data, alert.alertTypes);
+
     const payload = JSON.stringify({
-      title: alert.name,
-      body: JSON.stringify(data),
+      title,
+      body,
     });
 
     for (const subscription of subscriptions) {

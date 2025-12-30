@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NotificationController } from '../controllers/notification.controller';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
+import { NotificationFormatterService } from '@application/services/notification-formatter.service';
 import { DatabaseModule } from '@infrastructure/persistence/database.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
@@ -75,6 +76,7 @@ import { DataSource } from 'typeorm';
       },
     },
     SendNotificationUseCase,
+    NotificationFormatterService,
   ],
   exports: [SendNotificationUseCase],
 })

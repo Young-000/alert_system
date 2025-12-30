@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SubwayController } from '../controllers/subway.controller';
 import { GetSubwayArrivalUseCase } from '@application/use-cases/get-subway-arrival.use-case';
+import { SearchSubwayStationsUseCase } from '@application/use-cases/search-subway-stations.use-case';
 import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 
 @Module({
@@ -14,6 +15,7 @@ import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client
       },
     },
     GetSubwayArrivalUseCase,
+    SearchSubwayStationsUseCase,
   ],
 })
 export class SubwayModule {}
