@@ -28,12 +28,24 @@ async function testConnection() {
   console.log('🔄 Supabase 연결 테스트 중...');
   console.log(`📍 Host: db.ayibvijmjygujjieueny.supabase.co`);
 
+  // URL 파싱하여 개별 옵션으로 설정
+  const urlObj = new URL(supabaseUrl);
+  const password = decodeURIComponent(urlObj.password);
+  
   const dataSource = new DataSource({
     type: 'postgres',
-    url: supabaseUrl,
+    host: urlObj.hostname,
+    port: parseInt(urlObj.port),
+    username: urlObj.username,
+    password: password,
+    database: urlObj.pathname.slice(1), // '/' 제거
     ssl: { rejectUnauthorized: false },
     entities: [UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity],
     synchronize: false, // 테스트용이므로 false
+    extra: {
+      // IPv4 강제
+      family: 4,
+    },
   });
 
   try {

@@ -76,6 +76,7 @@ import { DataSource } from 'typeorm';
     },
     SendNotificationUseCase,
   ],
+  exports: [SendNotificationUseCase],
 })
 export class NotificationModule {}
 

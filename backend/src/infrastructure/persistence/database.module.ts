@@ -33,6 +33,12 @@ import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
         : false,
       entities: [UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity],
       synchronize: process.env.NODE_ENV === 'development',
+      extra: process.env.SUPABASE_URL
+        ? {
+            // IPv4 강제
+            family: 4,
+          }
+        : {},
     }),
     TypeOrmModule.forFeature([UserEntity, AlertEntity, AlertAlertTypeEntity, PushSubscriptionEntity]),
   ],
