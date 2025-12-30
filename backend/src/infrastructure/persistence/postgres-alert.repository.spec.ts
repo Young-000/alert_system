@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { PostgresAlertRepository } from './postgres-alert.repository';
 import { AlertEntity } from './typeorm/alert.entity';
+import { AlertAlertTypeEntity } from './typeorm/alert-alert-type.entity';
 import { UserEntity } from './typeorm/user.entity';
 import { Alert, AlertType } from '@domain/entities/alert.entity';
 import { User } from '@domain/entities/user.entity';
@@ -18,7 +19,7 @@ describe('PostgresAlertRepository', () => {
       username: 'alert_user',
       password: 'alert_password',
       database: 'alert_system_test',
-      entities: [UserEntity, AlertEntity],
+      entities: [UserEntity, AlertEntity, AlertAlertTypeEntity],
       synchronize: true,
       dropSchema: true,
     });

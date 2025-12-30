@@ -1,4 +1,6 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Inject } from '@nestjs/common';
+import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
+import { PushSubscription } from '@infrastructure/push/push-notification.service';
 
 export interface PushSubscriptionDto {
   userId: string;
@@ -11,15 +13,24 @@ export interface PushSubscriptionDto {
 
 @Controller('notifications')
 export class NotificationController {
+  constructor(
+    @Inject('IPushSubscriptionRepository')
+    private pushSubscriptionRepository: IPushSubscriptionRepository
+  ) {}
+
   @Post('subscribe')
-  async subscribe(@Body() subscription: PushSubscriptionDto) {
-    // TODO: Save push subscription to database
+  async subscribe(@Body() dto: PushSubscriptionDto) {
+    const subscription: PushSubscription = {
+      endpoint: dto.endpoint,
+      keys: dto.keys,
+    };
+    await this.pushSubscriptionRepository.save(dto.userId, subscription);
     return { message: 'Subscription saved' };
   }
 
   @Post('unsubscribe')
-  async unsubscribe(@Body() subscription: PushSubscriptionDto) {
-    // TODO: Remove push subscription from database
+  async unsubscribe(@Body() dto: PushSubscriptionDto) {
+    await this.pushSubscriptionRepository.delete(dto.userId, dto.endpoint);
     return { message: 'Subscription removed' };
   }
 }

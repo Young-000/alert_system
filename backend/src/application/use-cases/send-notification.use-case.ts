@@ -1,6 +1,7 @@
 import { Inject, NotFoundException } from '@nestjs/common';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
+import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
 import { IWeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
 import { IAirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { IBusApiClient } from '@infrastructure/external-apis/bus-api.client';
@@ -12,6 +13,7 @@ export class SendNotificationUseCase {
   constructor(
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,
     @Inject('IUserRepository') private userRepository: IUserRepository,
+    @Inject('IPushSubscriptionRepository') private pushSubscriptionRepository: IPushSubscriptionRepository,
     @Inject('IWeatherApiClient') private weatherApiClient: IWeatherApiClient,
     @Inject('IAirQualityApiClient') private airQualityApiClient: IAirQualityApiClient,
     @Inject('IBusApiClient') private busApiClient: IBusApiClient,
@@ -66,15 +68,24 @@ export class SendNotificationUseCase {
       data.subwayArrivals = subwayArrivals;
     }
 
+    const subscriptions = await this.pushSubscriptionRepository.findByUserId(user.id);
+    
+    if (subscriptions.length === 0) {
+      return;
+    }
+
     const payload = JSON.stringify({
       title: alert.name,
       body: JSON.stringify(data),
     });
 
-    // TODO: Get push subscription from database
-    // For now, this is a placeholder
-    // const subscription = await this.getPushSubscription(user.id);
-    // await this.pushNotificationService.sendNotification(subscription, payload);
+    for (const subscription of subscriptions) {
+      try {
+        await this.pushNotificationService.sendNotification(subscription, payload);
+      } catch (error) {
+        console.error(`Failed to send notification to ${subscription.endpoint}:`, error);
+      }
+    }
   }
 }
 

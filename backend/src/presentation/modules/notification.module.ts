@@ -4,6 +4,7 @@ import { SendNotificationUseCase } from '@application/use-cases/send-notificatio
 import { DatabaseModule } from '@infrastructure/persistence/database.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
+import { PostgresPushSubscriptionRepository } from '@infrastructure/persistence/postgres-push-subscription.repository';
 import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
 import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
@@ -58,9 +59,19 @@ import { DataSource } from 'typeorm';
       },
     },
     {
+      provide: 'IPushSubscriptionRepository',
+      useFactory: (dataSource: DataSource) => {
+        return new PostgresPushSubscriptionRepository(dataSource);
+      },
+      inject: [DataSource],
+    },
+    {
       provide: 'IPushNotificationService',
       useFactory: () => {
-        return new PushNotificationService();
+        const publicKey = process.env.VAPID_PUBLIC_KEY || '';
+        const privateKey = process.env.VAPID_PRIVATE_KEY || '';
+        const subject = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
+        return new PushNotificationService(publicKey, privateKey, subject);
       },
     },
     SendNotificationUseCase,
