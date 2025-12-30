@@ -39,7 +39,9 @@ describe('PostgresAlertRepository', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   });
 
   it('should save an alert', async () => {

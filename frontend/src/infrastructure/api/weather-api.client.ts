@@ -1,14 +1,6 @@
 import { ApiClient } from './api-client';
 import { Weather } from '../../domain/entities/weather.entity';
 
-export interface Weather {
-  location: string;
-  temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
-}
-
 export class WeatherApiClient {
   constructor(private apiClient: ApiClient) {}
 

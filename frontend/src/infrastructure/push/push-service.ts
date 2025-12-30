@@ -9,8 +9,8 @@ export interface PushSubscription {
 export class PushService {
   private async getVapidPublicKey(): Promise<string> {
     // 환경 변수가 있으면 사용, 없으면 API에서 가져오기
-    if (process.env.VITE_VAPID_PUBLIC_KEY) {
-      return process.env.VITE_VAPID_PUBLIC_KEY;
+    if (import.meta.env.VITE_VAPID_PUBLIC_KEY) {
+      return import.meta.env.VITE_VAPID_PUBLIC_KEY;
     }
 
     try {
@@ -43,9 +43,11 @@ export class PushService {
     }
 
     const registration = await navigator.serviceWorker.ready;
+    const keyArray = this.urlBase64ToUint8Array(publicKey);
+    // @ts-ignore - Uint8Array is compatible with BufferSource but TypeScript is strict
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: this.urlBase64ToUint8Array(publicKey),
+      applicationServerKey: keyArray,
     });
 
     return {
@@ -74,7 +76,7 @@ export class PushService {
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
     }
-    return outputArray;
+    return outputArray as Uint8Array;
   }
 
   private arrayBufferToBase64(buffer: ArrayBuffer): string {

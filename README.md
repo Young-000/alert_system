@@ -90,11 +90,28 @@ npm run test:e2e      # E2E 테스트
 npm run test:cov      # 커버리지
 ```
 
+**참고**: 일부 테스트(PostgresUserRepository, PostgresAlertRepository)는 실제 DB 연결이 필요합니다. 로컬 환경에서 실행하거나 테스트를 스킵할 수 있습니다.
+
 ### Frontend
 ```bash
 cd frontend
 npm test              # 단위 테스트
 npm run test:cov      # 커버리지
+npm run build         # 프로덕션 빌드
+```
+
+## 배포
+
+자세한 배포 가이드는 `DEPLOYMENT_README.md`를 참고하세요.
+
+### 빠른 배포 (Docker Compose)
+```bash
+# 환경 변수 설정
+cp .env.production.example .env.production
+# .env.production 파일 수정
+
+# 배포
+docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
 ```
 
 ## Clean Architecture
