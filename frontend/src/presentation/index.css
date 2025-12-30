@@ -5,7 +5,25 @@
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900;
+    /* 모바일 스크롤 부드럽게 */
+    -webkit-overflow-scrolling: touch;
+    /* iOS safe area 지원 */
+    padding-bottom: env(safe-area-inset-bottom);
   }
+  
+  /* 모바일 터치 최적화 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Safe area 지원 */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 @layer components {

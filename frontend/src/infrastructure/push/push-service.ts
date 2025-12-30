@@ -44,10 +44,13 @@ export class PushService {
 
     const registration = await navigator.serviceWorker.ready;
     const keyArray = this.urlBase64ToUint8Array(publicKey);
-    // @ts-ignore - Uint8Array is compatible with BufferSource but TypeScript is strict
+    // Convert to ArrayBuffer explicitly to satisfy TypeScript
+    const buffer = new ArrayBuffer(keyArray.length);
+    const view = new Uint8Array(buffer);
+    view.set(keyArray);
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: keyArray,
+      applicationServerKey: buffer,
     });
 
     return {

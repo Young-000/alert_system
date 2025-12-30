@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/Card';
+import { MobileCard } from '../components/MobileCard';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { UserApiClient } from '@infrastructure/api/user-api.client';
@@ -34,12 +34,12 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-2">Alert System</h1>
-          <p className="text-gray-600">출근/퇴근 시 필요한 정보를 통합 제공하는 알림 시스템</p>
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-primary mb-2">Alert</h1>
+          <p className="text-sm text-gray-600">출근/퇴근 시 필요한 정보를 통합 제공</p>
         </div>
 
-        <Card>
+        <MobileCard>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">시작하기</h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,7 +82,7 @@ export function LoginPage() {
               시작하기를 클릭하면 서비스 이용약관에 동의하는 것으로 간주됩니다.
             </p>
           </div>
-        </Card>
+        </MobileCard>
       </div>
     </div>
   );

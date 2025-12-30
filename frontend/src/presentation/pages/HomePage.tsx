@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/Card';
+import { MobileCard } from '../components/MobileCard';
 import { Button } from '../components/Button';
 import { Loading } from '../components/Loading';
+import { SwipeableCard } from '../components/SwipeableCard';
 import { ApiClient } from '@infrastructure/api/api-client';
 import { WeatherApiClient } from '@infrastructure/api/weather-api.client';
 import { AirQualityApiClient } from '@infrastructure/api/air-quality-api.client';
@@ -89,89 +90,94 @@ export function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="max-w-md mx-auto px-4 py-6">
+        {/* 헤더 */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
             안녕하세요, {user?.name || '사용자'}님 👋
           </h1>
           {user?.location ? (
-            <p className="text-gray-600">
-              📍 {user.location.address}
+            <p className="text-sm text-gray-600 flex items-center">
+              <span className="mr-1">📍</span>
+              {user.location.address}
             </p>
           ) : (
-            <div className="flex items-center space-x-2">
-              <p className="text-gray-600">위치 정보가 없습니다.</p>
-              <Button variant="secondary" onClick={() => navigate('/location')}>
-                위치 설정
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {error}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {weather && (
-            <Card title="날씨 정보">
-              <div className="flex items-center space-x-4">
-                <div className="text-5xl">{getWeatherIcon(weather.condition)}</div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {Math.round(weather.temperature)}°C
-                  </div>
-                  <div className="text-gray-600">{weather.condition}</div>
-                  <div className="text-sm text-gray-500 mt-2">
-                    습도 {weather.humidity}% · 풍속 {weather.windSpeed}km/h
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {airQuality && (
-            <Card title="미세먼지 정보">
-              <div className="flex items-center space-x-4">
-                <div className="text-5xl">
-                  {airQuality.status === 'Good' || airQuality.status === '좋음' ? '🟢' : 
-                   airQuality.status === 'Moderate' || airQuality.status === '보통' ? '🟡' : '🔴'}
-                </div>
-                <div>
-                  <div className={`text-2xl font-bold ${getAirQualityColor(airQuality.status)}`}>
-                    {airQuality.status}
-                  </div>
-                  <div className="text-gray-600 mt-2">
-                    <div>PM10: {airQuality.pm10} ㎍/㎥</div>
-                    <div>PM2.5: {airQuality.pm25} ㎍/㎥</div>
-                    <div>AQI: {airQuality.aqi}</div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            variant="primary" 
-            className="flex-1"
-            onClick={() => navigate('/alerts')}
-          >
-            알림 설정하기
-          </Button>
-          {!user?.location && (
             <Button 
               variant="secondary" 
-              className="flex-1"
+              size="sm"
               onClick={() => navigate('/location')}
+              className="mt-2"
             >
               위치 설정하기
             </Button>
           )}
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* 날씨 카드 */}
+        {weather && (
+          <SwipeableCard>
+            <MobileCard title="날씨 정보" icon="🌤️">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="text-5xl">{getWeatherIcon(weather.condition)}</div>
+                  <div>
+                    <div className="text-3xl font-bold text-gray-900">
+                      {Math.round(weather.temperature)}°C
+                    </div>
+                    <div className="text-sm text-gray-600">{weather.condition}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-xs text-gray-500">
+                <span>습도 {weather.humidity}%</span>
+                <span>풍속 {weather.windSpeed}km/h</span>
+              </div>
+            </MobileCard>
+          </SwipeableCard>
+        )}
+
+        {/* 미세먼지 카드 */}
+        {airQuality && (
+          <SwipeableCard>
+            <MobileCard title="미세먼지 정보" icon="🟢">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="text-5xl">
+                    {airQuality.status === 'Good' || airQuality.status === '좋음' ? '🟢' : 
+                     airQuality.status === 'Moderate' || airQuality.status === '보통' ? '🟡' : '🔴'}
+                  </div>
+                  <div>
+                    <div className={`text-2xl font-bold ${getAirQualityColor(airQuality.status)}`}>
+                      {airQuality.status}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">AQI: {airQuality.aqi}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-xs text-gray-500">
+                <span>PM10: {airQuality.pm10} ㎍/㎥</span>
+                <span>PM2.5: {airQuality.pm25} ㎍/㎥</span>
+              </div>
+            </MobileCard>
+          </SwipeableCard>
+        )}
+
+        {/* 빠른 액션 버튼 */}
+        <div className="mt-6 space-y-2">
+          <Button 
+            variant="primary" 
+            className="w-full"
+            onClick={() => navigate('/alerts')}
+          >
+            알림 설정하기
+          </Button>
         </div>
       </div>
     </div>

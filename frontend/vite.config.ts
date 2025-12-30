@@ -16,17 +16,37 @@ export default defineConfig({
         theme_color: '#3B82F6',
         background_color: '#F9FAFB',
         display: 'standalone',
+        orientation: 'portrait',
         start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: '알림 설정',
+            short_name: '알림',
+            description: '알림 설정 페이지로 이동',
+            url: '/alerts',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: '위치 설정',
+            short_name: '위치',
+            description: '위치 설정 페이지로 이동',
+            url: '/location',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           }
         ]
       },

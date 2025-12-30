@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/Card';
+import { MobileCard } from '../components/MobileCard';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { UserApiClient } from '@infrastructure/api/user-api.client';
@@ -103,11 +103,11 @@ export function LocationSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">위치 설정</h1>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="max-w-md mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">위치 설정</h1>
 
-        <Card>
+        <MobileCard>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Button
@@ -180,10 +180,10 @@ export function LocationSettingsPage() {
               </Button>
             </div>
           </form>
-        </Card>
+        </MobileCard>
 
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <p className="text-xs text-blue-800">
             💡 <strong>팁:</strong> 정확한 날씨와 미세먼지 정보를 받으려면 정확한 위치 설정이 필요합니다.
           </p>
         </div>
