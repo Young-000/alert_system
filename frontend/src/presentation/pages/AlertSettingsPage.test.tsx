@@ -1,48 +1,27 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AlertSettingsPage } from './AlertSettingsPage';
-import { AlertApiClient } from '@infrastructure/api/alert-api.client';
-import type { AlertType } from '@infrastructure/api/alert-api.client';
-import { UserApiClient } from '@infrastructure/api/user-api.client';
-import { SubwayApiClient } from '@infrastructure/api/subway-api.client';
+import { alertApiClient, userApiClient } from '@infrastructure/api';
+import type { AlertType } from '@infrastructure/api';
 
-jest.mock('@infrastructure/api/alert-api.client');
-jest.mock('@infrastructure/api/api-client');
-jest.mock('@infrastructure/api/user-api.client');
-jest.mock('@infrastructure/api/subway-api.client');
 jest.mock('../hooks/usePushNotification', () => ({
   usePushNotification: () => ({
     permission: 'default',
     subscription: null,
+    isSwReady: true,
+    swError: null,
     requestPermission: jest.fn(),
     subscribe: jest.fn(),
     unsubscribe: jest.fn(),
   }),
 }));
 
-describe('AlertSettingsPage', () => {
-  let mockAlertApiClient: jest.Mocked<AlertApiClient>;
-  let mockUserApiClient: jest.Mocked<UserApiClient>;
-  let mockSubwayApiClient: jest.Mocked<SubwayApiClient>;
+const mockAlertApiClient = alertApiClient as jest.Mocked<typeof alertApiClient>;
+const mockUserApiClient = userApiClient as jest.Mocked<typeof userApiClient>;
 
+describe('AlertSettingsPage', () => {
   beforeEach(() => {
-    mockAlertApiClient = {
-      createAlert: jest.fn(),
-      getAlertsByUser: jest.fn(),
-      getAlert: jest.fn(),
-      deleteAlert: jest.fn(),
-    } as any;
-    (AlertApiClient as jest.Mock).mockImplementation(() => mockAlertApiClient);
-    mockUserApiClient = {
-      createUser: jest.fn(),
-      getUser: jest.fn(),
-      updateLocation: jest.fn(),
-    } as any;
-    (UserApiClient as jest.Mock).mockImplementation(() => mockUserApiClient);
-    mockSubwayApiClient = {
-      searchStations: jest.fn(),
-    } as any;
-    (SubwayApiClient as jest.Mock).mockImplementation(() => mockSubwayApiClient);
+    jest.clearAllMocks();
     localStorage.setItem('userId', 'user-1');
   });
 
@@ -120,9 +99,19 @@ describe('AlertSettingsPage', () => {
       </MemoryRouter>
     );
 
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+    });
+
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: '출근 알림' },
     });
+
+    // Select at least one alert type (weather)
+    const weatherCheckbox = screen.getByRole('checkbox', { name: /weather/i });
+    fireEvent.click(weatherCheckbox);
+
     fireEvent.click(screen.getByRole('button', { name: /알림 시작하기/i }));
 
     await waitFor(() => {

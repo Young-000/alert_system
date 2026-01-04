@@ -40,7 +40,7 @@ describe('CreateUserUseCase', () => {
     const existingUser = new User('user@example.com', 'John Doe');
     userRepository.findByEmail.mockResolvedValue(existingUser);
 
-    await expect(useCase.execute(dto)).rejects.toThrow('User already exists');
+    await expect(useCase.execute(dto)).rejects.toThrow('이미 존재하는 이메일입니다.');
   });
 
   it('should create a user with location', async () => {

@@ -1,20 +1,13 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginPage } from './LoginPage';
-import { UserApiClient } from '@infrastructure/api/user-api.client';
+import { userApiClient } from '@infrastructure/api';
 import { MemoryRouter } from 'react-router-dom';
 
-jest.mock('@infrastructure/api/user-api.client');
-jest.mock('@infrastructure/api/api-client');
+const mockUserApiClient = userApiClient as jest.Mocked<typeof userApiClient>;
 
 describe('LoginPage', () => {
-  let mockUserApiClient: jest.Mocked<UserApiClient>;
-
   beforeEach(() => {
-    mockUserApiClient = {
-      createUser: jest.fn(),
-      getUser: jest.fn(),
-    } as any;
-    (UserApiClient as jest.Mock).mockImplementation(() => mockUserApiClient);
+    jest.clearAllMocks();
   });
 
   it('should render login form', () => {
@@ -40,7 +33,7 @@ describe('LoginPage', () => {
         <LoginPage />
       </MemoryRouter>
     );
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'user@example.com' },
     });
