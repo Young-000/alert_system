@@ -32,6 +32,9 @@
 # Supabase 연결 URL (전체 URL 사용 권장)
 SUPABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 
+# 또는 DATABASE_URL 사용 가능
+# DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+
 # 또는 개별 설정
 # DATABASE_HOST=db.[PROJECT-REF].supabase.co
 # DATABASE_PORT=5432
@@ -47,7 +50,8 @@ PORT=3000
 ## 4. 테이블 자동 생성
 
 ### 개발 환경에서:
-- `synchronize: true` 설정으로 자동 생성됨
+- 로컬 DB 사용 시 `synchronize: true` 설정으로 자동 생성됨
+- Supabase 사용 시에는 `DB_SYNCHRONIZE=true`로 명시하거나 수동 생성 권장
 - 프로덕션에서는 마이그레이션 사용 권장
 
 ### 수동 생성 (SQL Editor에서):
@@ -61,6 +65,18 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Subway Stations 테이블
+CREATE TABLE subway_stations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  line VARCHAR(100) NOT NULL,
+  code VARCHAR(100),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX subway_stations_name_idx ON subway_stations (name);
+CREATE UNIQUE INDEX subway_stations_name_line_idx ON subway_stations (name, line);
+
 -- Alerts 테이블
 CREATE TABLE alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -70,7 +86,7 @@ CREATE TABLE alerts (
   alert_types JSONB NOT NULL,
   enabled BOOLEAN DEFAULT true,
   bus_stop_id VARCHAR(100),
-  subway_station_id VARCHAR(100),
+  subway_station_id UUID REFERENCES subway_stations(id),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -82,6 +98,14 @@ CREATE TABLE push_subscriptions (
   keys JSONB NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE UNIQUE INDEX push_subscriptions_endpoint_idx ON push_subscriptions (endpoint);
+```
+
+### 지하철역 데이터 시드
+```bash
+cd backend
+npm run db:apply
+npm run seed:subway
 ```
 
 ## 5. 연결 테스트
@@ -130,6 +154,7 @@ CREATE POLICY "Users can view own data"
 SUPABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 NODE_ENV=development
 PORT=3000
+DB_SYNCHRONIZE=false
 ```
 
 **이것만으로 충분합니다!** 별도 PostgreSQL 설치 불필요.
@@ -163,6 +188,7 @@ docker-compose up -d redis
 SUPABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 REDIS_HOST=localhost
 REDIS_PORT=6379
+DB_SYNCHRONIZE=false
 ```
 
 코드는 자동으로 환경 변수를 확인하여 적절한 연결을 사용합니다.
@@ -181,4 +207,3 @@ REDIS_PORT=6379
 ### 권한 오류
 - 데이터베이스 사용자 권한 확인
 - RLS 정책 확인
-

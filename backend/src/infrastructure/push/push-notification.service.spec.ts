@@ -1,19 +1,29 @@
 import { PushNotificationService } from './push-notification.service';
 
-const mockSetVapidDetails = jest.fn();
-const mockSendNotification = jest.fn();
-
-jest.mock('web-push', () => ({
-  setVapidDetails: mockSetVapidDetails,
-  sendNotification: mockSendNotification,
-}));
+jest.mock('web-push', () => {
+  const mockSetVapidDetails = jest.fn();
+  const mockSendNotification = jest.fn();
+  const api = {
+    setVapidDetails: mockSetVapidDetails,
+    sendNotification: mockSendNotification,
+  };
+  return {
+    ...api,
+    default: api,
+    __mockSetVapidDetails: mockSetVapidDetails,
+    __mockSendNotification: mockSendNotification,
+  };
+});
 
 describe('PushNotificationService', () => {
   let service: PushNotificationService;
+  let mockSendNotification: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new PushNotificationService('public-key', 'private-key');
+    const webpushMock = jest.requireMock('web-push') as any;
+    mockSendNotification = webpushMock.__mockSendNotification;
+    service = new PushNotificationService('public-key', 'private-key', 'mailto:test@example.com');
   });
 
   it('should send push notification', async () => {
@@ -46,4 +56,3 @@ describe('PushNotificationService', () => {
     await expect(service.sendNotification(subscription, payload)).rejects.toThrow('Push error');
   });
 });
-

@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Param, Delete, Inject } from '@nestjs/common';
 import { CreateAlertUseCase } from '@application/use-cases/create-alert.use-case';
+import { DeleteAlertUseCase } from '@application/use-cases/delete-alert.use-case';
 import { CreateAlertDto } from '@application/dto/create-alert.dto';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 
@@ -7,6 +8,7 @@ import { IAlertRepository } from '@domain/repositories/alert.repository';
 export class AlertController {
   constructor(
     private createAlertUseCase: CreateAlertUseCase,
+    private deleteAlertUseCase: DeleteAlertUseCase,
     @Inject('IAlertRepository') private alertRepository: IAlertRepository
   ) {}
 
@@ -27,8 +29,7 @@ export class AlertController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    await this.alertRepository.delete(id);
+    await this.deleteAlertUseCase.execute(id);
     return { message: 'Alert deleted' };
   }
 }
-

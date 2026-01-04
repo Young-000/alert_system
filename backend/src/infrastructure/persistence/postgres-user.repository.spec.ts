@@ -3,7 +3,10 @@ import { PostgresUserRepository } from './postgres-user.repository';
 import { UserEntity } from './typeorm/user.entity';
 import { User } from '@domain/entities/user.entity';
 
-describe('PostgresUserRepository', () => {
+const shouldRun = process.env.RUN_DB_TESTS === 'true';
+const describeDb = shouldRun ? describe : describe.skip;
+
+describeDb('PostgresUserRepository', () => {
   let dataSource: DataSource;
   let repository: PostgresUserRepository;
 
@@ -65,4 +68,3 @@ describe('PostgresUserRepository', () => {
     expect(found?.email).toBe('user@example.com');
   });
 });
-

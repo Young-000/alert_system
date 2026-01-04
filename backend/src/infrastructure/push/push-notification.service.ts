@@ -1,4 +1,4 @@
-import webpush from 'web-push';
+import * as webpush from 'web-push';
 
 export interface PushSubscription {
   endpoint: string;
@@ -13,8 +13,8 @@ export interface IPushNotificationService {
 }
 
 export class PushNotificationService implements IPushNotificationService {
-  constructor(private publicKey: string, private privateKey: string) {
-    webpush.setVapidDetails('mailto:admin@example.com', publicKey, privateKey);
+  constructor(private publicKey: string, private privateKey: string, private subject: string) {
+    webpush.setVapidDetails(this.subject, publicKey, privateKey);
   }
 
   async sendNotification(subscription: PushSubscription, payload: string): Promise<void> {
@@ -25,4 +25,3 @@ export class PushNotificationService implements IPushNotificationService {
     }
   }
 }
-

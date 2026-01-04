@@ -1,11 +1,14 @@
+import { Inject } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { Alert } from '@domain/entities/alert.entity';
+import { INotificationScheduler } from '@application/ports/notification-scheduler';
 
-export class NotificationSchedulerService {
+export class NotificationSchedulerService implements INotificationScheduler {
   constructor(
-    private queue: Queue,
-    private alertRepository: IAlertRepository
+    @InjectQueue('notifications') private queue: Queue,
+    @Inject('IAlertRepository') private alertRepository: IAlertRepository
   ) {}
 
   async scheduleNotification(alert: Alert): Promise<void> {
@@ -42,4 +45,3 @@ export class NotificationSchedulerService {
     }
   }
 }
-

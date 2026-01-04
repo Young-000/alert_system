@@ -49,13 +49,12 @@ export class PostgresAlertRepository implements IAlertRepository {
       entity.schedule,
       entity.alertTypes as AlertType[],
       entity.busStopId,
-      entity.subwayStationId
+      entity.subwayStationId,
+      entity.id,
     );
-    (alert as any).id = entity.id;
     if (!entity.enabled) {
       alert.disable();
     }
     return alert;
   }
 }
-

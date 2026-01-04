@@ -31,5 +31,8 @@ export class UserApiClient {
   async getUser(id: string): Promise<User> {
     return this.apiClient.get<User>(`/users/${id}`);
   }
-}
 
+  async updateLocation(id: string, location: NonNullable<User['location']>): Promise<User> {
+    return this.apiClient.patch<User>(`/users/${id}/location`, { location });
+  }
+}

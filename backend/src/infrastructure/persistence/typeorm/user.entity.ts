@@ -18,7 +18,6 @@ export class UserEntity {
     lng: number;
   };
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
-

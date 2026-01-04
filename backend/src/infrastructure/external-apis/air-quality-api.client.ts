@@ -69,7 +69,9 @@ export class AirQualityApiClient implements IAirQualityApiClient {
         status
       );
     } catch (error) {
-      throw new Error(`Failed to fetch air quality: ${error}`);
+      const message =
+        error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`미세먼지 정보를 가져오는데 실패했습니다: ${message}`);
     }
   }
 

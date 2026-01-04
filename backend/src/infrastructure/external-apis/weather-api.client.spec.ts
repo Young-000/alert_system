@@ -1,24 +1,28 @@
 import { WeatherApiClient } from './weather-api.client';
-import axios from 'axios';
 import { Weather } from '@domain/entities/weather.entity';
 
-const mockGet = jest.fn();
-const mockCreate = jest.fn(() => ({
-  get: mockGet,
-}));
-
-jest.mock('axios', () => ({
-  create: mockCreate,
-  default: {
+jest.mock('axios', () => {
+  const mockGet = jest.fn();
+  const mockCreate = jest.fn(() => ({
+    get: mockGet,
+  }));
+  return {
     create: mockCreate,
-  },
-}));
+    default: {
+      create: mockCreate,
+    },
+    __mockGet: mockGet,
+  };
+});
 
 describe('WeatherApiClient', () => {
   let client: WeatherApiClient;
+  let mockGet: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    const axiosMock = jest.requireMock('axios') as any;
+    mockGet = axiosMock.__mockGet;
     client = new WeatherApiClient('test-api-key');
   });
 
@@ -56,4 +60,3 @@ describe('WeatherApiClient', () => {
     await expect(client.getWeather(37.5665, 126.9780)).rejects.toThrow('API Error');
   });
 });
-

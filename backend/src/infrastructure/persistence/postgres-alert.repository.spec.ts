@@ -5,7 +5,10 @@ import { UserEntity } from './typeorm/user.entity';
 import { Alert, AlertType } from '@domain/entities/alert.entity';
 import { User } from '@domain/entities/user.entity';
 
-describe('PostgresAlertRepository', () => {
+const shouldRun = process.env.RUN_DB_TESTS === 'true';
+const describeDb = shouldRun ? describe : describe.skip;
+
+describeDb('PostgresAlertRepository', () => {
   let dataSource: DataSource;
   let repository: PostgresAlertRepository;
   let user: User;
@@ -83,4 +86,3 @@ describe('PostgresAlertRepository', () => {
     expect(found).toBeUndefined();
   });
 });
-

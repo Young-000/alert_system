@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginPage } from './LoginPage';
 import { UserApiClient } from '@infrastructure/api/user-api.client';
-import { ApiClient } from '@infrastructure/api/api-client';
+import { MemoryRouter } from 'react-router-dom';
 
 jest.mock('@infrastructure/api/user-api.client');
 jest.mock('@infrastructure/api/api-client');
@@ -18,7 +18,11 @@ describe('LoginPage', () => {
   });
 
   it('should render login form', () => {
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
   });
@@ -31,7 +35,11 @@ describe('LoginPage', () => {
     };
     mockUserApiClient.createUser.mockResolvedValue(mockUser);
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
     
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'user@example.com' },
@@ -39,7 +47,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: 'John Doe' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+    fireEvent.click(screen.getByRole('button', { name: /계정 만들기/i }));
 
     await waitFor(() => {
       expect(mockUserApiClient.createUser).toHaveBeenCalledWith({
@@ -49,4 +57,3 @@ describe('LoginPage', () => {
     });
   });
 });
-

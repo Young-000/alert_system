@@ -1,6 +1,9 @@
 import { AirQualityApiClient } from './air-quality-api.client';
 
-describe('AirQualityApiClient Integration', () => {
+const shouldRun = process.env.RUN_INTEGRATION_TESTS === 'true';
+const describeIntegration = shouldRun ? describe : describe.skip;
+
+describeIntegration('AirQualityApiClient Integration', () => {
   let client: AirQualityApiClient;
   const apiKey = process.env.AIR_QUALITY_API_KEY || 'c854d1870b7792e9e000563a58e8d1e4aa664c0642501163c4b9e420a90f8686';
 
@@ -44,4 +47,3 @@ describe('AirQualityApiClient Integration', () => {
     expect(result.pm25).toBeGreaterThanOrEqual(0);
   });
 });
-

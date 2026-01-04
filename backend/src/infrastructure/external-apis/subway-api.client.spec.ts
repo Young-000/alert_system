@@ -1,24 +1,28 @@
 import { SubwayApiClient } from './subway-api.client';
-import axios from 'axios';
 import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
 
-const mockGet = jest.fn();
-const mockCreate = jest.fn(() => ({
-  get: mockGet,
-}));
-
-jest.mock('axios', () => ({
-  create: mockCreate,
-  default: {
+jest.mock('axios', () => {
+  const mockGet = jest.fn();
+  const mockCreate = jest.fn(() => ({
+    get: mockGet,
+  }));
+  return {
     create: mockCreate,
-  },
-}));
+    default: {
+      create: mockCreate,
+    },
+    __mockGet: mockGet,
+  };
+});
 
 describe('SubwayApiClient', () => {
   let client: SubwayApiClient;
+  let mockGet: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    const axiosMock = jest.requireMock('axios') as any;
+    mockGet = axiosMock.__mockGet;
     client = new SubwayApiClient('test-api-key');
   });
 
@@ -53,4 +57,3 @@ describe('SubwayApiClient', () => {
     await expect(client.getSubwayArrival('station-123')).rejects.toThrow('API Error');
   });
 });
-

@@ -3,7 +3,9 @@ import axios, { AxiosInstance } from 'axios';
 export class ApiClient {
   private client: AxiosInstance;
 
-  constructor(baseURL: string = 'http://localhost:3000') {
+  constructor(
+    baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+  ) {
     this.client = axios.create({
       baseURL,
       headers: {
@@ -17,12 +19,12 @@ export class ApiClient {
     return response.data;
   }
 
-  async post<T>(url: string, data?: any): Promise<T> {
+  async post<T, D = unknown>(url: string, data?: D): Promise<T> {
     const response = await this.client.post<T>(url, data);
     return response.data;
   }
 
-  async put<T>(url: string, data?: any): Promise<T> {
+  async put<T, D = unknown>(url: string, data?: D): Promise<T> {
     const response = await this.client.put<T>(url, data);
     return response.data;
   }
@@ -31,5 +33,9 @@ export class ApiClient {
     const response = await this.client.delete<T>(url);
     return response.data;
   }
-}
 
+  async patch<T, D = unknown>(url: string, data?: D): Promise<T> {
+    const response = await this.client.patch<T>(url, data);
+    return response.data;
+  }
+}

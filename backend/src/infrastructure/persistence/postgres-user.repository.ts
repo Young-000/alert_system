@@ -35,9 +35,11 @@ export class PostgresUserRepository implements IUserRepository {
   }
 
   private toDomain(entity: UserEntity): User {
-    const user = new User(entity.email, entity.name, entity.location as UserLocation | undefined);
-    (user as any).id = entity.id;
-    return user;
+    return new User(
+      entity.email,
+      entity.name,
+      entity.location as UserLocation | undefined,
+      entity.id,
+    );
   }
 }
-

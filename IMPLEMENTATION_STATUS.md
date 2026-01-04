@@ -21,6 +21,12 @@
   - `GET /air-quality/user/:userId` - 사용자 위치 기반
   - `GET /air-quality/location?lat=37.5665&lng=126.9780` - 좌표 기반
 
+### 4. MVP 알림 흐름 보강
+- ✅ 푸시 구독 저장/삭제 유스케이스 추가
+- ✅ 알림 생성 시 스케줄러 연동
+- ✅ 지하철역 검색 API 추가
+- ✅ 지하철역 시드 스크립트 추가
+
 ## 📊 테스트 결과
 
 ### 미세먼지 API 통합 테스트
@@ -78,11 +84,10 @@ git push origin main
 ## 📝 다음 단계
 
 1. ✅ 미세먼지 API - 완료
-2. ⏳ 날씨 API 구현
-3. ⏳ 버스 도착시간 API 구현
-4. ⏳ 지하철 도착시간 API 구현
-5. ⏳ 알림 스케줄러 연동
-6. ⏳ 프론트엔드 UI 구현
+2. ⏳ 날씨 API 구현/검증 (우천 알림용)
+3. ⏳ 지하철 API 실데이터 검증
+4. ⏳ 알림 전송 워커 운영 안정화
+5. ⏳ 프론트엔드 MVP UI 개선
 
 ## 📚 참고 문서
 
@@ -90,4 +95,3 @@ git push origin main
 - `SUPABASE_SETUP.md`: Supabase 설정 가이드
 - `MOBILE_SETUP.md`: 모바일 개발 환경 설정
 - `GIT_SETUP.md`: Git 설정 가이드
-

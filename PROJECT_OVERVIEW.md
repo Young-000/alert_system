@@ -90,6 +90,7 @@ alert_system/
 ### Users
 - `POST /users` - 사용자 생성
 - `GET /users/:id` - 사용자 조회
+- `PATCH /users/:id/location` - 사용자 위치 업데이트
 
 ### Alerts
 - `POST /alerts` - 알림 생성
@@ -104,6 +105,9 @@ alert_system/
 ### Notifications
 - `POST /notifications/subscribe` - 푸시 알림 구독
 - `POST /notifications/unsubscribe` - 푸시 알림 구독 해제
+
+### Subway
+- `GET /subway/stations?query=강남` - 지하철역 검색
 
 ## 🧪 테스트 상태
 
@@ -240,4 +244,3 @@ npm test
 3. **TypeScript**: 타입 안정성
 4. **PWA**: 모바일에서 앱처럼 사용 가능
 5. **Supabase**: 관리형 데이터베이스로 설정 간소화
-

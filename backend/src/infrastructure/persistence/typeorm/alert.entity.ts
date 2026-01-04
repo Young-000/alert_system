@@ -20,11 +20,11 @@ export class AlertEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid')
+  @Column('uuid', { name: 'user_id' })
   userId: string;
 
   @ManyToOne(() => UserEntity)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
   @Column()
@@ -33,19 +33,18 @@ export class AlertEntity {
   @Column()
   schedule: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'jsonb', name: 'alert_types' })
   alertTypes: string[];
 
   @Column({ default: true })
   enabled: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'bus_stop_id' })
   busStopId?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true, name: 'subway_station_id' })
   subwayStationId?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
-

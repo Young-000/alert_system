@@ -4,11 +4,13 @@ import { IUserRepository } from '@domain/repositories/user.repository';
 import { Alert, AlertType } from '@domain/entities/alert.entity';
 import { User } from '@domain/entities/user.entity';
 import { CreateAlertDto } from '../dto/create-alert.dto';
+import { INotificationScheduler } from '@application/ports/notification-scheduler';
 
 describe('CreateAlertUseCase', () => {
   let useCase: CreateAlertUseCase;
   let alertRepository: jest.Mocked<IAlertRepository>;
   let userRepository: jest.Mocked<IUserRepository>;
+  let notificationScheduler: jest.Mocked<INotificationScheduler>;
 
   beforeEach(() => {
     alertRepository = {
@@ -22,7 +24,11 @@ describe('CreateAlertUseCase', () => {
       findById: jest.fn(),
       findByEmail: jest.fn(),
     };
-    useCase = new CreateAlertUseCase(alertRepository, userRepository);
+    notificationScheduler = {
+      scheduleNotification: jest.fn(),
+      cancelNotification: jest.fn(),
+    };
+    useCase = new CreateAlertUseCase(alertRepository, userRepository, notificationScheduler);
   });
 
   it('should create an alert', async () => {
@@ -35,6 +41,7 @@ describe('CreateAlertUseCase', () => {
     };
     userRepository.findById.mockResolvedValue(user);
     alertRepository.save.mockResolvedValue();
+    notificationScheduler.scheduleNotification.mockResolvedValue();
 
     const result = await useCase.execute(dto);
 
@@ -43,6 +50,7 @@ describe('CreateAlertUseCase', () => {
     expect(result.alertTypes).toEqual([AlertType.WEATHER]);
     expect(userRepository.findById).toHaveBeenCalledWith(user.id);
     expect(alertRepository.save).toHaveBeenCalled();
+    expect(notificationScheduler.scheduleNotification).toHaveBeenCalled();
   });
 
   it('should throw error if user not found', async () => {
@@ -54,7 +62,7 @@ describe('CreateAlertUseCase', () => {
     };
     userRepository.findById.mockResolvedValue(undefined);
 
-    await expect(useCase.execute(dto)).rejects.toThrow('User not found');
+    await expect(useCase.execute(dto)).rejects.toThrow('사용자를 찾을 수 없습니다.');
   });
 
   it('should create an alert with bus stop id', async () => {
@@ -68,10 +76,10 @@ describe('CreateAlertUseCase', () => {
     };
     userRepository.findById.mockResolvedValue(user);
     alertRepository.save.mockResolvedValue();
+    notificationScheduler.scheduleNotification.mockResolvedValue();
 
     const result = await useCase.execute(dto);
 
     expect(result.busStopId).toBe('bus-stop-123');
   });
 });
-

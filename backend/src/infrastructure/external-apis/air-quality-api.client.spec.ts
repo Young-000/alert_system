@@ -1,24 +1,28 @@
 import { AirQualityApiClient } from './air-quality-api.client';
-import axios from 'axios';
 import { AirQuality } from '@domain/entities/air-quality.entity';
 
-const mockGet = jest.fn();
-const mockCreate = jest.fn(() => ({
-  get: mockGet,
-}));
-
-jest.mock('axios', () => ({
-  create: mockCreate,
-  default: {
+jest.mock('axios', () => {
+  const mockGet = jest.fn();
+  const mockCreate = jest.fn(() => ({
+    get: mockGet,
+  }));
+  return {
     create: mockCreate,
-  },
-}));
+    default: {
+      create: mockCreate,
+    },
+    __mockGet: mockGet,
+  };
+});
 
 describe('AirQualityApiClient', () => {
   let client: AirQualityApiClient;
+  let mockGet: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    const axiosMock = jest.requireMock('axios') as any;
+    mockGet = axiosMock.__mockGet;
     client = new AirQualityApiClient('test-api-key');
   });
 
@@ -53,4 +57,3 @@ describe('AirQualityApiClient', () => {
     await expect(client.getAirQuality(37.5665, 126.9780)).rejects.toThrow('API Error');
   });
 });
-

@@ -12,6 +12,10 @@ import { Weather } from '@domain/entities/weather.entity';
 import { AirQuality } from '@domain/entities/air-quality.entity';
 import { BusArrival } from '@domain/entities/bus-arrival.entity';
 import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
+import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
+import { ISubwayStationRepository } from '@domain/repositories/subway-station.repository';
+import { PushSubscription } from '@domain/entities/push-subscription.entity';
+import { SubwayStation } from '@domain/entities/subway-station.entity';
 
 describe('SendNotificationUseCase', () => {
   let useCase: SendNotificationUseCase;
@@ -22,6 +26,8 @@ describe('SendNotificationUseCase', () => {
   let busApiClient: jest.Mocked<IBusApiClient>;
   let subwayApiClient: jest.Mocked<ISubwayApiClient>;
   let pushNotificationService: jest.Mocked<IPushNotificationService>;
+  let pushSubscriptionRepository: jest.Mocked<IPushSubscriptionRepository>;
+  let subwayStationRepository: jest.Mocked<ISubwayStationRepository>;
 
   beforeEach(() => {
     alertRepository = {
@@ -50,6 +56,16 @@ describe('SendNotificationUseCase', () => {
     pushNotificationService = {
       sendNotification: jest.fn(),
     };
+    pushSubscriptionRepository = {
+      save: jest.fn(),
+      findByUserId: jest.fn(),
+      deleteByEndpoint: jest.fn(),
+    };
+    subwayStationRepository = {
+      findById: jest.fn(),
+      searchByName: jest.fn(),
+      saveMany: jest.fn(),
+    };
 
     useCase = new SendNotificationUseCase(
       alertRepository,
@@ -58,7 +74,9 @@ describe('SendNotificationUseCase', () => {
       airQualityApiClient,
       busApiClient,
       subwayApiClient,
-      pushNotificationService
+      pushNotificationService,
+      pushSubscriptionRepository,
+      subwayStationRepository
     );
   });
 
@@ -70,14 +88,15 @@ describe('SendNotificationUseCase', () => {
     });
     const alert = new Alert(user.id, '출근 알림', '0 8 * * *', [AlertType.WEATHER]);
     const weather = new Weather('Seoul', 15, 'Clear', 60, 10);
-    const subscription = {
-      endpoint: 'https://example.com/push',
-      keys: { p256dh: 'key1', auth: 'key2' },
-    };
+    const subscription = new PushSubscription(user.id, 'https://example.com/push', {
+      p256dh: 'key1',
+      auth: 'key2',
+    });
 
     alertRepository.findById.mockResolvedValue(alert);
     userRepository.findById.mockResolvedValue(user);
     weatherApiClient.getWeather.mockResolvedValue(weather);
+    pushSubscriptionRepository.findByUserId.mockResolvedValue([subscription]);
     pushNotificationService.sendNotification.mockResolvedValue();
 
     await useCase.execute(alert.id);
@@ -89,7 +108,6 @@ describe('SendNotificationUseCase', () => {
   it('should throw error if alert not found', async () => {
     alertRepository.findById.mockResolvedValue(undefined);
 
-    await expect(useCase.execute('non-existent-id')).rejects.toThrow('Alert not found');
+    await expect(useCase.execute('non-existent-id')).rejects.toThrow('알림을 찾을 수 없습니다.');
   });
 });
-

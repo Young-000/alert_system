@@ -45,24 +45,35 @@ alert_system/
    # .env 파일에 SUPABASE_URL 설정
    ```
 
-3. **Redis 실행** (알림 큐용)
+3. **DB 스키마 적용 + 지하철역 데이터 시드**
+   ```bash
+   cd backend
+   npm run db:apply
+   npm run seed:subway
+   ```
+
+4. **Redis 실행** (알림 큐용)
    ```bash
    docker-compose up -d redis
    ```
 
-4. **Backend 시작**
+5. **Backend 시작**
    ```bash
    cd backend
    npm install
    npm run start:dev
    ```
 
-5. **Frontend 시작**
+6. **Frontend 시작**
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
+
+> 프론트엔드 환경 변수 예시:
+> - `VITE_API_BASE_URL` (기본값: http://localhost:3000)
+> - `VITE_VAPID_PUBLIC_KEY` (푸시 구독용)
 
 #### 방법 2: 로컬 PostgreSQL 사용 (선택사항)
 1. **Docker 서비스 시작**

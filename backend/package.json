@@ -14,7 +14,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:supabase": "ts-node -r dotenv/config test-supabase-connection.ts"
+    "test:supabase": "ts-node -r dotenv/config test-supabase-connection.ts",
+    "seed:subway": "ts-node -r dotenv/config -r tsconfig-paths/register scripts/seed-subway-stations.ts",
+    "db:apply": "ts-node -r dotenv/config -r tsconfig-paths/register scripts/apply-schema.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
@@ -55,4 +57,3 @@
     "typescript": "^5.3.3"
   }
 }
-

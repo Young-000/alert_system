@@ -1,18 +1,16 @@
 import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
-import { UserEntity } from './src/infrastructure/persistence/typeorm/user.entity';
-import { AlertEntity } from './src/infrastructure/persistence/typeorm/alert.entity';
-import { PushSubscriptionEntity } from './src/infrastructure/persistence/typeorm/push-subscription.entity';
+import { buildDataSourceOptions } from './src/infrastructure/persistence/database.config';
 
 // .env 파일 로드
 dotenv.config();
 
 async function testConnection() {
-  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL;
   
   if (!supabaseUrl) {
-    console.error('❌ SUPABASE_URL 환경 변수가 설정되지 않았습니다.');
-    console.log('💡 .env 파일에 SUPABASE_URL을 설정하세요.');
+    console.error('❌ DATABASE_URL 또는 SUPABASE_URL 환경 변수가 설정되지 않았습니다.');
+    console.log('💡 .env 파일에 DATABASE_URL 또는 SUPABASE_URL을 설정하세요.');
     console.log('   예: SUPABASE_URL=postgresql://postgres:[PASSWORD]@db.ayibvijmjygujjieueny.supabase.co:5432/postgres');
     process.exit(1);
   }
@@ -28,11 +26,8 @@ async function testConnection() {
   console.log(`📍 Host: db.ayibvijmjygujjieueny.supabase.co`);
 
   const dataSource = new DataSource({
-    type: 'postgres',
-    url: supabaseUrl,
-    ssl: { rejectUnauthorized: false },
-    entities: [UserEntity, AlertEntity, PushSubscriptionEntity],
-    synchronize: false, // 테스트용이므로 false
+    ...buildDataSourceOptions(),
+    synchronize: false,
   });
 
   try {

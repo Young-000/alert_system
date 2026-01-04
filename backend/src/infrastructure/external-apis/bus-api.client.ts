@@ -5,6 +5,20 @@ export interface IBusApiClient {
   getBusArrival(stopId: string): Promise<BusArrival[]>;
 }
 
+interface BusArrivalApiItem {
+  stId: string;
+  busRouteId: string;
+  busRouteNm: string;
+  arrmsg1: string;
+  staOrd?: number;
+}
+
+interface BusApiResponse {
+  msgBody: {
+    itemList?: BusArrivalApiItem[];
+  };
+}
+
 export class BusApiClient implements IBusApiClient {
   private client: AxiosInstance;
 
@@ -20,25 +34,30 @@ export class BusApiClient implements IBusApiClient {
 
   async getBusArrival(stopId: string): Promise<BusArrival[]> {
     try {
-      const response = await this.client.get('/getArrInfoByRoute', {
-        params: {
-          stId: stopId,
+      const response = await this.client.get<BusApiResponse>(
+        '/getArrInfoByRoute',
+        {
+          params: {
+            stId: stopId,
+          },
         },
-      });
+      );
 
       const items = response.data.msgBody.itemList || [];
-      return items.map((item: any) => {
+      return items.map((item: BusArrivalApiItem) => {
         const arrivalTime = this.parseArrivalTime(item.arrmsg1);
         return new BusArrival(
           item.stId,
           item.busRouteId,
           item.busRouteNm,
           arrivalTime,
-          item.staOrd || 0
+          item.staOrd || 0,
         );
       });
     } catch (error) {
-      throw new Error(`Failed to fetch bus arrival: ${error}`);
+      const message =
+        error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`버스 도착 정보를 가져오는데 실패했습니다: ${message}`);
     }
   }
 
@@ -47,4 +66,3 @@ export class BusApiClient implements IBusApiClient {
     return match ? parseInt(match[1], 10) : 0;
   }
 }
-
