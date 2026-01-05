@@ -4,6 +4,7 @@ import { UserModule } from './modules/user.module';
 import { AlertModule } from './modules/alert.module';
 import { NotificationModule } from './modules/notification.module';
 import { AirQualityModule } from './modules/air-quality.module';
+import { AlimtalkModule } from './modules/alimtalk.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AirQualityModule } from './modules/air-quality.module';
     AlertModule,
     NotificationModule,
     AirQualityModule,
+    AlimtalkModule,
   ],
 })
 export class AppModule {}

@@ -4,6 +4,7 @@ export interface IUserRepository {
   save(user: User): Promise<void>;
   findById(id: string): Promise<User | undefined>;
   findByEmail(email: string): Promise<User | undefined>;
+  findByPhoneNumber(phoneNumber: string): Promise<User | undefined>;
 }
 
 export class UserRepository implements IUserRepository {
@@ -20,6 +21,15 @@ export class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | undefined> {
     for (const user of this.users.values()) {
       if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
+  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if (user.phoneNumber === phoneNumber) {
         return user;
       }
     }

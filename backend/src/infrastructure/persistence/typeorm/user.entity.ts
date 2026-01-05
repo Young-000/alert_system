@@ -18,6 +18,9 @@ export class UserEntity {
     lng: number;
   };
 
+  @Column({ nullable: true })
+  phoneNumber?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

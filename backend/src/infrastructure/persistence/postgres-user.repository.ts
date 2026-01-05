@@ -25,18 +25,29 @@ export class PostgresUserRepository implements IUserRepository {
     return entity ? this.toDomain(entity) : undefined;
   }
 
+  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    const entity = await this.repository.findOne({ where: { phoneNumber } });
+    return entity ? this.toDomain(entity) : undefined;
+  }
+
   private toEntity(user: User): UserEntity {
     const entity = new UserEntity();
     entity.id = user.id;
     entity.email = user.email;
     entity.name = user.name;
     entity.location = user.location;
+    entity.phoneNumber = user.phoneNumber;
     return entity;
   }
 
   private toDomain(entity: UserEntity): User {
-    const user = new User(entity.email, entity.name, entity.location as UserLocation | undefined);
-    (user as any).id = entity.id;
+    const user = new User(
+      entity.email,
+      entity.name,
+      entity.location as UserLocation | undefined,
+      entity.id,
+      entity.phoneNumber
+    );
     return user;
   }
 }

@@ -12,6 +12,7 @@ describe('CreateUserUseCase', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByPhoneNumber: jest.fn(),
     };
     useCase = new CreateUserUseCase(userRepository);
   });

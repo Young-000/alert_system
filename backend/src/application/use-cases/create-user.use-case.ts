@@ -12,7 +12,7 @@ export class CreateUserUseCase {
       throw new Error('User already exists');
     }
 
-    const user = new User(dto.email, dto.name, dto.location);
+    const user = new User(dto.email, dto.name, dto.location, undefined, dto.phoneNumber);
     await this.userRepository.save(user);
     return user;
   }

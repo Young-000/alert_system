@@ -6,5 +6,6 @@ export class CreateUserDto {
     lat: number;
     lng: number;
   };
+  phoneNumber?: string;
 }
 
