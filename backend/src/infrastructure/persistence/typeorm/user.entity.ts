@@ -11,6 +11,9 @@ export class UserEntity {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  password?: string;
+
   @Column({ type: 'jsonb', nullable: true })
   location?: {
     address: string;
