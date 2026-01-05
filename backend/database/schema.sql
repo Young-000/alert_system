@@ -3,10 +3,23 @@
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
   location JSONB,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Add password_hash to existing users table if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'password_hash') THEN
+    ALTER TABLE users ADD COLUMN password_hash VARCHAR(255);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'updated_at') THEN
+    ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS subway_stations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

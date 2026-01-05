@@ -4,6 +4,7 @@ export interface IAlertRepository {
   save(alert: Alert): Promise<void>;
   findById(id: string): Promise<Alert | undefined>;
   findByUserId(userId: string): Promise<Alert[]>;
+  findAll(): Promise<Alert[]>;
   delete(id: string): Promise<void>;
 }
 
@@ -26,6 +27,10 @@ export class AlertRepository implements IAlertRepository {
       }
     }
     return userAlerts;
+  }
+
+  async findAll(): Promise<Alert[]> {
+    return Array.from(this.alerts.values());
   }
 
   async delete(id: string): Promise<void> {

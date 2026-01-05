@@ -1,7 +1,8 @@
-import { Inject } from '@nestjs/common';
+import { Inject, ConflictException } from '@nestjs/common';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
+import * as bcrypt from 'bcrypt';
 
 export class CreateUserUseCase {
   constructor(
@@ -11,11 +12,11 @@ export class CreateUserUseCase {
   async execute(dto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
-      // 기존 사용자가 있으면 해당 사용자로 로그인 (getOrCreate 패턴)
-      return existingUser;
+      throw new ConflictException('이미 등록된 이메일입니다.');
     }
 
-    const user = new User(dto.email, dto.name, dto.location);
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const user = new User(dto.email, dto.name, passwordHash, dto.location);
     await this.userRepository.save(user);
     return user;
   }

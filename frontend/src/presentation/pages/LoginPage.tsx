@@ -1,9 +1,13 @@
 import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { userApiClient } from '@infrastructure/api';
+import { authApiClient } from '@infrastructure/api';
+
+type AuthMode = 'login' | 'register';
 
 export function LoginPage() {
+  const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,24 +20,41 @@ export function LoginPage() {
       setIsLoading(true);
 
       try {
-        const user = await userApiClient.createUser({ email, name });
-        localStorage.setItem('userId', user.id);
+        if (mode === 'register') {
+          const response = await authApiClient.register({ email, password, name });
+          localStorage.setItem('userId', response.user.id);
+          localStorage.setItem('accessToken', response.accessToken);
+        } else {
+          const response = await authApiClient.login({ email, password });
+          localStorage.setItem('userId', response.user.id);
+          localStorage.setItem('accessToken', response.accessToken);
+        }
         navigate('/alerts');
-      } catch {
-        setError('계정 생성에 실패했습니다. 다시 시도해주세요.');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '오류가 발생했습니다.';
+        if (mode === 'register') {
+          setError(errorMessage.includes('409') ? '이미 등록된 이메일입니다.' : '회원가입에 실패했습니다.');
+        } else {
+          setError('이메일 또는 비밀번호가 일치하지 않습니다.');
+        }
       } finally {
         setIsLoading(false);
       }
     },
-    [email, name, navigate],
+    [email, password, name, mode, navigate],
   );
+
+  const toggleMode = () => {
+    setMode(mode === 'login' ? 'register' : 'login');
+    setError('');
+  };
 
   return (
     <main className="page">
       <nav className="nav">
         <div className="brand">
           <strong>Alert System</strong>
-          <span>Get started</span>
+          <span>{mode === 'login' ? '로그인' : '회원가입'}</span>
         </div>
         <div className="nav-actions">
           <Link className="btn btn-ghost" to="/">
@@ -45,19 +66,22 @@ export function LoginPage() {
       <section className="card auth-card">
         <div className="stack">
           <div>
-            <p className="eyebrow">계정 만들기</p>
-            <h1>시작하기</h1>
+            <p className="eyebrow">{mode === 'login' ? '다시 오셨군요!' : '처음이신가요?'}</p>
+            <h1>{mode === 'login' ? '로그인' : '회원가입'}</h1>
             <p className="muted">
-              이메일과 이름만 입력하면 알림 설정으로 이동합니다.
+              {mode === 'login'
+                ? '이메일과 비밀번호로 로그인하세요.'
+                : '계정을 만들어 알림 서비스를 시작하세요.'}
             </p>
           </div>
           <form onSubmit={handleSubmit} className="stack">
             <div className="field">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">이메일</label>
               <input
                 id="email"
                 className="input"
                 type="email"
+                placeholder="email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -65,16 +89,34 @@ export function LoginPage() {
                 disabled={isLoading}
               />
             </div>
+            {mode === 'register' && (
+              <div className="field">
+                <label htmlFor="name">이름</label>
+                <input
+                  id="name"
+                  className="input"
+                  type="text"
+                  placeholder="홍길동"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  aria-required="true"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
             <div className="field">
-              <label htmlFor="name">Name</label>
+              <label htmlFor="password">비밀번호</label>
               <input
-                id="name"
+                id="password"
                 className="input"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                type="password"
+                placeholder={mode === 'register' ? '6자 이상' : '••••••'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 aria-required="true"
+                minLength={6}
                 disabled={isLoading}
               />
             </div>
@@ -88,9 +130,17 @@ export function LoginPage() {
               className="btn btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? '처리 중...' : '계정 만들기'}
+              {isLoading ? '처리 중...' : (mode === 'login' ? '로그인' : '회원가입')}
             </button>
           </form>
+          <div className="auth-toggle">
+            <span className="muted">
+              {mode === 'login' ? '계정이 없으신가요?' : '이미 계정이 있으신가요?'}
+            </span>
+            <button type="button" className="btn btn-link" onClick={toggleMode}>
+              {mode === 'login' ? '회원가입' : '로그인'}
+            </button>
+          </div>
         </div>
       </section>
     </main>

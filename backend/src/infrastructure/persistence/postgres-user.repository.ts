@@ -29,6 +29,7 @@ export class PostgresUserRepository implements IUserRepository {
     const entity = new UserEntity();
     entity.id = user.id;
     entity.email = user.email;
+    entity.passwordHash = user.passwordHash;
     entity.name = user.name;
     entity.location = user.location;
     return entity;
@@ -38,8 +39,11 @@ export class PostgresUserRepository implements IUserRepository {
     return new User(
       entity.email,
       entity.name,
+      entity.passwordHash,
       entity.location as UserLocation | undefined,
       entity.id,
+      entity.createdAt,
+      entity.updatedAt,
     );
   }
 }

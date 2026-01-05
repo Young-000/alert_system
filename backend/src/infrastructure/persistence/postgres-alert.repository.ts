@@ -25,6 +25,11 @@ export class PostgresAlertRepository implements IAlertRepository {
     return entities.map((entity) => this.toDomain(entity));
   }
 
+  async findAll(): Promise<Alert[]> {
+    const entities = await this.repository.find();
+    return entities.map((entity) => this.toDomain(entity));
+  }
+
   async delete(id: string): Promise<void> {
     await this.repository.delete(id);
   }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '@infrastructure/persistence/database.module';
+import { AuthModule } from './modules/auth.module';
 import { UserModule } from './modules/user.module';
 import { AlertModule } from './modules/alert.module';
 import { NotificationModule } from './modules/notification.module';
@@ -12,6 +13,7 @@ import { QueueModule } from '@infrastructure/queue/queue.module';
   imports: [
     DatabaseModule,
     QueueModule,
+    AuthModule,
     UserModule,
     AlertModule,
     NotificationModule,

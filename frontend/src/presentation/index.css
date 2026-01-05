@@ -503,6 +503,31 @@ h3 {
   margin: 0 auto;
 }
 
+.auth-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+
+.btn-link:hover {
+  background: var(--primary-light);
+}
+
 /* ========== ANIMATIONS ========== */
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
