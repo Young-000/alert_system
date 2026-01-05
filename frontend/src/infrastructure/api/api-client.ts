@@ -10,6 +10,7 @@ export class ApiClient {
       baseURL,
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
     });
   }

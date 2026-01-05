@@ -39,6 +39,10 @@ export class PostgresSubwayStationRepository implements ISubwayStationRepository
     await this.repository.upsert(entities, ['name', 'line']);
   }
 
+  async clear(): Promise<void> {
+    await this.repository.clear();
+  }
+
   private toDomain(entity: SubwayStationEntity): SubwayStation {
     return new SubwayStation(entity.name, entity.line, entity.code, entity.id);
   }

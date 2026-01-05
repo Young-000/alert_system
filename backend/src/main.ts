@@ -5,9 +5,25 @@ import { AppModule } from './presentation/app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS 설정 - 프로덕션에서는 특정 도메인만 허용
+  // CORS 설정 - 개발 및 프로덕션 도메인 허용
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'https://frontend-xi-two-52.vercel.app',
+        process.env.CORS_ORIGIN,
+      ].filter(Boolean);
+
+      // Vercel preview URLs 허용
+      if (!origin ||
+          allowedOrigins.includes(origin) ||
+          origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   });
 

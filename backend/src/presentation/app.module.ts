@@ -5,6 +5,7 @@ import { AlertModule } from './modules/alert.module';
 import { NotificationModule } from './modules/notification.module';
 import { AirQualityModule } from './modules/air-quality.module';
 import { SubwayModule } from './modules/subway.module';
+import { BusModule } from './modules/bus.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { QueueModule } from '@infrastructure/queue/queue.module';
     NotificationModule,
     AirQualityModule,
     SubwayModule,
+    BusModule,
   ],
 })
 export class AppModule {}

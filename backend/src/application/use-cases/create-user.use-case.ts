@@ -1,5 +1,4 @@
 import { Inject } from '@nestjs/common';
-import { ConflictException } from '@nestjs/common';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -12,7 +11,8 @@ export class CreateUserUseCase {
   async execute(dto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
-      throw new ConflictException('이미 존재하는 이메일입니다.');
+      // 기존 사용자가 있으면 해당 사용자로 로그인 (getOrCreate 패턴)
+      return existingUser;
     }
 
     const user = new User(dto.email, dto.name, dto.location);

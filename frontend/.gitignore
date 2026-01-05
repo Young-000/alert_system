@@ -32,3 +32,6 @@ dist-ssr
 # Coverage
 coverage
 
+.vercel
+test-results/
+playwright-report/

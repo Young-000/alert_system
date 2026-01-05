@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AlertSettingsPage } from './AlertSettingsPage';
-import { alertApiClient, userApiClient } from '@infrastructure/api';
+import { alertApiClient } from '@infrastructure/api';
 import type { AlertType } from '@infrastructure/api';
 
 jest.mock('../hooks/usePushNotification', () => ({
@@ -10,14 +10,13 @@ jest.mock('../hooks/usePushNotification', () => ({
     subscription: null,
     isSwReady: true,
     swError: null,
-    requestPermission: jest.fn(),
-    subscribe: jest.fn(),
+    requestPermission: jest.fn().mockResolvedValue('granted'),
+    subscribe: jest.fn().mockResolvedValue({ endpoint: 'test', keys: {} }),
     unsubscribe: jest.fn(),
   }),
 }));
 
 const mockAlertApiClient = alertApiClient as jest.Mocked<typeof alertApiClient>;
-const mockUserApiClient = userApiClient as jest.Mocked<typeof userApiClient>;
 
 describe('AlertSettingsPage', () => {
   beforeEach(() => {
@@ -29,24 +28,21 @@ describe('AlertSettingsPage', () => {
     localStorage.clear();
   });
 
-  it('should render alert form', () => {
+  it('should render wizard first step with type selection', async () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
-    mockUserApiClient.getUser.mockResolvedValue({
-      id: 'user-1',
-      email: 'user@example.com',
-      name: 'John Doe',
-    });
+
     render(
       <MemoryRouter>
         <AlertSettingsPage />
       </MemoryRouter>
     );
-    return waitFor(() => {
-      expect(mockAlertApiClient.getAlertsByUser).toHaveBeenCalled();
-      expect(mockUserApiClient.getUser).toHaveBeenCalled();
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/schedule/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
     });
+
+    expect(screen.getByText('날씨')).toBeInTheDocument();
+    expect(screen.getByText('교통')).toBeInTheDocument();
   });
 
   it('should load existing alerts', async () => {
@@ -61,37 +57,20 @@ describe('AlertSettingsPage', () => {
       },
     ];
     mockAlertApiClient.getAlertsByUser.mockResolvedValue(mockAlerts);
-    mockUserApiClient.getUser.mockResolvedValue({
-      id: 'user-1',
-      email: 'user@example.com',
-      name: 'John Doe',
-    });
 
     render(
       <MemoryRouter>
         <AlertSettingsPage />
       </MemoryRouter>
     );
+
     await waitFor(() => {
       expect(screen.getByText('출근 알림')).toBeInTheDocument();
     });
   });
 
-  it('should create new alert', async () => {
+  it('should navigate through wizard steps when weather is selected', async () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
-    mockUserApiClient.getUser.mockResolvedValue({
-      id: 'user-1',
-      email: 'user@example.com',
-      name: 'John Doe',
-    });
-    mockAlertApiClient.createAlert.mockResolvedValue({
-      id: 'alert-1',
-      userId: 'user-1',
-      name: '출근 알림',
-      schedule: '0 8 * * *',
-      alertTypes: ['weather'] as AlertType[],
-      enabled: true,
-    });
 
     render(
       <MemoryRouter>
@@ -99,23 +78,68 @@ describe('AlertSettingsPage', () => {
       </MemoryRouter>
     );
 
-    // Wait for initial load
     await waitFor(() => {
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+      expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText(/name/i), {
-      target: { value: '출근 알림' },
+    // Select weather
+    const weatherButton = screen.getByText('날씨').closest('button');
+    fireEvent.click(weatherButton!);
+
+    // Click next
+    const nextButton = screen.getByText('다음 →');
+    fireEvent.click(nextButton);
+
+    // Should go to routine step (skipping transport steps)
+    await waitFor(() => {
+      expect(screen.getByText('하루 루틴을 알려주세요')).toBeInTheDocument();
     });
+  });
 
-    // Select at least one alert type (weather)
-    const weatherCheckbox = screen.getByRole('checkbox', { name: /weather/i });
-    fireEvent.click(weatherCheckbox);
+  it('should show login warning when userId is not set', async () => {
+    localStorage.clear();
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
-    fireEvent.click(screen.getByRole('button', { name: /알림 시작하기/i }));
+    render(
+      <MemoryRouter>
+        <AlertSettingsPage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
-      expect(mockAlertApiClient.createAlert).toHaveBeenCalled();
+      expect(screen.getByText('먼저 계정을 만들어주세요.')).toBeInTheDocument();
+    });
+  });
+
+  it('should delete an alert', async () => {
+    const mockAlerts = [
+      {
+        id: 'alert-1',
+        userId: 'user-1',
+        name: '테스트 알림',
+        schedule: '0 8 * * *',
+        alertTypes: ['weather'] as AlertType[],
+        enabled: true,
+      },
+    ];
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue(mockAlerts);
+    mockAlertApiClient.deleteAlert.mockResolvedValue(undefined);
+
+    render(
+      <MemoryRouter>
+        <AlertSettingsPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('테스트 알림')).toBeInTheDocument();
+    });
+
+    const deleteButton = screen.getByText('삭제');
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockAlertApiClient.deleteAlert).toHaveBeenCalledWith('alert-1');
     });
   });
 });

@@ -32,15 +32,19 @@ describe('CreateUserUseCase', () => {
     expect(userRepository.save).toHaveBeenCalled();
   });
 
-  it('should throw error if user already exists', async () => {
+  it('should return existing user if email already exists (getOrCreate)', async () => {
     const dto: CreateUserDto = {
       email: 'user@example.com',
       name: 'John Doe',
     };
-    const existingUser = new User('user@example.com', 'John Doe');
+    const existingUser = new User('user@example.com', 'Existing User');
     userRepository.findByEmail.mockResolvedValue(existingUser);
 
-    await expect(useCase.execute(dto)).rejects.toThrow('이미 존재하는 이메일입니다.');
+    const result = await useCase.execute(dto);
+
+    expect(result).toBe(existingUser);
+    expect(result.name).toBe('Existing User');
+    expect(userRepository.save).not.toHaveBeenCalled();
   });
 
   it('should create a user with location', async () => {

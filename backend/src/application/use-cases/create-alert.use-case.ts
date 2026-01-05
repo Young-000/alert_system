@@ -1,10 +1,11 @@
-import { Inject, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { Alert } from '@domain/entities/alert.entity';
 import { CreateAlertDto } from '../dto/create-alert.dto';
 import { INotificationScheduler } from '@application/ports/notification-scheduler';
 
+@Injectable()
 export class CreateAlertUseCase {
   constructor(
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,

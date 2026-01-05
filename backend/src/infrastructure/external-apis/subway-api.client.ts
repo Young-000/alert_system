@@ -19,10 +19,12 @@ interface SubwayApiResponse {
 
 export class SubwayApiClient implements ISubwayApiClient {
   private client: AxiosInstance;
+  private apiKey: string;
 
-  constructor(private apiKey: string) {
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.SUBWAY_REALTIME_API_KEY || '';
     this.client = axios.create({
-      baseURL: 'https://swopenAPI.seoul.go.kr/api/subway',
+      baseURL: 'http://swopenAPI.seoul.go.kr/api/subway',
     });
   }
 
