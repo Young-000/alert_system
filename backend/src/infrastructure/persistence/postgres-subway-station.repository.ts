@@ -1,12 +1,15 @@
+import { Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { SubwayStationEntity } from './typeorm/subway-station.entity';
 import { SubwayStation } from '@domain/entities/subway-station.entity';
 import { ISubwayStationRepository } from '@domain/repositories/subway-station.repository';
 
+@Injectable()
 export class PostgresSubwayStationRepository implements ISubwayStationRepository {
   private repository: Repository<SubwayStationEntity>;
 
-  constructor(private dataSource: DataSource) {
+  constructor(@InjectDataSource() private dataSource: DataSource) {
     this.repository = dataSource.getRepository(SubwayStationEntity);
   }
 

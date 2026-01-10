@@ -1,16 +1,15 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationSchedulerService } from './notification-scheduler.service';
-import { DatabaseModule } from '@infrastructure/persistence/database.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
-import { DataSource } from 'typeorm';
 import { InMemoryNotificationSchedulerService } from './in-memory-notification-scheduler.service';
+
+const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
   imports: [
-    ...(process.env.QUEUE_ENABLED === 'true'
+    ...(isQueueEnabled
       ? [
-          DatabaseModule,
           BullModule.forRoot({
             connection: {
               host: process.env.REDIS_HOST || 'localhost',
@@ -24,14 +23,11 @@ import { InMemoryNotificationSchedulerService } from './in-memory-notification-s
       : []),
   ],
   providers: [
-    ...(process.env.QUEUE_ENABLED === 'true'
+    ...(isQueueEnabled
       ? [
           {
             provide: 'IAlertRepository',
-            useFactory: (dataSource: DataSource) => {
-              return new PostgresAlertRepository(dataSource);
-            },
-            inject: [DataSource],
+            useClass: PostgresAlertRepository,
           },
           NotificationSchedulerService,
           {
@@ -40,15 +36,16 @@ import { InMemoryNotificationSchedulerService } from './in-memory-notification-s
           },
         ]
       : [
+          InMemoryNotificationSchedulerService,
           {
             provide: 'INotificationScheduler',
-            useClass: InMemoryNotificationSchedulerService,
+            useExisting: InMemoryNotificationSchedulerService,
           },
         ]),
   ],
   exports: [
     'INotificationScheduler',
-    ...(process.env.QUEUE_ENABLED === 'true' ? [BullModule] : []),
+    ...(isQueueEnabled ? [BullModule] : [InMemoryNotificationSchedulerService]),
   ],
 })
 export class QueueModule {}

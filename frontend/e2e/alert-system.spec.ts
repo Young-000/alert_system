@@ -16,17 +16,24 @@ test.describe('Alert System E2E Tests', () => {
   test('Should navigate to login page', async ({ page }) => {
     await page.click('text=시작하기');
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.locator('text=시작하기').last()).toBeVisible();
+    // Login page initially shows login form (email + password)
     await expect(page.locator('input#email')).toBeVisible();
+    await expect(page.locator('input#password')).toBeVisible();
+    // Name field is only visible after switching to registration mode
+    await page.getByRole('button', { name: '회원가입' }).click();
     await expect(page.locator('input#name')).toBeVisible();
   });
 
   test('Should create account and navigate to alerts page', async ({ page }) => {
     await page.goto(`${BASE_URL}/login`);
 
+    // Switch to registration mode first
+    await page.getByRole('button', { name: '회원가입' }).click();
+
     const timestamp = Date.now();
     await page.fill('input#email', `test${timestamp}@example.com`);
     await page.fill('input#name', `Test User ${timestamp}`);
+    await page.fill('input#password', 'testPassword123');
 
     await page.click('button[type="submit"]');
 

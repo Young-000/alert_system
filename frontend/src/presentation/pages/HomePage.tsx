@@ -1,24 +1,43 @@
 import { Link } from 'react-router-dom';
 
 export function HomePage() {
+  const isLoggedIn = !!localStorage.getItem('userId');
+
   return (
     <main className="page">
+      <a href="#main-content" className="skip-link">
+        본문으로 건너뛰기
+      </a>
       <nav className="nav">
         <div className="brand">
           <strong>Alert System</strong>
-          <span>Daily commute signal</span>
+          <span>출퇴근 알림 시스템</span>
         </div>
         <div className="nav-actions">
           <Link className="btn btn-ghost" to="/alerts">
             알림 설정
           </Link>
-          <Link className="btn btn-primary" to="/login">
-            시작하기
-          </Link>
+          {isLoggedIn ? (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                localStorage.removeItem('userId');
+                localStorage.removeItem('accessToken');
+                window.location.reload();
+              }}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <Link className="btn btn-primary" to="/login">
+              시작하기
+            </Link>
+          )}
         </div>
       </nav>
 
-      <section className="hero">
+      <section id="main-content" className="hero">
         <div className="hero-content">
           <p className="eyebrow">도시 리듬을 읽는 알림</p>
           <h1>출근과 퇴근 사이, 필요한 정보만 골라서</h1>
@@ -27,12 +46,20 @@ export function HomePage() {
             받아보세요.
           </p>
           <div className="hero-actions">
-            <Link className="btn btn-primary" to="/login">
-              알림 시작하기
-            </Link>
-            <Link className="btn btn-outline" to="/alerts">
-              데모 보기
-            </Link>
+            {isLoggedIn ? (
+              <Link className="btn btn-primary" to="/alerts">
+                내 알림 관리
+              </Link>
+            ) : (
+              <>
+                <Link className="btn btn-primary" to="/login">
+                  알림 시작하기
+                </Link>
+                <Link className="btn btn-outline" to="/alerts">
+                  데모 보기
+                </Link>
+              </>
+            )}
           </div>
           <div className="hero-meta">
             <span className="chip">기본 스케줄 08:00 / 18:00</span>
@@ -68,16 +95,19 @@ export function HomePage() {
 
       <section className="grid-3">
         <div className="card feature-card">
+          <span className="feature-icon" aria-hidden="true">📍</span>
           <h3>위치 기반</h3>
           <p className="muted">
             브라우저 위치 권한으로 자동 설정하고 필요하면 수동 입력도 가능해요.
           </p>
         </div>
         <div className="card feature-card">
+          <span className="feature-icon" aria-hidden="true">🚇</span>
           <h3>지하철 역 검색</h3>
           <p className="muted">검색 즉시 역 목록을 보여주고 노선까지 함께 확인해요.</p>
         </div>
         <div className="card feature-card">
+          <span className="feature-icon" aria-hidden="true">🔔</span>
           <h3>하루 두 번 알림</h3>
           <p className="muted">
             기본 스케줄 08:00 / 18:00. 필요하면 원하는 시간으로 조정할 수 있어요.
@@ -87,7 +117,7 @@ export function HomePage() {
 
       <section className="card">
         <div className="section-head">
-          <div className="step-badge">MVP</div>
+          <div className="step-badge">✨</div>
           <div>
             <h2>사용 흐름</h2>
             <p className="muted">설정은 3분이면 끝나요.</p>
@@ -116,6 +146,15 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      <footer className="footer">
+        <p className="footer-text">
+          <span>Alert System</span>
+          <span className="footer-divider">·</span>
+          <span>출퇴근 알림 서비스</span>
+        </p>
+        <p className="footer-copyright">© 2025 All rights reserved</p>
+      </footer>
     </main>
   );
 }

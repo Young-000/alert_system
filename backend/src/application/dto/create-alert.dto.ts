@@ -4,11 +4,15 @@ import {
   IsArray,
   IsOptional,
   IsUUID,
+  IsBoolean,
   ArrayMinSize,
   IsIn,
-  Matches,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
 } from 'class-validator';
 import { AlertType } from '@domain/entities/alert.entity';
+import { CronExpressionParser } from 'cron-parser';
 
 const ALERT_TYPES: AlertType[] = [
   AlertType.WEATHER,
@@ -16,6 +20,23 @@ const ALERT_TYPES: AlertType[] = [
   AlertType.BUS,
   AlertType.SUBWAY,
 ];
+
+@ValidatorConstraint({ name: 'cronExpression', async: false })
+export class CronExpressionValidator implements ValidatorConstraintInterface {
+  validate(expression: string): boolean {
+    if (!expression) return false;
+    try {
+      CronExpressionParser.parse(expression);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  defaultMessage(): string {
+    return '유효한 Cron 표현식을 입력해주세요.';
+  }
+}
 
 export class CreateAlertDto {
   @IsUUID('4', { message: '유효한 사용자 ID가 필요합니다.' })
@@ -28,16 +49,17 @@ export class CreateAlertDto {
 
   @IsString()
   @IsNotEmpty({ message: '스케줄은 필수입니다.' })
-  @Matches(
-    /^(\*|([0-9]|[1-5][0-9])|\*\/([0-9]|[1-5][0-9])) (\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3])) (\*|([1-9]|[12][0-9]|3[01])|\*\/([1-9]|[12][0-9]|3[01])) (\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2])) (\*|[0-6]|\*\/[0-6])$/,
-    { message: '유효한 Cron 표현식을 입력해주세요.' },
-  )
+  @Validate(CronExpressionValidator)
   schedule: string;
 
   @IsArray()
   @ArrayMinSize(1, { message: '최소 하나의 알림 타입이 필요합니다.' })
   @IsIn(ALERT_TYPES, { each: true, message: '유효한 알림 타입이 아닙니다.' })
   alertTypes: AlertType[];
+
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 
   @IsOptional()
   @IsString()

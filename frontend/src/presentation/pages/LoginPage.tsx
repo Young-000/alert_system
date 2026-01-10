@@ -11,6 +11,7 @@ export function LoginPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = useCallback(
@@ -51,6 +52,9 @@ export function LoginPage() {
 
   return (
     <main className="page">
+      <a href="#auth-form" className="skip-link">
+        본문으로 건너뛰기
+      </a>
       <nav className="nav">
         <div className="brand">
           <strong>Alert System</strong>
@@ -63,7 +67,7 @@ export function LoginPage() {
         </div>
       </nav>
 
-      <section className="card auth-card">
+      <section id="auth-form" className="card auth-card">
         <div className="stack">
           <div>
             <p className="eyebrow">{mode === 'login' ? '다시 오셨군요!' : '처음이신가요?'}</p>
@@ -87,6 +91,7 @@ export function LoginPage() {
                 required
                 aria-required="true"
                 disabled={isLoading}
+                autoComplete="email"
               />
             </div>
             {mode === 'register' && (
@@ -102,23 +107,36 @@ export function LoginPage() {
                   required
                   aria-required="true"
                   disabled={isLoading}
+                  autoComplete="name"
                 />
               </div>
             )}
             <div className="field">
               <label htmlFor="password">비밀번호</label>
-              <input
-                id="password"
-                className="input"
-                type="password"
-                placeholder={mode === 'register' ? '6자 이상' : '••••••'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                aria-required="true"
-                minLength={6}
-                disabled={isLoading}
-              />
+              <div className="input-group">
+                <input
+                  id="password"
+                  className="input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={mode === 'register' ? '6자 이상' : '••••••'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  aria-required="true"
+                  minLength={6}
+                  disabled={isLoading}
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                />
+                <button
+                  type="button"
+                  className="input-addon"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
             {error && (
               <div className="notice error" role="alert">
@@ -130,7 +148,14 @@ export function LoginPage() {
               className="btn btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? '처리 중...' : (mode === 'login' ? '로그인' : '회원가입')}
+              {isLoading ? (
+                <>
+                  <span className="spinner spinner-sm" aria-hidden="true" />
+                  처리 중...
+                </>
+              ) : (
+                mode === 'login' ? '로그인' : '회원가입'
+              )}
             </button>
           </form>
           <div className="auth-toggle">
@@ -143,6 +168,15 @@ export function LoginPage() {
           </div>
         </div>
       </section>
+
+      <footer className="footer">
+        <p className="footer-text">
+          <span>Alert System</span>
+          <span className="footer-divider">·</span>
+          <span>출퇴근 알림 서비스</span>
+        </p>
+        <p className="footer-copyright">© 2025 All rights reserved</p>
+      </footer>
     </main>
   );
 }

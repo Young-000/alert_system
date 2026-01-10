@@ -1,12 +1,15 @@
+import { Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 import { PushSubscription } from '@domain/entities/push-subscription.entity';
 import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
 
+@Injectable()
 export class PostgresPushSubscriptionRepository implements IPushSubscriptionRepository {
   private repository: Repository<PushSubscriptionEntity>;
 
-  constructor(private dataSource: DataSource) {
+  constructor(@InjectDataSource() private dataSource: DataSource) {
     this.repository = dataSource.getRepository(PushSubscriptionEntity);
   }
 

@@ -56,6 +56,9 @@ export function AlertSettingsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userId = localStorage.getItem('userId') || '';
   const { permission, subscribe, requestPermission, subscription } = usePushNotification();
@@ -235,6 +238,8 @@ export function AlertSettingsPage() {
       return;
     }
 
+    setIsSubmitting(true);
+
     // Request push permission if not granted
     if (permission !== 'granted') {
       await requestPermission();
@@ -277,6 +282,8 @@ export function AlertSettingsPage() {
       }, 2000);
     } catch {
       setError('알림 생성에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -289,14 +296,62 @@ export function AlertSettingsPage() {
     return `${parts.join(' + ')} 알림`;
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (alert: Alert) => {
+    setDeleteTarget({ id: alert.id, name: alert.name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await alertApiClient.deleteAlert(id);
+      await alertApiClient.deleteAlert(deleteTarget.id);
       loadAlerts();
+      setDeleteTarget(null);
     } catch {
       setError('삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
   };
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteTarget(null);
+  }, []);
+
+  // ESC key to close modal
+  useEffect(() => {
+    if (!deleteTarget) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDeleteCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [deleteTarget, handleDeleteCancel]);
+
+  // Enter key to proceed to next step
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if modal is open or in input/textarea
+      if (deleteTarget) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'Enter' && canProceed()) {
+        e.preventDefault();
+        if (step === 'confirm' && !isSubmitting && !success) {
+          handleSubmit();
+        } else if (step !== 'confirm') {
+          goNext();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [step, deleteTarget, isSubmitting, success]);
 
   // Calculate notification times for display
   const getNotificationTimes = () => {
@@ -348,6 +403,9 @@ export function AlertSettingsPage() {
 
   return (
     <main className="page">
+      <a href="#wizard-content" className="skip-link">
+        본문으로 건너뛰기
+      </a>
       <nav className="nav">
         <div className="brand">
           <strong>Alert System</strong>
@@ -355,7 +413,21 @@ export function AlertSettingsPage() {
         </div>
         <div className="nav-actions">
           <Link className="btn btn-ghost" to="/">홈</Link>
-          {!userId && <Link className="btn btn-outline" to="/login">로그인</Link>}
+          {userId ? (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                localStorage.removeItem('userId');
+                localStorage.removeItem('accessToken');
+                window.location.href = '/';
+              }}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <Link className="btn btn-outline" to="/login">로그인</Link>
+          )}
         </div>
       </nav>
 
@@ -365,7 +437,7 @@ export function AlertSettingsPage() {
         </div>
       )}
 
-      <div className="wizard-container">
+      <div id="wizard-content" className="wizard-container">
         {/* Progress Bar */}
         <div className="progress-bar">
           <div
@@ -381,13 +453,15 @@ export function AlertSettingsPage() {
             <h1>어떤 정보를 받고 싶으세요?</h1>
             <p className="muted">복수 선택 가능해요</p>
 
-            <div className="choice-grid">
+            <div className="choice-grid" role="group" aria-label="알림 유형 선택">
               <button
                 type="button"
                 className={`choice-card ${wantsWeather ? 'active' : ''}`}
                 onClick={() => setWantsWeather(!wantsWeather)}
+                aria-pressed={wantsWeather}
+                aria-label="날씨 알림 선택"
               >
-                <span className="choice-icon">🌤️</span>
+                <span className="choice-icon" aria-hidden="true">🌤️</span>
                 <span className="choice-title">날씨</span>
                 <span className="choice-desc">오늘 뭐 입지? 우산 필요해?</span>
               </button>
@@ -396,8 +470,10 @@ export function AlertSettingsPage() {
                 type="button"
                 className={`choice-card ${wantsTransport ? 'active' : ''}`}
                 onClick={() => setWantsTransport(!wantsTransport)}
+                aria-pressed={wantsTransport}
+                aria-label="교통 알림 선택"
               >
-                <span className="choice-icon">🚇</span>
+                <span className="choice-icon" aria-hidden="true">🚇</span>
                 <span className="choice-title">교통</span>
                 <span className="choice-desc">지하철/버스 실시간 도착</span>
               </button>
@@ -411,7 +487,7 @@ export function AlertSettingsPage() {
             <h1>어떤 교통수단을 이용하세요?</h1>
             <p className="muted">복수 선택 가능해요</p>
 
-            <div className="choice-grid">
+            <div className="choice-grid" role="group" aria-label="교통수단 선택">
               <button
                 type="button"
                 className={`choice-card ${transportTypes.includes('subway') ? 'active' : ''}`}
@@ -422,8 +498,10 @@ export function AlertSettingsPage() {
                       : [...prev, 'subway']
                   );
                 }}
+                aria-pressed={transportTypes.includes('subway')}
+                aria-label="지하철 선택"
               >
-                <span className="choice-icon">🚇</span>
+                <span className="choice-icon" aria-hidden="true">🚇</span>
                 <span className="choice-title">지하철</span>
               </button>
 
@@ -437,8 +515,10 @@ export function AlertSettingsPage() {
                       : [...prev, 'bus']
                   );
                 }}
+                aria-pressed={transportTypes.includes('bus')}
+                aria-label="버스 선택"
               >
-                <span className="choice-icon">🚌</span>
+                <span className="choice-icon" aria-hidden="true">🚌</span>
                 <span className="choice-title">버스</span>
               </button>
             </div>
@@ -452,21 +532,25 @@ export function AlertSettingsPage() {
             <p className="muted">출근길에 이용하는 곳을 선택해주세요</p>
 
             <div className="search-box">
-              <span className="search-icon">🔍</span>
+              <span className="search-icon" aria-hidden="true">🔍</span>
               <input
-                type="text"
+                type="search"
                 className="search-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="예: 강남역, 홍대입구"
                 autoFocus
+                aria-label="역 또는 정류장 검색"
+                autoComplete="off"
               />
             </div>
 
-            {isSearching && <p className="muted">검색 중...</p>}
+            <div aria-live="polite" aria-busy={isSearching}>
+              {isSearching && <p className="muted">검색 중...</p>}
+            </div>
 
-            {searchResults.length > 0 && (
-              <div className="search-results">
+            {searchResults.length > 0 ? (
+              <div className="search-results" role="listbox" aria-label="검색 결과">
                 {searchResults.map((item) => {
                   const isSelected = selectedTransports.some(
                     (t) => t.id === item.id && t.type === item.type
@@ -475,22 +559,34 @@ export function AlertSettingsPage() {
                     <button
                       key={`${item.type}-${item.id}`}
                       type="button"
+                      role="option"
+                      aria-selected={isSelected}
                       className={`search-result-item ${isSelected ? 'selected' : ''}`}
                       onClick={() => toggleTransport(item)}
                     >
-                      <span className="result-icon">
+                      <span className="result-icon" aria-hidden="true">
                         {item.type === 'subway' ? '🚇' : '🚌'}
                       </span>
                       <div className="result-info">
                         <strong>{item.name}</strong>
                         <span className="muted">{item.detail}</span>
                       </div>
-                      {isSelected && <span className="check-icon">✓</span>}
+                      {isSelected && <span className="check-icon" aria-hidden="true">✓</span>}
                     </button>
                   );
                 })}
               </div>
-            )}
+            ) : searchQuery.length >= 2 && !isSearching ? (
+              <div className="empty-state" role="status">
+                <span className="empty-icon" aria-hidden="true">🔍</span>
+                <p className="empty-title">검색 결과가 없습니다</p>
+                <p className="empty-desc">
+                  &quot;{searchQuery}&quot;에 해당하는 {transportTypes.includes('subway') && transportTypes.includes('bus') ? '역/정류장' : transportTypes.includes('subway') ? '역' : '정류장'}을 찾을 수 없어요.
+                  <br />
+                  다른 이름으로 검색해보세요.
+                </p>
+              </div>
+            ) : null}
 
             {selectedTransports.length > 0 && (
               <div className="selected-items">
@@ -607,8 +703,10 @@ export function AlertSettingsPage() {
               )}
             </div>
 
-            {error && <div className="notice error">{error}</div>}
-            {success && <div className="notice success">{success}</div>}
+            <div aria-live="polite" aria-atomic="true">
+              {error && <div className="notice error" role="alert">{error}</div>}
+              {success && <div className="notice success" role="status">{success}</div>}
+            </div>
           </section>
         )}
 
@@ -634,12 +732,28 @@ export function AlertSettingsPage() {
               type="button"
               className="btn btn-primary"
               onClick={handleSubmit}
-              disabled={!!success}
+              disabled={isSubmitting || !!success}
             >
-              {success ? '✓ 완료!' : '알림 시작하기'}
+              {success ? (
+                '✓ 완료!'
+              ) : isSubmitting ? (
+                <>
+                  <span className="spinner spinner-sm" aria-hidden="true" />
+                  저장 중...
+                </>
+              ) : (
+                '알림 시작하기'
+              )}
             </button>
           )}
         </div>
+
+        {/* Keyboard hint */}
+        {canProceed() && !success && (
+          <p className="keyboard-hint" aria-hidden="true">
+            <kbd>Enter</kbd> 키로 다음 단계로 이동
+          </p>
+        )}
       </div>
 
       {/* Existing Alerts */}
@@ -661,8 +775,9 @@ export function AlertSettingsPage() {
                 </div>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-small"
-                  onClick={() => handleDelete(alert.id)}
+                  className="btn btn-danger-outline btn-small"
+                  onClick={() => handleDeleteClick(alert)}
+                  aria-label={`${alert.name} 삭제`}
                 >
                   삭제
                 </button>
@@ -671,6 +786,63 @@ export function AlertSettingsPage() {
           </div>
         </section>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div
+          className="modal-overlay"
+          onClick={handleDeleteCancel}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon danger" aria-hidden="true">⚠️</div>
+              <h2 id="delete-modal-title" className="modal-title">알림 삭제</h2>
+            </div>
+            <p className="modal-body">
+              &quot;{deleteTarget.name}&quot; 알림을 삭제하시겠습니까?
+              <br />
+              삭제 후에는 복구할 수 없습니다.
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="spinner spinner-sm" aria-hidden="true" />
+                    삭제 중...
+                  </>
+                ) : (
+                  '삭제'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="footer">
+        <p className="footer-text">
+          <span>Alert System</span>
+          <span className="footer-divider">·</span>
+          <span>출퇴근 알림 서비스</span>
+        </p>
+        <p className="footer-copyright">© 2025 All rights reserved</p>
+      </footer>
     </main>
   );
 }

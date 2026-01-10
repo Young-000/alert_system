@@ -1,6 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Inject, Optional } from '@nestjs/common';
 import { NotificationController } from '../controllers/notification.controller';
-import { DatabaseModule } from '@infrastructure/persistence/database.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
@@ -16,39 +15,29 @@ import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
 import { PushNotificationService } from '@infrastructure/push/push-notification.service';
 import { NoopPushNotificationService } from '@infrastructure/push/noop-push-notification.service';
 import { NotificationProcessor } from '@infrastructure/queue/notification.processor';
-import { DataSource } from 'typeorm';
+import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-memory-notification-scheduler.service';
+
+const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
-  imports: [DatabaseModule, QueueModule],
+  imports: [QueueModule],
   controllers: [NotificationController],
   providers: [
     {
       provide: 'IAlertRepository',
-      useFactory: (dataSource: DataSource) => {
-        return new PostgresAlertRepository(dataSource);
-      },
-      inject: [DataSource],
+      useClass: PostgresAlertRepository,
     },
     {
       provide: 'IUserRepository',
-      useFactory: (dataSource: DataSource) => {
-        return new PostgresUserRepository(dataSource);
-      },
-      inject: [DataSource],
+      useClass: PostgresUserRepository,
     },
     {
       provide: 'IPushSubscriptionRepository',
-      useFactory: (dataSource: DataSource) => {
-        return new PostgresPushSubscriptionRepository(dataSource);
-      },
-      inject: [DataSource],
+      useClass: PostgresPushSubscriptionRepository,
     },
     {
       provide: 'ISubwayStationRepository',
-      useFactory: (dataSource: DataSource) => {
-        return new PostgresSubwayStationRepository(dataSource);
-      },
-      inject: [DataSource],
+      useClass: PostgresSubwayStationRepository,
     },
     {
       provide: 'IWeatherApiClient',
@@ -93,7 +82,23 @@ import { DataSource } from 'typeorm';
     SendNotificationUseCase,
     SavePushSubscriptionUseCase,
     RemovePushSubscriptionUseCase,
-    ...(process.env.QUEUE_ENABLED === 'true' ? [NotificationProcessor] : []),
+    ...(isQueueEnabled ? [NotificationProcessor] : []),
   ],
 })
-export class NotificationModule {}
+export class NotificationModule implements OnModuleInit {
+  constructor(
+    private readonly sendNotificationUseCase: SendNotificationUseCase,
+    @Optional()
+    @Inject(InMemoryNotificationSchedulerService)
+    private readonly inMemoryScheduler?: InMemoryNotificationSchedulerService,
+  ) {}
+
+  onModuleInit(): void {
+    // Wire up the notification handler for the in-memory scheduler
+    if (!isQueueEnabled && this.inMemoryScheduler) {
+      this.inMemoryScheduler.setNotificationHandler(async (alertId: string) => {
+        await this.sendNotificationUseCase.execute(alertId);
+      });
+    }
+  }
+}

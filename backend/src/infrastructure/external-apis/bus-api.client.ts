@@ -8,7 +8,8 @@ export interface IBusApiClient {
 interface BusArrivalApiItem {
   stId: string;
   busRouteId: string;
-  busRouteNm: string;
+  busRouteNm?: string;  // Some endpoints use busRouteNm
+  rtNm?: string;        // Some endpoints use rtNm
   arrmsg1: string;
   staOrd?: number;
 }
@@ -34,8 +35,10 @@ export class BusApiClient implements IBusApiClient {
 
   async getBusArrival(stopId: string): Promise<BusArrival[]> {
     try {
+      // Use getArrInfoByStId to get all bus arrivals at a stop
+      // (getArrInfoByRoute requires both stId and busRouteId)
       const response = await this.client.get<BusApiResponse>(
-        '/getArrInfoByRoute',
+        '/getArrInfoByStId',
         {
           params: {
             stId: stopId,
@@ -46,10 +49,12 @@ export class BusApiClient implements IBusApiClient {
       const items = response.data.msgBody.itemList || [];
       return items.map((item: BusArrivalApiItem) => {
         const arrivalTime = this.parseArrivalTime(item.arrmsg1);
+        // Handle both busRouteNm and rtNm field names from different endpoints
+        const routeName = item.busRouteNm || item.rtNm || 'Unknown';
         return new BusArrival(
           item.stId,
           item.busRouteId,
-          item.busRouteNm,
+          routeName,
           arrivalTime,
           item.staOrd || 0,
         );

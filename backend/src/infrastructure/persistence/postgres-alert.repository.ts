@@ -1,12 +1,15 @@
+import { Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { AlertEntity } from './typeorm/alert.entity';
 import { Alert, AlertType } from '@domain/entities/alert.entity';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 
+@Injectable()
 export class PostgresAlertRepository implements IAlertRepository {
   private repository: Repository<AlertEntity>;
 
-  constructor(private dataSource: DataSource) {
+  constructor(@InjectDataSource() private dataSource: DataSource) {
     this.repository = dataSource.getRepository(AlertEntity);
   }
 

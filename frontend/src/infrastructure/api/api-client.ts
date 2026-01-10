@@ -13,6 +13,15 @@ export class ApiClient {
         'ngrok-skip-browser-warning': 'true',
       },
     });
+
+    // 인터셉터: 요청 시 JWT 토큰 추가
+    this.client.interceptors.request.use((config) => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
   }
 
   async get<T>(url: string): Promise<T> {
