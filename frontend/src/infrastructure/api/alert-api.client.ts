@@ -40,5 +40,13 @@ export class AlertApiClient {
   async deleteAlert(id: string): Promise<void> {
     return this.apiClient.delete(`/alerts/${id}`);
   }
+
+  async toggleAlert(id: string): Promise<Alert> {
+    return this.apiClient.patch<Alert>(`/alerts/${id}/toggle`, {});
+  }
+
+  async updateAlert(id: string, dto: Partial<CreateAlertDto>): Promise<Alert> {
+    return this.apiClient.patch<Alert>(`/alerts/${id}`, dto);
+  }
 }
 

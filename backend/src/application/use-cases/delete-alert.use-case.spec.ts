@@ -24,6 +24,7 @@ describe('DeleteAlertUseCase', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByUserId: jest.fn(),
+      findAll: jest.fn(),
       delete: jest.fn(),
     };
     notificationScheduler = {

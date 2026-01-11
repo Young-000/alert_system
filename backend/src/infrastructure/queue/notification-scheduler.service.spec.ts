@@ -16,6 +16,7 @@ describe('NotificationSchedulerService', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByUserId: jest.fn(),
+      findAll: jest.fn(),
       delete: jest.fn(),
     };
     service = new NotificationSchedulerService(queue, alertRepository);

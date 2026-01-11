@@ -15,7 +15,7 @@ export enum AlertTypeEnum {
   SUBWAY = 'subway',
 }
 
-@Entity('alerts')
+@Entity('alerts', { schema: 'alert_system' })
 export class AlertEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -33,7 +33,7 @@ export class AlertEntity {
   @Column()
   schedule: string;
 
-  @Column({ type: 'jsonb', name: 'alert_types' })
+  @Column({ type: 'simple-json', name: 'alert_types' })
   alertTypes: string[];
 
   @Column({ default: true })

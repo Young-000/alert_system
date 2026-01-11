@@ -20,6 +20,7 @@ describe('CreateUserUseCase', () => {
     const dto: CreateUserDto = {
       email: 'user@example.com',
       name: 'John Doe',
+      password: 'password123',
     };
     userRepository.findByEmail.mockResolvedValue(undefined);
     userRepository.save.mockResolvedValue();
@@ -32,18 +33,16 @@ describe('CreateUserUseCase', () => {
     expect(userRepository.save).toHaveBeenCalled();
   });
 
-  it('should return existing user if email already exists (getOrCreate)', async () => {
+  it('should throw ConflictException when email already exists', async () => {
     const dto: CreateUserDto = {
       email: 'user@example.com',
       name: 'John Doe',
+      password: 'password123',
     };
     const existingUser = new User('user@example.com', 'Existing User');
     userRepository.findByEmail.mockResolvedValue(existingUser);
 
-    const result = await useCase.execute(dto);
-
-    expect(result).toBe(existingUser);
-    expect(result.name).toBe('Existing User');
+    await expect(useCase.execute(dto)).rejects.toThrow('이미 등록된 이메일입니다.');
     expect(userRepository.save).not.toHaveBeenCalled();
   });
 
@@ -51,6 +50,7 @@ describe('CreateUserUseCase', () => {
     const dto: CreateUserDto = {
       email: 'user@example.com',
       name: 'John Doe',
+      password: 'password123',
       location: {
         address: 'Seoul',
         lat: 37.5665,

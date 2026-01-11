@@ -3383,6 +3383,39 @@ a[aria-disabled="true"],
   font-size: 0.8rem;
 }
 
+/* Alert Card States */
+.alert-card.disabled {
+  opacity: 0.6;
+  background: var(--bg-subtle);
+}
+
+.alert-card.disabled::before {
+  background: var(--border);
+}
+
+.alert-card.disabled:hover {
+  border-color: var(--border-hover);
+  transform: none;
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.status-badge.disabled {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* ========== MOBILE RESPONSIVE - WIZARD ========== */
 @media (max-width: 600px) {
   .wizard-container {

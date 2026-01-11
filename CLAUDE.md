@@ -112,6 +112,24 @@ npm run seed:subway   # 지하철역 데이터 시드
 docker-compose up -d redis  # Redis 실행
 ```
 
+## Supabase 설정
+
+> ⚠️ **필수 참조**: [`/SUPABASE_RULES.md`](/SUPABASE_RULES.md)
+
+| 항목 | 값 |
+|------|-----|
+| **Project** | Project 2 (비게임) |
+| **Project ID** | `gtnqsbdlybrkbsgtecvy` |
+| **Schema** | `alert_system` |
+| **URL** | `https://gtnqsbdlybrkbsgtecvy.supabase.co` |
+
+**스키마 룰:**
+- 모든 테이블은 `alert_system.table_name` 형식
+- `public` 스키마 사용 금지
+- 사용자 데이터 테이블 RLS 필수
+
+---
+
 ## 환경 변수
 
 ### Backend (.env)

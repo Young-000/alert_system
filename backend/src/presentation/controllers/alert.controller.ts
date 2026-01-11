@@ -5,6 +5,7 @@ import { UpdateAlertUseCase } from '@application/use-cases/update-alert.use-case
 import { CreateAlertDto } from '@application/dto/create-alert.dto';
 import { UpdateAlertDto } from '@application/dto/update-alert.dto';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
+import { AuthenticatedRequest } from '@infrastructure/auth/auth.service';
 
 @Controller('alerts')
 export class AlertController {
@@ -16,7 +17,7 @@ export class AlertController {
   ) {}
 
   @Post()
-  async create(@Body() createAlertDto: CreateAlertDto, @Request() req: any) {
+  async create(@Body() createAlertDto: CreateAlertDto, @Request() req: AuthenticatedRequest) {
     // 자신의 알림만 생성 가능 (Authorization)
     if (req.user.userId !== createAlertDto.userId) {
       throw new ForbiddenException('다른 사용자의 알림을 생성할 수 없습니다.');
@@ -25,7 +26,7 @@ export class AlertController {
   }
 
   @Get('user/:userId')
-  async findByUser(@Param('userId') userId: string, @Request() req: any) {
+  async findByUser(@Param('userId') userId: string, @Request() req: AuthenticatedRequest) {
     // 자신의 알림만 조회 가능 (Authorization)
     if (req.user.userId !== userId) {
       throw new ForbiddenException('다른 사용자의 알림을 조회할 수 없습니다.');
@@ -34,7 +35,7 @@ export class AlertController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req: any) {
+  async findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const alert = await this.alertRepository.findById(id);
     if (!alert) {
       throw new NotFoundException('알림을 찾을 수 없습니다.');
@@ -47,7 +48,7 @@ export class AlertController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto, @Request() req: any) {
+  async update(@Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto, @Request() req: AuthenticatedRequest) {
     const alert = await this.alertRepository.findById(id);
     if (!alert) {
       throw new NotFoundException('알림을 찾을 수 없습니다.');
@@ -60,7 +61,7 @@ export class AlertController {
   }
 
   @Patch(':id/toggle')
-  async toggle(@Param('id') id: string, @Request() req: any) {
+  async toggle(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const alert = await this.alertRepository.findById(id);
     if (!alert) {
       throw new NotFoundException('알림을 찾을 수 없습니다.');
@@ -74,7 +75,7 @@ export class AlertController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Request() req: any) {
+  async remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const alert = await this.alertRepository.findById(id);
     if (!alert) {
       throw new NotFoundException('알림을 찾을 수 없습니다.');

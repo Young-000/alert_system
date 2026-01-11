@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 
-@Entity('subway_stations')
+@Entity('subway_stations', { schema: 'alert_system' })
 @Index(['name', 'line'], { unique: true })
 export class SubwayStationEntity {
   @PrimaryGeneratedColumn('uuid')

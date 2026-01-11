@@ -1,6 +1,10 @@
 -- Alert System MVP schema
 
-CREATE TABLE IF NOT EXISTS users (
+-- Create schema if not exists
+CREATE SCHEMA IF NOT EXISTS alert_system;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS alert_system.users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -10,18 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Add password_hash to existing users table if not exists
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'password_hash') THEN
-    ALTER TABLE users ADD COLUMN password_hash VARCHAR(255);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'updated_at') THEN
-    ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
-  END IF;
-END $$;
-
-CREATE TABLE IF NOT EXISTS subway_stations (
+-- Subway stations table
+CREATE TABLE IF NOT EXISTS alert_system.subway_stations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   line VARCHAR(100) NOT NULL,
@@ -29,29 +23,73 @@ CREATE TABLE IF NOT EXISTS subway_stations (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS subway_stations_name_idx ON subway_stations (name);
-CREATE UNIQUE INDEX IF NOT EXISTS subway_stations_name_line_idx
-  ON subway_stations (name, line);
+CREATE INDEX IF NOT EXISTS subway_stations_name_idx ON alert_system.subway_stations (name);
 
-CREATE TABLE IF NOT EXISTS alerts (
+-- Alerts table
+CREATE TABLE IF NOT EXISTS alert_system.alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES alert_system.users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   schedule VARCHAR(100) NOT NULL,
   alert_types JSONB NOT NULL,
   enabled BOOLEAN DEFAULT true,
   bus_stop_id VARCHAR(100),
-  subway_station_id UUID REFERENCES subway_stations(id),
+  subway_station_id UUID REFERENCES alert_system.subway_stations(id),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS push_subscriptions (
+CREATE INDEX IF NOT EXISTS alerts_user_id_idx ON alert_system.alerts (user_id);
+
+-- Push subscriptions table
+CREATE TABLE IF NOT EXISTS alert_system.push_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES alert_system.users(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL,
   keys JSONB NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS push_subscriptions_endpoint_idx
-  ON push_subscriptions (endpoint);
+CREATE UNIQUE INDEX IF NOT EXISTS push_subscriptions_endpoint_idx ON alert_system.push_subscriptions (endpoint);
+
+-- Enable RLS on all tables
+ALTER TABLE alert_system.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE alert_system.subway_stations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE alert_system.alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE alert_system.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- RLS policies for users table
+CREATE POLICY "Users can view own data" ON alert_system.users
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can update own data" ON alert_system.users
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Users can insert" ON alert_system.users
+  FOR INSERT WITH CHECK (true);
+
+-- RLS policies for subway_stations (read-only for all)
+CREATE POLICY "Anyone can view subway stations" ON alert_system.subway_stations
+  FOR SELECT USING (true);
+
+-- RLS policies for alerts
+CREATE POLICY "Users can view own alerts" ON alert_system.alerts
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert alerts" ON alert_system.alerts
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Users can update own alerts" ON alert_system.alerts
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Users can delete own alerts" ON alert_system.alerts
+  FOR DELETE USING (true);
+
+-- RLS policies for push_subscriptions
+CREATE POLICY "Users can view own subscriptions" ON alert_system.push_subscriptions
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert subscriptions" ON alert_system.push_subscriptions
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Users can delete own subscriptions" ON alert_system.push_subscriptions
+  FOR DELETE USING (true);

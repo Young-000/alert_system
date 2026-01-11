@@ -26,7 +26,7 @@ export class PostgresSubwayStationRepository implements ISubwayStationRepository
 
     const entities = await this.repository
       .createQueryBuilder('station')
-      .where('station.name ILIKE :name', { name: `%${normalized}%` })
+      .where('LOWER(station.name) LIKE LOWER(:name)', { name: `%${normalized}%` })
       .orderBy('station.name', 'ASC')
       .limit(limit)
       .getMany();
