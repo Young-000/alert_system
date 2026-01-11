@@ -14,7 +14,7 @@ export class UserEntity {
   @Column()
   name: string;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   location?: {
     address: string;
     lat: number;

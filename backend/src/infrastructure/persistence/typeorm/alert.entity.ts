@@ -33,7 +33,7 @@ export class AlertEntity {
   @Column()
   schedule: string;
 
-  @Column({ type: 'simple-json', name: 'alert_types' })
+  @Column({ type: 'jsonb', name: 'alert_types' })
   alertTypes: string[];
 
   @Column({ default: true })

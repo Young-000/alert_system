@@ -9,7 +9,7 @@ export class SubwayArrivalCacheEntity {
   @Column({ name: 'station_name' })
   stationName: string;
 
-  @Column({ type: 'simple-json' })
+  @Column({ type: 'jsonb' })
   arrivals: Array<{
     stationId: string;
     subwayId: string;
@@ -21,7 +21,7 @@ export class SubwayArrivalCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'datetime' })
+  @Column({ name: 'expires_at', type: 'timestamp' })
   expiresAt: Date;
 }
 
@@ -34,7 +34,7 @@ export class BusArrivalCacheEntity {
   @Column({ name: 'stop_id' })
   stopId: string;
 
-  @Column({ type: 'simple-json' })
+  @Column({ type: 'jsonb' })
   arrivals: Array<{
     stopId: string;
     routeId: string;
@@ -46,7 +46,7 @@ export class BusArrivalCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'datetime' })
+  @Column({ name: 'expires_at', type: 'timestamp' })
   expiresAt: Date;
 }
 

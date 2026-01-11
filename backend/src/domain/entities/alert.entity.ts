@@ -10,12 +10,20 @@ import { v4 as uuidv4 } from 'uuid';
 export class Alert {
   public readonly id: string;
   public readonly userId: string;
-  public readonly name: string;
-  public readonly schedule: string;
+  private _name: string;
+  private _schedule: string;
   public alertTypes: AlertType[];
   public enabled: boolean;
   public busStopId?: string;
   public subwayStationId?: string;
+
+  get name(): string {
+    return this._name;
+  }
+
+  get schedule(): string {
+    return this._schedule;
+  }
 
   constructor(
     userId: string,
@@ -28,12 +36,20 @@ export class Alert {
   ) {
     this.id = id || uuidv4();
     this.userId = userId;
-    this.name = name;
-    this.schedule = schedule;
+    this._name = name;
+    this._schedule = schedule;
     this.alertTypes = alertTypes;
     this.enabled = true;
     this.busStopId = busStopId;
     this.subwayStationId = subwayStationId;
+  }
+
+  updateName(name: string): void {
+    this._name = name;
+  }
+
+  updateSchedule(schedule: string): void {
+    this._schedule = schedule;
   }
 
   disable(): void {

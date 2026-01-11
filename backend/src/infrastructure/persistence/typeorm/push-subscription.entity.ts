@@ -25,7 +25,7 @@ export class PushSubscriptionEntity {
   @Column('text')
   endpoint: string;
 
-  @Column({ type: 'simple-json' })
+  @Column({ type: 'jsonb' })
   keys: {
     p256dh: string;
     auth: string;

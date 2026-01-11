@@ -24,10 +24,10 @@ export class UpdateAlertUseCase {
 
     // Update alert properties
     if (dto.name !== undefined) {
-      (existingAlert as any).name = dto.name;
+      existingAlert.updateName(dto.name);
     }
     if (dto.schedule !== undefined) {
-      (existingAlert as any).schedule = dto.schedule;
+      existingAlert.updateSchedule(dto.schedule);
     }
     if (dto.alertTypes !== undefined) {
       existingAlert.alertTypes = dto.alertTypes;
@@ -40,10 +40,10 @@ export class UpdateAlertUseCase {
       }
     }
     if (dto.busStopId !== undefined) {
-      (existingAlert as any).busStopId = dto.busStopId;
+      existingAlert.busStopId = dto.busStopId;
     }
     if (dto.subwayStationId !== undefined) {
-      (existingAlert as any).subwayStationId = dto.subwayStationId;
+      existingAlert.subwayStationId = dto.subwayStationId;
     }
 
     await this.alertRepository.save(existingAlert);

@@ -58,38 +58,39 @@ ALTER TABLE alert_system.alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE alert_system.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for users table
+-- Note: Backend uses service role (bypasses RLS). These policies apply to Supabase client direct access.
 CREATE POLICY "Users can view own data" ON alert_system.users
-  FOR SELECT USING (true);
+  FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own data" ON alert_system.users
-  FOR UPDATE USING (true);
+  FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Users can insert" ON alert_system.users
-  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can insert own data" ON alert_system.users
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
--- RLS policies for subway_stations (read-only for all)
+-- RLS policies for subway_stations (read-only reference data for all authenticated users)
 CREATE POLICY "Anyone can view subway stations" ON alert_system.subway_stations
-  FOR SELECT USING (true);
+  FOR SELECT USING (auth.role() = 'authenticated');
 
 -- RLS policies for alerts
 CREATE POLICY "Users can view own alerts" ON alert_system.alerts
-  FOR SELECT USING (true);
+  FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert alerts" ON alert_system.alerts
-  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can insert own alerts" ON alert_system.alerts
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own alerts" ON alert_system.alerts
-  FOR UPDATE USING (true);
+  FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own alerts" ON alert_system.alerts
-  FOR DELETE USING (true);
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS policies for push_subscriptions
 CREATE POLICY "Users can view own subscriptions" ON alert_system.push_subscriptions
-  FOR SELECT USING (true);
+  FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert subscriptions" ON alert_system.push_subscriptions
-  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can insert own subscriptions" ON alert_system.push_subscriptions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own subscriptions" ON alert_system.push_subscriptions
-  FOR DELETE USING (true);
+  FOR DELETE USING (auth.uid() = user_id);
