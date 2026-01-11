@@ -1,14 +1,19 @@
 # Supabase 연결 설정 가이드
 
-## ✅ 제공된 연결 정보
+> ⚠️ **중요**: 이 프로젝트는 **Project 2 (비게임)**에 속합니다.
+> 글로벌 규칙: [`/SUPABASE_RULES.md`](/SUPABASE_RULES.md)
 
-```
-Host: db.ayibvijmjygujjieueny.supabase.co
-Port: 5432
-Database: postgres
-User: postgres
-Password: [프로젝트 생성 시 설정한 비밀번호]
-```
+## ✅ 연결 정보
+
+| 항목 | 값 |
+|------|-----|
+| **Project** | Project 2 (비게임) |
+| **Project ID** | `gtnqsbdlybrkbsgtecvy` |
+| **Schema** | `alert_system` |
+| **Host** | `db.gtnqsbdlybrkbsgtecvy.supabase.co` |
+| **Port** | `5432` |
+| **Database** | `postgres` |
+| **User** | `postgres` |
 
 ## 🚀 빠른 설정
 
@@ -21,16 +26,17 @@ cp .env.supabase.example .env
 
 ### 2. .env 파일 수정
 
-`.env` 파일을 열고 `[YOUR-PASSWORD]` 부분을 실제 비밀번호로 교체:
+`.env` 파일을 열고 Supabase 연결 정보 설정:
 
 ```env
-SUPABASE_URL=postgresql://postgres:실제비밀번호@db.ayibvijmjygujjieueny.supabase.co:5432/postgres
+# Project 2 (비게임) - alert_system 스키마
+SUPABASE_URL=https://gtnqsbdlybrkbsgtecvy.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...  # 서버 전용
 ```
 
-**예시:**
-```env
-SUPABASE_URL=postgresql://postgres:mypassword123@db.ayibvijmjygujjieueny.supabase.co:5432/postgres
-```
+> ⚠️ 모든 테이블은 `alert_system` 스키마 내에 생성해야 합니다.
+> `public` 스키마 사용 금지 (글로벌 규칙)
 
 ### 3. 연결 테스트
 

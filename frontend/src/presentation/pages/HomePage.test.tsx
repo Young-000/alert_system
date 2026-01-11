@@ -9,6 +9,8 @@ describe('HomePage', () => {
         <HomePage />
       </MemoryRouter>
     );
-    expect(screen.getByText('Alert System')).toBeInTheDocument();
+    // 여러 곳에 Alert System 텍스트가 있으므로 getAllByText 사용
+    const elements = screen.getAllByText('Alert System');
+    expect(elements.length).toBeGreaterThan(0);
   });
 });

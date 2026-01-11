@@ -762,9 +762,10 @@ export function AlertSettingsPage() {
           <h2>설정된 알림</h2>
           <div className="alert-list">
             {alerts.map((alert) => (
-              <article key={alert.id} className="alert-card">
+              <article key={alert.id} className={`alert-card ${!alert.enabled ? 'disabled' : ''}`}>
                 <div className="alert-info">
                   <strong>{alert.name}</strong>
+                  {!alert.enabled && <span className="status-badge disabled">비활성</span>}
                   <div className="alert-tags">
                     {alert.alertTypes.map((type) => (
                       <span key={type} className="tag-small">
@@ -773,14 +774,31 @@ export function AlertSettingsPage() {
                     ))}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-danger-outline btn-small"
-                  onClick={() => handleDeleteClick(alert)}
-                  aria-label={`${alert.name} 삭제`}
-                >
-                  삭제
-                </button>
+                <div className="alert-actions">
+                  <button
+                    type="button"
+                    className={`btn btn-small ${alert.enabled ? 'btn-outline' : 'btn-primary'}`}
+                    onClick={async () => {
+                      try {
+                        await alertApiClient.toggleAlert(alert.id);
+                        loadAlerts();
+                      } catch {
+                        setError('알림 상태 변경에 실패했습니다.');
+                      }
+                    }}
+                    aria-label={`${alert.name} ${alert.enabled ? '비활성화' : '활성화'}`}
+                  >
+                    {alert.enabled ? '끄기' : '켜기'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger-outline btn-small"
+                    onClick={() => handleDeleteClick(alert)}
+                    aria-label={`${alert.name} 삭제`}
+                  >
+                    삭제
+                  </button>
+                </div>
               </article>
             ))}
           </div>

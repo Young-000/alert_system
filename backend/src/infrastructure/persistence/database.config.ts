@@ -1,6 +1,7 @@
 import { DataSourceOptions } from 'typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import * as dotenv from 'dotenv';
+import * as pg from 'pg';
 import { UserEntity } from './typeorm/user.entity';
 import { AlertEntity } from './typeorm/alert.entity';
 import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
@@ -19,6 +20,7 @@ export function buildDataSourceOptions(): DataSourceOptions {
     type: 'postgres',
     entities: [UserEntity, AlertEntity, PushSubscriptionEntity, SubwayStationEntity],
     synchronize,
+    schema: 'alert_system', // Supabase 전용 스키마 사용
   };
 
   const connectionOptions: Partial<PostgresConnectionOptions> = hasUrl
@@ -39,5 +41,7 @@ export function buildDataSourceOptions(): DataSourceOptions {
     ...baseOptions,
     ...connectionOptions,
     ...sslOptions,
+    // Fix for pg/TypeORM ESM/CommonJS compatibility
+    driver: pg,
   };
 }

@@ -14,9 +14,17 @@ interface UsePushNotificationResult {
   unsubscribe: () => Promise<void>;
 }
 
+// 초기 permission 값을 함수로 계산 (lazy initialization)
+const getInitialPermission = (): NotificationPermission => {
+  if (typeof window !== 'undefined' && 'Notification' in window) {
+    return Notification.permission;
+  }
+  return 'default';
+};
+
 export function usePushNotification(): UsePushNotificationResult {
   const [permission, setPermission] =
-    useState<NotificationPermission>('default');
+    useState<NotificationPermission>(getInitialPermission);
   const [subscription, setSubscription] = useState<PushSubscriptionData | null>(
     null,
   );
@@ -26,24 +34,28 @@ export function usePushNotification(): UsePushNotificationResult {
   const pushService = useMemo(() => new PushService(), []);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
+    let mounted = true;
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then(() => {
-          setIsSwReady(true);
+          if (mounted) setIsSwReady(true);
         })
         .catch((error) => {
           console.error('Service Worker 등록 실패:', error);
-          setSwError('서비스 워커 등록에 실패했습니다. 푸시 알림을 사용할 수 없습니다.');
-          setIsSwReady(false);
+          if (mounted) {
+            setSwError('서비스 워커 등록에 실패했습니다. 푸시 알림을 사용할 수 없습니다.');
+            setIsSwReady(false);
+          }
         });
-    } else {
+    } else if (mounted) {
       setSwError('이 브라우저는 서비스 워커를 지원하지 않습니다.');
     }
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const requestPermission = useCallback(async () => {
