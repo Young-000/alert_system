@@ -6,6 +6,7 @@ import { CreateUserDto } from '@application/dto/create-user.dto';
 import { UpdateUserLocationDto } from '@application/dto/update-user-location.dto';
 import { UserResponseDto } from '@application/dto/user-response.dto';
 import { Public } from '@infrastructure/auth/public.decorator';
+import { AuthenticatedRequest } from '@infrastructure/auth/auth.service';
 
 @Controller('users')
 export class UserController {
@@ -23,7 +24,7 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req: any): Promise<UserResponseDto> {
+  async findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest): Promise<UserResponseDto> {
     // 자신의 정보만 조회 가능 (Authorization)
     if (req.user.userId !== id) {
       throw new ForbiddenException('다른 사용자의 정보를 조회할 수 없습니다.');
@@ -36,7 +37,7 @@ export class UserController {
   async updateLocation(
     @Param('id') id: string,
     @Body() body: UpdateUserLocationDto,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<UserResponseDto> {
     // 자신의 위치만 수정 가능 (Authorization)
     if (req.user.userId !== id) {

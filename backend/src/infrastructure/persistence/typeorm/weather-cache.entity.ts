@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 
-@Entity('weather_cache')
+@Entity('weather_cache', { schema: 'alert_system' })
 @Index(['lat', 'lng'])
 export class WeatherCacheEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -30,6 +30,6 @@ export class WeatherCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamp' })
+  @Column({ name: 'expires_at', type: 'datetime' })
   expiresAt: Date;
 }

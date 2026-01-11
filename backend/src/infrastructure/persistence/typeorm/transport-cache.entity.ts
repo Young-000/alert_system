@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 
-@Entity('subway_arrival_cache')
+@Entity('subway_arrival_cache', { schema: 'alert_system' })
 @Index(['stationName'])
 export class SubwayArrivalCacheEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -9,7 +9,7 @@ export class SubwayArrivalCacheEntity {
   @Column({ name: 'station_name' })
   stationName: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'simple-json' })
   arrivals: Array<{
     stationId: string;
     subwayId: string;
@@ -21,11 +21,11 @@ export class SubwayArrivalCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamp' })
+  @Column({ name: 'expires_at', type: 'datetime' })
   expiresAt: Date;
 }
 
-@Entity('bus_arrival_cache')
+@Entity('bus_arrival_cache', { schema: 'alert_system' })
 @Index(['stopId'])
 export class BusArrivalCacheEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -34,7 +34,7 @@ export class BusArrivalCacheEntity {
   @Column({ name: 'stop_id' })
   stopId: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'simple-json' })
   arrivals: Array<{
     stopId: string;
     routeId: string;
@@ -46,11 +46,11 @@ export class BusArrivalCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamp' })
+  @Column({ name: 'expires_at', type: 'datetime' })
   expiresAt: Date;
 }
 
-@Entity('api_call_log')
+@Entity('api_call_log', { schema: 'alert_system' })
 @Index(['apiName', 'calledAt'])
 export class ApiCallLogEntity {
   @PrimaryGeneratedColumn('uuid')
