@@ -150,7 +150,7 @@ export function AlertSettingsPage() {
   }, [searchQuery, transportTypes]);
 
   // Navigation
-  const goNext = () => {
+  const goNext = useCallback(() => {
     if (step === 'type') {
       if (wantsTransport) {
         setStep('transport');
@@ -164,7 +164,7 @@ export function AlertSettingsPage() {
     } else if (step === 'routine') {
       setStep('confirm');
     }
-  };
+  }, [step, wantsTransport, wantsWeather]);
 
   const goBack = () => {
     if (step === 'transport') setStep('type');
@@ -196,7 +196,7 @@ export function AlertSettingsPage() {
   };
 
   // Generate cron schedule from routine
-  const generateSchedule = (): string => {
+  const generateSchedule = useCallback((): string => {
     const times: string[] = [];
 
     if (wantsWeather) {
@@ -227,10 +227,20 @@ export function AlertSettingsPage() {
 
     const uniqueHours = [...new Set(times)].sort((a, b) => Number(a) - Number(b));
     return `0 ${uniqueHours.join(',')} * * *`;
-  };
+  }, [wantsWeather, wantsTransport, routine]);
+
+  // Generate alert name
+  const generateAlertName = useCallback(() => {
+    const parts: string[] = [];
+    if (wantsWeather) parts.push('날씨');
+    if (selectedTransports.length > 0) {
+      parts.push(selectedTransports.map((t) => t.name).join(', '));
+    }
+    return `${parts.join(' + ')} 알림`;
+  }, [wantsWeather, selectedTransports]);
 
   // Submit alert
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     setError('');
 
     if (!userId) {
@@ -285,16 +295,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const generateAlertName = () => {
-    const parts: string[] = [];
-    if (wantsWeather) parts.push('날씨');
-    if (selectedTransports.length > 0) {
-      parts.push(selectedTransports.map((t) => t.name).join(', '));
-    }
-    return `${parts.join(' + ')} 알림`;
-  };
+  }, [userId, permission, requestPermission, wantsWeather, selectedTransports, generateAlertName, generateSchedule, loadAlerts]);
 
   const handleDeleteClick = (alert: Alert) => {
     setDeleteTarget({ id: alert.id, name: alert.name });
@@ -339,7 +340,15 @@ export function AlertSettingsPage() {
       if (deleteTarget) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      if (e.key === 'Enter' && canProceed()) {
+      // Inline canProceed check
+      const canProceedNow = (() => {
+        if (step === 'type') return wantsWeather || wantsTransport;
+        if (step === 'transport') return transportTypes.length > 0;
+        if (step === 'station') return selectedTransports.length > 0;
+        return true;
+      })();
+
+      if (e.key === 'Enter' && canProceedNow) {
         e.preventDefault();
         if (step === 'confirm' && !isSubmitting && !success) {
           handleSubmit();
@@ -351,7 +360,7 @@ export function AlertSettingsPage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [step, deleteTarget, isSubmitting, success]);
+  }, [step, deleteTarget, isSubmitting, success, wantsWeather, wantsTransport, transportTypes.length, selectedTransports.length, goNext, handleSubmit]);
 
   // Calculate notification times for display
   const getNotificationTimes = () => {
