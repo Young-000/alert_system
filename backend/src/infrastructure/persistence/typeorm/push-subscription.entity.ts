@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 
-@Entity('push_subscriptions')
+@Entity('push_subscriptions', { schema: 'alert_system' })
 export class PushSubscriptionEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

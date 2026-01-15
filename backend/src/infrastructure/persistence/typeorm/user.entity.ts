@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('users')
+@Entity('users', { schema: 'alert_system' })
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

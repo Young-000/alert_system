@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/presentation/app.module';
+import { TestAppModule } from './test-app.module';
 import { DataSource } from 'typeorm';
 
 describe('AppController (e2e)', () => {
@@ -10,7 +10,7 @@ describe('AppController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [TestAppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -41,10 +41,22 @@ describe('AppController (e2e)', () => {
       const loginRes = await request(app.getHttpServer())
         .post('/auth/login')
         .send({ email, password });
+
+      if (!loginRes.body.user) {
+        throw new Error(`Login failed for ${email}: ${JSON.stringify(loginRes.body)}`);
+      }
+
       return {
         token: loginRes.body.accessToken,
         userId: loginRes.body.user.id,
       };
+    }
+
+    // 등록이 성공했는지 확인
+    if (registerRes.status !== 201 || !registerRes.body.user) {
+      throw new Error(
+        `Registration failed for ${email}: status=${registerRes.status}, body=${JSON.stringify(registerRes.body)}`,
+      );
     }
 
     return {
@@ -213,6 +225,229 @@ describe('AppController (e2e)', () => {
           alertTypes: ['weather'],
         })
         .expect(403);
+    });
+
+    it('/alerts/:id (PATCH) should update an alert', async () => {
+      const { token, userId } = await registerAndLogin(
+        `alertupdate-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Alert Update User',
+      );
+
+      // 알림 생성
+      const createRes = await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '원래 알림',
+          schedule: '0 8 * * *',
+          alertTypes: ['weather'],
+        });
+
+      const alertId = createRes.body.id;
+
+      // 알림 수정
+      return request(app.getHttpServer())
+        .patch(`/alerts/${alertId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          name: '수정된 알림',
+          schedule: '0 9 * * *',
+        })
+        .expect(200)
+        .expect((res: request.Response) => {
+          expect(res.body.name).toBe('수정된 알림');
+          expect(res.body.schedule).toBe('0 9 * * *');
+        });
+    });
+
+    it('/alerts/:id/toggle (PATCH) should toggle alert enabled status', async () => {
+      const { token, userId } = await registerAndLogin(
+        `alerttoggle-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Alert Toggle User',
+      );
+
+      // 알림 생성 (기본적으로 enabled)
+      const createRes = await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '토글 알림',
+          schedule: '0 8 * * *',
+          alertTypes: ['weather'],
+        });
+
+      const alertId = createRes.body.id;
+      expect(createRes.body.enabled).toBe(true);
+
+      // 토글 -> disabled
+      const toggleRes = await request(app.getHttpServer())
+        .patch(`/alerts/${alertId}/toggle`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(toggleRes.body.enabled).toBe(false);
+    });
+
+    it('/alerts/:id (DELETE) should delete an alert', async () => {
+      const { token, userId } = await registerAndLogin(
+        `alertdelete-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Alert Delete User',
+      );
+
+      // 알림 생성
+      const createRes = await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '삭제할 알림',
+          schedule: '0 8 * * *',
+          alertTypes: ['weather'],
+        });
+
+      const alertId = createRes.body.id;
+
+      // 알림 삭제
+      await request(app.getHttpServer())
+        .delete(`/alerts/${alertId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      // 삭제 후 조회 시 404
+      return request(app.getHttpServer())
+        .get(`/alerts/${alertId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404);
+    });
+
+    it('should block accessing other user alert', async () => {
+      const { token: token1, userId: userId1 } = await registerAndLogin(
+        `alertaccess1-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Alert Access User One',
+      );
+
+      const { token: token2 } = await registerAndLogin(
+        `alertaccess2-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Alert Access User Two',
+      );
+
+      // User1이 알림 생성
+      const createRes = await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token1}`)
+        .send({
+          userId: userId1,
+          name: 'User1의 알림',
+          schedule: '0 8 * * *',
+          alertTypes: ['weather'],
+        });
+
+      const alertId = createRes.body.id;
+
+      // User2가 User1의 알림 접근 시도 -> 403
+      await request(app.getHttpServer())
+        .get(`/alerts/${alertId}`)
+        .set('Authorization', `Bearer ${token2}`)
+        .expect(403);
+
+      // User2가 User1의 알림 수정 시도 -> 403
+      await request(app.getHttpServer())
+        .patch(`/alerts/${alertId}`)
+        .set('Authorization', `Bearer ${token2}`)
+        .send({ name: '해킹 시도' })
+        .expect(403);
+
+      // User2가 User1의 알림 삭제 시도 -> 403
+      return request(app.getHttpServer())
+        .delete(`/alerts/${alertId}`)
+        .set('Authorization', `Bearer ${token2}`)
+        .expect(403);
+    });
+
+    it('should create alert with all options (bus, subway)', async () => {
+      const { token, userId } = await registerAndLogin(
+        `alertfull-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Full Alert User',
+      );
+
+      return request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '종합 출근 알림',
+          schedule: '0 7 * * 1-5',
+          alertTypes: ['weather', 'airQuality', 'bus', 'subway'],
+          busStopId: 'bus-stop-123',
+          // Note: subwayStationId must be a valid UUID, omitting for this test
+        })
+        .expect(201)
+        .expect((res: request.Response) => {
+          expect(res.body.alertTypes).toEqual(['weather', 'airQuality', 'bus', 'subway']);
+          expect(res.body.busStopId).toBe('bus-stop-123');
+        });
+    });
+
+    it('should manage multiple alerts for one user', async () => {
+      const { token, userId } = await registerAndLogin(
+        `alertmulti-${Date.now()}@example.com`,
+        'SecurePass123!',
+        'Multi Alert User',
+      );
+
+      // 3개의 알림 생성
+      await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '출근 알림',
+          schedule: '0 8 * * 1-5',
+          alertTypes: ['weather'],
+        });
+
+      await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '퇴근 알림',
+          schedule: '0 18 * * 1-5',
+          alertTypes: ['weather', 'bus'],
+          busStopId: 'bus-123',
+        });
+
+      await request(app.getHttpServer())
+        .post('/alerts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId,
+          name: '주말 알림',
+          schedule: '0 10 * * 6,0',
+          alertTypes: ['airQuality'],
+        });
+
+      // 알림 목록 조회
+      return request(app.getHttpServer())
+        .get(`/alerts/user/${userId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+        .expect((res: request.Response) => {
+          expect(Array.isArray(res.body)).toBe(true);
+          expect(res.body.length).toBe(3);
+          const names = res.body.map((a: any) => a.name);
+          expect(names).toContain('출근 알림');
+          expect(names).toContain('퇴근 알림');
+          expect(names).toContain('주말 알림');
+        });
     });
   });
 

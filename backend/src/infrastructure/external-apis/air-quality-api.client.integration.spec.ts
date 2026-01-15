@@ -1,14 +1,14 @@
 import { AirQualityApiClient } from './air-quality-api.client';
 
-const shouldRun = process.env.RUN_INTEGRATION_TESTS === 'true';
+const apiKey = process.env.AIR_QUALITY_API_KEY;
+const shouldRun = process.env.RUN_INTEGRATION_TESTS === 'true' && !!apiKey;
 const describeIntegration = shouldRun ? describe : describe.skip;
 
 describeIntegration('AirQualityApiClient Integration', () => {
   let client: AirQualityApiClient;
-  const apiKey = process.env.AIR_QUALITY_API_KEY || 'c854d1870b7792e9e000563a58e8d1e4aa664c0642501163c4b9e420a90f8686';
 
   beforeEach(() => {
-    client = new AirQualityApiClient(apiKey);
+    client = new AirQualityApiClient(apiKey!);
   });
 
   it('should fetch real air quality data for Seoul', async () => {

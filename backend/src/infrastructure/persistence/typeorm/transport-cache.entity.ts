@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 
-@Entity('subway_arrival_cache')
+@Entity('subway_arrival_cache', { schema: 'alert_system' })
 @Index(['stationName'])
 export class SubwayArrivalCacheEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -25,7 +25,7 @@ export class SubwayArrivalCacheEntity {
   expiresAt: Date;
 }
 
-@Entity('bus_arrival_cache')
+@Entity('bus_arrival_cache', { schema: 'alert_system' })
 @Index(['stopId'])
 export class BusArrivalCacheEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -50,7 +50,7 @@ export class BusArrivalCacheEntity {
   expiresAt: Date;
 }
 
-@Entity('api_call_log')
+@Entity('api_call_log', { schema: 'alert_system' })
 @Index(['apiName', 'calledAt'])
 export class ApiCallLogEntity {
   @PrimaryGeneratedColumn('uuid')

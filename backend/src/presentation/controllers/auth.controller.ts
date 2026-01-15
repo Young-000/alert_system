@@ -4,7 +4,7 @@ import { CreateUserUseCase } from '@application/use-cases/create-user.use-case';
 import { LoginUseCase } from '@application/use-cases/login.use-case';
 import { AuthService, AuthResponse } from '@infrastructure/auth/auth.service';
 import { Public } from '@infrastructure/auth/public.decorator';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {

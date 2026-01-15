@@ -15,7 +15,7 @@ export enum AlertTypeEnum {
   SUBWAY = 'subway',
 }
 
-@Entity('alerts')
+@Entity('alerts', { schema: 'alert_system' })
 export class AlertEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

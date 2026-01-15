@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 
-@Entity('air_quality_cache')
+@Entity('air_quality_cache', { schema: 'alert_system' })
 @Index(['sidoName'])
 export class AirQualityCacheEntity {
   @PrimaryGeneratedColumn('uuid')

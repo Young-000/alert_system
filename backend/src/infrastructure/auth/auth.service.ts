@@ -16,6 +16,15 @@ export interface AuthResponse {
   accessToken: string;
 }
 
+export interface AuthenticatedUser {
+  userId: string;
+  email: string;
+}
+
+export interface AuthenticatedRequest {
+  user: AuthenticatedUser;
+}
+
 @Injectable()
 export class AuthService {
   constructor(private jwtService: JwtService) {}

@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 
-@Entity('weather_cache')
+@Entity('weather_cache', { schema: 'alert_system' })
 @Index(['lat', 'lng'])
 export class WeatherCacheEntity {
   @PrimaryGeneratedColumn('uuid')

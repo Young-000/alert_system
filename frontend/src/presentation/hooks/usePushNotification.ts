@@ -14,36 +14,57 @@ interface UsePushNotificationResult {
   unsubscribe: () => Promise<void>;
 }
 
+// 초기 permission 값을 함수로 계산 (lazy initialization)
+const getInitialPermission = (): NotificationPermission => {
+  if (typeof window !== 'undefined' && 'Notification' in window) {
+    return Notification.permission;
+  }
+  return 'default';
+};
+
+// Service Worker 지원 여부 확인 (lazy initialization)
+const getInitialSwError = (): string | null => {
+  if (typeof navigator !== 'undefined' && !('serviceWorker' in navigator)) {
+    return '이 브라우저는 서비스 워커를 지원하지 않습니다.';
+  }
+  return null;
+};
+
 export function usePushNotification(): UsePushNotificationResult {
   const [permission, setPermission] =
-    useState<NotificationPermission>('default');
+    useState<NotificationPermission>(getInitialPermission);
   const [subscription, setSubscription] = useState<PushSubscriptionData | null>(
     null,
   );
   const [isSwReady, setIsSwReady] = useState(false);
-  const [swError, setSwError] = useState<string | null>(null);
+  const [swError, setSwError] = useState<string | null>(getInitialSwError);
 
   const pushService = useMemo(() => new PushService(), []);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
+    // Service Worker 미지원 브라우저는 초기화 시 이미 에러 설정됨
+    if (!('serviceWorker' in navigator)) {
+      return;
     }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then(() => {
-          setIsSwReady(true);
-        })
-        .catch((error) => {
-          console.error('Service Worker 등록 실패:', error);
+    let mounted = true;
+
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(() => {
+        if (mounted) setIsSwReady(true);
+      })
+      .catch((error) => {
+        console.error('Service Worker 등록 실패:', error);
+        if (mounted) {
           setSwError('서비스 워커 등록에 실패했습니다. 푸시 알림을 사용할 수 없습니다.');
           setIsSwReady(false);
-        });
-    } else {
-      setSwError('이 브라우저는 서비스 워커를 지원하지 않습니다.');
-    }
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const requestPermission = useCallback(async () => {
