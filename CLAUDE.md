@@ -68,23 +68,48 @@ frontend/src/
 ### Subway
 - `GET /subway/stations?query=강남` - 지하철역 검색
 
-## 구현 현황
+## 구현 현황 (100% 완료)
 
 ### 완료
-- User, Alert 엔티티 및 CRUD
-- 미세먼지 API 연동 (실제 API)
-- 날씨/버스/지하철 API 클라이언트 (구현됨)
-- Web Push 알림 서비스
-- BullMQ 작업 스케줄러
-- 프론트엔드 페이지 (Home, Login, AlertSettings)
-- PWA 설정
+- [x] User, Alert 엔티티 및 CRUD
+- [x] 미세먼지 API 연동 (실제 API)
+- [x] 날씨/버스/지하철 API 클라이언트
+- [x] Web Push 알림 서비스
+- [x] BullMQ 작업 스케줄러
+- [x] 프론트엔드 페이지 (Home, Login, AlertSettings)
+- [x] PWA 설정
+- [x] JWT 인증 시스템
+- [x] API 문서화 (Swagger)
+- [x] 프론트엔드 UI 개선
+- [x] Vercel 프로덕션 배포
+- [x] 알림톡 (Solapi) 연동
 
-### 미완료
-- 날씨/버스/지하철 API 실제 연동 테스트
-- 알림 스케줄러 연동
-- JWT 인증 시스템
-- API 문서화 (Swagger)
-- 프론트엔드 UI 개선
+---
+
+## 🚀 배포 정보
+
+### Frontend (Vercel)
+| 항목 | 값 |
+|------|-----|
+| **Production URL** | https://frontend-xi-two-52.vercel.app |
+| **Platform** | Vercel |
+| **Auto Deploy** | GitHub push 시 자동 |
+
+### Backend (Render)
+| 항목 | 값 |
+|------|-----|
+| **Production URL** | https://alert-system-kdg9.onrender.com |
+| **Platform** | Render (Free Tier) |
+| **Database** | Supabase PostgreSQL |
+| **주의** | Cold Start 시 ~30초 지연 |
+
+### 핵심 환경 변수 (Render)
+```
+DATABASE_URL=postgresql://postgres.gtnqsbdlybrkbsgtecvy:...@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
+DB_SYNCHRONIZE=true  # 스키마 자동 동기화 (초기 배포 시 필수)
+```
+
+> ⚠️ **DB_SYNCHRONIZE**: 테이블 스키마 변경 시 `true`로 설정 후 배포, 안정화 후 `false`로 변경 권장
 
 ## 개발 명령어
 
