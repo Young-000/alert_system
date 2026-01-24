@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 
 export interface ToastMessage {
   id: string;
@@ -68,22 +68,26 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
 export function useToast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const addToast = (type: ToastMessage['type'], message: string) => {
+  const addToast = useCallback((type: ToastMessage['type'], message: string) => {
     const id = Date.now().toString();
     setToasts((prev) => [...prev, { id, type, message }]);
-  };
+  }, []);
 
-  const dismissToast = (id: string) => {
+  const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
+
+  const helpers = useMemo(() => ({
+    success: (message: string) => addToast('success', message),
+    error: (message: string) => addToast('error', message),
+    info: (message: string) => addToast('info', message),
+    warning: (message: string) => addToast('warning', message),
+  }), [addToast]);
 
   return {
     toasts,
     addToast,
     dismissToast,
-    success: (message: string) => addToast('success', message),
-    error: (message: string) => addToast('error', message),
-    info: (message: string) => addToast('info', message),
-    warning: (message: string) => addToast('warning', message),
+    ...helpers,
   };
 }

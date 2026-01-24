@@ -3,6 +3,12 @@ import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 
+// bcrypt 모킹으로 테스트 속도 향상
+jest.mock('bcrypt', () => ({
+  hash: jest.fn().mockResolvedValue('hashedPassword'),
+  compare: jest.fn().mockResolvedValue(true),
+}));
+
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let userRepository: jest.Mocked<IUserRepository>;

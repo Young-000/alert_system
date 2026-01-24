@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './presentation/app.module';
 
@@ -64,9 +65,33 @@ async function bootstrap() {
     }),
   );
 
+  // Swagger API 문서 설정
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Alert System API')
+    .setDescription('출퇴근 알림 시스템 - 날씨, 미세먼지, 교통 정보 통합 제공 및 스마트 알림')
+    .setVersion('2.0')
+    .addTag('users', '사용자 관리')
+    .addTag('alerts', '알림 설정')
+    .addTag('behavior', '행동 추적 및 패턴 분석')
+    .addTag('notifications', '푸시 알림')
+    .addTag('privacy', '개인정보 관리 (GDPR)')
+    .addTag('air-quality', '미세먼지 정보')
+    .addTag('subway', '지하철 정보')
+    .addTag('bus', '버스 정보')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger API Docs: http://localhost:${port}/api-docs`);
 }
 bootstrap();
 

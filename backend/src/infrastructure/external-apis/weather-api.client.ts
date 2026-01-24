@@ -32,7 +32,8 @@ export class WeatherApiClient implements IWeatherApiClient {
         response.data.wind.speed
       );
     } catch (error) {
-      throw new Error(`Failed to fetch weather: ${error}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`날씨 정보를 가져오는데 실패했습니다: ${message}`);
     }
   }
 }

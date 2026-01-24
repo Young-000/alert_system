@@ -23,7 +23,7 @@ async function testConnection() {
   }
 
   console.log('🔄 Supabase 연결 테스트 중...');
-  console.log(`📍 Host: db.ayibvijmjygujjieueny.supabase.co`);
+  console.log(`📍 Host: db.gtnqsbdlybrkbsgtecvy.supabase.co (Project 2 - 비게임)`);
 
   const dataSource = new DataSource({
     ...buildDataSourceOptions(),

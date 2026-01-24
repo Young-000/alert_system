@@ -24,9 +24,21 @@ export class PostgresSubwayStationRepository implements ISubwayStationRepository
       return [];
     }
 
-    const entities = await this.repository
-      .createQueryBuilder('station')
-      .where('station.name ILIKE :name', { name: `%${normalized}%` })
+    const dbType = this.dataSource.options.type;
+    const queryBuilder = this.repository.createQueryBuilder('station');
+
+    // SQLite uses LIKE with LOWER(), PostgreSQL uses ILIKE
+    if (dbType === 'sqlite' || dbType === 'better-sqlite3') {
+      queryBuilder.where('LOWER(station.name) LIKE LOWER(:name)', {
+        name: `%${normalized}%`,
+      });
+    } else {
+      queryBuilder.where('station.name ILIKE :name', {
+        name: `%${normalized}%`,
+      });
+    }
+
+    const entities = await queryBuilder
       .orderBy('station.name', 'ASC')
       .limit(limit)
       .getMany();

@@ -1,7 +1,81 @@
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { behaviorCollector } from '../../infrastructure/analytics/behavior-collector';
+
+// Compute initial states outside of effects to avoid cascading renders
+function getInitialLoginState(): boolean {
+  return !!localStorage.getItem('userId');
+}
+
+function getInitialDepartureState(): { showButton: boolean; alertId: string | null } {
+  const lastNotificationTime = localStorage.getItem('lastNotificationTime');
+  const lastAlertId = localStorage.getItem('lastAlertId');
+  if (lastNotificationTime && lastAlertId) {
+    const timeDiff = Date.now() - parseInt(lastNotificationTime, 10);
+    if (timeDiff < 30 * 60 * 1000) { // 30 minutes
+      return { showButton: true, alertId: lastAlertId };
+    }
+  }
+  return { showButton: false, alertId: null };
+}
+
+// Check initial URL params for departure confirmation
+function getInitialDepartureConfirmed(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('departure') === 'confirmed';
+}
 
 export function HomePage() {
-  const isLoggedIn = !!localStorage.getItem('userId');
+  const isLoggedIn = getInitialLoginState();
+  const initialDeparture = getInitialDepartureState();
+  const [showDepartureButton, setShowDepartureButton] = useState(initialDeparture.showButton);
+  const [departureConfirmed, setDepartureConfirmed] = useState(getInitialDepartureConfirmed);
+  const [activeAlertId] = useState<string | null>(initialDeparture.alertId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hasHandledUrlParam = useRef(false);
+
+  // Initialize behavior collector (side effect for external system)
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      behaviorCollector.initialize(userId);
+    }
+  }, []);
+
+  // Clean up URL params and auto-hide confirmation (side effects for external system)
+  useEffect(() => {
+    if (searchParams.get('departure') === 'confirmed' && !hasHandledUrlParam.current) {
+      hasHandledUrlParam.current = true;
+      // Clear the query param (external system: browser URL)
+      searchParams.delete('departure');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Auto-hide departure confirmation toast after 3 seconds
+  useEffect(() => {
+    if (departureConfirmed) {
+      const timer = setTimeout(() => setDepartureConfirmed(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [departureConfirmed]);
+
+  const handleDepartureConfirm = useCallback(async () => {
+    if (!activeAlertId) return;
+
+    await behaviorCollector.trackDepartureConfirmed({
+      alertId: activeAlertId,
+      source: 'app',
+    });
+
+    setDepartureConfirmed(true);
+    setShowDepartureButton(false);
+    localStorage.removeItem('lastNotificationTime');
+    localStorage.removeItem('lastAlertId');
+
+    // Hide confirmation after 3 seconds
+    setTimeout(() => setDepartureConfirmed(false), 3000);
+  }, [activeAlertId]);
 
   return (
     <main className="page">
@@ -36,6 +110,34 @@ export function HomePage() {
           )}
         </div>
       </nav>
+
+      {/* Departure Confirmation Toast */}
+      {departureConfirmed && (
+        <div className="toast toast-success" role="alert" aria-live="polite">
+          <span className="toast-icon">✅</span>
+          <span>출발이 기록되었습니다! 오늘도 좋은 하루 되세요.</span>
+        </div>
+      )}
+
+      {/* Quick Departure Button (shown after receiving notification) */}
+      {showDepartureButton && isLoggedIn && (
+        <div className="departure-panel">
+          <div className="departure-content">
+            <span className="departure-icon">🚶</span>
+            <div className="departure-text">
+              <strong>지금 출발하시나요?</strong>
+              <span className="muted">버튼을 눌러 출발 시간을 기록하세요</span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary btn-departure"
+              onClick={handleDepartureConfirm}
+            >
+              지금 출발
+            </button>
+          </div>
+        </div>
+      )}
 
       <section id="main-content" className="hero">
         <div className="hero-content">

@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS alert_system.alerts (
   enabled BOOLEAN DEFAULT true,
   bus_stop_id VARCHAR(100),
   subway_station_id UUID REFERENCES alert_system.subway_stations(id),
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS alerts_user_id_idx ON alert_system.alerts (user_id);

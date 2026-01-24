@@ -1,6 +1,7 @@
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
 
+@Injectable()
 export class RemovePushSubscriptionUseCase {
   constructor(
     @Inject('IPushSubscriptionRepository')

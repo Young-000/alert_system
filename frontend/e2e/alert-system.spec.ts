@@ -8,7 +8,7 @@ test.describe('Alert System E2E Tests', () => {
   });
 
   test('HomePage should render correctly', async ({ page }) => {
-    await expect(page.locator('text=Alert System')).toBeVisible();
+    await expect(page.getByRole('navigation').getByText('Alert System')).toBeVisible();
     await expect(page.locator('text=출근과 퇴근 사이')).toBeVisible();
     await expect(page.locator('text=알림 시작하기').first()).toBeVisible();
   });
@@ -43,12 +43,17 @@ test.describe('Alert System E2E Tests', () => {
   });
 
   test('Should show alert wizard steps', async ({ page }) => {
-    // Set userId to simulate logged in state
-    await page.evaluate(() => {
-      localStorage.setItem('userId', 'test-user-id');
-    });
+    // First register a user to get valid credentials
+    const timestamp = Date.now();
+    await page.goto(`${BASE_URL}/login`);
+    await page.getByRole('button', { name: '회원가입' }).click();
+    await page.fill('input#email', `wizard-test-${timestamp}@example.com`);
+    await page.fill('input#name', `Wizard User`);
+    await page.fill('input#password', 'testPassword123');
+    await page.click('button[type="submit"]');
 
-    await page.goto(`${BASE_URL}/alerts`);
+    // Wait for navigation to alerts page
+    await page.waitForURL(/\/alerts/, { timeout: 10000 });
 
     // Step 1: Type selection
     await expect(page.locator('text=어떤 정보를 받고 싶으세요?')).toBeVisible();

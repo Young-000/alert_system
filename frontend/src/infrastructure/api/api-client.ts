@@ -22,6 +22,21 @@ export class ApiClient {
       }
       return config;
     });
+
+    // 인터셉터: 응답 에러 처리
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // 로그인/회원가입 API는 401 리다이렉트 제외 (에러 메시지 표시 필요)
+        const isAuthEndpoint = error.config?.url?.startsWith('/auth/');
+        if (error.response?.status === 401 && !isAuthEndpoint) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('userId');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   async get<T>(url: string): Promise<T> {

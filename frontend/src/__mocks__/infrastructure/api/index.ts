@@ -7,6 +7,18 @@ export const apiClient = {
   patch: jest.fn(),
 };
 
+// ApiClient class mock
+export class ApiClient {
+  constructor(_baseUrl: string) {
+    // Mock - baseUrl not used
+  }
+  get = jest.fn();
+  post = jest.fn();
+  put = jest.fn();
+  delete = jest.fn();
+  patch = jest.fn();
+}
+
 export const alertApiClient = {
   createAlert: jest.fn(),
   getAlertsByUser: jest.fn(),

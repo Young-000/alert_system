@@ -11,6 +11,10 @@ import {
   BusArrivalCacheEntity,
   ApiCallLogEntity,
 } from './typeorm/transport-cache.entity';
+import { NotificationRuleEntity } from './typeorm/notification-rule.entity';
+import { BehaviorEventEntity } from './typeorm/behavior-event.entity';
+import { UserPatternEntity } from './typeorm/user-pattern.entity';
+import { CommuteRecordEntity } from './typeorm/commute-record.entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -28,6 +32,12 @@ import { buildDataSourceOptions } from './database.config';
       SubwayArrivalCacheEntity,
       BusArrivalCacheEntity,
       ApiCallLogEntity,
+      // Smart notification
+      NotificationRuleEntity,
+      // Behavior tracking
+      BehaviorEventEntity,
+      UserPatternEntity,
+      CommuteRecordEntity,
     ]),
   ],
   exports: [TypeOrmModule],
