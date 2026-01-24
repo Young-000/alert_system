@@ -1,7 +1,8 @@
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ISubwayStationRepository } from '@domain/repositories/subway-station.repository';
 import { SubwayStation } from '@domain/entities/subway-station.entity';
 
+@Injectable()
 export class SearchSubwayStationsUseCase {
   constructor(
     @Inject('ISubwayStationRepository')

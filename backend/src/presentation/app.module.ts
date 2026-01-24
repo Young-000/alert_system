@@ -9,6 +9,8 @@ import { NotificationModule } from './modules/notification.module';
 import { AirQualityModule } from './modules/air-quality.module';
 import { SubwayModule } from './modules/subway.module';
 import { BusModule } from './modules/bus.module';
+import { BehaviorModule } from './modules/behavior.module';
+import { PrivacyModule } from './modules/privacy.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 
@@ -28,6 +30,8 @@ import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
     AirQualityModule,
     SubwayModule,
     BusModule,
+    BehaviorModule,
+    PrivacyModule,
   ],
   providers: [
     // 전역 JWT 인증 가드

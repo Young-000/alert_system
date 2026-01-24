@@ -1,4 +1,4 @@
-import { Inject, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, Optional, Logger } from '@nestjs/common';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { IWeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
@@ -13,6 +13,12 @@ import { Weather } from '@domain/entities/weather.entity';
 import { AirQuality } from '@domain/entities/air-quality.entity';
 import { BusArrival } from '@domain/entities/bus-arrival.entity';
 import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
+import { NotificationContextBuilder } from '@domain/entities/notification-context.entity';
+import { RuleCategory } from '@domain/entities/notification-rule.entity';
+import { IRuleEngine, RULE_ENGINE } from '@domain/services/rule-engine.service';
+import { ISmartMessageBuilder, SMART_MESSAGE_BUILDER } from '@application/services/smart-message-builder.service';
+import { INotificationRuleRepository, NOTIFICATION_RULE_REPOSITORY } from '@domain/repositories/notification-rule.repository';
+import { Recommendation } from '@domain/entities/recommendation.entity';
 
 interface NotificationData {
   weather?: Weather;
@@ -20,9 +26,13 @@ interface NotificationData {
   busArrivals?: BusArrival[];
   subwayArrivals?: SubwayArrival[];
   subwayStationName?: string;
+  recommendations?: Recommendation[];
 }
 
+@Injectable()
 export class SendNotificationUseCase {
+  private readonly logger = new Logger(SendNotificationUseCase.name);
+
   constructor(
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,
     @Inject('IUserRepository') private userRepository: IUserRepository,
@@ -37,6 +47,10 @@ export class SendNotificationUseCase {
     private pushSubscriptionRepository: IPushSubscriptionRepository,
     @Inject('ISubwayStationRepository')
     private subwayStationRepository: ISubwayStationRepository,
+    // Smart Notification dependencies (optional for backward compatibility)
+    @Optional() @Inject(RULE_ENGINE) private ruleEngine?: IRuleEngine,
+    @Optional() @Inject(SMART_MESSAGE_BUILDER) private smartMessageBuilder?: ISmartMessageBuilder,
+    @Optional() @Inject(NOTIFICATION_RULE_REPOSITORY) private ruleRepository?: INotificationRuleRepository,
   ) {}
 
   async execute(alertId: string): Promise<void> {
@@ -54,6 +68,8 @@ export class SendNotificationUseCase {
       throw new NotFoundException('사용자 위치 정보를 찾을 수 없습니다.');
     }
 
+    // Build notification context
+    const contextBuilder = NotificationContextBuilder.create(user.id, alertId);
     const data: NotificationData = {};
 
     if (alert.alertTypes.includes(AlertType.WEATHER)) {
@@ -62,6 +78,7 @@ export class SendNotificationUseCase {
         user.location.lng,
       );
       data.weather = weather;
+      contextBuilder.withWeather(weather);
     }
 
     if (alert.alertTypes.includes(AlertType.AIR_QUALITY)) {
@@ -70,6 +87,7 @@ export class SendNotificationUseCase {
         user.location.lng,
       );
       data.airQuality = airQuality;
+      contextBuilder.withAirQuality(airQuality);
     }
 
     if (alert.alertTypes.includes(AlertType.BUS) && alert.busStopId) {
@@ -77,6 +95,7 @@ export class SendNotificationUseCase {
         alert.busStopId,
       );
       data.busArrivals = busArrivals;
+      contextBuilder.withBusArrivals(busArrivals);
     }
 
     if (alert.alertTypes.includes(AlertType.SUBWAY) && alert.subwayStationId) {
@@ -89,13 +108,46 @@ export class SendNotificationUseCase {
           await this.subwayApiClient.getSubwayArrival(stationName);
         data.subwayArrivals = subwayArrivals;
         data.subwayStationName = stationName;
+        contextBuilder.withSubwayArrivals(subwayArrivals, stationName);
       }
     }
 
+    const context = contextBuilder.build();
+
+    // Smart notification: evaluate rules and build message
+    let title = alert.name;
+    let body: string;
+    let recommendations: Recommendation[] = [];
+
+    if (this.ruleEngine && this.smartMessageBuilder && this.ruleRepository) {
+      try {
+        const categories = this.getRelevantCategories(alert.alertTypes);
+        const rules = await this.ruleRepository.findByCategories(categories);
+
+        recommendations = this.ruleEngine.evaluate(context, rules);
+        data.recommendations = recommendations;
+
+        title = this.smartMessageBuilder.buildTitle(context);
+        body = this.smartMessageBuilder.build(context, recommendations);
+
+        this.logger.log(`Smart notification: ${recommendations.length} recommendations generated`);
+      } catch (error) {
+        this.logger.warn(`Smart notification failed, falling back: ${error}`);
+        body = this.buildNotificationBody(data);
+      }
+    } else {
+      // Fallback to legacy message builder
+      body = this.buildNotificationBody(data);
+    }
+
     const payload = JSON.stringify({
-      title: alert.name,
-      body: this.buildNotificationBody(data),
+      title,
+      body,
       data,
+      actions: [
+        { action: 'leaving-now', title: '지금 출발' },
+        { action: 'dismiss', title: '닫기' },
+      ],
     });
 
     const subscriptions = await this.pushSubscriptionRepository.findByUserId(
@@ -111,6 +163,25 @@ export class SendNotificationUseCase {
         payload,
       );
     }
+  }
+
+  private getRelevantCategories(alertTypes: AlertType[]): RuleCategory[] {
+    const categories: RuleCategory[] = [];
+
+    if (alertTypes.includes(AlertType.WEATHER)) {
+      categories.push(RuleCategory.WEATHER);
+    }
+    if (alertTypes.includes(AlertType.AIR_QUALITY)) {
+      categories.push(RuleCategory.AIR_QUALITY);
+    }
+    if (alertTypes.includes(AlertType.BUS) || alertTypes.includes(AlertType.SUBWAY)) {
+      categories.push(RuleCategory.TRANSIT);
+    }
+    if (alertTypes.includes(AlertType.BUS) && alertTypes.includes(AlertType.SUBWAY)) {
+      categories.push(RuleCategory.TRANSIT_COMPARISON);
+    }
+
+    return categories;
   }
 
   private buildNotificationBody(data: NotificationData): string {

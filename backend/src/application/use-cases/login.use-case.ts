@@ -1,4 +1,4 @@
-import { Inject, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
 import { LoginDto } from '../dto/create-user.dto';
@@ -9,6 +9,7 @@ export interface LoginResult {
   accessToken: string;
 }
 
+@Injectable()
 export class LoginUseCase {
   constructor(
     @Inject('IUserRepository') private userRepository: IUserRepository,

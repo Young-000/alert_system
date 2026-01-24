@@ -30,11 +30,17 @@ export class PushService {
       applicationServerKey: this.urlBase64ToUint8Array(publicKey),
     });
 
+    const p256dh = subscription.getKey('p256dh');
+    const auth = subscription.getKey('auth');
+    if (!p256dh || !auth) {
+      throw new Error('Push subscription keys are missing');
+    }
+
     return {
       endpoint: subscription.endpoint,
       keys: {
-        p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh')!),
-        auth: this.arrayBufferToBase64(subscription.getKey('auth')!),
+        p256dh: this.arrayBufferToBase64(p256dh),
+        auth: this.arrayBufferToBase64(auth),
       },
     };
   }

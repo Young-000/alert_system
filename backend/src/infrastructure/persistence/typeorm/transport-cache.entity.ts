@@ -9,7 +9,7 @@ export class SubwayArrivalCacheEntity {
   @Column({ name: 'station_name' })
   stationName: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'simple-json' })
   arrivals: Array<{
     stationId: string;
     subwayId: string;
@@ -34,7 +34,7 @@ export class BusArrivalCacheEntity {
   @Column({ name: 'stop_id' })
   stopId: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'simple-json' })
   arrivals: Array<{
     stopId: string;
     routeId: string;

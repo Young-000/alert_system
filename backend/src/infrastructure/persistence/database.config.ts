@@ -1,5 +1,6 @@
 import { DataSourceOptions } from 'typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 import * as dotenv from 'dotenv';
 import * as pg from 'pg';
 import { UserEntity } from './typeorm/user.entity';
@@ -9,7 +10,21 @@ import { SubwayStationEntity } from './typeorm/subway-station.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
-  const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL;
+
+  // SQLite 모드 지원 (E2E 테스트용)
+  const useSqlite = process.env.USE_SQLITE === 'true';
+  if (useSqlite) {
+    const sqliteOptions: SqliteConnectionOptions = {
+      type: 'sqlite',
+      database: process.env.SQLITE_DATABASE || ':memory:',
+      entities: [UserEntity, AlertEntity, PushSubscriptionEntity, SubwayStationEntity],
+      synchronize: true,
+    };
+    return sqliteOptions;
+  }
+
+  // Support global env var from ~/.zshrc (SUPABASE_PROJECT2_DB_URL) as fallback
+  const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_PROJECT2_DB_URL;
   const hasUrl = Boolean(databaseUrl);
   const isSupabase = Boolean(process.env.SUPABASE_URL) || Boolean(databaseUrl?.includes('supabase.co'));
   const synchronize =

@@ -3,6 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -33,7 +34,7 @@ export class AlertEntity {
   @Column()
   schedule: string;
 
-  @Column({ type: 'jsonb', name: 'alert_types' })
+  @Column({ type: 'simple-json', name: 'alert_types' })
   alertTypes: string[];
 
   @Column({ default: true })
@@ -47,4 +48,7 @@ export class AlertEntity {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

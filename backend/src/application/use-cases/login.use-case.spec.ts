@@ -2,13 +2,22 @@ import { UnauthorizedException } from '@nestjs/common';
 import { LoginUseCase } from './login.use-case';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
-import * as bcrypt from 'bcrypt';
+
+// bcrypt 모킹으로 테스트 속도 향상
+jest.mock('bcrypt', () => ({
+  hash: jest.fn().mockResolvedValue('hashedPassword'),
+  hashSync: jest.fn().mockReturnValue('hashedPassword'),
+  compare: jest.fn().mockImplementation((password: string, hash: string) => {
+    // password123은 올바른 비밀번호
+    return Promise.resolve(password === 'password123' && hash === 'hashedPassword');
+  }),
+}));
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
   let mockUserRepository: jest.Mocked<IUserRepository>;
 
-  const hashedPassword = bcrypt.hashSync('password123', 10);
+  const hashedPassword = 'hashedPassword';
 
   const mockUser = new User(
     'test@example.com',

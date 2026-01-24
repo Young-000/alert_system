@@ -61,7 +61,7 @@ describe('GetAirQualityUseCase', () => {
       mockUserRepository.findById.mockResolvedValue(undefined);
 
       await expect(useCase.execute('non-existent')).rejects.toThrow(
-        'User location not found',
+        '사용자를 찾을 수 없습니다.',
       );
     });
 
@@ -76,7 +76,7 @@ describe('GetAirQualityUseCase', () => {
       mockUserRepository.findById.mockResolvedValue(userWithoutLocation);
 
       await expect(useCase.execute('user-2')).rejects.toThrow(
-        'User location not found',
+        '사용자 위치 정보가 설정되지 않았습니다.',
       );
     });
   });

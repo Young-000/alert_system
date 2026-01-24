@@ -1,6 +1,7 @@
 import { Module, OnModuleInit, Inject, Optional } from '@nestjs/common';
 import { NotificationController } from '../controllers/notification.controller';
 import { QueueModule } from '@infrastructure/queue/queue.module';
+import { SmartNotificationModule } from './smart-notification.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { PostgresPushSubscriptionRepository } from '@infrastructure/persistence/postgres-push-subscription.repository';
@@ -20,7 +21,7 @@ import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-m
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
-  imports: [QueueModule],
+  imports: [QueueModule, SmartNotificationModule],
   controllers: [NotificationController],
   providers: [
     {

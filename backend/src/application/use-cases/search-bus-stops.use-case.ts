@@ -1,7 +1,8 @@
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { BusStop } from '@domain/entities/bus-stop.entity';
 import { IBusStopApiClient } from '@infrastructure/external-apis/bus-stop-api.client';
 
+@Injectable()
 export class SearchBusStopsUseCase {
   constructor(
     @Inject('IBusStopApiClient')
