@@ -10,7 +10,7 @@
 - **Current Status**: 🟢 Complete
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-01-24 09:21:00
+- **Last Updated**: 2026-01-24 11:37:40
 
 ## Infrastructure
 
@@ -49,9 +49,9 @@
 | CI/CD | 🟢 | Vercel 자동 배포 |
 
 ## Git Statistics
-- **Total Commits**: 11
-- **Last Commit**: 2026-01-16 03:10:19
-- **Last Commit Message**: E2E Review: Supabase 스키마 적용 및 코드 품질 개선 (#2)
+- **Total Commits**: 12
+- **Last Commit**: 2026-01-24 11:37:40
+- **Last Commit Message**: [E2E Review] 2026-01-24 점검 완료 (#3)
 - **Current Branch**: main
 - **Uncommitted Changes**: 0 files
 
@@ -107,5 +107,24 @@ cd backend && npm test
 cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3001 npx playwright test
 ```
 
+## 최근 E2E 검증 (2026-01-24 20:20)
+
+### API 엔드포인트
+| Endpoint | Status | Notes |
+|----------|--------|-------|
+| POST /auth/register | ✅ | 회원가입 정상 |
+| POST /auth/login | ✅ | 로그인 정상 |
+| POST /alerts | ✅ | 알림 생성 정상 |
+| GET /alerts/user/:userId | ✅ | 알림 조회 정상 |
+| GET /air-quality/location | ✅ | 미세먼지 실시간 데이터 |
+| GET /subway/stations | ✅ | 799개 역 검색 가능 |
+
+### UI/UX 반응형
+| Viewport | Status |
+|----------|--------|
+| Mobile (375x667) | ✅ |
+| Tablet (768x1024) | ✅ |
+| Desktop (1920x1080) | ✅ |
+
 ---
-*Last updated: 2026-01-24 09:21:00*
+*Last updated: 2026-01-24 20:20:00*
