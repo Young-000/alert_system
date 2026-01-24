@@ -26,7 +26,10 @@ export function buildDataSourceOptions(): DataSourceOptions {
   // Support global env var from ~/.zshrc (SUPABASE_PROJECT2_DB_URL) as fallback
   const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_PROJECT2_DB_URL;
   const hasUrl = Boolean(databaseUrl);
-  const isSupabase = Boolean(process.env.SUPABASE_URL) || Boolean(databaseUrl?.includes('supabase.co'));
+  // Detect Supabase from URL, SUPABASE_URL env, or DATABASE_HOST (for pooler connections)
+  const isSupabase = Boolean(process.env.SUPABASE_URL) ||
+                     Boolean(databaseUrl?.includes('supabase.co')) ||
+                     Boolean(process.env.DATABASE_HOST?.includes('supabase.com'));
   const synchronize =
     process.env.DB_SYNCHRONIZE === 'true' ||
     (!hasUrl && process.env.NODE_ENV === 'development');
