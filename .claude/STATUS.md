@@ -7,10 +7,10 @@
 - **Repository**: local
 
 ## Status
-- **Current Status**: 🟢 Complete
+- **Current Status**: 🟢 Complete (AWS 전환 준비 완료)
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-01-25 09:43:35
+- **Last Updated**: 2026-01-26 03:15:00
 
 ## Infrastructure
 
@@ -49,11 +49,11 @@
 | CI/CD | 🟢 | Vercel 자동 배포 |
 
 ## Git Statistics
-- **Total Commits**: 21
-- **Last Commit**: 2026-01-25 09:43:32
-- **Last Commit Message**: [E2E Review] 2026-01-25 1차 점검 완료 (#5)
+- **Total Commits**: 24
+- **Last Commit**: 2026-01-26 01:34:51
+- **Last Commit Message**: docs: simplify CLAUDE.md with global reference
 - **Current Branch**: main
-- **Uncommitted Changes**: 0 files
+- **Uncommitted Changes**: 1 files
 
 ## Implementation Status
 
@@ -87,6 +87,34 @@
 - 개발 환경: `USE_SQLITE=true` 설정으로 SQLite 모드 사용 가능
 - 프로덕션 환경: Supabase PostgreSQL 사용
 - Redis는 선택적 (BullMQ 스케줄러용)
+
+## AWS 전환 준비 상태
+
+### 준비된 인프라
+| 항목 | 상태 | 위치 |
+|------|------|------|
+| Terraform 모듈 | ✅ 준비 | `infra/terraform/` |
+| VPC/네트워크 | ✅ 준비 | 7개 모듈 (vpc, alb, ecs, rds, elasticache, eventbridge, cloudwatch) |
+| EventBridge Scheduler 서비스 | ✅ 준비 | `backend/src/infrastructure/scheduler/.aws-ready/` |
+| Scheduler Trigger API | ✅ 준비 | `/scheduler/trigger` 엔드포인트 |
+| CI/CD 파이프라인 | ✅ 준비 | `.github/workflows/deploy.yml` |
+| 배포 가이드 | ✅ 준비 | `infra/DEPLOYMENT_GUIDE.md` |
+
+### AWS 전환 단계
+1. AWS SDK 설치: `npm install @aws-sdk/client-scheduler`
+2. EventBridge 서비스 활성화 (`.aws-ready/` → `scheduler/`)
+3. Terraform 인프라 배포
+4. 환경변수 설정 (AWS_SCHEDULER_ENABLED=true)
+
+### 예상 비용
+| 서비스 | 월 비용 |
+|--------|---------|
+| ECS Fargate | ~$30 |
+| ALB | ~$20 |
+| RDS (db.t4g.micro) | ~$30 |
+| ElastiCache | ~$25 |
+| CloudWatch | ~$10 |
+| **총합** | **~$115/월** |
 
 ## 🚀 배포 정보
 
@@ -138,5 +166,21 @@ cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3
 | Tablet (768x1024) | ✅ |
 | Desktop (1920x1080) | ✅ |
 
+## 최근 E2E 검증 (2026-01-26 AWS 전환 준비)
+
+### 코드 품질
+| 검사 | Backend | Frontend |
+|------|---------|----------|
+| TypeScript | ✅ 통과 | ✅ 통과 |
+| ESLint | ✅ 통과 | ✅ 통과 |
+| 빌드 | ✅ 성공 | ✅ 성공 |
+| 테스트 | ✅ 155 passed | ✅ 15 passed |
+
+### 변경사항
+- EventBridge Scheduler 서비스 코드 준비 (AWS SDK 설치 전)
+- Scheduler 컨트롤러 분리 (`scheduler-trigger.controller.ts`, `scheduler-legacy.controller.ts`)
+- Terraform IaC 모듈 완성 (7개 모듈)
+- GitHub Actions CI/CD 파이프라인 준비
+
 ---
-*Last updated: 2026-01-25 01:30:00*
+*Last updated: 2026-01-26 03:15:00*

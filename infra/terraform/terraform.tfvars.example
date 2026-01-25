@@ -1,0 +1,39 @@
+# Alert System - Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in the values
+
+# General
+project_name = "alert-system"
+environment  = "prod"
+aws_region   = "ap-northeast-2"
+
+# VPC
+vpc_cidr = "10.0.0.0/16"
+
+# ECS
+container_image   = "your-account-id.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system:latest"
+container_port    = 3000
+ecs_cpu           = 512   # 0.5 vCPU
+ecs_memory        = 1024  # 1 GB
+ecs_desired_count = 2
+
+# RDS
+rds_instance_class    = "db.t4g.micro"
+rds_allocated_storage = 20
+database_name         = "alert_system"
+database_username     = "alert_admin"
+
+# ElastiCache
+elasticache_node_type = "cache.t4g.micro"
+
+# SSL Certificate (optional - leave empty for HTTP only)
+certificate_arn = ""
+
+# SSM Parameter Store ARNs for secrets
+# Create these parameters in AWS SSM Parameter Store first:
+# aws ssm put-parameter --name "/alert-system/prod/jwt-secret" --value "your-secret" --type SecureString
+ssm_jwt_secret_arn          = "arn:aws:ssm:ap-northeast-2:YOUR_ACCOUNT_ID:parameter/alert-system/prod/jwt-secret"
+ssm_vapid_private_key_arn   = "arn:aws:ssm:ap-northeast-2:YOUR_ACCOUNT_ID:parameter/alert-system/prod/vapid-private-key"
+ssm_air_quality_api_key_arn = "arn:aws:ssm:ap-northeast-2:YOUR_ACCOUNT_ID:parameter/alert-system/prod/air-quality-api-key"
+
+# Monitoring
+alert_email = "your-email@example.com"

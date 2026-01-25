@@ -8,8 +8,16 @@ interface TriggerDto {
   alertId?: string;
 }
 
-@Controller('scheduler')
-export class SchedulerController {
+/**
+ * Legacy Scheduler Controller
+ *
+ * Render 배포용 크론 트리거 (모든 알림 일괄 발송)
+ * AWS 전환 후에는 scheduler-trigger.controller.ts 사용
+ *
+ * @deprecated AWS 전환 후 제거 예정
+ */
+@Controller('scheduler-legacy')
+export class SchedulerLegacyController {
   constructor(
     private sendNotificationUseCase: SendNotificationUseCase,
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,
