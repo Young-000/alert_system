@@ -32,3 +32,12 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      # Solapi 알림톡
+      - key: SOLAPI_API_KEY
+        sync: false
+      - key: SOLAPI_API_SECRET
+        sync: false
+      - key: SOLAPI_PF_ID
+        sync: false
+      - key: SOLAPI_TEMPLATE_ID
+        sync: false
