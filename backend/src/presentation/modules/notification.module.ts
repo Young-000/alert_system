@@ -1,5 +1,7 @@
 import { Module, OnModuleInit, Inject, Optional } from '@nestjs/common';
 import { NotificationController } from '../controllers/notification.controller';
+import { SchedulerTriggerController } from '../controllers/scheduler-trigger.controller';
+import { SchedulerLegacyController } from '../controllers/scheduler-legacy.controller';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { SmartNotificationModule } from './smart-notification.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
@@ -22,7 +24,7 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
   imports: [QueueModule, SmartNotificationModule],
-  controllers: [NotificationController],
+  controllers: [NotificationController, SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {
       provide: 'IAlertRepository',
