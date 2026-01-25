@@ -10,7 +10,7 @@
 - **Current Status**: 🟢 Complete
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-01-24 11:37:40
+- **Last Updated**: 2026-01-25 02:39:29
 
 ## Infrastructure
 
@@ -49,11 +49,11 @@
 | CI/CD | 🟢 | Vercel 자동 배포 |
 
 ## Git Statistics
-- **Total Commits**: 12
-- **Last Commit**: 2026-01-24 11:37:40
-- **Last Commit Message**: [E2E Review] 2026-01-24 점검 완료 (#3)
+- **Total Commits**: 20
+- **Last Commit**: 2026-01-25 02:39:29
+- **Last Commit Message**: fix: detect Supabase from DATABASE_HOST for individual env vars
 - **Current Branch**: main
-- **Uncommitted Changes**: 0 files
+- **Uncommitted Changes**: 15 files
 
 ## Implementation Status
 
@@ -91,12 +91,15 @@
 ## 🚀 배포 정보
 
 ### Frontend (Vercel)
-- **URL**: https://alertsystem-phi.vercel.app
+- **URL**: https://frontend-xi-two-52.vercel.app
+- **최신 배포**: https://frontend-iv289b99q-youngjaes-projects-fcb4b310.vercel.app
 - **자동 배포**: GitHub push 시 자동 배포
 
-### Backend
+### Backend (Render)
+- **URL**: https://alert-system-kdg9.onrender.com
 - **로컬 개발**: `npm run start:dev` (포트 3001)
-- **프로덕션**: Railway/Render 배포 필요 (CLI 로그인 필요)
+- **프로덕션**: Render 무료 티어 (SQLite 모드)
+- **주의**: Cold Start 시 ~30초 지연 가능
 
 ### 테스트 명령어
 ```bash
@@ -107,17 +110,26 @@ cd backend && npm test
 cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3001 npx playwright test
 ```
 
-## 최근 E2E 검증 (2026-01-24 20:20)
+## 최근 E2E 검증 (2026-01-25 프로덕션)
 
 ### API 엔드포인트
 | Endpoint | Status | Notes |
 |----------|--------|-------|
-| POST /auth/register | ✅ | 회원가입 정상 |
+| POST /auth/register | ✅ | 회원가입 정상 (201) |
 | POST /auth/login | ✅ | 로그인 정상 |
-| POST /alerts | ✅ | 알림 생성 정상 |
-| GET /alerts/user/:userId | ✅ | 알림 조회 정상 |
+| POST /alerts | ✅ | 알림 생성 (JWT 인증 필요) |
+| GET /alerts/user/:userId | ✅ | 알림 조회 정상 (200) |
 | GET /air-quality/location | ✅ | 미세먼지 실시간 데이터 |
 | GET /subway/stations | ✅ | 799개 역 검색 가능 |
+
+### 프로덕션 E2E 테스트 결과
+| 테스트 항목 | 상태 | 비고 |
+|------------|------|------|
+| Frontend 로드 | ✅ | Vercel 배포 정상 |
+| Backend 연결 | ✅ | Render → Vercel 연결 |
+| 회원가입 | ✅ | 201 Created |
+| 로그인 유지 | ✅ | JWT 토큰 저장 |
+| 마법사 UI | ✅ | Step 1-3 전환 정상 |
 
 ### UI/UX 반응형
 | Viewport | Status |
@@ -127,4 +139,4 @@ cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3
 | Desktop (1920x1080) | ✅ |
 
 ---
-*Last updated: 2026-01-24 20:20:00*
+*Last updated: 2026-01-25 01:30:00*
