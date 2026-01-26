@@ -16,7 +16,32 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleEnabled, setIsGoogleEnabled] = useState(false);
+  const [serverStatus, setServerStatus] = useState<'warming' | 'ready' | 'error'>('warming');
   const navigate = useNavigate();
+
+  // 서버 예열 (Cold Start 대응)
+  useEffect(() => {
+    const warmUpServer = async () => {
+      const startTime = Date.now();
+      try {
+        const response = await fetch(`${API_BASE_URL}/health`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(45000), // 45초 타임아웃
+        });
+        if (response.ok) {
+          setServerStatus('ready');
+          const elapsed = Date.now() - startTime;
+          if (elapsed > 5000) {
+            console.log(`Server warmed up in ${(elapsed / 1000).toFixed(1)}s`);
+          }
+        }
+      } catch {
+        // 실패해도 사용자가 시도할 수 있도록 ready로 설정
+        setServerStatus('ready');
+      }
+    };
+    warmUpServer();
+  }, []);
 
   // Google OAuth 상태 확인
   useEffect(() => {
@@ -31,8 +56,11 @@ export function LoginPage() {
         // Google 상태 확인 실패 시 무시
       }
     };
-    checkGoogleStatus();
-  }, []);
+    // 서버가 준비되면 Google 상태 확인
+    if (serverStatus === 'ready') {
+      checkGoogleStatus();
+    }
+  }, [serverStatus]);
 
   const handleGoogleLogin = () => {
     // 백엔드 Google OAuth 엔드포인트로 리다이렉트
@@ -191,9 +219,14 @@ export function LoginPage() {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isLoading}
+              disabled={isLoading || serverStatus === 'warming'}
             >
-              {isLoading ? (
+              {serverStatus === 'warming' ? (
+                <>
+                  <span className="spinner spinner-sm" aria-hidden="true" />
+                  서버 연결 중...
+                </>
+              ) : isLoading ? (
                 <>
                   <span className="spinner spinner-sm" aria-hidden="true" />
                   처리 중...

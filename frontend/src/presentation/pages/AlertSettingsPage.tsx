@@ -513,13 +513,22 @@ export function AlertSettingsPage() {
         {/* Step: Type Selection */}
         {step === 'type' && (
           <section className="wizard-step">
+            {/* 알림톡 안내 배너 */}
+            <div className="alimtalk-banner">
+              <span className="alimtalk-icon" aria-hidden="true">📱</span>
+              <div className="alimtalk-text">
+                <strong>카카오 알림톡으로 알림을 받아요</strong>
+                <span className="muted">회원가입 시 등록한 전화번호로 발송됩니다</span>
+              </div>
+            </div>
+
             {/* Quick Action: One-click Weather Alert */}
             <div className="quick-action-card">
               <div className="quick-action-content">
                 <span className="quick-action-icon" aria-hidden="true">🌤️</span>
                 <div className="quick-action-text">
                   <strong>날씨 알림 바로 시작</strong>
-                  <span className="muted">매일 오전 7시 날씨 + 미세먼지</span>
+                  <span className="muted">매일 오전 7시 날씨 + 미세먼지 알림톡</span>
                 </div>
               </div>
               <button
@@ -782,9 +791,29 @@ export function AlertSettingsPage() {
                 ))}
               </div>
 
+              <div className="confirm-section">
+                <h3>📱 알림 방법</h3>
+                <div className="delivery-methods">
+                  <div className="delivery-method">
+                    <span className="delivery-icon">💬</span>
+                    <span>카카오 알림톡</span>
+                    <span className="badge badge-primary">기본</span>
+                  </div>
+                  <div className="delivery-method muted">
+                    <span className="delivery-icon">🔔</span>
+                    <span>브라우저 푸시</span>
+                    {permission === 'granted' ? (
+                      <span className="badge badge-success">활성</span>
+                    ) : (
+                      <span className="badge badge-muted">선택</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {permission !== 'granted' && (
-                <div className="notice warning">
-                  알림을 받으려면 브라우저 알림 권한이 필요합니다.
+                <div className="notice info">
+                  브라우저 알림도 함께 받으시겠어요? 아래 버튼 클릭 시 권한을 요청합니다.
                 </div>
               )}
             </div>
