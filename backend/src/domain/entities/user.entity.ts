@@ -10,16 +10,20 @@ export class User {
   public readonly id: string;
   public readonly email: string;
   public readonly name: string;
+  public phoneNumber: string;
   public passwordHash?: string;
   public location?: UserLocation;
+  public googleId?: string;
   public readonly createdAt: Date;
   public updatedAt: Date;
 
   constructor(
     email: string,
     name: string,
+    phoneNumber: string,
     passwordHash?: string,
     location?: UserLocation,
+    googleId?: string,
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
@@ -27,8 +31,10 @@ export class User {
     this.id = id || uuidv4();
     this.email = email;
     this.name = name;
+    this.phoneNumber = phoneNumber;
     this.passwordHash = passwordHash;
     this.location = location;
+    this.googleId = googleId;
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
   }

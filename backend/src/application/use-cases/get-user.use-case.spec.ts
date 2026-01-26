@@ -10,8 +10,10 @@ describe('GetUserUseCase', () => {
   const mockUser = new User(
     'test@example.com',
     '테스트유저',
+    '01012345678',
     'hashedPassword',
     { address: '서울시 강남구', lat: 37.5665, lng: 126.978 },
+    undefined, // googleId
     'user-1',
   );
 
@@ -19,6 +21,8 @@ describe('GetUserUseCase', () => {
     mockUserRepository = {
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      updateGoogleId: jest.fn(),
       save: jest.fn(),
     };
 

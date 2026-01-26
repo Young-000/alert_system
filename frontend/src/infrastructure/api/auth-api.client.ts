@@ -5,6 +5,7 @@ export interface AuthResponse {
     id: string;
     email: string;
     name: string;
+    phoneNumber: string;
   };
   accessToken: string;
 }
@@ -13,6 +14,7 @@ export interface RegisterDto {
   email: string;
   password: string;
   name: string;
+  phoneNumber: string;
 }
 
 export interface LoginDto {

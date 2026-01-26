@@ -19,11 +19,13 @@ import { PushNotificationService } from '@infrastructure/push/push-notification.
 import { NoopPushNotificationService } from '@infrastructure/push/noop-push-notification.service';
 import { NotificationProcessor } from '@infrastructure/queue/notification.processor';
 import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-memory-notification-scheduler.service';
+import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
-  imports: [QueueModule, SmartNotificationModule],
+  imports: [QueueModule, SmartNotificationModule, ConfigModule],
   controllers: [NotificationController, SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {
@@ -81,6 +83,18 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
         }
         return new PushNotificationService(publicKey, privateKey, subject);
       },
+    },
+    {
+      provide: SOLAPI_SERVICE,
+      useFactory: (configService: ConfigService) => {
+        const apiKey = configService.get<string>('SOLAPI_API_KEY', '');
+        const apiSecret = configService.get<string>('SOLAPI_API_SECRET', '');
+        if (!apiKey || !apiSecret) {
+          return new NoopSolapiService();
+        }
+        return new SolapiService(configService);
+      },
+      inject: [ConfigService],
     },
     SendNotificationUseCase,
     SavePushSubscriptionUseCase,

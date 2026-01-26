@@ -14,6 +14,12 @@ export class UserEntity {
   @Column()
   name: string;
 
+  @Column({ name: 'phone_number', default: '' })
+  phoneNumber: string;
+
+  @Column({ name: 'google_id', unique: true, nullable: true })
+  googleId?: string;
+
   @Column({ type: 'simple-json', nullable: true })
   location?: {
     address: string;

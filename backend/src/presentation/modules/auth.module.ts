@@ -5,8 +5,10 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../../infrastructure/auth/auth.service';
 import { JwtStrategy } from '../../infrastructure/auth/jwt.strategy';
+import { GoogleStrategy } from '../../infrastructure/auth/google.strategy';
 import { CreateUserUseCase } from '@application/use-cases/create-user.use-case';
 import { LoginUseCase } from '@application/use-cases/login.use-case';
+import { GoogleOAuthUseCase } from '@application/use-cases/google-oauth.use-case';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '@infrastructure/persistence/typeorm/user.entity';
@@ -35,8 +37,13 @@ import { UserEntity } from '@infrastructure/persistence/typeorm/user.entity';
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     CreateUserUseCase,
     LoginUseCase,
+    {
+      provide: 'GoogleOAuthUseCase',
+      useClass: GoogleOAuthUseCase,
+    },
     {
       provide: 'IUserRepository',
       useClass: PostgresUserRepository,

@@ -9,8 +9,8 @@ describe('UserRepository', () => {
   });
 
   it('should save a user', async () => {
-    const user = new User('user@example.com', 'John Doe');
-    
+    const user = new User('user@example.com', 'John Doe', '01012345678');
+
     await repository.save(user);
     
     const found = await repository.findById(user.id);
@@ -18,7 +18,7 @@ describe('UserRepository', () => {
   });
 
   it('should find user by id', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     await repository.save(user);
     
     const found = await repository.findById(user.id);
@@ -33,7 +33,7 @@ describe('UserRepository', () => {
   });
 
   it('should find user by email', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     await repository.save(user);
     
     const found = await repository.findByEmail('user@example.com');

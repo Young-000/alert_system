@@ -4,6 +4,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { AlertSettingsPage } from './pages/AlertSettingsPage';
+import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/alerts" element={<AlertSettingsPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>

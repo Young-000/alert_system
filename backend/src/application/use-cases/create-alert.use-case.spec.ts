@@ -24,6 +24,8 @@ describe('CreateAlertUseCase', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      updateGoogleId: jest.fn(),
     };
     notificationScheduler = {
       scheduleNotification: jest.fn(),
@@ -33,7 +35,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create an alert', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '출근 알림',
@@ -67,7 +69,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create an alert with bus stop id', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '출근 알림',
@@ -85,7 +87,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create an alert with subway station id', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '지하철 알림',
@@ -103,7 +105,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create an alert with multiple alert types', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '종합 출근 알림',
@@ -125,7 +127,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create alert with air quality type only', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '미세먼지 알림',
@@ -143,7 +145,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create alert and call scheduler with the alert', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '퇴근 알림',
@@ -166,7 +168,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create alert with weekend schedule', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '주말 알림',
@@ -183,7 +185,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should create alert with hourly schedule', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '시간별 알림',
@@ -200,7 +202,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should set alert as enabled by default', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '기본 알림',
@@ -217,7 +219,7 @@ describe('CreateAlertUseCase', () => {
   });
 
   it('should generate unique id for each alert', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const dto: CreateAlertDto = {
       userId: user.id,
       name: '알림 1',

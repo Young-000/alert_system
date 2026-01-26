@@ -7,10 +7,10 @@
 - **Repository**: local
 
 ## Status
-- **Current Status**: 🟢 Complete (AWS 전환 준비 완료)
+- **Current Status**: 🟢 Complete (Google OAuth + 알림톡 연동 완료)
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-01-26 03:15:00
+- **Last Updated**: 2026-01-27 03:00:00
 
 ## Infrastructure
 
@@ -39,6 +39,7 @@
 | 지하철 API | 🟢 연동됨 | 지하철 도착 정보 |
 | Web Push | 🟢 연동됨 | 푸시 알림 |
 | 알림톡 (Solapi) | 🟢 연동됨 | 카카오 알림톡 |
+| Google OAuth | 🟡 코드 준비 | Google 로그인 (설정 필요) |
 
 ### Completion
 | Category | Progress | Notes |
@@ -182,5 +183,99 @@ cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3
 - Terraform IaC 모듈 완성 (7개 모듈)
 - GitHub Actions CI/CD 파이프라인 준비
 
+## Google OAuth 설정 가이드
+
+### 1. Google Cloud Console 프로젝트 생성
+
+1. [Google Cloud Console](https://console.cloud.google.com/) 접속
+2. 새 프로젝트 생성 또는 기존 프로젝트 선택
+3. **API 및 서비스** → **사용자 인증 정보** 이동
+
+### 2. OAuth 2.0 클라이언트 ID 생성
+
+1. **사용자 인증 정보 만들기** → **OAuth 클라이언트 ID** 선택
+2. 애플리케이션 유형: **웹 애플리케이션** 선택
+3. 이름: `Alert System` (자유롭게 설정)
+4. **승인된 자바스크립트 원본** 추가:
+   - `http://localhost:5173` (개발용)
+   - `https://frontend-xi-two-52.vercel.app` (프로덕션)
+5. **승인된 리디렉션 URI** 추가:
+   - `http://localhost:3001/auth/google/callback` (개발용)
+   - `https://alert-system-kdg9.onrender.com/auth/google/callback` (프로덕션)
+6. **만들기** 클릭 → Client ID, Client Secret 복사
+
+### 3. 동의 화면 구성
+
+1. **OAuth 동의 화면** → **외부** 선택
+2. 앱 이름: `Alert System`
+3. 사용자 지원 이메일: 본인 이메일
+4. 개발자 연락처 정보: 본인 이메일
+5. 범위 추가: `email`, `profile`, `openid`
+6. 저장 후 **앱 게시** (테스트 모드에서 프로덕션으로 전환)
+
+### 4. 환경변수 설정
+
+#### Backend (Render)
+```env
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_CALLBACK_URL=https://alert-system-kdg9.onrender.com/auth/google/callback
+FRONTEND_URL=https://frontend-xi-two-52.vercel.app
+```
+
+#### 로컬 개발 (.env)
+```env
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
+FRONTEND_URL=http://localhost:5173
+```
+
+### 5. 테스트
+
+```bash
+# Backend API로 Google OAuth 상태 확인
+curl https://alert-system-kdg9.onrender.com/auth/google/status
+
+# 응답 예시 (설정됨)
+{"enabled":true,"message":"Google OAuth is configured"}
+
+# 응답 예시 (미설정)
+{"enabled":false,"message":"Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET."}
+```
+
+### 6. 주의사항
+
+- **테스트 모드**: 동의 화면이 테스트 모드일 경우, 테스트 사용자로 등록된 계정만 로그인 가능
+- **프로덕션 전환**: 실제 서비스에서는 동의 화면을 프로덕션으로 게시해야 함
+- **전화번호**: Google 로그인 시 전화번호는 비어있음 → 프로필 페이지에서 별도 입력 필요 (알림톡 발송용)
+
 ---
-*Last updated: 2026-01-26 03:15:00*
+
+## 2026-01-27 업데이트
+
+### 새로운 기능
+- ✅ 알림 설정 무한 로딩 해결 (로딩 상태 UI 추가)
+- ✅ 회원가입 시 전화번호 필수 입력 (알림톡 발송용)
+- ✅ 알림톡 Solapi 연동 (날씨 알림 → 카카오 알림톡)
+- ✅ 날씨/미세먼지 기반 팁 자동 생성
+- ✅ 원클릭 날씨 알림 설정 UI
+- ✅ Google OAuth 로그인 (코드 준비 완료, 설정 필요)
+
+### 변경된 파일 (Backend)
+- `src/domain/entities/user.entity.ts` - googleId 필드 추가
+- `src/infrastructure/persistence/typeorm/user.entity.ts` - google_id 컬럼
+- `src/infrastructure/auth/google.strategy.ts` - Google OAuth Strategy (신규)
+- `src/application/use-cases/google-oauth.use-case.ts` - Google 로그인 Use Case (신규)
+- `src/application/use-cases/send-notification.use-case.ts` - Solapi 알림톡 + tip 로직
+- `src/presentation/controllers/auth.controller.ts` - Google OAuth 엔드포인트
+- `src/presentation/modules/auth.module.ts` - GoogleStrategy 등록
+
+### 변경된 파일 (Frontend)
+- `src/presentation/pages/LoginPage.tsx` - Google 로그인 버튼 + 전화번호 입력
+- `src/presentation/pages/AuthCallbackPage.tsx` - OAuth 콜백 처리 (신규)
+- `src/presentation/pages/AlertSettingsPage.tsx` - 원클릭 날씨 알림 + 로딩 UI
+- `src/presentation/index.css` - Google 버튼 스타일
+
+---
+*Last updated: 2026-01-27 03:00:00*

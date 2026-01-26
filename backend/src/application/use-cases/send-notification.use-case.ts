@@ -19,6 +19,7 @@ import { IRuleEngine, RULE_ENGINE } from '@domain/services/rule-engine.service';
 import { ISmartMessageBuilder, SMART_MESSAGE_BUILDER } from '@application/services/smart-message-builder.service';
 import { INotificationRuleRepository, NOTIFICATION_RULE_REPOSITORY } from '@domain/repositories/notification-rule.repository';
 import { Recommendation } from '@domain/entities/recommendation.entity';
+import { ISolapiService, SOLAPI_SERVICE, WeatherAlimtalkVariables } from '@infrastructure/messaging/solapi.service';
 
 interface NotificationData {
   weather?: Weather;
@@ -51,6 +52,8 @@ export class SendNotificationUseCase {
     @Optional() @Inject(RULE_ENGINE) private ruleEngine?: IRuleEngine,
     @Optional() @Inject(SMART_MESSAGE_BUILDER) private smartMessageBuilder?: ISmartMessageBuilder,
     @Optional() @Inject(NOTIFICATION_RULE_REPOSITORY) private ruleRepository?: INotificationRuleRepository,
+    // Solapi Alimtalk service
+    @Optional() @Inject(SOLAPI_SERVICE) private solapiService?: ISolapiService,
   ) {}
 
   async execute(alertId: string): Promise<void> {
@@ -163,6 +166,19 @@ export class SendNotificationUseCase {
         payload,
       );
     }
+
+    // Send Alimtalk if user has phone number and weather data is available
+    if (this.solapiService && user.phoneNumber && data.weather) {
+      try {
+        const variables = this.buildAlimtalkVariables(user.name, data);
+        await this.solapiService.sendWeatherAlert(user.phoneNumber, variables);
+        this.logger.log(`Alimtalk sent to ${user.phoneNumber}`);
+      } catch (error) {
+        // Log error but don't fail the entire notification
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Failed to send Alimtalk: ${errorMessage}`);
+      }
+    }
   }
 
   private getRelevantCategories(alertTypes: AlertType[]): RuleCategory[] {
@@ -205,5 +221,61 @@ export class SendNotificationUseCase {
     }
 
     return parts.length > 0 ? parts.join(' · ') : 'New alert available';
+  }
+
+  private buildAlimtalkVariables(userName: string, data: NotificationData): WeatherAlimtalkVariables {
+    const weather = data.weather;
+    const airQuality = data.airQuality;
+
+    // Generate tip based on weather and air quality
+    const tip = this.generateTip(weather, airQuality);
+
+    return {
+      userName,
+      temperature: weather ? `${Math.round(weather.temperature)}°C` : '-',
+      condition: weather?.condition || '정보 없음',
+      airLevel: airQuality?.status || '정보 없음',
+      humidity: weather ? `${weather.humidity}%` : '-',
+      tip,
+    };
+  }
+
+  private generateTip(weather?: Weather, airQuality?: AirQuality): string {
+    const tips: string[] = [];
+
+    // Weather-based tips
+    if (weather) {
+      const condition = weather.condition?.toLowerCase() || '';
+      const temp = weather.temperature;
+
+      if (condition.includes('rain') || condition.includes('비')) {
+        tips.push('우산을 챙기세요! ☔');
+      } else if (condition.includes('snow') || condition.includes('눈')) {
+        tips.push('눈이 와요, 따뜻하게 입으세요! ❄️');
+      }
+
+      if (temp <= 5) {
+        tips.push('많이 추워요, 두꺼운 외투 필수! 🧥');
+      } else if (temp <= 10) {
+        tips.push('쌀쌀해요, 겉옷을 챙기세요.');
+      } else if (temp >= 30) {
+        tips.push('폭염 주의! 시원하게 입으세요. 🌡️');
+      } else if (temp >= 25) {
+        tips.push('더워요, 가볍게 입으세요.');
+      }
+    }
+
+    // Air quality-based tips
+    if (airQuality) {
+      const status = airQuality.status?.toLowerCase() || '';
+
+      if (status === '나쁨' || status.includes('bad')) {
+        tips.push('미세먼지가 나빠요, 마스크 필수! 😷');
+      } else if (status === '매우나쁨' || status.includes('very bad')) {
+        tips.push('미세먼지 매우 나쁨! 외출을 자제하세요. 🚫');
+      }
+    }
+
+    return tips.length > 0 ? tips.join(' ') : '좋은 하루 보내세요! 😊';
   }
 }

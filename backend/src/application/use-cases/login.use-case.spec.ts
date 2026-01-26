@@ -22,8 +22,10 @@ describe('LoginUseCase', () => {
   const mockUser = new User(
     'test@example.com',
     '테스트유저',
+    '01012345678',
     hashedPassword,
     { address: '서울시 강남구', lat: 37.5665, lng: 126.978 },
+    undefined, // googleId
     'user-1',
   );
 
@@ -31,6 +33,8 @@ describe('LoginUseCase', () => {
     mockUserRepository = {
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      updateGoogleId: jest.fn(),
       save: jest.fn(),
     };
 
@@ -90,8 +94,10 @@ describe('LoginUseCase', () => {
       const userWithoutPassword = new User(
         'nopassword@example.com',
         '비밀번호없는유저',
-        undefined,
+        '01012345678',
+        undefined, // passwordHash
         { address: '서울시 강남구', lat: 37.5665, lng: 126.978 },
+        undefined, // googleId
         'user-2',
       );
       mockUserRepository.findByEmail.mockResolvedValue(userWithoutPassword);
@@ -115,8 +121,10 @@ describe('LoginUseCase', () => {
       const userWithEmptyHash = new User(
         'emptyhash@example.com',
         '빈해시유저',
+        '01012345678',
         '',
         { address: '서울시 강남구', lat: 37.5665, lng: 126.978 },
+        undefined, // googleId
         'user-3',
       );
       mockUserRepository.findByEmail.mockResolvedValue(userWithEmptyHash);

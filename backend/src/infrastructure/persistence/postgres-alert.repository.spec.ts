@@ -34,9 +34,10 @@ describeDb('PostgresAlertRepository', () => {
     const userEntity = userRepo.create({
       email: 'user@example.com',
       name: 'John Doe',
+      phoneNumber: '01012345678',
     });
     await userRepo.save(userEntity);
-    user = new User('user@example.com', 'John Doe');
+    user = new User('user@example.com', 'John Doe', '01012345678');
     (user as any).id = userEntity.id;
   });
 

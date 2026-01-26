@@ -13,9 +13,10 @@ export class PostgresUserRepository implements IUserRepository {
     this.repository = dataSource.getRepository(UserEntity);
   }
 
-  async save(user: User): Promise<void> {
+  async save(user: User): Promise<User> {
     const entity = this.toEntity(user);
-    await this.repository.save(entity);
+    const saved = await this.repository.save(entity);
+    return this.toDomain(saved);
   }
 
   async findById(id: string): Promise<User | undefined> {
@@ -28,12 +29,23 @@ export class PostgresUserRepository implements IUserRepository {
     return entity ? this.toDomain(entity) : undefined;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | undefined> {
+    const entity = await this.repository.findOne({ where: { googleId } });
+    return entity ? this.toDomain(entity) : undefined;
+  }
+
+  async updateGoogleId(userId: string, googleId: string): Promise<void> {
+    await this.repository.update(userId, { googleId });
+  }
+
   private toEntity(user: User): UserEntity {
     const entity = new UserEntity();
     entity.id = user.id;
     entity.email = user.email;
     entity.passwordHash = user.passwordHash;
     entity.name = user.name;
+    entity.phoneNumber = user.phoneNumber;
+    entity.googleId = user.googleId;
     entity.location = user.location;
     return entity;
   }
@@ -42,8 +54,10 @@ export class PostgresUserRepository implements IUserRepository {
     return new User(
       entity.email,
       entity.name,
+      entity.phoneNumber,
       entity.passwordHash,
       entity.location as UserLocation | undefined,
+      entity.googleId,
       entity.id,
       entity.createdAt,
       entity.updatedAt,

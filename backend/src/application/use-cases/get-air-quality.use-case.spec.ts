@@ -20,8 +20,10 @@ describe('GetAirQualityUseCase', () => {
   const mockUser = new User(
     'test@example.com',
     '테스트유저',
+    '01012345678',
     'hashedPassword',
     { address: '서울시 강남구', lat: 37.5665, lng: 126.978 },
+    undefined, // googleId
     'user-1',
   );
 
@@ -33,6 +35,8 @@ describe('GetAirQualityUseCase', () => {
     mockUserRepository = {
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      updateGoogleId: jest.fn(),
       save: jest.fn(),
     };
 
@@ -69,8 +73,10 @@ describe('GetAirQualityUseCase', () => {
       const userWithoutLocation = new User(
         'nolocation@example.com',
         '위치없는유저',
+        '01012345678',
         'hashedPassword',
-        undefined,
+        undefined, // location
+        undefined, // googleId
         'user-2',
       );
       mockUserRepository.findById.mockResolvedValue(userWithoutLocation);

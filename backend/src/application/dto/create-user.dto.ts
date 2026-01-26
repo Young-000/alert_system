@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   MinLength,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -40,6 +41,11 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: '이름은 필수입니다.' })
   name: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '전화번호는 필수입니다.' })
+  @Matches(/^01[0-9]{8,9}$/, { message: '유효한 휴대폰 번호를 입력해주세요. (예: 01012345678)' })
+  phoneNumber: string;
 
   @IsOptional()
   @ValidateNested()

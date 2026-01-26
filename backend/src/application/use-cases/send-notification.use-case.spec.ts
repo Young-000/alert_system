@@ -41,6 +41,8 @@ describe('SendNotificationUseCase', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      updateGoogleId: jest.fn(),
     };
     weatherApiClient = {
       getWeather: jest.fn(),
@@ -82,7 +84,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should send notification with weather data', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -113,7 +115,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should return early if alert is disabled', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -139,7 +141,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should throw error if user has no location', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     const alert = new Alert(user.id, '알림', '0 8 * * *', [AlertType.WEATHER]);
     alertRepository.findById.mockResolvedValue(alert);
     userRepository.findById.mockResolvedValue(user);
@@ -148,7 +150,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should send notification with air quality data', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -173,7 +175,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should send notification with bus arrival data', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -201,7 +203,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should send notification with subway arrival data', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -232,7 +234,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should send notification with all alert types', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -275,7 +277,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should return early if no push subscriptions', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -294,7 +296,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should send to multiple subscriptions', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -319,7 +321,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should not call subway API if station not found', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -343,7 +345,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should not call bus API if no busStopId configured', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -365,7 +367,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should include correct notification payload', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,
@@ -392,7 +394,7 @@ describe('SendNotificationUseCase', () => {
   });
 
   it('should format notification body with rain weather', async () => {
-    const user = new User('user@example.com', 'John Doe', undefined, {
+    const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
       lng: 126.9780,

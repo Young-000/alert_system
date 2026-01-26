@@ -11,14 +11,16 @@ describe('UpdateUserLocationUseCase', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      updateGoogleId: jest.fn(),
     };
     useCase = new UpdateUserLocationUseCase(userRepository);
   });
 
   it('should update user location', async () => {
-    const user = new User('user@example.com', 'John Doe');
+    const user = new User('user@example.com', 'John Doe', '01012345678');
     userRepository.findById.mockResolvedValue(user);
-    userRepository.save.mockResolvedValue();
+    userRepository.save.mockImplementation((u) => Promise.resolve(u));
 
     const updated = await useCase.execute(user.id, {
       address: 'Seoul',

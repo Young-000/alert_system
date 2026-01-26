@@ -39,7 +39,7 @@ describe('LoginPage', () => {
 
     it('로그인 성공 시 토큰을 저장하고 알림 페이지로 이동해야 한다', async () => {
       const mockResponse = {
-        user: { id: 'user-1', email: 'user@example.com', name: 'John Doe' },
+        user: { id: 'user-1', email: 'user@example.com', name: 'John Doe', phoneNumber: '01012345678' },
         accessToken: 'test-token',
       };
       mockAuthApiClient.login.mockResolvedValue(mockResponse);
@@ -113,7 +113,7 @@ describe('LoginPage', () => {
 
     it('회원가입 폼을 제출할 수 있어야 한다', async () => {
       const mockResponse = {
-        user: { id: 'user-1', email: 'new@example.com', name: '홍길동' },
+        user: { id: 'user-1', email: 'new@example.com', name: '홍길동', phoneNumber: '01098765432' },
         accessToken: 'new-token',
       };
       mockAuthApiClient.register.mockResolvedValue(mockResponse);
@@ -137,6 +137,9 @@ describe('LoginPage', () => {
       fireEvent.change(screen.getByLabelText('이름'), {
         target: { value: '홍길동' },
       });
+      fireEvent.change(screen.getByLabelText('전화번호'), {
+        target: { value: '01098765432' },
+      });
       fireEvent.change(screen.getByLabelText('비밀번호'), {
         target: { value: 'password123' },
       });
@@ -151,6 +154,7 @@ describe('LoginPage', () => {
           email: 'new@example.com',
           password: 'password123',
           name: '홍길동',
+          phoneNumber: '01098765432',
         });
       });
     });

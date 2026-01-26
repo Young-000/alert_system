@@ -54,6 +54,7 @@ export function AlertSettingsPage() {
 
   // Existing alerts
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -65,13 +66,19 @@ export function AlertSettingsPage() {
 
   // Load existing alerts
   const loadAlerts = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setIsLoadingAlerts(false);
+      return;
+    }
+    setIsLoadingAlerts(true);
     try {
       const userAlerts = await alertApiClient.getAlertsByUser(userId);
       setAlerts(userAlerts);
     } catch (err) {
       console.error('Failed to load alerts:', err);
       setError('알림 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoadingAlerts(false);
     }
   }, [userId]);
 
@@ -238,6 +245,44 @@ export function AlertSettingsPage() {
     }
     return `${parts.join(' + ')} 알림`;
   }, [wantsWeather, selectedTransports]);
+
+  // Quick weather alert (one-click)
+  const handleQuickWeatherAlert = useCallback(async () => {
+    setError('');
+
+    if (!userId) {
+      setError('로그인이 필요합니다.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Request push permission if not granted
+    if (permission !== 'granted') {
+      await requestPermission();
+    }
+
+    try {
+      const dto: CreateAlertDto = {
+        userId,
+        name: '아침 날씨 알림',
+        schedule: '0 7 * * *', // 매일 오전 7시
+        alertTypes: ['weather', 'airQuality'],
+      };
+
+      await alertApiClient.createAlert(dto);
+      setSuccess('날씨 알림이 설정되었습니다! 매일 오전 7시에 알림을 받습니다.');
+      loadAlerts();
+
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+    } catch {
+      setError('알림 생성에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [userId, permission, requestPermission, loadAlerts]);
 
   // Submit alert
   const handleSubmit = useCallback(async () => {
@@ -446,7 +491,16 @@ export function AlertSettingsPage() {
         </div>
       )}
 
-      <div id="wizard-content" className="wizard-container">
+      {/* 초기 로딩 상태 표시 */}
+      {isLoadingAlerts && userId && (
+        <div className="loading-container" role="status" aria-live="polite">
+          <span className="spinner" aria-hidden="true" />
+          <p>서버에 연결 중입니다...</p>
+          <p className="muted">최대 30초가 소요될 수 있습니다</p>
+        </div>
+      )}
+
+      <div id="wizard-content" className="wizard-container" style={{ display: isLoadingAlerts && userId ? 'none' : undefined }}>
         {/* Progress Bar */}
         <div className="progress-bar">
           <div
@@ -459,6 +513,29 @@ export function AlertSettingsPage() {
         {/* Step: Type Selection */}
         {step === 'type' && (
           <section className="wizard-step">
+            {/* Quick Action: One-click Weather Alert */}
+            <div className="quick-action-card">
+              <div className="quick-action-content">
+                <span className="quick-action-icon" aria-hidden="true">🌤️</span>
+                <div className="quick-action-text">
+                  <strong>날씨 알림 바로 시작</strong>
+                  <span className="muted">매일 오전 7시 날씨 + 미세먼지</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary btn-small"
+                onClick={handleQuickWeatherAlert}
+                disabled={isSubmitting || !userId}
+              >
+                {isSubmitting ? '설정 중...' : '원클릭 설정'}
+              </button>
+            </div>
+
+            <div className="divider-text">
+              <span>또는 직접 설정</span>
+            </div>
+
             <h1>어떤 정보를 받고 싶으세요?</h1>
             <p className="muted">복수 선택 가능해요</p>
 

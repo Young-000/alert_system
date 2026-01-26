@@ -19,7 +19,7 @@ export class CreateUserUseCase {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_SALT_ROUNDS);
-    const user = new User(dto.email, dto.name, passwordHash, dto.location);
+    const user = new User(dto.email, dto.name, dto.phoneNumber, passwordHash, dto.location);
     await this.userRepository.save(user);
     return user;
   }
