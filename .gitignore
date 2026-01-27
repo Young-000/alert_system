@@ -42,3 +42,15 @@ coverage/
 docker-compose.override.yml
 
 .vercel
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+
+# SQLite (로컬 개발용)
+*.sqlite
+database.sqlite

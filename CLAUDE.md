@@ -49,30 +49,35 @@
 | 항목 | 값 |
 |------|-----|
 | **Frontend URL** | https://frontend-xi-two-52.vercel.app |
-| **Backend URL** | https://alert-system-kdg9.onrender.com |
+| **Backend URL (Render)** | https://alert-system-kdg9.onrender.com |
+| **Backend URL (AWS)** | http://alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com |
 | **Supabase** | Project 2 - `gtnqsbdlybrkbsgtecvy` |
 | **Schema** | `alert_system` |
 
-## 기술 스택 (AWS 전환 예정)
+## 기술 스택
 
-| 영역 | 현재 | 목표 (AWS) |
-|------|------|------------|
-| **Backend** | Render (NestJS) | AWS Lambda 또는 ECS |
-| **Frontend** | Vercel (React) | Vercel 유지 또는 CloudFront |
-| **Database** | Supabase | Supabase 유지 (또는 RDS) |
-| **Scheduling** | In-Memory (손실됨) | **EventBridge Scheduler** |
-| **Cache** | 없음 | ElastiCache Redis |
-| **Queue** | BullMQ (비활성) | SQS |
+| 영역 | 상태 | 서비스 |
+|------|:----:|--------|
+| **Backend** | ✅ | AWS ECS Fargate (NestJS) |
+| **Frontend** | ✅ | Vercel (React) |
+| **Database** | ✅ | Supabase PostgreSQL |
+| **Load Balancer** | ✅ | AWS ALB |
+| **Container Registry** | ✅ | AWS ECR |
+| **Secrets** | ✅ | AWS SSM Parameter Store |
+| **HTTPS** | 🔄 | ACM + ALB 설정 필요 |
+| **Scheduling** | 🔄 | EventBridge Scheduler (다음 단계) |
 
 ## 진행상황
 
 | 영역 | 상태 | 비고 |
 |------|:----:|------|
 | Frontend | ✅ | Vercel 배포 |
-| Backend | ✅ | Render (전환 예정) |
-| DB 연결 | ✅ | Supabase |
-| 배포 | ✅ | |
-| **AWS 전환** | 🔄 | 진행 중 |
+| Backend (Render) | ✅ | 백업용 유지 |
+| Backend (AWS) | ✅ | ECS Fargate 배포 완료 |
+| DB 연결 | ✅ | Supabase Pooler |
+| ALB Health Check | ✅ | /health 엔드포인트 |
+| **HTTPS 설정** | 🔄 | ACM 인증서 필요 |
+| **EventBridge** | 🔄 | 다음 단계 |
 
 ## DB 테이블
 
@@ -84,73 +89,131 @@ alert_system.subway_stations
 alert_system.push_subscriptions
 ```
 
+## AWS 리소스
+
+| 리소스 | 이름/값 |
+|--------|---------|
+| **ECS Cluster** | `alert-system-prod` |
+| **ECS Service** | `alert-system-prod-service` |
+| **ALB** | `alert-system-prod-alb` |
+| **ALB DNS** | `alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com` |
+| **ECR Repository** | `alert-system-backend` |
+| **SSM Prefix** | `/alert-system/prod/` |
+| **Region** | `ap-northeast-2` (Seoul) |
+
 ## 환경 변수
 
 ### Backend (.env)
 ```env
-DATABASE_URL=postgresql://postgres.gtnqsbdlybrkbsgtecvy:...@supabase.com:5432/postgres
-DB_SYNCHRONIZE=true  # 스키마 변경 시만
+DATABASE_URL=postgresql://postgres.gtnqsbdlybrkbsgtecvy:...@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
+NODE_ENV=development
+PORT=3001
+USE_SQLITE=true
+JWT_SECRET=...
 AIR_QUALITY_API_KEY=...
-REDIS_HOST=...
+SOLAPI_API_KEY=...
 ```
 
-### Frontend (.env)
+### Frontend (.env.production)
 ```env
+# HTTPS 설정 후 AWS로 전환
+# VITE_API_BASE_URL=https://alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com
 VITE_API_BASE_URL=https://alert-system-kdg9.onrender.com
 VITE_VAPID_PUBLIC_KEY=...
+```
+
+### AWS SSM Parameters
+```
+/alert-system/prod/database-url
+/alert-system/prod/jwt-secret
+/alert-system/prod/air-quality-api-key
+/alert-system/prod/solapi-api-key
+/alert-system/prod/solapi-api-secret
+/alert-system/prod/solapi-pf-id
 ```
 
 ## 개발 명령어
 
 ```bash
-# Backend
+# Backend (로컬)
 cd backend && npm run start:dev
 
-# Frontend
+# Frontend (로컬)
 cd frontend && npm run dev
 
-# Docker
+# Docker (로컬 Redis)
 docker-compose up -d redis
+```
+
+## AWS 배포 명령어
+
+```bash
+# 1. Docker 이미지 빌드 & 푸시
+cd backend
+docker build --platform linux/amd64 -t alert-system-backend .
+docker tag alert-system-backend:latest 211125569291.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system-backend:latest
+aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 211125569291.dkr.ecr.ap-northeast-2.amazonaws.com
+docker push 211125569291.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system-backend:latest
+
+# 2. ECS 서비스 재배포
+aws ecs update-service --cluster alert-system-prod --service alert-system-prod-service --force-new-deployment
+
+# 3. 배포 상태 확인
+aws ecs describe-services --cluster alert-system-prod --services alert-system-prod-service --query 'services[0].deployments'
+
+# 4. 로그 확인
+aws logs tail /ecs/alert-system-prod --follow
 ```
 
 ## Known Issues (프로젝트 고유)
 
-### Render Cold Start (AWS 전환으로 해결 예정)
-Backend (Render Free Tier) 첫 요청 시 ~30초 지연
-→ AWS Lambda/ECS 전환 시 해결
+### ~~Render Cold Start~~ ✅ 해결됨
+~~Backend (Render Free Tier) 첫 요청 시 ~30초 지연~~
+→ AWS ECS Fargate로 전환 완료
 
-### In-Memory Scheduler 손실 (AWS 전환으로 해결 예정)
+### HTTPS 설정 필요 🔄
+현재 ALB는 HTTP (포트 80)만 지원
+→ ACM 인증서 발급 후 HTTPS 리스너 추가 필요
+→ 프론트엔드(Vercel HTTPS)에서 HTTP API 호출 시 Mixed Content 오류
+
+### In-Memory Scheduler 손실 🔄
 서버 재시작 시 모든 스케줄 손실
-→ EventBridge Scheduler로 영구 저장
+→ EventBridge Scheduler로 영구 저장 (다음 단계)
 
 ---
 
-## AWS 아키텍처 (목표)
+## AWS 아키텍처 (현재)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Vercel (Frontend)                          │
-│                     React PWA 유지                              │
+│                     React PWA ✅                                │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    API Gateway + Lambda                         │
-│              또는 ECS Fargate (NestJS)                          │
+│                    ALB (HTTP:80) ✅                             │
+│           → HTTPS 설정 필요 (ACM 인증서)                         │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  ECS Fargate (NestJS) ✅                        │
+│                Private Subnet + NAT Gateway                     │
 └─────────────────────────────────────────────────────────────────┘
          │              │              │              │
          ▼              ▼              ▼              ▼
 ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────────────┐
 │ Supabase  │  │ElastiCache│  │EventBridge│  │    CloudWatch     │
-│PostgreSQL │  │  Redis    │  │ Scheduler │  │    Monitoring     │
+│PostgreSQL │  │  Redis    │  │ Scheduler │  │    Logs ✅        │
+│    ✅     │  │   🔄      │  │    🔄     │  │                   │
 └───────────┘  └───────────┘  └───────────┘  └───────────────────┘
 ```
 
-### 핵심: EventBridge Scheduler
-- 사용자별 개인 스케줄을 각각 등록
-- 서버 재시작과 무관하게 영구 저장
-- 초 단위 정확도
-- 월 1,400만 호출 무료
+### 다음 단계
+1. **HTTPS 설정**: ACM 인증서 발급 → ALB HTTPS 리스너 추가
+2. **EventBridge Scheduler**: 사용자별 알림 스케줄 영구 저장
+3. **ElastiCache Redis**: BullMQ 큐 (선택사항)
 
 ---
 

@@ -13,8 +13,10 @@ import { BehaviorModule } from './modules/behavior.module';
 import { PrivacyModule } from './modules/privacy.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
+import { HealthController } from './controllers/health.controller';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     DatabaseModule,
     QueueModule,
