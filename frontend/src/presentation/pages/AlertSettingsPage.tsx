@@ -4,11 +4,9 @@ import {
   alertApiClient,
   subwayApiClient,
   busApiClient,
-  apiClient,
 } from '@infrastructure/api';
 import type { Alert, AlertType, CreateAlertDto } from '@infrastructure/api';
 import type { SubwayStation, BusStop } from '@infrastructure/api';
-import { usePushNotification } from '../hooks/usePushNotification';
 
 type WizardStep = 'type' | 'transport' | 'station' | 'routine' | 'confirm';
 
@@ -62,7 +60,6 @@ export function AlertSettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userId = localStorage.getItem('userId') || '';
-  const { permission, subscribe, requestPermission, subscription } = usePushNotification();
 
   // Load existing alerts
   const loadAlerts = useCallback(async () => {
@@ -85,18 +82,6 @@ export function AlertSettingsPage() {
   useEffect(() => {
     loadAlerts();
   }, [loadAlerts]);
-
-  // Subscribe to push when permission granted
-  useEffect(() => {
-    if (permission !== 'granted' || !userId || subscription) return;
-    subscribe()
-      .then((sub) => {
-        if (sub && userId) {
-          return apiClient.post('/notifications/subscribe', { userId, ...sub });
-        }
-      })
-      .catch(console.error);
-  }, [permission, userId, subscription, subscribe]);
 
   // Unified search for subway + bus
   useEffect(() => {
@@ -257,11 +242,6 @@ export function AlertSettingsPage() {
 
     setIsSubmitting(true);
 
-    // Request push permission if not granted
-    if (permission !== 'granted') {
-      await requestPermission();
-    }
-
     try {
       const dto: CreateAlertDto = {
         userId,
@@ -271,7 +251,7 @@ export function AlertSettingsPage() {
       };
 
       await alertApiClient.createAlert(dto);
-      setSuccess('날씨 알림이 설정되었습니다! 매일 오전 7시에 알림을 받습니다.');
+      setSuccess('날씨 알림이 설정되었습니다! 매일 오전 7시에 알림톡을 받습니다.');
       loadAlerts();
 
       setTimeout(() => {
@@ -282,7 +262,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, permission, requestPermission, loadAlerts]);
+  }, [userId, loadAlerts]);
 
   // Submit alert
   const handleSubmit = useCallback(async () => {
@@ -294,11 +274,6 @@ export function AlertSettingsPage() {
     }
 
     setIsSubmitting(true);
-
-    // Request push permission if not granted
-    if (permission !== 'granted') {
-      await requestPermission();
-    }
 
     try {
       const alertTypes: AlertType[] = [];
@@ -322,7 +297,7 @@ export function AlertSettingsPage() {
       };
 
       await alertApiClient.createAlert(dto);
-      setSuccess('알림이 설정되었습니다!');
+      setSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
       loadAlerts();
 
       // Reset wizard
@@ -340,7 +315,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, permission, requestPermission, wantsWeather, selectedTransports, generateAlertName, generateSchedule, loadAlerts]);
+  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, loadAlerts]);
 
   const handleDeleteClick = (alert: Alert) => {
     setDeleteTarget({ id: alert.id, name: alert.name });
@@ -799,23 +774,11 @@ export function AlertSettingsPage() {
                     <span>카카오 알림톡</span>
                     <span className="badge badge-primary">기본</span>
                   </div>
-                  <div className="delivery-method muted">
-                    <span className="delivery-icon">🔔</span>
-                    <span>브라우저 푸시</span>
-                    {permission === 'granted' ? (
-                      <span className="badge badge-success">활성</span>
-                    ) : (
-                      <span className="badge badge-muted">선택</span>
-                    )}
-                  </div>
                 </div>
+                <p className="muted" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  회원가입 시 등록한 전화번호로 알림톡이 발송됩니다
+                </p>
               </div>
-
-              {permission !== 'granted' && (
-                <div className="notice info">
-                  브라우저 알림도 함께 받으시겠어요? 아래 버튼 클릭 시 권한을 요청합니다.
-                </div>
-              )}
             </div>
 
             <div aria-live="polite" aria-atomic="true">

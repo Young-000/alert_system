@@ -21,6 +21,7 @@ import { CHECKPOINT_RECORD_REPOSITORY } from '@domain/repositories/checkpoint-re
 import { ManageRouteUseCase } from '@application/use-cases/manage-route.use-case';
 import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commute-session.use-case';
 import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats.use-case';
+import { RecommendBestRouteUseCase } from '@application/use-cases/recommend-best-route.use-case';
 
 // Controllers
 import { RouteController } from '../controllers/route.controller';
@@ -54,6 +55,7 @@ import { CommuteController } from '../controllers/commute.controller';
     ManageRouteUseCase,
     ManageCommuteSessionUseCase,
     GetCommuteStatsUseCase,
+    RecommendBestRouteUseCase,
   ],
   exports: [
     COMMUTE_ROUTE_REPOSITORY,
@@ -62,6 +64,7 @@ import { CommuteController } from '../controllers/commute.controller';
     ManageRouteUseCase,
     ManageCommuteSessionUseCase,
     GetCommuteStatsUseCase,
+    RecommendBestRouteUseCase,
   ],
 })
 export class CommuteModule {}

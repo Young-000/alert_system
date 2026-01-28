@@ -5,7 +5,6 @@ import * as dotenv from 'dotenv';
 import * as pg from 'pg';
 import { UserEntity } from './typeorm/user.entity';
 import { AlertEntity } from './typeorm/alert.entity';
-import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 import { SubwayStationEntity } from './typeorm/subway-station.entity';
 import { WeatherCacheEntity } from './typeorm/weather-cache.entity';
 import { AirQualityCacheEntity } from './typeorm/air-quality-cache.entity';
@@ -33,7 +32,6 @@ export function buildDataSourceOptions(): DataSourceOptions {
     const allEntities = [
       UserEntity,
       AlertEntity,
-      PushSubscriptionEntity,
       SubwayStationEntity,
       WeatherCacheEntity,
       AirQualityCacheEntity,
@@ -72,7 +70,6 @@ export function buildDataSourceOptions(): DataSourceOptions {
   const allEntities = [
     UserEntity,
     AlertEntity,
-    PushSubscriptionEntity,
     SubwayStationEntity,
     WeatherCacheEntity,
     AirQualityCacheEntity,

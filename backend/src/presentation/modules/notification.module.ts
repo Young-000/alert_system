@@ -1,32 +1,27 @@
-import { Module, OnModuleInit, Inject, Optional } from '@nestjs/common';
-import { NotificationController } from '../controllers/notification.controller';
+import { Module, OnModuleInit, Inject, Optional, Logger } from '@nestjs/common';
 import { SchedulerTriggerController } from '../controllers/scheduler-trigger.controller';
 import { SchedulerLegacyController } from '../controllers/scheduler-legacy.controller';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { SmartNotificationModule } from './smart-notification.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
-import { PostgresPushSubscriptionRepository } from '@infrastructure/persistence/postgres-push-subscription.repository';
 import { PostgresSubwayStationRepository } from '@infrastructure/persistence/postgres-subway-station.repository';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
-import { SavePushSubscriptionUseCase } from '@application/use-cases/save-push-subscription.use-case';
-import { RemovePushSubscriptionUseCase } from '@application/use-cases/remove-push-subscription.use-case';
 import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
 import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
-import { PushNotificationService } from '@infrastructure/push/push-notification.service';
-import { NoopPushNotificationService } from '@infrastructure/push/noop-push-notification.service';
 import { NotificationProcessor } from '@infrastructure/queue/notification.processor';
 import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-memory-notification-scheduler.service';
 import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { IAlertRepository } from '@domain/repositories/alert.repository';
 
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
   imports: [QueueModule, SmartNotificationModule, ConfigModule],
-  controllers: [NotificationController, SchedulerTriggerController, SchedulerLegacyController],
+  controllers: [SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {
       provide: 'IAlertRepository',
@@ -35,10 +30,6 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
     {
       provide: 'IUserRepository',
       useClass: PostgresUserRepository,
-    },
-    {
-      provide: 'IPushSubscriptionRepository',
-      useClass: PostgresPushSubscriptionRepository,
     },
     {
       provide: 'ISubwayStationRepository',
@@ -73,18 +64,6 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
       },
     },
     {
-      provide: 'IPushNotificationService',
-      useFactory: () => {
-        const publicKey = process.env.VAPID_PUBLIC_KEY || '';
-        const privateKey = process.env.VAPID_PRIVATE_KEY || '';
-        const subject = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
-        if (!publicKey || !privateKey) {
-          return new NoopPushNotificationService();
-        }
-        return new PushNotificationService(publicKey, privateKey, subject);
-      },
-    },
-    {
       provide: SOLAPI_SERVICE,
       useFactory: (configService: ConfigService) => {
         const apiKey = configService.get<string>('SOLAPI_API_KEY', '');
@@ -97,25 +76,53 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
       inject: [ConfigService],
     },
     SendNotificationUseCase,
-    SavePushSubscriptionUseCase,
-    RemovePushSubscriptionUseCase,
     ...(isQueueEnabled ? [NotificationProcessor] : []),
   ],
 })
 export class NotificationModule implements OnModuleInit {
+  private readonly logger = new Logger(NotificationModule.name);
+
   constructor(
     private readonly sendNotificationUseCase: SendNotificationUseCase,
+    @Inject('IAlertRepository')
+    private readonly alertRepository: IAlertRepository,
     @Optional()
     @Inject(InMemoryNotificationSchedulerService)
     private readonly inMemoryScheduler?: InMemoryNotificationSchedulerService,
   ) {}
 
-  onModuleInit(): void {
+  async onModuleInit(): Promise<void> {
     // Wire up the notification handler for the in-memory scheduler
     if (!isQueueEnabled && this.inMemoryScheduler) {
       this.inMemoryScheduler.setNotificationHandler(async (alertId: string) => {
         await this.sendNotificationUseCase.execute(alertId);
       });
+
+      // Load existing enabled alerts from DB and schedule them
+      await this.loadAndScheduleExistingAlerts();
+    }
+  }
+
+  private async loadAndScheduleExistingAlerts(): Promise<void> {
+    if (!this.inMemoryScheduler) return;
+
+    try {
+      const alerts = await this.alertRepository.findAll();
+      const enabledAlerts = alerts.filter((alert) => alert.enabled);
+
+      this.logger.log(
+        `Loading ${enabledAlerts.length} enabled alerts from database...`,
+      );
+
+      for (const alert of enabledAlerts) {
+        await this.inMemoryScheduler.scheduleNotification(alert);
+      }
+
+      this.logger.log(
+        `Successfully scheduled ${enabledAlerts.length} alerts on startup`,
+      );
+    } catch (error) {
+      this.logger.error('Failed to load and schedule existing alerts', error);
     }
   }
 }

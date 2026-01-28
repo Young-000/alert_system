@@ -5,9 +5,7 @@ import { IWeatherApiClient } from '@infrastructure/external-apis/weather-api.cli
 import { IAirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { IBusApiClient } from '@infrastructure/external-apis/bus-api.client';
 import { ISubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
-import { IPushNotificationService } from '@infrastructure/push/push-notification.service';
 import { AlertType } from '@domain/entities/alert.entity';
-import { IPushSubscriptionRepository } from '@domain/repositories/push-subscription.repository';
 import { ISubwayStationRepository } from '@domain/repositories/subway-station.repository';
 import { Weather } from '@domain/entities/weather.entity';
 import { AirQuality } from '@domain/entities/air-quality.entity';
@@ -42,10 +40,6 @@ export class SendNotificationUseCase {
     private airQualityApiClient: IAirQualityApiClient,
     @Inject('IBusApiClient') private busApiClient: IBusApiClient,
     @Inject('ISubwayApiClient') private subwayApiClient: ISubwayApiClient,
-    @Inject('IPushNotificationService')
-    private pushNotificationService: IPushNotificationService,
-    @Inject('IPushSubscriptionRepository')
-    private pushSubscriptionRepository: IPushSubscriptionRepository,
     @Inject('ISubwayStationRepository')
     private subwayStationRepository: ISubwayStationRepository,
     // Smart Notification dependencies (optional for backward compatibility)
@@ -143,30 +137,6 @@ export class SendNotificationUseCase {
       body = this.buildNotificationBody(data);
     }
 
-    const payload = JSON.stringify({
-      title,
-      body,
-      data,
-      actions: [
-        { action: 'leaving-now', title: '지금 출발' },
-        { action: 'dismiss', title: '닫기' },
-      ],
-    });
-
-    const subscriptions = await this.pushSubscriptionRepository.findByUserId(
-      user.id,
-    );
-    if (subscriptions.length === 0) {
-      return;
-    }
-
-    for (const subscription of subscriptions) {
-      await this.pushNotificationService.sendNotification(
-        { endpoint: subscription.endpoint, keys: subscription.keys },
-        payload,
-      );
-    }
-
     // Send Alimtalk if user has phone number and weather data is available
     if (this.solapiService && user.phoneNumber && data.weather) {
       try {
@@ -174,10 +144,13 @@ export class SendNotificationUseCase {
         await this.solapiService.sendWeatherAlert(user.phoneNumber, variables);
         this.logger.log(`Alimtalk sent to ${user.phoneNumber}`);
       } catch (error) {
-        // Log error but don't fail the entire notification
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.logger.error(`Failed to send Alimtalk: ${errorMessage}`);
       }
+    } else if (!user.phoneNumber) {
+      this.logger.warn(`User ${user.id} has no phone number, skipping notification`);
+    } else if (!data.weather) {
+      this.logger.warn(`No weather data available for alert ${alertId}`);
     }
   }
 

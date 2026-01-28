@@ -12,11 +12,16 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ManageRouteUseCase } from '@application/use-cases/manage-route.use-case';
+import { RecommendBestRouteUseCase } from '@application/use-cases/recommend-best-route.use-case';
 import {
   CreateRouteDto,
   UpdateRouteDto,
   RouteResponseDto,
 } from '@application/dto/commute.dto';
+import {
+  RouteRecommendationResponseDto,
+  RouteRecommendationQueryDto,
+} from '@application/dto/route-recommendation.dto';
 import { RouteType } from '@domain/entities/commute-route.entity';
 import { Public } from '@infrastructure/auth/public.decorator';
 
@@ -25,7 +30,10 @@ import { Public } from '@infrastructure/auth/public.decorator';
 export class RouteController {
   private readonly logger = new Logger(RouteController.name);
 
-  constructor(private readonly manageRouteUseCase: ManageRouteUseCase) {}
+  constructor(
+    private readonly manageRouteUseCase: ManageRouteUseCase,
+    private readonly recommendBestRouteUseCase: RecommendBestRouteUseCase,
+  ) {}
 
   /**
    * 새 경로 생성
@@ -53,6 +61,19 @@ export class RouteController {
       );
     }
     return this.manageRouteUseCase.getRoutesByUserId(userId);
+  }
+
+  /**
+   * 최적 경로 추천
+   * 통근 기록을 분석하여 가장 빠르고 안정적인 경로를 추천합니다.
+   */
+  @Get('user/:userId/recommend')
+  async getRouteRecommendation(
+    @Param('userId') userId: string,
+    @Query() query: RouteRecommendationQueryDto
+  ): Promise<RouteRecommendationResponseDto> {
+    this.logger.log(`Getting route recommendation for user ${userId}, weather: ${query.weather}`);
+    return this.recommendBestRouteUseCase.execute(userId, query.weather);
   }
 
   /**
