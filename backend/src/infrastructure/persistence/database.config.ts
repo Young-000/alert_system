@@ -7,6 +7,22 @@ import { UserEntity } from './typeorm/user.entity';
 import { AlertEntity } from './typeorm/alert.entity';
 import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 import { SubwayStationEntity } from './typeorm/subway-station.entity';
+import { WeatherCacheEntity } from './typeorm/weather-cache.entity';
+import { AirQualityCacheEntity } from './typeorm/air-quality-cache.entity';
+import {
+  SubwayArrivalCacheEntity,
+  BusArrivalCacheEntity,
+  ApiCallLogEntity,
+} from './typeorm/transport-cache.entity';
+import { NotificationRuleEntity } from './typeorm/notification-rule.entity';
+import { BehaviorEventEntity } from './typeorm/behavior-event.entity';
+import { UserPatternEntity } from './typeorm/user-pattern.entity';
+import { CommuteRecordEntity } from './typeorm/commute-record.entity';
+// Commute tracking entities
+import { CommuteRouteEntity } from './typeorm/commute-route.entity';
+import { RouteCheckpointEntity } from './typeorm/route-checkpoint.entity';
+import { CommuteSessionEntity } from './typeorm/commute-session.entity';
+import { CheckpointRecordEntity } from './typeorm/checkpoint-record.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -14,10 +30,29 @@ export function buildDataSourceOptions(): DataSourceOptions {
   // SQLite 모드 지원 (E2E 테스트용)
   const useSqlite = process.env.USE_SQLITE === 'true';
   if (useSqlite) {
+    const allEntities = [
+      UserEntity,
+      AlertEntity,
+      PushSubscriptionEntity,
+      SubwayStationEntity,
+      WeatherCacheEntity,
+      AirQualityCacheEntity,
+      SubwayArrivalCacheEntity,
+      BusArrivalCacheEntity,
+      ApiCallLogEntity,
+      NotificationRuleEntity,
+      BehaviorEventEntity,
+      UserPatternEntity,
+      CommuteRecordEntity,
+      CommuteRouteEntity,
+      RouteCheckpointEntity,
+      CommuteSessionEntity,
+      CheckpointRecordEntity,
+    ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
       database: process.env.SQLITE_DATABASE || ':memory:',
-      entities: [UserEntity, AlertEntity, PushSubscriptionEntity, SubwayStationEntity],
+      entities: allEntities,
       synchronize: true,
     };
     return sqliteOptions;
@@ -34,9 +69,29 @@ export function buildDataSourceOptions(): DataSourceOptions {
     process.env.DB_SYNCHRONIZE === 'true' ||
     (!hasUrl && process.env.NODE_ENV === 'development');
 
+  const allEntities = [
+    UserEntity,
+    AlertEntity,
+    PushSubscriptionEntity,
+    SubwayStationEntity,
+    WeatherCacheEntity,
+    AirQualityCacheEntity,
+    SubwayArrivalCacheEntity,
+    BusArrivalCacheEntity,
+    ApiCallLogEntity,
+    NotificationRuleEntity,
+    BehaviorEventEntity,
+    UserPatternEntity,
+    CommuteRecordEntity,
+    CommuteRouteEntity,
+    RouteCheckpointEntity,
+    CommuteSessionEntity,
+    CheckpointRecordEntity,
+  ];
+
   const baseOptions: PostgresConnectionOptions = {
     type: 'postgres',
-    entities: [UserEntity, AlertEntity, PushSubscriptionEntity, SubwayStationEntity],
+    entities: allEntities,
     synchronize,
     schema: 'alert_system', // Supabase 전용 스키마 사용
   };
