@@ -7,6 +7,27 @@ import {
   type CheckpointStats,
 } from '@infrastructure/api/commute-api.client';
 
+// Stopwatch record type (same as CommuteTrackingPage)
+interface StopwatchRecord {
+  id: string;
+  startedAt: string;
+  completedAt: string;
+  totalDurationSeconds: number;
+  type: 'morning' | 'evening' | 'custom';
+  notes?: string;
+}
+
+const STOPWATCH_STORAGE_KEY = 'commute_stopwatch_records';
+
+function getStopwatchRecords(): StopwatchRecord[] {
+  try {
+    const data = localStorage.getItem(STOPWATCH_STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function CommuteDashboardPage() {
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = getCommuteApiClient();
@@ -14,11 +35,23 @@ export function CommuteDashboardPage() {
   // State
   const [stats, setStats] = useState<CommuteStatsResponse | null>(null);
   const [history, setHistory] = useState<CommuteHistoryResponse | null>(null);
+  const [stopwatchRecords, setStopwatchRecords] = useState<StopwatchRecord[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'history'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'history' | 'stopwatch'>('overview');
 
-  // Load data
+  // Load stopwatch records from localStorage
+  useEffect(() => {
+    const records = getStopwatchRecords();
+    setStopwatchRecords(records);
+
+    // If we have stopwatch records but no API data, show stopwatch tab by default
+    if (records.length > 0 && !stats?.totalSessions) {
+      setActiveTab('stopwatch');
+    }
+  }, [stats?.totalSessions]);
+
+  // Load data from API
   useEffect(() => {
     if (!userId) {
       setIsLoading(false);
@@ -92,7 +125,7 @@ export function CommuteDashboardPage() {
         </div>
       </nav>
 
-      {!stats || stats.totalSessions === 0 ? (
+      {(!stats || stats.totalSessions === 0) && stopwatchRecords.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">📊</span>
           <h2>아직 데이터가 없어요</h2>
@@ -105,31 +138,44 @@ export function CommuteDashboardPage() {
         <div className="dashboard-container">
           {/* Tabs */}
           <div className="dashboard-tabs">
-            <button
-              type="button"
-              className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
-            >
-              전체 요약
-            </button>
-            <button
-              type="button"
-              className={`tab ${activeTab === 'routes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('routes')}
-            >
-              구간 분석
-            </button>
-            <button
-              type="button"
-              className={`tab ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => setActiveTab('history')}
-            >
-              기록
-            </button>
+            {stats && stats.totalSessions > 0 && (
+              <>
+                <button
+                  type="button"
+                  className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('overview')}
+                >
+                  전체 요약
+                </button>
+                <button
+                  type="button"
+                  className={`tab ${activeTab === 'routes' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('routes')}
+                >
+                  구간 분석
+                </button>
+                <button
+                  type="button"
+                  className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('history')}
+                >
+                  기록
+                </button>
+              </>
+            )}
+            {stopwatchRecords.length > 0 && (
+              <button
+                type="button"
+                className={`tab ${activeTab === 'stopwatch' ? 'active' : ''}`}
+                onClick={() => setActiveTab('stopwatch')}
+              >
+                ⏱️ 스톱워치 ({stopwatchRecords.length})
+              </button>
+            )}
           </div>
 
           {/* Overview Tab */}
-          {activeTab === 'overview' && (
+          {activeTab === 'overview' && stats && (
             <div className="tab-content">
               {/* Overall Stats */}
               <section className="stats-section">
@@ -232,7 +278,7 @@ export function CommuteDashboardPage() {
           )}
 
           {/* Routes Tab */}
-          {activeTab === 'routes' && (
+          {activeTab === 'routes' && stats && (
             <div className="tab-content">
               {/* Route Selector */}
               <div className="route-selector">
@@ -376,11 +422,90 @@ export function CommuteDashboardPage() {
               </section>
             </div>
           )}
+
+          {/* Stopwatch Tab */}
+          {activeTab === 'stopwatch' && stopwatchRecords.length > 0 && (
+            <div className="tab-content">
+              {/* Stopwatch Stats Summary */}
+              <section className="stats-section">
+                <h2>⏱️ 스톱워치 기록 요약</h2>
+                <div className="stats-grid">
+                  <div className="stat-card">
+                    <span className="stat-icon">🚶</span>
+                    <span className="stat-value">{stopwatchRecords.length}회</span>
+                    <span className="stat-label">총 기록</span>
+                  </div>
+                  <div className="stat-card">
+                    <span className="stat-icon">⏱️</span>
+                    <span className="stat-value">
+                      {Math.round(
+                        stopwatchRecords.reduce((sum, r) => sum + r.totalDurationSeconds, 0) /
+                        stopwatchRecords.length / 60
+                      )}분
+                    </span>
+                    <span className="stat-label">평균 소요 시간</span>
+                  </div>
+                  <div className="stat-card">
+                    <span className="stat-icon">🌅</span>
+                    <span className="stat-value">
+                      {stopwatchRecords.filter((r) => r.type === 'morning').length}회
+                    </span>
+                    <span className="stat-label">출근</span>
+                  </div>
+                  <div className="stat-card">
+                    <span className="stat-icon">🌆</span>
+                    <span className="stat-value">
+                      {stopwatchRecords.filter((r) => r.type === 'evening').length}회
+                    </span>
+                    <span className="stat-label">퇴근</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Stopwatch Records List */}
+              <section className="history-section">
+                <h2>최근 스톱워치 기록</h2>
+                <div className="history-list">
+                  {stopwatchRecords.slice(0, 20).map((record) => (
+                    <div key={record.id} className="history-item">
+                      <div className="history-header">
+                        <span className="history-route">
+                          {record.type === 'morning' ? '🌅 출근' : record.type === 'evening' ? '🌆 퇴근' : '🚶 이동'}
+                        </span>
+                        <span className="history-status completed">완료</span>
+                      </div>
+                      <div className="history-details">
+                        <span className="history-date">
+                          {new Date(record.startedAt).toLocaleDateString('ko-KR', {
+                            month: 'short',
+                            day: 'numeric',
+                            weekday: 'short',
+                          })}
+                        </span>
+                        <span className="history-time">
+                          {new Date(record.startedAt).toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        <span className="history-duration">
+                          {Math.floor(record.totalDurationSeconds / 60)}분 {record.totalDurationSeconds % 60}초
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="stopwatch-hint">
+                  💡 스톱워치 기록은 이 기기에만 저장됩니다
+                </p>
+              </section>
+            </div>
+          )}
         </div>
       )}
 
       <footer className="footer">
-        <p className="footer-text">Alert System · 출퇴근 통계</p>
+        <p className="footer-text">출퇴근 메이트 · 출퇴근 통계</p>
       </footer>
     </main>
   );
