@@ -84,12 +84,18 @@ export function HomePage() {
       </a>
       <nav className="nav">
         <div className="brand">
-          <strong>Alert System</strong>
-          <span>출퇴근 알림 시스템</span>
+          <strong>출퇴근 메이트</strong>
+          <span>나의 출퇴근 동반자</span>
         </div>
         <div className="nav-actions">
           <Link className="btn btn-ghost" to="/alerts">
-            알림 설정
+            출근 전
+          </Link>
+          <Link className="btn btn-ghost" to="/commute">
+            출퇴근 중
+          </Link>
+          <Link className="btn btn-ghost" to="/commute/dashboard">
+            퇴근 후
           </Link>
           {isLoggedIn ? (
             <button
@@ -141,119 +147,193 @@ export function HomePage() {
 
       <section id="main-content" className="hero">
         <div className="hero-content">
-          <p className="eyebrow">도시 리듬을 읽는 알림</p>
-          <h1>출근과 퇴근 사이, 필요한 정보만 골라서</h1>
+          <p className="eyebrow">출퇴근의 모든 순간을 함께</p>
+          <h1>출근 전, 출퇴근 중, 퇴근 후까지</h1>
           <p className="lead">
-            지하철 역 검색, 위치 기반 공기질, 강수 알림을 하루 두 번 자동으로
-            받아보세요.
+            날씨·교통 알림부터 이동 시간 추적, 통근 패턴 분석까지.
+            <br />
+            매일의 출퇴근을 더 스마트하게.
           </p>
           <div className="hero-actions">
             {isLoggedIn ? (
-              <Link className="btn btn-primary" to="/alerts">
-                내 알림 관리
-              </Link>
+              <>
+                <Link className="btn btn-primary" to="/alerts">
+                  오늘 알림 확인
+                </Link>
+                <Link className="btn btn-outline" to="/commute">
+                  트래킹 시작
+                </Link>
+              </>
             ) : (
               <>
                 <Link className="btn btn-primary" to="/login">
-                  알림 시작하기
+                  시작하기
                 </Link>
                 <Link className="btn btn-outline" to="/alerts">
-                  데모 보기
+                  미리보기
                 </Link>
               </>
             )}
           </div>
-          <div className="hero-meta">
-            <span className="chip">기본 스케줄 08:00 / 18:00</span>
-            <span className="chip">브라우저 위치 + 수동 입력</span>
-            <span className="chip">지하철 역 검색</span>
-          </div>
         </div>
         <div className="hero-panel">
           <div className="card compact">
-            <div className="panel-title">오늘의 알림 샘플</div>
+            <div className="panel-title">오늘의 출퇴근</div>
             <div className="panel-row">
-              <strong>08:00</strong>
-              <span className="muted">출근 · 강남역 · 미세먼지 보통</span>
+              <strong>07:30</strong>
+              <span className="muted">알림 받음 · 우산 챙기세요</span>
             </div>
             <div className="panel-row">
-              <strong>18:00</strong>
-              <span className="muted">퇴근 · 강남역 · 우산 필요</span>
-            </div>
-          </div>
-          <div className="card compact">
-            <div className="panel-title">오늘의 흐름</div>
-            <div className="panel-row">
-              <span>위치 업데이트</span>
-              <strong>2분 전</strong>
+              <strong>08:15</strong>
+              <span className="muted">출발 · 트래킹 시작</span>
             </div>
             <div className="panel-row">
-              <span>지하철 역</span>
-              <strong>강남 · 2호선</strong>
+              <strong>09:02</strong>
+              <span className="muted">도착 · 47분 소요</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="grid-3">
-        <div className="card feature-card">
-          <span className="feature-icon" aria-hidden="true">📍</span>
-          <h3>위치 기반</h3>
+      {/* Three Pillars Section */}
+      <section className="grid-3 pillars-section">
+        <Link to="/alerts" className="card feature-card pillar-card">
+          <div className="pillar-number">1</div>
+          <span className="feature-icon" aria-hidden="true">🌅</span>
+          <h3>출근 전</h3>
+          <p className="pillar-subtitle">알림 준비</p>
           <p className="muted">
-            브라우저 위치 권한으로 자동 설정하고 필요하면 수동 입력도 가능해요.
+            날씨, 미세먼지, 교통 정보를 출근 전에 미리 받아보세요.
+            우산이 필요한지, 마스크를 챙겨야 하는지 알려드려요.
           </p>
-        </div>
-        <div className="card feature-card">
-          <span className="feature-icon" aria-hidden="true">🚇</span>
-          <h3>지하철 역 검색</h3>
-          <p className="muted">검색 즉시 역 목록을 보여주고 노선까지 함께 확인해요.</p>
-        </div>
-        <div className="card feature-card">
-          <span className="feature-icon" aria-hidden="true">🔔</span>
-          <h3>하루 두 번 알림</h3>
+          <span className="pillar-action">알림 설정하기 →</span>
+        </Link>
+        <Link to="/commute" className="card feature-card pillar-card pillar-highlight">
+          <div className="pillar-number">2</div>
+          <span className="feature-icon" aria-hidden="true">🚶</span>
+          <h3>출퇴근 중</h3>
+          <p className="pillar-subtitle">시간 추적</p>
           <p className="muted">
-            기본 스케줄 08:00 / 18:00. 필요하면 원하는 시간으로 조정할 수 있어요.
+            출발부터 도착까지 실제 이동 시간을 기록하세요.
+            체크포인트별로 어디서 시간이 걸리는지 파악할 수 있어요.
           </p>
-        </div>
+          <span className="pillar-action">트래킹 시작하기 →</span>
+        </Link>
+        <Link to="/commute/dashboard" className="card feature-card pillar-card">
+          <div className="pillar-number">3</div>
+          <span className="feature-icon" aria-hidden="true">📊</span>
+          <h3>퇴근 후</h3>
+          <p className="pillar-subtitle">기록 리뷰</p>
+          <p className="muted">
+            일주일, 한 달간의 통근 패턴을 분석하세요.
+            평균 소요 시간과 최적 출발 시간을 추천받을 수 있어요.
+          </p>
+          <span className="pillar-action">통계 보기 →</span>
+        </Link>
       </section>
 
-      <section className="card">
+      {/* How it works */}
+      <section className="card how-it-works">
         <div className="section-head">
           <div className="step-badge">✨</div>
           <div>
-            <h2>사용 흐름</h2>
-            <p className="muted">설정은 3분이면 끝나요.</p>
+            <h2>이렇게 사용하세요</h2>
+            <p className="muted">하루 3분, 출퇴근이 달라져요</p>
           </div>
         </div>
-        <div className="steps-grid">
-          <div className="step-card">
-            <div className="step-badge">1</div>
-            <strong>위치 설정</strong>
-            <span className="muted">권한 허용 또는 수동 입력</span>
+        <div className="journey-flow">
+          <div className="journey-step">
+            <div className="journey-time">AM 7:30</div>
+            <div className="journey-icon">📱</div>
+            <div className="journey-content">
+              <strong>알림 확인</strong>
+              <span className="muted">날씨·교통 정보 수신</span>
+            </div>
           </div>
-          <div className="step-card">
-            <div className="step-badge">2</div>
-            <strong>지하철 역 선택</strong>
-            <span className="muted">검색 후 노선까지 확인</span>
+          <div className="journey-arrow">→</div>
+          <div className="journey-step">
+            <div className="journey-time">AM 8:00</div>
+            <div className="journey-icon">🚶</div>
+            <div className="journey-content">
+              <strong>출발 버튼</strong>
+              <span className="muted">트래킹 자동 시작</span>
+            </div>
           </div>
-          <div className="step-card">
-            <div className="step-badge">3</div>
-            <strong>알림 시간</strong>
-            <span className="muted">08:00 / 18:00 기본 제공</span>
+          <div className="journey-arrow">→</div>
+          <div className="journey-step">
+            <div className="journey-time">AM 9:00</div>
+            <div className="journey-icon">🏢</div>
+            <div className="journey-content">
+              <strong>도착 체크</strong>
+              <span className="muted">소요 시간 기록</span>
+            </div>
           </div>
-          <div className="step-card">
-            <div className="step-badge">4</div>
-            <strong>푸시 구독</strong>
-            <span className="muted">웹에서 바로 알림 수신</span>
+          <div className="journey-arrow">→</div>
+          <div className="journey-step">
+            <div className="journey-time">PM 7:00</div>
+            <div className="journey-icon">📊</div>
+            <div className="journey-content">
+              <strong>하루 리뷰</strong>
+              <span className="muted">패턴 분석</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Detail */}
+      <section className="card features-detail">
+        <h2>주요 기능</h2>
+        <div className="features-grid">
+          <div className="feature-item">
+            <span className="feature-icon-small">🌤️</span>
+            <div>
+              <strong>날씨 알림</strong>
+              <p className="muted">비, 눈, 미세먼지 정보</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <span className="feature-icon-small">🚇</span>
+            <div>
+              <strong>지하철 도착</strong>
+              <p className="muted">실시간 도착 정보</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <span className="feature-icon-small">⏱️</span>
+            <div>
+              <strong>시간 추적</strong>
+              <p className="muted">구간별 소요 시간</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <span className="feature-icon-small">📈</span>
+            <div>
+              <strong>패턴 분석</strong>
+              <p className="muted">최적 출발 시간 추천</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <span className="feature-icon-small">💬</span>
+            <div>
+              <strong>카카오 알림톡</strong>
+              <p className="muted">앱 설치 없이 알림</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <span className="feature-icon-small">🗺️</span>
+            <div>
+              <strong>경로 설정</strong>
+              <p className="muted">나만의 출퇴근 경로</p>
+            </div>
           </div>
         </div>
       </section>
 
       <footer className="footer">
         <p className="footer-text">
-          <span>Alert System</span>
+          <span>출퇴근 메이트</span>
           <span className="footer-divider">·</span>
-          <span>출퇴근 알림 서비스</span>
+          <span>나의 출퇴근 동반자</span>
         </p>
         <p className="footer-copyright">© 2025 All rights reserved</p>
       </footer>
