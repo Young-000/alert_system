@@ -6207,6 +6207,8 @@ kbd {
 
 .config-actions .btn {
   flex: 1;
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .config-actions .btn-primary {
