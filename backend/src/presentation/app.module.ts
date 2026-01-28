@@ -11,6 +11,7 @@ import { SubwayModule } from './modules/subway.module';
 import { BusModule } from './modules/bus.module';
 import { BehaviorModule } from './modules/behavior.module';
 import { PrivacyModule } from './modules/privacy.module';
+import { CommuteModule } from './modules/commute.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
@@ -34,6 +35,7 @@ import { HealthController } from './controllers/health.controller';
     BusModule,
     BehaviorModule,
     PrivacyModule,
+    CommuteModule,
   ],
   providers: [
     // 전역 JWT 인증 가드

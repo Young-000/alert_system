@@ -1,0 +1,282 @@
+import { ApiClient } from './api-client';
+
+// ========== Types ==========
+
+export type RouteType = 'morning' | 'evening' | 'custom';
+export type CheckpointType = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
+export type TransportMode = 'walk' | 'subway' | 'bus' | 'transfer' | 'taxi' | 'bike';
+export type SessionStatus = 'in_progress' | 'completed' | 'cancelled';
+
+export interface CreateCheckpointDto {
+  sequenceOrder: number;
+  name: string;
+  checkpointType: CheckpointType;
+  linkedStationId?: string;
+  linkedBusStopId?: string;
+  lineInfo?: string;
+  expectedDurationToNext?: number;
+  expectedWaitTime?: number;
+  transportMode?: TransportMode;
+}
+
+export interface CreateRouteDto {
+  userId: string;
+  name: string;
+  routeType: RouteType;
+  isPreferred?: boolean;
+  checkpoints: CreateCheckpointDto[];
+}
+
+export interface UpdateRouteDto {
+  name?: string;
+  routeType?: RouteType;
+  isPreferred?: boolean;
+  checkpoints?: CreateCheckpointDto[];
+}
+
+export interface CheckpointResponse {
+  id: string;
+  sequenceOrder: number;
+  name: string;
+  checkpointType: CheckpointType;
+  linkedStationId?: string;
+  linkedBusStopId?: string;
+  lineInfo?: string;
+  expectedDurationToNext?: number;
+  expectedWaitTime: number;
+  transportMode?: TransportMode;
+  totalExpectedTime: number;
+  isTransferRelated: boolean;
+}
+
+export interface RouteResponse {
+  id: string;
+  userId: string;
+  name: string;
+  routeType: RouteType;
+  isPreferred: boolean;
+  totalExpectedDuration?: number;
+  totalTransferTime: number;
+  pureMovementTime: number;
+  checkpoints: CheckpointResponse[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StartSessionDto {
+  userId: string;
+  routeId: string;
+  weatherCondition?: string;
+}
+
+export interface RecordCheckpointDto {
+  sessionId: string;
+  checkpointId: string;
+  actualWaitTime?: number;
+  notes?: string;
+}
+
+export interface CompleteSessionDto {
+  sessionId: string;
+  notes?: string;
+}
+
+export interface CheckpointRecordResponse {
+  id: string;
+  checkpointId: string;
+  checkpointName?: string;
+  arrivedAt: string;
+  arrivalTimeString: string;
+  durationFromPrevious?: number;
+  actualWaitTime: number;
+  isDelayed: boolean;
+  delayMinutes: number;
+  waitDelayMinutes: number;
+  delayStatus: string;
+  waitDelayStatus: string;
+  totalDuration: number;
+  notes?: string;
+}
+
+export interface SessionResponse {
+  id: string;
+  userId: string;
+  routeId: string;
+  startedAt: string;
+  completedAt?: string;
+  totalDurationMinutes?: number;
+  totalWaitMinutes: number;
+  totalDelayMinutes: number;
+  status: SessionStatus;
+  weatherCondition?: string;
+  notes?: string;
+  progress: number;
+  delayStatus: string;
+  pureMovementTime: number;
+  waitTimePercentage: number;
+  checkpointRecords: CheckpointRecordResponse[];
+}
+
+export interface SessionSummary {
+  id: string;
+  routeId: string;
+  routeName?: string;
+  startedAt: string;
+  completedAt?: string;
+  totalDurationMinutes?: number;
+  totalWaitMinutes: number;
+  totalDelayMinutes: number;
+  status: SessionStatus;
+  weatherCondition?: string;
+  delayStatus: string;
+}
+
+export interface CommuteHistoryResponse {
+  userId: string;
+  sessions: SessionSummary[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export interface CheckpointStats {
+  checkpointId: string;
+  checkpointName: string;
+  checkpointType: CheckpointType;
+  expectedDuration: number;
+  expectedWaitTime: number;
+  averageActualDuration: number;
+  averageActualWaitTime: number;
+  averageDelay: number;
+  sampleCount: number;
+  variability: number;
+  isBottleneck: boolean;
+}
+
+export interface RouteStats {
+  routeId: string;
+  routeName: string;
+  totalSessions: number;
+  averageTotalDuration: number;
+  averageTotalWaitTime: number;
+  averageDelay: number;
+  waitTimePercentage: number;
+  checkpointStats: CheckpointStats[];
+  bottleneckCheckpoint?: string;
+  mostVariableCheckpoint?: string;
+}
+
+export interface DayOfWeekStats {
+  dayOfWeek: number;
+  dayName: string;
+  averageDuration: number;
+  averageWaitTime: number;
+  averageDelay: number;
+  sampleCount: number;
+}
+
+export interface WeatherImpact {
+  condition: string;
+  averageDuration: number;
+  averageDelay: number;
+  sampleCount: number;
+  comparedToNormal: number;
+}
+
+export interface CommuteStatsResponse {
+  userId: string;
+  totalSessions: number;
+  recentSessions: number;
+  overallAverageDuration: number;
+  overallAverageWaitTime: number;
+  overallAverageDelay: number;
+  waitTimePercentage: number;
+  routeStats: RouteStats[];
+  dayOfWeekStats: DayOfWeekStats[];
+  weatherImpact: WeatherImpact[];
+  insights: string[];
+}
+
+// ========== API Client ==========
+
+export class CommuteApiClient {
+  constructor(private apiClient: ApiClient) {}
+
+  // ========== Route APIs ==========
+
+  async createRoute(dto: CreateRouteDto): Promise<RouteResponse> {
+    return this.apiClient.post<RouteResponse>('/routes', dto);
+  }
+
+  async getRoute(id: string): Promise<RouteResponse> {
+    return this.apiClient.get<RouteResponse>(`/routes/${id}`);
+  }
+
+  async getUserRoutes(userId: string, routeType?: RouteType): Promise<RouteResponse[]> {
+    const url = routeType
+      ? `/routes/user/${userId}?type=${routeType}`
+      : `/routes/user/${userId}`;
+    return this.apiClient.get<RouteResponse[]>(url);
+  }
+
+  async updateRoute(id: string, dto: UpdateRouteDto): Promise<RouteResponse> {
+    return this.apiClient.patch<RouteResponse>(`/routes/${id}`, dto);
+  }
+
+  async deleteRoute(id: string): Promise<void> {
+    return this.apiClient.delete(`/routes/${id}`);
+  }
+
+  // ========== Session APIs ==========
+
+  async startSession(dto: StartSessionDto): Promise<SessionResponse> {
+    return this.apiClient.post<SessionResponse>('/commute/start', dto);
+  }
+
+  async recordCheckpoint(dto: RecordCheckpointDto): Promise<SessionResponse> {
+    return this.apiClient.post<SessionResponse>('/commute/checkpoint', dto);
+  }
+
+  async completeSession(dto: CompleteSessionDto): Promise<SessionResponse> {
+    return this.apiClient.post<SessionResponse>('/commute/complete', dto);
+  }
+
+  async cancelSession(sessionId: string): Promise<{ success: boolean }> {
+    return this.apiClient.post<{ success: boolean }>(`/commute/cancel/${sessionId}`);
+  }
+
+  async getSession(sessionId: string): Promise<SessionResponse> {
+    return this.apiClient.get<SessionResponse>(`/commute/session/${sessionId}`);
+  }
+
+  async getInProgressSession(userId: string): Promise<SessionResponse | null> {
+    const response = await this.apiClient.get<SessionResponse | { session: null }>(
+      `/commute/in-progress/${userId}`
+    );
+    if ('session' in response && response.session === null) {
+      return null;
+    }
+    return response as SessionResponse;
+  }
+
+  // ========== History & Stats APIs ==========
+
+  async getHistory(userId: string, limit = 20, offset = 0): Promise<CommuteHistoryResponse> {
+    return this.apiClient.get<CommuteHistoryResponse>(
+      `/commute/history/${userId}?limit=${limit}&offset=${offset}`
+    );
+  }
+
+  async getStats(userId: string, days = 30): Promise<CommuteStatsResponse> {
+    return this.apiClient.get<CommuteStatsResponse>(`/commute/stats/${userId}?days=${days}`);
+  }
+}
+
+// Singleton instance
+let commuteApiClientInstance: CommuteApiClient | null = null;
+
+export function getCommuteApiClient(): CommuteApiClient {
+  if (!commuteApiClientInstance) {
+    commuteApiClientInstance = new CommuteApiClient(new ApiClient());
+  }
+  return commuteApiClientInstance;
+}
