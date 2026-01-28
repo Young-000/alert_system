@@ -29,6 +29,7 @@ async function bootstrap() {
     'http://localhost:5177',
     'http://localhost:5178',
     'https://frontend-xi-two-52.vercel.app',
+    'https://alert-commute-test.vercel.app', // Commute tracking test site
     process.env.CORS_ORIGIN,
   ].filter(Boolean) as string[];
 
