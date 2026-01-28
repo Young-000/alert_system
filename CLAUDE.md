@@ -50,7 +50,6 @@
 |------|-----|
 | **Frontend URL** | https://frontend-xi-two-52.vercel.app |
 | **Backend API (HTTPS)** | https://d1qgl3ij2xig8k.cloudfront.net |
-| **Backend (Render, 백업)** | https://alert-system-kdg9.onrender.com |
 | **Supabase** | Project 2 - `gtnqsbdlybrkbsgtecvy` |
 | **Schema** | `alert_system` |
 
