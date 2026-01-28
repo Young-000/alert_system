@@ -6425,3 +6425,272 @@ kbd {
   background: var(--success-light);
   color: var(--success);
 }
+
+/* ============================================
+   STOPWATCH MODE STYLES
+   ============================================ */
+
+.stopwatch-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.stopwatch-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 2rem;
+}
+
+/* Type Selection */
+.stopwatch-type-section {
+  text-align: center;
+}
+
+.stopwatch-type-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--ink);
+}
+
+.stopwatch-type-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.type-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.type-btn.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.type-icon {
+  font-size: 2rem;
+}
+
+.type-btn span:last-child {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Stopwatch Display */
+.stopwatch-display-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.stopwatch-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+}
+
+.stopwatch-display.pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: var(--shadow-lg);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+  }
+}
+
+.stopwatch-time {
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.stopwatch-label {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.stopwatch-label.paused {
+  color: var(--warning);
+}
+
+/* Stopwatch Controls */
+.stopwatch-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-stopwatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-lg);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.btn-stopwatch .btn-icon {
+  font-size: 1.25rem;
+}
+
+.btn-stopwatch.btn-start {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-stopwatch.btn-start:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+}
+
+.btn-stopwatch.btn-pause {
+  background: var(--warning);
+  color: white;
+}
+
+.btn-stopwatch.btn-pause:hover {
+  background: #d97706;
+}
+
+.btn-stopwatch.btn-resume {
+  background: var(--success);
+  color: white;
+}
+
+.btn-stopwatch.btn-resume:hover {
+  background: #059669;
+}
+
+.btn-stopwatch.btn-complete {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.btn-stopwatch.btn-complete:hover {
+  opacity: 0.9;
+}
+
+/* Stopwatch Complete */
+.stopwatch-complete {
+  text-align: center;
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 320px;
+}
+
+.complete-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.complete-badge .complete-icon {
+  font-size: 3rem;
+}
+
+.complete-badge h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.complete-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+
+.summary-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.summary-value.muted {
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.complete-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.complete-actions .btn {
+  flex: 1;
+}
+
+/* Stopwatch Hint */
+.stopwatch-hint {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  text-align: center;
+  max-width: 280px;
+}
