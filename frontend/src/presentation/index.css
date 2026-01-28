@@ -6206,16 +6206,27 @@ kbd {
 }
 
 .config-actions .btn {
-  flex: 1;
   white-space: nowrap;
-  min-width: fit-content;
+  padding: 0.75rem 1rem;
+}
+
+.config-actions .btn-ghost {
+  flex: 0 0 auto; /* Don't grow, don't shrink, use auto width */
 }
 
 .config-actions .btn-primary {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  font-size: 0.9rem; /* Slightly smaller on narrow screens */
+}
+
+@media (min-width: 400px) {
+  .config-actions .btn-primary {
+    font-size: 1rem;
+  }
 }
 
 .btn-arrow {
