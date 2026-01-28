@@ -132,5 +132,21 @@ export class Alert {
   enable(): void {
     this.enabled = true;
   }
+
+  toJSON() {
+    return {
+      id: this.id,
+      userId: this.userId,
+      name: this._name,
+      schedule: this._schedule,
+      alertTypes: this.alertTypes,
+      enabled: this.enabled,
+      busStopId: this.busStopId,
+      subwayStationId: this.subwayStationId,
+      smartSchedulingEnabled: this.smartSchedulingEnabled,
+      smartSchedulingConfig: this.smartSchedulingConfig,
+      notificationTime: this.notificationTime,
+    };
+  }
 }
 
