@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getCommuteApiClient,
   type RouteResponse,
@@ -8,10 +8,43 @@ import {
   type CheckpointRecordResponse,
 } from '@infrastructure/api/commute-api.client';
 
+// Stopwatch record stored in localStorage
+interface StopwatchRecord {
+  id: string;
+  startedAt: string;
+  completedAt: string;
+  totalDurationSeconds: number;
+  type: 'morning' | 'evening' | 'custom';
+  notes?: string;
+}
+
+const STOPWATCH_STORAGE_KEY = 'commute_stopwatch_records';
+
+function getStopwatchRecords(): StopwatchRecord[] {
+  try {
+    const data = localStorage.getItem(STOPWATCH_STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStopwatchRecord(record: StopwatchRecord): void {
+  const records = getStopwatchRecords();
+  records.unshift(record);
+  // Keep only last 50 records
+  localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify(records.slice(0, 50)));
+}
+
 export function CommuteTrackingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = getCommuteApiClient();
+
+  // Check for stopwatch mode
+  const isStopwatchMode = searchParams.get('mode') === 'stopwatch';
+  const routeIdParam = searchParams.get('routeId');
 
   // State
   const [routes, setRoutes] = useState<RouteResponse[]>([]);
@@ -20,12 +53,24 @@ export function CommuteTrackingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Timer
+  // Timer (shared between modes)
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load routes and check for active session
+  // Stopwatch mode state
+  const [stopwatchState, setStopwatchState] = useState<'idle' | 'running' | 'paused' | 'completed'>('idle');
+  const [stopwatchStartTime, setStopwatchStartTime] = useState<number | null>(null);
+  const [pausedTime, setPausedTime] = useState(0);
+  const [stopwatchType, setStopwatchType] = useState<'morning' | 'evening' | 'custom'>('morning');
+  const [completedDuration, setCompletedDuration] = useState(0);
+
+  // Load routes and check for active session (only in route mode)
   useEffect(() => {
+    if (isStopwatchMode) {
+      setIsLoading(false);
+      return;
+    }
+
     if (!userId) {
       setIsLoading(false);
       return;
@@ -45,6 +90,9 @@ export function CommuteTrackingPage() {
           setActiveSession(inProgress);
           const route = userRoutes.find((r) => r.id === inProgress.routeId);
           setSelectedRoute(route || null);
+        } else if (routeIdParam) {
+          const route = userRoutes.find((r) => r.id === routeIdParam);
+          setSelectedRoute(route || null);
         } else if (userRoutes.length > 0) {
           const preferred = userRoutes.find((r) => r.isPreferred) || userRoutes[0];
           setSelectedRoute(preferred);
@@ -58,9 +106,9 @@ export function CommuteTrackingPage() {
     };
 
     loadData();
-  }, [userId, commuteApi]);
+  }, [userId, commuteApi, isStopwatchMode, routeIdParam]);
 
-  // Timer effect
+  // Timer effect for route-based session
   useEffect(() => {
     if (activeSession && activeSession.status === 'in_progress') {
       const startTime = new Date(activeSession.startedAt).getTime();
@@ -80,14 +128,89 @@ export function CommuteTrackingPage() {
     }
   }, [activeSession]);
 
-  // Format time
+  // Stopwatch timer effect
+  useEffect(() => {
+    if (stopwatchState === 'running' && stopwatchStartTime) {
+      const updateStopwatch = () => {
+        const now = Date.now();
+        setElapsedTime(Math.floor((now - stopwatchStartTime) / 1000) + pausedTime);
+      };
+
+      updateStopwatch();
+      timerRef.current = setInterval(updateStopwatch, 100); // More frequent for smoother display
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      };
+    }
+  }, [stopwatchState, stopwatchStartTime, pausedTime]);
+
+  // Format time for route mode
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}분 ${secs.toString().padStart(2, '0')}초`;
   };
 
-  // Start session
+  // Format time for stopwatch (00:00:00)
+  const formatStopwatchTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Stopwatch controls
+  const handleStartStopwatch = () => {
+    setStopwatchStartTime(Date.now());
+    setStopwatchState('running');
+    setError('');
+  };
+
+  const handlePauseStopwatch = () => {
+    setPausedTime(elapsedTime);
+    setStopwatchState('paused');
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  };
+
+  const handleResumeStopwatch = () => {
+    setStopwatchStartTime(Date.now());
+    setStopwatchState('running');
+  };
+
+  const handleCompleteStopwatch = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    const finalDuration = elapsedTime;
+    setCompletedDuration(finalDuration);
+    setStopwatchState('completed');
+
+    // Save to localStorage
+    const record: StopwatchRecord = {
+      id: Date.now().toString(),
+      startedAt: new Date(Date.now() - finalDuration * 1000).toISOString(),
+      completedAt: new Date().toISOString(),
+      totalDurationSeconds: finalDuration,
+      type: stopwatchType,
+    };
+    saveStopwatchRecord(record);
+  };
+
+  const handleResetStopwatch = () => {
+    setStopwatchState('idle');
+    setStopwatchStartTime(null);
+    setPausedTime(0);
+    setElapsedTime(0);
+    setCompletedDuration(0);
+  };
+
+  // Start session (route mode)
   const handleStartSession = async () => {
     if (!selectedRoute) {
       setError('경로를 선택해주세요.');
@@ -98,7 +221,7 @@ export function CommuteTrackingPage() {
       const session = await commuteApi.startSession({
         userId,
         routeId: selectedRoute.id,
-        weatherCondition: '맑음', // TODO: Get from weather API
+        weatherCondition: '맑음',
       });
       setActiveSession(session);
       setError('');
@@ -136,7 +259,6 @@ export function CommuteTrackingPage() {
       });
       setActiveSession(completedSession);
 
-      // Redirect to dashboard after completion
       setTimeout(() => {
         navigate('/commute/dashboard');
       }, 2000);
@@ -173,7 +295,6 @@ export function CommuteTrackingPage() {
 
       if (isRecorded) return 'completed';
 
-      // Find the next unrecorded checkpoint
       const recordedIds = new Set(activeSession.checkpointRecords.map((r) => r.checkpointId));
       const nextUnrecorded = selectedRoute?.checkpoints.find((cp) => !recordedIds.has(cp.id));
 
@@ -192,6 +313,184 @@ export function CommuteTrackingPage() {
     [activeSession]
   );
 
+  // ========== STOPWATCH MODE RENDER ==========
+  if (isStopwatchMode) {
+    return (
+      <main className="page stopwatch-page">
+        <nav className="nav">
+          <div className="brand">
+            <Link to="/routes" className="nav-back">←</Link>
+            <strong>스톱워치 모드</strong>
+          </div>
+          <div className="nav-actions">
+            <Link className="btn btn-ghost" to="/commute/dashboard">
+              통계
+            </Link>
+          </div>
+        </nav>
+
+        <div className="stopwatch-container">
+          {/* Type Selection (only when idle) */}
+          {stopwatchState === 'idle' && (
+            <section className="stopwatch-type-section">
+              <h2>어떤 출퇴근인가요?</h2>
+              <div className="stopwatch-type-buttons">
+                <button
+                  type="button"
+                  className={`type-btn ${stopwatchType === 'morning' ? 'active' : ''}`}
+                  onClick={() => setStopwatchType('morning')}
+                >
+                  <span className="type-icon">🌅</span>
+                  <span>출근</span>
+                </button>
+                <button
+                  type="button"
+                  className={`type-btn ${stopwatchType === 'evening' ? 'active' : ''}`}
+                  onClick={() => setStopwatchType('evening')}
+                >
+                  <span className="type-icon">🌆</span>
+                  <span>퇴근</span>
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Timer Display */}
+          <section className="stopwatch-display-section">
+            <div className={`stopwatch-display ${stopwatchState === 'running' ? 'pulse' : ''}`}>
+              <span className="stopwatch-time">
+                {stopwatchState === 'completed'
+                  ? formatStopwatchTime(completedDuration)
+                  : formatStopwatchTime(elapsedTime)}
+              </span>
+              {stopwatchState === 'running' && (
+                <span className="stopwatch-label">기록 중...</span>
+              )}
+              {stopwatchState === 'paused' && (
+                <span className="stopwatch-label paused">일시정지</span>
+              )}
+            </div>
+          </section>
+
+          {/* Completed State */}
+          {stopwatchState === 'completed' && (
+            <section className="stopwatch-complete">
+              <div className="complete-badge">
+                <span className="complete-icon">✅</span>
+                <h2>{stopwatchType === 'morning' ? '출근' : '퇴근'} 완료!</h2>
+              </div>
+              <div className="complete-summary">
+                <div className="summary-item">
+                  <span className="summary-label">총 소요 시간</span>
+                  <span className="summary-value">
+                    {Math.floor(completedDuration / 60)}분 {completedDuration % 60}초
+                  </span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">기록 시간</span>
+                  <span className="summary-value muted">
+                    {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+              <div className="complete-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleResetStopwatch}
+                >
+                  새로 시작
+                </button>
+                <Link to="/commute/dashboard" className="btn btn-primary">
+                  통계 보기
+                </Link>
+              </div>
+            </section>
+          )}
+
+          {/* Control Buttons */}
+          {stopwatchState !== 'completed' && (
+            <section className="stopwatch-controls">
+              {stopwatchState === 'idle' && (
+                <button
+                  type="button"
+                  className="btn btn-stopwatch btn-start"
+                  onClick={handleStartStopwatch}
+                >
+                  <span className="btn-icon">▶</span>
+                  <span>시작</span>
+                </button>
+              )}
+
+              {stopwatchState === 'running' && (
+                <div className="control-group">
+                  <button
+                    type="button"
+                    className="btn btn-stopwatch btn-pause"
+                    onClick={handlePauseStopwatch}
+                  >
+                    <span className="btn-icon">⏸</span>
+                    <span>일시정지</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-stopwatch btn-complete"
+                    onClick={handleCompleteStopwatch}
+                  >
+                    <span className="btn-icon">⏹</span>
+                    <span>완료</span>
+                  </button>
+                </div>
+              )}
+
+              {stopwatchState === 'paused' && (
+                <div className="control-group">
+                  <button
+                    type="button"
+                    className="btn btn-stopwatch btn-resume"
+                    onClick={handleResumeStopwatch}
+                  >
+                    <span className="btn-icon">▶</span>
+                    <span>재개</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-stopwatch btn-complete"
+                    onClick={handleCompleteStopwatch}
+                  >
+                    <span className="btn-icon">⏹</span>
+                    <span>완료</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={handleResetStopwatch}
+                  >
+                    초기화
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Hint */}
+          {stopwatchState === 'idle' && (
+            <p className="stopwatch-hint">
+              경로 설정 없이 시간만 기록하는 간편 모드입니다
+            </p>
+          )}
+
+          {error && <div className="notice error">{error}</div>}
+        </div>
+
+        <footer className="footer">
+          <p className="footer-text">출퇴근 메이트 · 스톱워치 모드</p>
+        </footer>
+      </main>
+    );
+  }
+
+  // ========== ROUTE MODE RENDER ==========
   if (!userId) {
     return (
       <main className="page">
@@ -393,7 +692,6 @@ export function CommuteTrackingPage() {
                               type="button"
                               className="btn btn-primary btn-checkpoint"
                               onClick={() => {
-                                // For the last checkpoint, complete the session
                                 if (isLast) {
                                   handleRecordCheckpoint(checkpoint.id).then(() => {
                                     handleCompleteSession();
@@ -447,7 +745,7 @@ export function CommuteTrackingPage() {
       )}
 
       <footer className="footer">
-        <p className="footer-text">Alert System · 출퇴근 트래킹</p>
+        <p className="footer-text">출퇴근 메이트 · 출퇴근 트래킹</p>
       </footer>
     </main>
   );
