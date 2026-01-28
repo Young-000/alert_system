@@ -78,12 +78,16 @@ export function LoginPage() {
           const response = await authApiClient.register({ email, password, name, phoneNumber });
           localStorage.setItem('userId', response.user.id);
           localStorage.setItem('accessToken', response.accessToken);
+          localStorage.setItem('userName', name);
+          // 신규 회원은 온보딩으로 이동
+          navigate('/onboarding');
+          return;
         } else {
           const response = await authApiClient.login({ email, password });
           localStorage.setItem('userId', response.user.id);
           localStorage.setItem('accessToken', response.accessToken);
         }
-        navigate('/alerts');
+        navigate('/');
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '오류가 발생했습니다.';
         if (mode === 'register') {
