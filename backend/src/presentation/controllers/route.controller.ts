@@ -38,15 +38,8 @@ export class RouteController {
   }
 
   /**
-   * 특정 경로 조회
-   */
-  @Get(':id')
-  async getRoute(@Param('id') id: string): Promise<RouteResponseDto> {
-    return this.manageRouteUseCase.getRouteById(id);
-  }
-
-  /**
    * 사용자의 모든 경로 조회
+   * NOTE: 이 라우트는 @Get(':id') 보다 먼저 정의되어야 함 (NestJS 라우트 매칭 순서)
    */
   @Get('user/:userId')
   async getUserRoutes(
@@ -60,6 +53,14 @@ export class RouteController {
       );
     }
     return this.manageRouteUseCase.getRoutesByUserId(userId);
+  }
+
+  /**
+   * 특정 경로 조회
+   */
+  @Get(':id')
+  async getRoute(@Param('id') id: string): Promise<RouteResponseDto> {
+    return this.manageRouteUseCase.getRouteById(id);
   }
 
   /**
