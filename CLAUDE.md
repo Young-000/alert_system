@@ -49,8 +49,8 @@
 | 항목 | 값 |
 |------|-----|
 | **Frontend URL** | https://frontend-xi-two-52.vercel.app |
-| **Backend URL (Render)** | https://alert-system-kdg9.onrender.com |
-| **Backend URL (AWS)** | http://alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com |
+| **Backend API (HTTPS)** | https://d1qgl3ij2xig8k.cloudfront.net |
+| **Backend (Render, 백업)** | https://alert-system-kdg9.onrender.com |
 | **Supabase** | Project 2 - `gtnqsbdlybrkbsgtecvy` |
 | **Schema** | `alert_system` |
 
@@ -61,10 +61,10 @@
 | **Backend** | ✅ | AWS ECS Fargate (NestJS) |
 | **Frontend** | ✅ | Vercel (React) |
 | **Database** | ✅ | Supabase PostgreSQL |
+| **CDN/HTTPS** | ✅ | AWS CloudFront |
 | **Load Balancer** | ✅ | AWS ALB |
 | **Container Registry** | ✅ | AWS ECR |
 | **Secrets** | ✅ | AWS SSM Parameter Store |
-| **HTTPS** | 🔄 | ACM + ALB 설정 필요 |
 | **Scheduling** | 🔄 | EventBridge Scheduler (다음 단계) |
 
 ## 진행상황
@@ -72,11 +72,10 @@
 | 영역 | 상태 | 비고 |
 |------|:----:|------|
 | Frontend | ✅ | Vercel 배포 |
-| Backend (Render) | ✅ | 백업용 유지 |
-| Backend (AWS) | ✅ | ECS Fargate 배포 완료 |
+| Backend (AWS) | ✅ | ECS Fargate + CloudFront |
+| HTTPS | ✅ | CloudFront 배포 완료 |
 | DB 연결 | ✅ | Supabase Pooler |
 | ALB Health Check | ✅ | /health 엔드포인트 |
-| **HTTPS 설정** | 🔄 | ACM 인증서 필요 |
 | **EventBridge** | 🔄 | 다음 단계 |
 
 ## DB 테이블
@@ -93,11 +92,14 @@ alert_system.push_subscriptions
 
 | 리소스 | 이름/값 |
 |--------|---------|
+| **CloudFront** | `d1qgl3ij2xig8k.cloudfront.net` |
+| **CloudFront ID** | `E1YZF6XW3X251G` |
 | **ECS Cluster** | `alert-system-prod` |
 | **ECS Service** | `alert-system-prod-service` |
 | **ALB** | `alert-system-prod-alb` |
 | **ALB DNS** | `alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com` |
-| **ECR Repository** | `alert-system-backend` |
+| **ECR Repository** | `alert-system` (378898678278.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system) |
+| **ECS Cluster** | `alert-system-prod-cluster` |
 | **SSM Prefix** | `/alert-system/prod/` |
 | **Region** | `ap-northeast-2` (Seoul) |
 
@@ -116,9 +118,8 @@ SOLAPI_API_KEY=...
 
 ### Frontend (.env.production)
 ```env
-# HTTPS 설정 후 AWS로 전환
-# VITE_API_BASE_URL=https://alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com
-VITE_API_BASE_URL=https://alert-system-kdg9.onrender.com
+# AWS CloudFront (HTTPS)
+VITE_API_BASE_URL=https://d1qgl3ij2xig8k.cloudfront.net
 VITE_VAPID_PUBLIC_KEY=...
 ```
 
@@ -150,10 +151,10 @@ docker-compose up -d redis
 ```bash
 # 1. Docker 이미지 빌드 & 푸시
 cd backend
-docker build --platform linux/amd64 -t alert-system-backend .
-docker tag alert-system-backend:latest 211125569291.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system-backend:latest
-aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 211125569291.dkr.ecr.ap-northeast-2.amazonaws.com
-docker push 211125569291.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system-backend:latest
+docker build --platform linux/amd64 -t alert-system .
+docker tag alert-system:latest 378898678278.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system:latest
+aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 378898678278.dkr.ecr.ap-northeast-2.amazonaws.com
+docker push 378898678278.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system:latest
 
 # 2. ECS 서비스 재배포
 aws ecs update-service --cluster alert-system-prod --service alert-system-prod-service --force-new-deployment
@@ -163,18 +164,20 @@ aws ecs describe-services --cluster alert-system-prod --services alert-system-pr
 
 # 4. 로그 확인
 aws logs tail /ecs/alert-system-prod --follow
+
+# 5. CloudFront 캐시 무효화 (필요시)
+aws cloudfront create-invalidation --distribution-id E1YZF6XW3X251G --paths "/*"
 ```
 
 ## Known Issues (프로젝트 고유)
 
 ### ~~Render Cold Start~~ ✅ 해결됨
 ~~Backend (Render Free Tier) 첫 요청 시 ~30초 지연~~
-→ AWS ECS Fargate로 전환 완료
+→ AWS ECS Fargate + CloudFront로 전환 완료
 
-### HTTPS 설정 필요 🔄
-현재 ALB는 HTTP (포트 80)만 지원
-→ ACM 인증서 발급 후 HTTPS 리스너 추가 필요
-→ 프론트엔드(Vercel HTTPS)에서 HTTP API 호출 시 Mixed Content 오류
+### ~~HTTPS 설정~~ ✅ 해결됨
+~~ALB는 HTTP만 지원~~
+→ CloudFront 배포로 HTTPS 자동 제공
 
 ### In-Memory Scheduler 손실 🔄
 서버 재시작 시 모든 스케줄 손실
@@ -192,8 +195,14 @@ aws logs tail /ecs/alert-system-prod --follow
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
+│                  CloudFront (HTTPS) ✅                          │
+│               d1qgl3ij2xig8k.cloudfront.net                     │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
 │                    ALB (HTTP:80) ✅                             │
-│           → HTTPS 설정 필요 (ACM 인증서)                         │
+│           Internal Load Balancing                               │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -211,9 +220,9 @@ aws logs tail /ecs/alert-system-prod --follow
 ```
 
 ### 다음 단계
-1. **HTTPS 설정**: ACM 인증서 발급 → ALB HTTPS 리스너 추가
-2. **EventBridge Scheduler**: 사용자별 알림 스케줄 영구 저장
-3. **ElastiCache Redis**: BullMQ 큐 (선택사항)
+1. **EventBridge Scheduler**: 사용자별 알림 스케줄 영구 저장
+2. **ElastiCache Redis**: BullMQ 큐 (선택사항)
+3. **커스텀 도메인**: Route 53 + ACM (선택사항)
 
 ---
 
