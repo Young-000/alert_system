@@ -10,6 +10,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { RouteSetupPage } from './pages/RouteSetupPage';
 import { CommuteTrackingPage } from './pages/CommuteTrackingPage';
 import { CommuteDashboardPage } from './pages/CommuteDashboardPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/alerts" element={<AlertSettingsPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           {/* Commute tracking routes */}
