@@ -303,7 +303,7 @@ export function RouteSetupPage() {
                   <span className="btn-loading">저장 중...</span>
                 ) : (
                   <>
-                    <span>저장하고 시작</span>
+                    <span>시작하기</span>
                     <span className="btn-arrow">→</span>
                   </>
                 )}
