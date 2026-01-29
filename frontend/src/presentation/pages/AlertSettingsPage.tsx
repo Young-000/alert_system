@@ -58,6 +58,9 @@ export function AlertSettingsPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editTarget, setEditTarget] = useState<Alert | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', schedule: '' });
+  const [isEditing, setIsEditing] = useState(false);
 
   const userId = localStorage.getItem('userId') || '';
 
@@ -337,6 +340,46 @@ export function AlertSettingsPage() {
 
   const handleDeleteCancel = useCallback(() => {
     setDeleteTarget(null);
+  }, []);
+
+  const handleEditClick = (alert: Alert) => {
+    setEditTarget(alert);
+    // Parse schedule to extract time (e.g., "0 7 * * *" -> "07:00")
+    const parts = alert.schedule.split(' ');
+    let time = '07:00';
+    if (parts.length >= 2) {
+      const minute = parts[0].padStart(2, '0');
+      const hour = parts[1].split(',')[0].padStart(2, '0');
+      time = `${hour}:${minute}`;
+    }
+    setEditForm({ name: alert.name, schedule: time });
+  };
+
+  const handleEditConfirm = async () => {
+    if (!editTarget) return;
+    setIsEditing(true);
+    try {
+      // Convert time to cron format
+      const [hour, minute] = editForm.schedule.split(':');
+      const cronSchedule = `${parseInt(minute)} ${parseInt(hour)} * * *`;
+
+      await alertApiClient.updateAlert(editTarget.id, {
+        name: editForm.name,
+        schedule: cronSchedule,
+      });
+      loadAlerts();
+      setEditTarget(null);
+      setSuccess('알림이 수정되었습니다.');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch {
+      setError('수정에 실패했습니다.');
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const handleEditCancel = useCallback(() => {
+    setEditTarget(null);
   }, []);
 
   // ESC key to close modal
@@ -855,6 +898,14 @@ export function AlertSettingsPage() {
                 <div className="alert-actions">
                   <button
                     type="button"
+                    className="btn btn-ghost btn-small"
+                    onClick={() => handleEditClick(alert)}
+                    aria-label={`${alert.name} 수정`}
+                  >
+                    수정
+                  </button>
+                  <button
+                    type="button"
                     className={`btn btn-small ${alert.enabled ? 'btn-outline' : 'btn-primary'}`}
                     onClick={async () => {
                       try {
@@ -924,6 +975,75 @@ export function AlertSettingsPage() {
                   </>
                 ) : (
                   '삭제'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editTarget && (
+        <div
+          className="modal-overlay"
+          onClick={handleEditCancel}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon" aria-hidden="true">✏️</div>
+              <h2 id="edit-modal-title" className="modal-title">알림 수정</h2>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="edit-name">알림 이름</label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="form-input"
+                  placeholder="알림 이름"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="edit-schedule">알림 시간</label>
+                <input
+                  id="edit-schedule"
+                  type="time"
+                  value={editForm.schedule}
+                  onChange={(e) => setEditForm({ ...editForm, schedule: e.target.value })}
+                  className="form-input"
+                />
+              </div>
+              <p className="muted" style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                알림 유형 변경은 새로운 알림을 생성해주세요.
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={handleEditCancel}
+                disabled={isEditing}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleEditConfirm}
+                disabled={isEditing || !editForm.name.trim()}
+              >
+                {isEditing ? (
+                  <>
+                    <span className="spinner spinner-sm" aria-hidden="true" />
+                    저장 중...
+                  </>
+                ) : (
+                  '저장'
                 )}
               </button>
             </div>

@@ -19,6 +19,11 @@ variable "api_endpoint" {
   description = "API endpoint URL (ALB DNS name)"
 }
 
+variable "cloudfront_domain" {
+  type        = string
+  description = "CloudFront distribution domain for HTTPS API calls"
+}
+
 variable "ecs_cluster_arn" {
   type = string
 }

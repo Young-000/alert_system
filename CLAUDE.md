@@ -64,7 +64,7 @@
 | **Load Balancer** | ✅ | AWS ALB |
 | **Container Registry** | ✅ | AWS ECR |
 | **Secrets** | ✅ | AWS SSM Parameter Store |
-| **Scheduling** | 🔄 | EventBridge Scheduler (다음 단계) |
+| **Scheduling** | ✅ | EventBridge Scheduler (영구 스케줄) |
 
 ## 진행상황
 
@@ -75,7 +75,7 @@
 | HTTPS | ✅ | CloudFront 배포 완료 |
 | DB 연결 | ✅ | Supabase Pooler |
 | ALB Health Check | ✅ | /health 엔드포인트 |
-| **EventBridge** | 🔄 | 다음 단계 |
+| **EventBridge** | ✅ | 영구 스케줄 완료 |
 
 ## DB 테이블
 
@@ -99,6 +99,8 @@ alert_system.push_subscriptions
 | **ALB DNS** | `alert-system-prod-alb-601836582.ap-northeast-2.elb.amazonaws.com` |
 | **ECR Repository** | `alert-system` (378898678278.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system) |
 | **ECS Cluster** | `alert-system-prod-cluster` |
+| **Schedule Group** | `alert-system-prod-alerts` |
+| **API Destination** | `alert-system-prod-scheduler-api` |
 | **SSM Prefix** | `/alert-system/prod/` |
 | **Region** | `ap-northeast-2` (Seoul) |
 
@@ -156,10 +158,10 @@ aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS
 docker push 378898678278.dkr.ecr.ap-northeast-2.amazonaws.com/alert-system:latest
 
 # 2. ECS 서비스 재배포
-aws ecs update-service --cluster alert-system-prod --service alert-system-prod-service --force-new-deployment
+aws ecs update-service --cluster alert-system-prod-cluster --service alert-system-prod-service --force-new-deployment
 
 # 3. 배포 상태 확인
-aws ecs describe-services --cluster alert-system-prod --services alert-system-prod-service --query 'services[0].deployments'
+aws ecs describe-services --cluster alert-system-prod-cluster --services alert-system-prod-service --query 'services[0].deployments'
 
 # 4. 로그 확인
 aws logs tail /ecs/alert-system-prod --follow
@@ -178,9 +180,9 @@ aws cloudfront create-invalidation --distribution-id E1YZF6XW3X251G --paths "/*"
 ~~ALB는 HTTP만 지원~~
 → CloudFront 배포로 HTTPS 자동 제공
 
-### In-Memory Scheduler 손실 🔄
-서버 재시작 시 모든 스케줄 손실
-→ EventBridge Scheduler로 영구 저장 (다음 단계)
+### ~~In-Memory Scheduler 손실~~ ✅ 해결됨
+~~서버 재시작 시 모든 스케줄 손실~~
+→ AWS EventBridge Scheduler로 영구 저장 완료
 
 ---
 
@@ -214,12 +216,12 @@ aws cloudfront create-invalidation --distribution-id E1YZF6XW3X251G --paths "/*"
 ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────────────┐
 │ Supabase  │  │ElastiCache│  │EventBridge│  │    CloudWatch     │
 │PostgreSQL │  │  Redis    │  │ Scheduler │  │    Logs ✅        │
-│    ✅     │  │   🔄      │  │    🔄     │  │                   │
+│    ✅     │  │   🔄      │  │    ✅     │  │                   │
 └───────────┘  └───────────┘  └───────────┘  └───────────────────┘
 ```
 
 ### 다음 단계
-1. **EventBridge Scheduler**: 사용자별 알림 스케줄 영구 저장
+1. ~~**EventBridge Scheduler**: 사용자별 알림 스케줄 영구 저장~~ ✅ 완료
 2. **ElastiCache Redis**: BullMQ 큐 (선택사항)
 3. **커스텀 도메인**: Route 53 + ACM (선택사항)
 

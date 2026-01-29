@@ -1,5 +1,47 @@
 # EventBridge Module - Scheduler for Individual User Notifications
 
+# Random password for scheduler secret
+resource "random_password" "scheduler_secret" {
+  length  = 32
+  special = false
+}
+
+# Store scheduler secret in SSM
+resource "aws_ssm_parameter" "scheduler_secret" {
+  name        = "/${var.project_name}/${var.environment}/scheduler-secret"
+  description = "Secret for authenticating EventBridge Scheduler callbacks"
+  type        = "SecureString"
+  value       = random_password.scheduler_secret.result
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-scheduler-secret"
+  }
+}
+
+# EventBridge Connection (authentication for API calls)
+resource "aws_cloudwatch_event_connection" "scheduler" {
+  name               = "${var.project_name}-${var.environment}-scheduler-connection"
+  description        = "Connection for EventBridge Scheduler to call backend API"
+  authorization_type = "API_KEY"
+
+  auth_parameters {
+    api_key {
+      key   = "x-scheduler-secret"
+      value = random_password.scheduler_secret.result
+    }
+  }
+}
+
+# API Destination (HTTP endpoint for scheduler to call)
+resource "aws_cloudwatch_event_api_destination" "scheduler" {
+  name                             = "${var.project_name}-${var.environment}-scheduler-api"
+  description                      = "API destination for scheduler trigger endpoint"
+  invocation_endpoint              = "https://${var.cloudfront_domain}/scheduler/trigger"
+  http_method                      = "POST"
+  invocation_rate_limit_per_second = 50
+  connection_arn                   = aws_cloudwatch_event_connection.scheduler.arn
+}
+
 # IAM Role for EventBridge Scheduler
 resource "aws_iam_role" "scheduler" {
   name = "${var.project_name}-${var.environment}-scheduler-role"
@@ -18,9 +60,9 @@ resource "aws_iam_role" "scheduler" {
   })
 }
 
-# Policy to invoke API Gateway / HTTP endpoints
-resource "aws_iam_role_policy" "scheduler_invoke" {
-  name = "${var.project_name}-${var.environment}-scheduler-invoke-policy"
+# Policy to put events to EventBridge (Scheduler → Event Bus)
+resource "aws_iam_role_policy" "scheduler_put_events" {
+  name = "${var.project_name}-${var.environment}-scheduler-put-events-policy"
   role = aws_iam_role.scheduler.id
 
   policy = jsonencode({
@@ -29,9 +71,80 @@ resource "aws_iam_role_policy" "scheduler_invoke" {
       {
         Effect = "Allow"
         Action = [
-          "states:StartExecution"
+          "events:PutEvents"
         ]
-        Resource = "*"
+        Resource = "arn:aws:events:${var.aws_region}:${var.account_id}:event-bus/default"
+      }
+    ]
+  })
+}
+
+# EventBridge Rule to route scheduler events to API Destination
+resource "aws_cloudwatch_event_rule" "scheduler_to_api" {
+  name        = "${var.project_name}-${var.environment}-scheduler-route"
+  description = "Routes scheduler events to API Destination"
+
+  event_pattern = jsonencode({
+    source      = ["${var.project_name}.scheduler"]
+    detail-type = ["ScheduledNotification"]
+  })
+}
+
+# Target: API Destination
+resource "aws_cloudwatch_event_target" "api_destination" {
+  rule      = aws_cloudwatch_event_rule.scheduler_to_api.name
+  target_id = "api-destination"
+  arn       = aws_cloudwatch_event_api_destination.scheduler.arn
+  role_arn  = aws_iam_role.events_api_destination.arn
+
+  # Transform the event to extract alertId from detail
+  input_transformer {
+    input_paths = {
+      alertId    = "$.detail.alertId"
+      userId     = "$.detail.userId"
+      alertTypes = "$.detail.alertTypes"
+    }
+    input_template = <<EOF
+{
+  "alertId": <alertId>,
+  "userId": <userId>,
+  "alertTypes": <alertTypes>
+}
+EOF
+  }
+}
+
+# IAM Role for EventBridge Rule to invoke API Destination
+resource "aws_iam_role" "events_api_destination" {
+  name = "${var.project_name}-${var.environment}-events-api-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "events_invoke_api" {
+  name = "${var.project_name}-${var.environment}-events-invoke-api-policy"
+  role = aws_iam_role.events_api_destination.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "events:InvokeApiDestination"
+        ]
+        Resource = aws_cloudwatch_event_api_destination.scheduler.arn
       }
     ]
   })

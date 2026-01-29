@@ -22,6 +22,7 @@
     "db:apply": "ts-node -r dotenv/config -r tsconfig-paths/register scripts/apply-schema.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-scheduler": "^3.978.0",
     "@nestjs/bullmq": "^10.0.1",
     "@nestjs/cli": "^10.2.1",
     "@nestjs/common": "^10.3.0",

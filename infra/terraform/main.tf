@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 
   # Remote state storage (uncomment after creating S3 bucket)
@@ -79,68 +83,54 @@ module "ecs" {
   memory          = var.ecs_memory
   desired_count   = var.ecs_desired_count
 
-  # Environment variables
+  # Environment variables (Supabase 사용, RDS/ElastiCache 비활성화)
   environment_variables = {
-    NODE_ENV          = var.environment
-    PORT              = tostring(var.container_port)
-    DATABASE_URL      = module.rds.connection_string
-    REDIS_URL         = module.elasticache.connection_string
-    QUEUE_ENABLED     = "true"
-    AWS_REGION        = var.aws_region
+    NODE_ENV               = "production"
+    PORT                   = tostring(var.container_port)
+    USE_SQLITE             = "false"
+    QUEUE_ENABLED          = "false"
+    AWS_REGION             = var.aws_region
+    AWS_ACCOUNT_ID         = data.aws_caller_identity.current.account_id
+    AWS_SCHEDULER_ENABLED  = "true"
+    SCHEDULE_GROUP_NAME    = module.eventbridge.schedule_group_name
+    SCHEDULER_ROLE_ARN     = module.eventbridge.scheduler_role_arn
+    SCHEDULER_DLQ_ARN      = module.eventbridge.dlq_arn
   }
 
   # Secrets (from SSM Parameter Store)
+  # SSM ARN prefix for consistency
   secrets = {
     JWT_SECRET           = var.ssm_jwt_secret_arn
     VAPID_PRIVATE_KEY    = var.ssm_vapid_private_key_arn
     AIR_QUALITY_API_KEY  = var.ssm_air_quality_api_key_arn
+    DATABASE_URL         = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/database-url"
+    SCHEDULER_SECRET     = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/scheduler-secret"
+
+    # Solapi (Kakao Alimtalk)
+    SOLAPI_API_KEY       = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/solapi-api-key"
+    SOLAPI_API_SECRET    = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/solapi-api-secret"
+    SOLAPI_PF_ID         = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/solapi-pf-id"
+    SOLAPI_TEMPLATE_ID   = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/solapi-template-id"
   }
-
-  depends_on = [module.rds, module.elasticache]
 }
 
-# RDS Module
-module "rds" {
-  source = "./modules/rds"
+# RDS Module - 비활성화 (Supabase 사용)
+# module "rds" { ... }
 
-  project_name       = var.project_name
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnet_ids
-  ecs_security_group_id = module.ecs.security_group_id
-
-  # Database configuration
-  instance_class    = var.rds_instance_class
-  allocated_storage = var.rds_allocated_storage
-  database_name     = var.database_name
-  master_username   = var.database_username
-  multi_az          = var.environment == "prod" ? true : false
-}
-
-# ElastiCache Module
-module "elasticache" {
-  source = "./modules/elasticache"
-
-  project_name          = var.project_name
-  environment           = var.environment
-  vpc_id                = module.vpc.vpc_id
-  private_subnet_ids    = module.vpc.private_subnet_ids
-  ecs_security_group_id = module.ecs.security_group_id
-
-  node_type       = var.elasticache_node_type
-  num_cache_nodes = var.environment == "prod" ? 2 : 1
-}
+# ElastiCache Module - 비활성화 (비용 절감)
+# module "elasticache" { ... }
 
 # EventBridge Module
 module "eventbridge" {
   source = "./modules/eventbridge"
 
-  project_name    = var.project_name
-  environment     = var.environment
-  aws_region      = var.aws_region
-  account_id      = data.aws_caller_identity.current.account_id
-  api_endpoint    = module.alb.dns_name
-  ecs_cluster_arn = module.ecs.cluster_arn
+  project_name      = var.project_name
+  environment       = var.environment
+  aws_region        = var.aws_region
+  account_id        = data.aws_caller_identity.current.account_id
+  api_endpoint      = module.alb.dns_name
+  cloudfront_domain = var.cloudfront_domain
+  ecs_cluster_arn   = module.ecs.cluster_arn
 }
 
 # CloudWatch Module
@@ -152,6 +142,6 @@ module "cloudwatch" {
   ecs_cluster_name   = module.ecs.cluster_name
   ecs_service_name   = module.ecs.service_name
   alb_arn_suffix     = module.alb.arn_suffix
-  rds_identifier     = module.rds.identifier
+  rds_identifier     = ""  # RDS 비활성화 (Supabase 사용)
   alert_email        = var.alert_email
 }

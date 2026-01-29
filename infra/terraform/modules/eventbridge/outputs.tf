@@ -13,3 +13,11 @@ output "dlq_arn" {
 output "dlq_url" {
   value = aws_sqs_queue.scheduler_dlq.url
 }
+
+output "api_destination_arn" {
+  value = aws_cloudwatch_event_api_destination.scheduler.arn
+}
+
+output "scheduler_secret_parameter" {
+  value = aws_ssm_parameter.scheduler_secret.name
+}

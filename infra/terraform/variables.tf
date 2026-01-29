@@ -116,3 +116,10 @@ variable "alert_email" {
   description = "Email for CloudWatch alerts"
   type        = string
 }
+
+# CloudFront
+variable "cloudfront_domain" {
+  description = "CloudFront distribution domain name"
+  type        = string
+  default     = "d1qgl3ij2xig8k.cloudfront.net"
+}

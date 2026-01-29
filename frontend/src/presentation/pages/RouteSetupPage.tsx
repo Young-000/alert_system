@@ -5,12 +5,32 @@ import {
   type CreateRouteDto,
   type RouteResponse,
   type RouteType,
+  type TransportMode,
 } from '@infrastructure/api/commute-api.client';
 
 interface SimpleCheckpoint {
   name: string;
   icon: string;
 }
+
+interface CustomCheckpoint {
+  id: string;
+  name: string;
+  icon: string;
+  transportMode: TransportMode;
+  expectedDuration: number;
+  waitTime: number;
+}
+
+const TRANSPORT_OPTIONS: { value: TransportMode; label: string; icon: string }[] = [
+  { value: 'walk', label: '도보', icon: '🚶' },
+  { value: 'subway', label: '지하철', icon: '🚇' },
+  { value: 'bus', label: '버스', icon: '🚌' },
+  { value: 'taxi', label: '택시/자차', icon: '🚗' },
+  { value: 'bike', label: '자전거', icon: '🚴' },
+];
+
+const CHECKPOINT_ICONS = ['🏠', '🚇', '🚌', '🏢', '☕', '🏪', '🚗', '🚶'];
 
 interface RouteTemplate {
   id: string;
@@ -61,9 +81,19 @@ export function RouteSetupPage() {
   const [isPreferred, setIsPreferred] = useState(true);
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
+  const [customRouteName, setCustomRouteName] = useState('');
+  const [customRouteType, setCustomRouteType] = useState<RouteType>('morning');
+  const [customCheckpoints, setCustomCheckpoints] = useState<CustomCheckpoint[]>([
+    { id: '1', name: '집', icon: '🏠', transportMode: 'walk', expectedDuration: 10, waitTime: 0 },
+    { id: '2', name: '지하철역', icon: '🚇', transportMode: 'subway', expectedDuration: 20, waitTime: 5 },
+    { id: '3', name: '회사', icon: '🏢', transportMode: 'walk', expectedDuration: 0, waitTime: 0 },
+  ]);
+  const [isSavingCustom, setIsSavingCustom] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<RouteResponse | null>(null);
 
   // Load existing routes
   useEffect(() => {
@@ -115,6 +145,169 @@ export function RouteSetupPage() {
 
   const handleStartWithoutRoute = () => {
     navigate('/commute?mode=stopwatch');
+  };
+
+  const addCustomCheckpoint = () => {
+    const newId = String(Date.now());
+    setCustomCheckpoints([
+      ...customCheckpoints,
+      { id: newId, name: '', icon: '📍', transportMode: 'walk', expectedDuration: 10, waitTime: 0 },
+    ]);
+  };
+
+  const removeCustomCheckpoint = (id: string) => {
+    if (customCheckpoints.length <= 2) return; // Minimum 2 checkpoints
+    setCustomCheckpoints(customCheckpoints.filter((cp) => cp.id !== id));
+  };
+
+  const updateCustomCheckpoint = (id: string, field: keyof CustomCheckpoint, value: string | number) => {
+    setCustomCheckpoints(
+      customCheckpoints.map((cp) =>
+        cp.id === id ? { ...cp, [field]: value } : cp
+      )
+    );
+  };
+
+  const handleSaveCustomRoute = async () => {
+    if (!userId) return;
+    if (!customRouteName.trim()) {
+      setError('경로 이름을 입력해주세요.');
+      return;
+    }
+    if (customCheckpoints.some((cp) => !cp.name.trim())) {
+      setError('모든 체크포인트의 이름을 입력해주세요.');
+      return;
+    }
+
+    setIsSavingCustom(true);
+    setError('');
+
+    try {
+      const dto: CreateRouteDto = {
+        userId,
+        name: customRouteName,
+        routeType: customRouteType,
+        isPreferred: true,
+        checkpoints: customCheckpoints.map((cp, index) => ({
+          sequenceOrder: index + 1,
+          name: cp.name,
+          checkpointType: index === 0 ? 'home' : index === customCheckpoints.length - 1 ? 'work' : 'custom',
+          expectedDurationToNext: index < customCheckpoints.length - 1 ? cp.expectedDuration : undefined,
+          expectedWaitTime: cp.waitTime,
+          transportMode: cp.transportMode,
+        })),
+      };
+
+      await commuteApi.createRoute(dto);
+      setSuccess('경로가 저장되었습니다!');
+      setShowCustomForm(false);
+      setCustomRouteName('');
+
+      // Reload routes
+      const routes = await commuteApi.getUserRoutes(userId);
+      setExistingRoutes(routes);
+
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Failed to save custom route:', err);
+      setError('저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSavingCustom(false);
+    }
+  };
+
+  const handleEditRoute = (route: RouteResponse) => {
+    setEditingRoute(route);
+    setCustomRouteName(route.name);
+    setCustomRouteType(route.routeType);
+    setCustomCheckpoints(
+      route.checkpoints.map((cp) => ({
+        id: cp.id,
+        name: cp.name,
+        icon: cp.checkpointType === 'home' ? '🏠' : cp.checkpointType === 'work' ? '🏢' : cp.checkpointType === 'subway' ? '🚇' : '📍',
+        transportMode: cp.transportMode || 'walk',
+        expectedDuration: cp.expectedDurationToNext || 0,
+        waitTime: cp.expectedWaitTime || 0,
+      }))
+    );
+    setShowCustomForm(true);
+    setSelectedTemplate(null);
+  };
+
+  const handleUpdateRoute = async () => {
+    if (!editingRoute) return;
+    if (!customRouteName.trim()) {
+      setError('경로 이름을 입력해주세요.');
+      return;
+    }
+    if (customCheckpoints.some((cp) => !cp.name.trim())) {
+      setError('모든 체크포인트의 이름을 입력해주세요.');
+      return;
+    }
+
+    setIsSavingCustom(true);
+    setError('');
+
+    try {
+      await commuteApi.updateRoute(editingRoute.id, {
+        name: customRouteName,
+        routeType: customRouteType,
+        checkpoints: customCheckpoints.map((cp, index) => ({
+          sequenceOrder: index + 1,
+          name: cp.name,
+          checkpointType: index === 0 ? 'home' : index === customCheckpoints.length - 1 ? 'work' : 'custom',
+          expectedDurationToNext: index < customCheckpoints.length - 1 ? cp.expectedDuration : undefined,
+          expectedWaitTime: cp.waitTime,
+          transportMode: cp.transportMode,
+        })),
+      });
+
+      setSuccess('경로가 수정되었습니다!');
+      setShowCustomForm(false);
+      setEditingRoute(null);
+      setCustomRouteName('');
+
+      // Reload routes
+      const routes = await commuteApi.getUserRoutes(userId);
+      setExistingRoutes(routes);
+
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Failed to update route:', err);
+      setError('수정에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSavingCustom(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowCustomForm(false);
+    setEditingRoute(null);
+    setCustomRouteName('');
+    setCustomCheckpoints([
+      { id: '1', name: '집', icon: '🏠', transportMode: 'walk', expectedDuration: 10, waitTime: 0 },
+      { id: '2', name: '지하철역', icon: '🚇', transportMode: 'subway', expectedDuration: 20, waitTime: 5 },
+      { id: '3', name: '회사', icon: '🏢', transportMode: 'walk', expectedDuration: 0, waitTime: 0 },
+    ]);
+  };
+
+  const handleDeleteRoute = async (routeId: string, routeName: string) => {
+    if (!confirm(`"${routeName}" 경로를 삭제하시겠습니까?`)) return;
+
+    setIsDeleting(routeId);
+    setError('');
+
+    try {
+      await commuteApi.deleteRoute(routeId);
+      setExistingRoutes((prev) => prev.filter((r) => r.id !== routeId));
+      setSuccess('경로가 삭제되었습니다.');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      console.error('Failed to delete route:', err);
+      setError('삭제에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   if (!userId) {
@@ -317,34 +510,59 @@ export function RouteSetupPage() {
       {existingRoutes.length > 0 && !selectedTemplate && (
         <section className="route-existing">
           <h2>저장된 경로</h2>
+          {(error || success) && !selectedTemplate && (
+            <div className={`notice ${error ? 'error' : 'success'}`}>
+              {error || success}
+            </div>
+          )}
           <div className="existing-grid">
             {existingRoutes.map((route) => (
-              <Link
-                key={route.id}
-                to={`/commute?routeId=${route.id}`}
-                className="existing-card"
-              >
-                <div className="existing-header">
-                  <span className="existing-icon">
-                    {route.routeType === 'morning' ? '🌅' : '🌆'}
-                  </span>
-                  <div className="existing-info">
-                    <strong>{route.name}</strong>
-                    <span>{route.checkpoints.length}개 체크포인트</span>
+              <div key={route.id} className="existing-card-wrapper">
+                <Link
+                  to={`/commute?routeId=${route.id}`}
+                  className="existing-card"
+                >
+                  <div className="existing-header">
+                    <span className="existing-icon">
+                      {route.routeType === 'morning' ? '🌅' : '🌆'}
+                    </span>
+                    <div className="existing-info">
+                      <strong>{route.name}</strong>
+                      <span>{route.checkpoints.length}개 체크포인트</span>
+                    </div>
+                    {route.isPreferred && <span className="badge">기본</span>}
                   </div>
-                  {route.isPreferred && <span className="badge">기본</span>}
+                  <div className="existing-meta">
+                    <span>예상 {route.totalExpectedDuration}분</span>
+                    <span className="existing-arrow">→</span>
+                  </div>
+                </Link>
+                <div className="existing-actions">
+                  <button
+                    type="button"
+                    className="btn-edit-route"
+                    onClick={() => handleEditRoute(route)}
+                    aria-label={`${route.name} 수정`}
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-delete-route"
+                    onClick={() => handleDeleteRoute(route.id, route.name)}
+                    disabled={isDeleting === route.id}
+                    aria-label={`${route.name} 삭제`}
+                  >
+                    {isDeleting === route.id ? '...' : '×'}
+                  </button>
                 </div>
-                <div className="existing-meta">
-                  <span>예상 {route.totalExpectedDuration}분</span>
-                  <span className="existing-arrow">→</span>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Advanced Option */}
+      {/* Advanced Option - Custom Route Builder */}
       {!selectedTemplate && (
         <section className="route-advanced">
           <button
@@ -357,9 +575,162 @@ export function RouteSetupPage() {
           </button>
 
           {showCustomForm && (
-            <div className="advanced-hint">
-              <p>상세 설정은 준비 중입니다.</p>
-              <p className="muted">템플릿을 선택하거나 스톱워치 모드를 사용해주세요.</p>
+            <div className="custom-route-form">
+              <h3>{editingRoute ? '경로 수정' : '나만의 경로 만들기'}</h3>
+              <p className="muted">{editingRoute ? '체크포인트와 설정을 수정하세요' : '체크포인트를 직접 설정해보세요'}</p>
+
+              {/* Route Name & Type */}
+              <div className="custom-form-row">
+                <div className="form-group">
+                  <label htmlFor="customRouteName">경로 이름</label>
+                  <input
+                    id="customRouteName"
+                    type="text"
+                    value={customRouteName}
+                    onChange={(e) => setCustomRouteName(e.target.value)}
+                    placeholder="예: 출근 경로"
+                    className="route-name-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="customRouteType">경로 유형</label>
+                  <select
+                    id="customRouteType"
+                    value={customRouteType}
+                    onChange={(e) => setCustomRouteType(e.target.value as RouteType)}
+                    className="route-type-select"
+                  >
+                    <option value="morning">🌅 출근</option>
+                    <option value="evening">🌆 퇴근</option>
+                    <option value="custom">📍 기타</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Checkpoints List */}
+              <div className="checkpoint-list">
+                <div className="checkpoint-list-header">
+                  <span>체크포인트</span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-small"
+                    onClick={addCustomCheckpoint}
+                  >
+                    + 추가
+                  </button>
+                </div>
+
+                {customCheckpoints.map((cp, index) => (
+                  <div key={cp.id} className="checkpoint-item">
+                    <div className="checkpoint-number">{index + 1}</div>
+                    <div className="checkpoint-fields">
+                      <div className="checkpoint-row">
+                        <select
+                          value={cp.icon}
+                          onChange={(e) => updateCustomCheckpoint(cp.id, 'icon', e.target.value)}
+                          className="icon-select"
+                          aria-label="아이콘 선택"
+                        >
+                          {CHECKPOINT_ICONS.map((icon) => (
+                            <option key={icon} value={icon}>{icon}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          value={cp.name}
+                          onChange={(e) => updateCustomCheckpoint(cp.id, 'name', e.target.value)}
+                          placeholder="체크포인트 이름"
+                          className="checkpoint-name-input"
+                        />
+                        {customCheckpoints.length > 2 && (
+                          <button
+                            type="button"
+                            className="btn-remove-checkpoint"
+                            onClick={() => removeCustomCheckpoint(cp.id)}
+                            aria-label="체크포인트 삭제"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+
+                      {index < customCheckpoints.length - 1 && (
+                        <div className="checkpoint-row checkpoint-transport">
+                          <select
+                            value={cp.transportMode}
+                            onChange={(e) => updateCustomCheckpoint(cp.id, 'transportMode', e.target.value)}
+                            className="transport-select"
+                            aria-label="이동 수단"
+                          >
+                            {TRANSPORT_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.icon} {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="time-input-group">
+                            <label>이동</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="120"
+                              value={cp.expectedDuration}
+                              onChange={(e) => updateCustomCheckpoint(cp.id, 'expectedDuration', parseInt(e.target.value) || 0)}
+                              className="time-input"
+                            />
+                            <span>분</span>
+                          </div>
+                          {(cp.transportMode === 'subway' || cp.transportMode === 'bus') && (
+                            <div className="time-input-group">
+                              <label>대기</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="30"
+                                value={cp.waitTime}
+                                onChange={(e) => updateCustomCheckpoint(cp.id, 'waitTime', parseInt(e.target.value) || 0)}
+                                className="time-input"
+                              />
+                              <span>분</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total Time Preview */}
+              <div className="custom-route-preview">
+                <span>예상 총 소요시간:</span>
+                <strong>
+                  {customCheckpoints.reduce((sum, cp) => sum + cp.expectedDuration + cp.waitTime, 0)}분
+                </strong>
+              </div>
+
+              {/* Error/Success */}
+              {error && <div className="notice error">{error}</div>}
+              {success && <div className="notice success">{success}</div>}
+
+              {/* Actions */}
+              <div className="custom-form-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleCancelEdit}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={editingRoute ? handleUpdateRoute : handleSaveCustomRoute}
+                  disabled={isSavingCustom}
+                >
+                  {isSavingCustom ? '저장 중...' : editingRoute ? '수정 완료' : '경로 저장'}
+                </button>
+              </div>
             </div>
           )}
         </section>

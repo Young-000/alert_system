@@ -1,7 +1,7 @@
 import { Module, OnModuleInit, Inject, Optional, Logger } from '@nestjs/common';
 import { SchedulerTriggerController } from '../controllers/scheduler-trigger.controller';
 import { SchedulerLegacyController } from '../controllers/scheduler-legacy.controller';
-import { QueueModule } from '@infrastructure/queue/queue.module';
+import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 import { SmartNotificationModule } from './smart-notification.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
@@ -16,11 +16,13 @@ import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-m
 import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
+import { INotificationScheduler } from '@application/ports/notification-scheduler';
 
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
+const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
 
 @Module({
-  imports: [QueueModule, SmartNotificationModule, ConfigModule],
+  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule],
   controllers: [SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {
@@ -86,20 +88,27 @@ export class NotificationModule implements OnModuleInit {
     private readonly sendNotificationUseCase: SendNotificationUseCase,
     @Inject('IAlertRepository')
     private readonly alertRepository: IAlertRepository,
+    @Inject('INotificationScheduler')
+    private readonly scheduler: INotificationScheduler,
     @Optional()
     @Inject(InMemoryNotificationSchedulerService)
     private readonly inMemoryScheduler?: InMemoryNotificationSchedulerService,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    // Wire up the notification handler for the in-memory scheduler
-    if (!isQueueEnabled && this.inMemoryScheduler) {
+    // Wire up the notification handler for the in-memory scheduler only
+    // EventBridge scheduler calls /scheduler/trigger endpoint directly
+    if (!isAWSSchedulerEnabled && this.inMemoryScheduler) {
       this.inMemoryScheduler.setNotificationHandler(async (alertId: string) => {
         await this.sendNotificationUseCase.execute(alertId);
       });
 
       // Load existing enabled alerts from DB and schedule them
       await this.loadAndScheduleExistingAlerts();
+    }
+    // EventBridge doesn't need to load alerts on startup - schedules are persistent in AWS
+    else if (isAWSSchedulerEnabled) {
+      this.logger.log('EventBridge Scheduler enabled - schedules are persisted in AWS');
     }
   }
 

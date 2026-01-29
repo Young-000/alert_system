@@ -5,10 +5,10 @@ import { DeleteAlertUseCase } from '@application/use-cases/delete-alert.use-case
 import { UpdateAlertUseCase } from '@application/use-cases/update-alert.use-case';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
-import { QueueModule } from '@infrastructure/queue/queue.module';
+import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 
 @Module({
-  imports: [QueueModule],
+  imports: [SchedulerModule.forRoot()],
   controllers: [AlertController],
   providers: [
     {

@@ -16,7 +16,7 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.alert_email
 }
 
-# Dashboard
+# Dashboard (RDS 위젯 제외)
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${var.project_name}-${var.environment}"
 
@@ -81,38 +81,6 @@ resource "aws_cloudwatch_dashboard" "main" {
           region = data.aws_region.current.name
           metrics = [
             ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", var.alb_arn_suffix]
-          ]
-          period = 300
-          stat   = "Average"
-        }
-      },
-      {
-        type   = "metric"
-        x      = 0
-        y      = 12
-        width  = 12
-        height = 6
-        properties = {
-          title  = "RDS CPU Utilization"
-          region = data.aws_region.current.name
-          metrics = [
-            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.rds_identifier]
-          ]
-          period = 300
-          stat   = "Average"
-        }
-      },
-      {
-        type   = "metric"
-        x      = 12
-        y      = 12
-        width  = 12
-        height = 6
-        properties = {
-          title  = "RDS Database Connections"
-          region = data.aws_region.current.name
-          metrics = [
-            ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.rds_identifier]
           ]
           period = 300
           stat   = "Average"
@@ -186,41 +154,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   alarm_actions = [aws_sns_topic.alerts.arn]
 }
 
-# RDS CPU Alarm
-resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
-  alarm_name          = "${var.project_name}-${var.environment}-rds-cpu-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/RDS"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 80
-  alarm_description   = "RDS CPU utilization is too high"
-
-  dimensions = {
-    DBInstanceIdentifier = var.rds_identifier
-  }
-
-  alarm_actions = [aws_sns_topic.alerts.arn]
-  ok_actions    = [aws_sns_topic.alerts.arn]
-}
-
-# RDS Free Storage Alarm
-resource "aws_cloudwatch_metric_alarm" "rds_storage_low" {
-  alarm_name          = "${var.project_name}-${var.environment}-rds-storage-low"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = 1
-  metric_name         = "FreeStorageSpace"
-  namespace           = "AWS/RDS"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 5368709120  # 5 GB in bytes
-  alarm_description   = "RDS free storage is running low"
-
-  dimensions = {
-    DBInstanceIdentifier = var.rds_identifier
-  }
-
-  alarm_actions = [aws_sns_topic.alerts.arn]
-}
+# RDS Alarms - 비활성화 (Supabase 사용)
+# RDS 사용 시 아래 주석 해제
+# resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" { ... }
+# resource "aws_cloudwatch_metric_alarm" "rds_storage_low" { ... }

@@ -20,15 +20,11 @@ output "ecs_service_name" {
   value       = module.ecs.service_name
 }
 
-output "rds_endpoint" {
-  description = "RDS endpoint"
-  value       = module.rds.endpoint
-}
+# RDS 비활성화 (Supabase 사용)
+# output "rds_endpoint" { ... }
 
-output "redis_endpoint" {
-  description = "ElastiCache Redis endpoint"
-  value       = module.elasticache.endpoint
-}
+# ElastiCache 비활성화 (비용 절감)
+# output "redis_endpoint" { ... }
 
 output "scheduler_role_arn" {
   description = "EventBridge Scheduler role ARN"
