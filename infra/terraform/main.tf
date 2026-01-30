@@ -106,6 +106,9 @@ module "ecs" {
     DATABASE_URL         = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/database-url"
     SCHEDULER_SECRET     = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/scheduler-secret"
 
+    # Subway/Bus API
+    SUBWAY_API_KEY       = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/subway-api-key"
+
     # Solapi (Kakao Alimtalk)
     SOLAPI_API_KEY       = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/solapi-api-key"
     SOLAPI_API_SECRET    = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/solapi-api-secret"

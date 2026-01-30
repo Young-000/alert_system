@@ -237,9 +237,22 @@ export function AlertSettingsPage() {
   // Quick weather alert (one-click)
   const handleQuickWeatherAlert = useCallback(async () => {
     setError('');
+    setSuccess('');
 
     if (!userId) {
       setError('로그인이 필요합니다.');
+      return;
+    }
+
+    // 중복 체크: 이미 "아침 날씨 알림"이 있는지 확인
+    const existingAlert = alerts.find(a => a.name === '아침 날씨 알림');
+    if (existingAlert) {
+      setError('이미 아침 날씨 알림이 설정되어 있습니다.');
+      // 기존 알림으로 스크롤
+      setTimeout(() => {
+        const alertsSection = document.querySelector('.existing-alerts');
+        alertsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
       return;
     }
 
@@ -254,18 +267,32 @@ export function AlertSettingsPage() {
       };
 
       await alertApiClient.createAlert(dto);
-      setSuccess('날씨 알림이 설정되었습니다! 매일 오전 7시에 알림톡을 받습니다.');
-      loadAlerts();
+      setSuccess('✓ 날씨 알림이 설정되었습니다!');
+      await loadAlerts();
+
+      // 설정된 알림 목록으로 스크롤
+      setTimeout(() => {
+        const alertsSection = document.querySelector('.existing-alerts');
+        alertsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
 
       setTimeout(() => {
         setSuccess('');
-      }, 3000);
-    } catch {
-      setError('알림 생성에 실패했습니다.');
+      }, 5000);
+    } catch (err: unknown) {
+      console.error('Quick weather alert creation failed:', err);
+      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
+      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+        setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+      } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+        setError('권한이 없습니다. 다시 로그인해주세요.');
+      } else {
+        setError(`알림 생성에 실패했습니다: ${errorMessage}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, loadAlerts]);
+  }, [userId, alerts, loadAlerts]);
 
   // Submit alert
   const handleSubmit = useCallback(async () => {
@@ -313,8 +340,16 @@ export function AlertSettingsPage() {
         setSearchQuery('');
         setSuccess('');
       }, 2000);
-    } catch {
-      setError('알림 생성에 실패했습니다.');
+    } catch (err: unknown) {
+      console.error('Alert creation failed:', err);
+      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
+      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+        setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+      } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+        setError('권한이 없습니다. 다시 로그인해주세요.');
+      } else {
+        setError(`알림 생성에 실패했습니다: ${errorMessage}`);
+      }
     } finally {
       setIsSubmitting(false);
     }

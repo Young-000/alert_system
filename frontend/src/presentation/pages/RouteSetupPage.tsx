@@ -69,6 +69,21 @@ const ROUTE_TEMPLATES: RouteTemplate[] = [
       { name: '집', icon: '🏠' },
     ],
   },
+  {
+    id: 'transfer',
+    name: '환승 경로',
+    type: 'morning',
+    icon: '🔄',
+    color: '#10b981',
+    gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+    checkpoints: [
+      { name: '집', icon: '🏠' },
+      { name: '버스', icon: '🚌' },
+      { name: '환승역', icon: '🚇' },
+      { name: '지하철', icon: '🚇' },
+      { name: '회사', icon: '🏢' },
+    ],
+  },
 ];
 
 export function RouteSetupPage() {
@@ -116,6 +131,27 @@ export function RouteSetupPage() {
     setError('');
 
     try {
+      // 아이콘으로 교통수단 추론
+      const getTransportMode = (icon: string): TransportMode => {
+        switch (icon) {
+          case '🚇': return 'subway';
+          case '🚌': return 'bus';
+          case '🚗': return 'taxi';
+          case '🚴': return 'bike';
+          default: return 'walk';
+        }
+      };
+
+      // 아이콘으로 체크포인트 타입 추론
+      type CheckpointTypeValue = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
+      const getCheckpointType = (icon: string, index: number, total: number): CheckpointTypeValue => {
+        if (index === 0) return 'home';
+        if (index === total - 1) return 'work';
+        if (icon === '🚇') return 'subway';
+        if (icon === '🚌') return 'bus_stop';
+        return 'transfer_point';
+      };
+
       const dto: CreateRouteDto = {
         userId,
         name: routeName || `${selectedTemplate.name} 경로`,
@@ -124,10 +160,10 @@ export function RouteSetupPage() {
         checkpoints: selectedTemplate.checkpoints.map((cp, index) => ({
           sequenceOrder: index + 1,
           name: cp.name,
-          checkpointType: index === 0 ? 'home' : index === selectedTemplate.checkpoints.length - 1 ? 'work' : 'subway',
-          expectedDurationToNext: index < selectedTemplate.checkpoints.length - 1 ? 15 : undefined,
-          expectedWaitTime: index === 1 ? 3 : 0,
-          transportMode: index === 0 ? 'walk' : index === 1 ? 'subway' : undefined,
+          checkpointType: getCheckpointType(cp.icon, index, selectedTemplate.checkpoints.length),
+          expectedDurationToNext: index < selectedTemplate.checkpoints.length - 1 ? 10 : undefined,
+          expectedWaitTime: ['🚇', '🚌'].includes(cp.icon) ? 3 : 0,
+          transportMode: index < selectedTemplate.checkpoints.length - 1 ? getTransportMode(cp.icon) : undefined,
         })),
       };
 
@@ -577,7 +613,9 @@ export function RouteSetupPage() {
           {showCustomForm && (
             <div className="custom-route-form">
               <h3>{editingRoute ? '경로 수정' : '나만의 경로 만들기'}</h3>
-              <p className="muted">{editingRoute ? '체크포인트와 설정을 수정하세요' : '체크포인트를 직접 설정해보세요'}</p>
+              <p className="muted">
+                {editingRoute ? '체크포인트와 설정을 수정하세요' : '버스→지하철→버스 등 여러 환승도 추가할 수 있어요'}
+              </p>
 
               {/* Route Name & Type */}
               <div className="custom-form-row">

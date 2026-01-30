@@ -666,7 +666,7 @@ export function CommuteTrackingPage() {
                         {/* Expected info (when not recorded) */}
                         {!recordedInfo && !isLast && (
                           <div className="expected-info">
-                            {checkpoint.expectedDurationToNext && (
+                            {typeof checkpoint.expectedDurationToNext === 'number' && (
                               <span>이동 {checkpoint.expectedDurationToNext}분</span>
                             )}
                             {checkpoint.expectedWaitTime > 0 && (
