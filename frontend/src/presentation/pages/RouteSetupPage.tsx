@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   getCommuteApiClient,
@@ -92,8 +92,6 @@ export function RouteSetupPage() {
   const commuteApi = getCommuteApiClient();
 
   const [selectedTemplate, setSelectedTemplate] = useState<RouteTemplate | null>(null);
-  const [routeName, setRouteName] = useState('');
-  const [isPreferred, setIsPreferred] = useState(true);
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -118,66 +116,6 @@ export function RouteSetupPage() {
       .then(setExistingRoutes)
       .catch(console.error);
   }, [userId, commuteApi]);
-
-  const handleTemplateSelect = useCallback((template: RouteTemplate) => {
-    setSelectedTemplate(template);
-    setRouteName(`${template.name} 경로`);
-  }, []);
-
-  const handleQuickSave = async () => {
-    if (!userId || !selectedTemplate) return;
-
-    setIsSaving(true);
-    setError('');
-
-    try {
-      // 아이콘으로 교통수단 추론
-      const getTransportMode = (icon: string): TransportMode => {
-        switch (icon) {
-          case '🚇': return 'subway';
-          case '🚌': return 'bus';
-          case '🚗': return 'taxi';
-          case '🚴': return 'bike';
-          default: return 'walk';
-        }
-      };
-
-      // 아이콘으로 체크포인트 타입 추론
-      type CheckpointTypeValue = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
-      const getCheckpointType = (icon: string, index: number, total: number): CheckpointTypeValue => {
-        if (index === 0) return 'home';
-        if (index === total - 1) return 'work';
-        if (icon === '🚇') return 'subway';
-        if (icon === '🚌') return 'bus_stop';
-        return 'transfer_point';
-      };
-
-      const dto: CreateRouteDto = {
-        userId,
-        name: routeName || `${selectedTemplate.name} 경로`,
-        routeType: selectedTemplate.type,
-        isPreferred,
-        checkpoints: selectedTemplate.checkpoints.map((cp, index) => ({
-          sequenceOrder: index + 1,
-          name: cp.name,
-          checkpointType: getCheckpointType(cp.icon, index, selectedTemplate.checkpoints.length),
-          expectedDurationToNext: index < selectedTemplate.checkpoints.length - 1 ? 10 : undefined,
-          expectedWaitTime: ['🚇', '🚌'].includes(cp.icon) ? 3 : 0,
-          transportMode: index < selectedTemplate.checkpoints.length - 1 ? getTransportMode(cp.icon) : undefined,
-        })),
-      };
-
-      await commuteApi.createRoute(dto);
-      setSuccess('경로가 저장되었습니다!');
-
-      setTimeout(() => navigate('/commute'), 1000);
-    } catch (err) {
-      console.error('Failed to save route:', err);
-      setError('저장에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleStartWithoutRoute = () => {
     navigate('/commute?mode=stopwatch');
@@ -405,189 +343,39 @@ export function RouteSetupPage() {
         </button>
       </section>
 
-      {/* Template Selection */}
-      <section className="route-templates">
-        <h2>경로 템플릿</h2>
-        <p className="section-desc">자주 가는 경로를 빠르게 설정하세요</p>
-
-        <div className="template-grid">
-          {ROUTE_TEMPLATES.map((template) => (
-            <button
-              key={template.id}
-              type="button"
-              className={`template-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
-              onClick={() => handleTemplateSelect(template)}
-              style={{ '--template-color': template.color, '--template-gradient': template.gradient } as React.CSSProperties}
-            >
-              <div className="template-header">
-                <span className="template-icon">{template.icon}</span>
-                <span className="template-name">{template.name}</span>
-                {selectedTemplate?.id === template.id && (
-                  <span className="template-check">✓</span>
-                )}
-              </div>
-
-              <div className="template-timeline">
-                {template.checkpoints.map((cp, index) => (
-                  <div key={index} className="timeline-item">
-                    <div className="timeline-dot">
-                      <span>{cp.icon}</span>
-                    </div>
-                    <span className="timeline-label">{cp.name}</span>
-                    {index < template.checkpoints.length - 1 && (
-                      <div className="timeline-connector" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Selected Template Config */}
-      {selectedTemplate && (
-        <section className="route-config">
-          <div className="config-card">
-            <div className="config-header">
-              <span className="config-icon" style={{ background: selectedTemplate.gradient }}>
-                {selectedTemplate.icon}
-              </span>
-              <div className="config-title">
-                <h3>{selectedTemplate.name} 경로 설정</h3>
-                <p>간단히 이름만 지정하세요</p>
-              </div>
-            </div>
-
-            <div className="config-form">
-              <div className="form-group">
-                <label htmlFor="routeName">경로 이름</label>
-                <input
-                  id="routeName"
-                  type="text"
-                  value={routeName}
-                  onChange={(e) => setRouteName(e.target.value)}
-                  placeholder={`예: ${selectedTemplate.name} 경로`}
-                  className="route-name-input"
-                />
-              </div>
-
-              <label className="checkbox-fancy">
-                <input
-                  type="checkbox"
-                  checked={isPreferred}
-                  onChange={(e) => setIsPreferred(e.target.checked)}
-                />
-                <span className="checkbox-box">
-                  <svg viewBox="0 0 12 10">
-                    <polyline points="1.5 6 4.5 9 10.5 1" />
-                  </svg>
-                </span>
-                <span className="checkbox-text">기본 경로로 설정</span>
-              </label>
-            </div>
-
-            {/* Visual Timeline Preview */}
-            <div className="config-preview">
-              <div className="preview-title">경로 미리보기</div>
-              <div className="preview-timeline">
-                {selectedTemplate.checkpoints.map((cp, index) => (
-                  <div key={index} className="preview-step">
-                    <div
-                      className="preview-node"
-                      style={{ background: selectedTemplate.gradient }}
-                    >
-                      {cp.icon}
-                    </div>
-                    <span className="preview-label">{cp.name}</span>
-                    {index < selectedTemplate.checkpoints.length - 1 && (
-                      <div className="preview-line" style={{ background: selectedTemplate.color }} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Error/Success Messages */}
-            {error && <div className="notice error">{error}</div>}
-            {success && <div className="notice success">{success}</div>}
-
-            {/* Actions */}
-            <div className="config-actions">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => setSelectedTemplate(null)}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-lg"
-                onClick={handleQuickSave}
-                disabled={isSaving}
-                style={{ background: selectedTemplate.gradient }}
-              >
-                {isSaving ? (
-                  <span className="btn-loading">저장 중...</span>
-                ) : (
-                  <>
-                    <span>시작하기</span>
-                    <span className="btn-arrow">→</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Existing Routes */}
-      {existingRoutes.length > 0 && !selectedTemplate && (
-        <section className="route-existing">
+      {/* 저장된 경로 (먼저 표시) */}
+      {existingRoutes.length > 0 && !selectedTemplate && !showCustomForm && (
+        <section className="route-saved">
           <h2>저장된 경로</h2>
-          {(error || success) && !selectedTemplate && (
-            <div className={`notice ${error ? 'error' : 'success'}`}>
-              {error || success}
-            </div>
-          )}
-          <div className="existing-grid">
+          <div className="saved-routes-list">
             {existingRoutes.map((route) => (
-              <div key={route.id} className="existing-card-wrapper">
-                <Link
-                  to={`/commute?routeId=${route.id}`}
-                  className="existing-card"
-                >
-                  <div className="existing-header">
-                    <span className="existing-icon">
-                      {route.routeType === 'morning' ? '🌅' : '🌆'}
-                    </span>
-                    <div className="existing-info">
-                      <strong>{route.name}</strong>
-                      <span>{route.checkpoints.length}개 체크포인트</span>
-                    </div>
-                    {route.isPreferred && <span className="badge">기본</span>}
+              <div key={route.id} className="saved-route-item">
+                <Link to={`/commute?routeId=${route.id}`} className="saved-route-link">
+                  <span className="saved-route-icon">
+                    {route.routeType === 'morning' ? '🌅' : '🌆'}
+                  </span>
+                  <div className="saved-route-info">
+                    <strong>{route.name}</strong>
+                    <span>{route.checkpoints.length}개 체크포인트 · {route.totalExpectedDuration}분</span>
                   </div>
-                  <div className="existing-meta">
-                    <span>예상 {route.totalExpectedDuration}분</span>
-                    <span className="existing-arrow">→</span>
-                  </div>
+                  {route.isPreferred && <span className="badge-primary">기본</span>}
+                  <span className="saved-route-arrow">▶</span>
                 </Link>
-                <div className="existing-actions">
+                <div className="saved-route-actions">
                   <button
                     type="button"
-                    className="btn-edit-route"
+                    className="btn-icon"
                     onClick={() => handleEditRoute(route)}
-                    aria-label={`${route.name} 수정`}
+                    aria-label="수정"
                   >
                     ✏️
                   </button>
                   <button
                     type="button"
-                    className="btn-delete-route"
+                    className="btn-icon btn-icon-danger"
                     onClick={() => handleDeleteRoute(route.id, route.name)}
                     disabled={isDeleting === route.id}
-                    aria-label={`${route.name} 삭제`}
+                    aria-label="삭제"
                   >
                     {isDeleting === route.id ? '...' : '×'}
                   </button>
@@ -595,11 +383,104 @@ export function RouteSetupPage() {
               </div>
             ))}
           </div>
+          {(error || success) && (
+            <div className={`notice ${error ? 'error' : 'success'}`}>
+              {error || success}
+            </div>
+          )}
         </section>
       )}
 
+      {/* 새 경로 만들기 */}
+      {!showCustomForm && (
+        <section className="route-templates">
+          <h2>{existingRoutes.length > 0 ? '새 경로 추가' : '경로 템플릿'}</h2>
+          <p className="section-desc">템플릿을 탭하면 바로 저장됩니다</p>
+
+          <div className="template-grid-v2">
+            {ROUTE_TEMPLATES.map((template) => (
+              <button
+                key={template.id}
+                type="button"
+                className="template-card-v2"
+                onClick={async () => {
+                  // 원클릭 저장
+                  setSelectedTemplate(template);
+                  // 바로 저장 실행
+                  if (!userId) return;
+                  setIsSaving(true);
+                  setError('');
+                  try {
+                    const getTransportMode = (icon: string): TransportMode => {
+                      switch (icon) {
+                        case '🚇': return 'subway';
+                        case '🚌': return 'bus';
+                        case '🚗': return 'taxi';
+                        case '🚴': return 'bike';
+                        default: return 'walk';
+                      }
+                    };
+                    type CheckpointTypeValue = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
+                    const getCheckpointType = (icon: string, index: number, total: number): CheckpointTypeValue => {
+                      if (index === 0) return 'home';
+                      if (index === total - 1) return 'work';
+                      if (icon === '🚇') return 'subway';
+                      if (icon === '🚌') return 'bus_stop';
+                      return 'transfer_point';
+                    };
+                    const dto: CreateRouteDto = {
+                      userId,
+                      name: `${template.name} 경로`,
+                      routeType: template.type,
+                      isPreferred: existingRoutes.length === 0,
+                      checkpoints: template.checkpoints.map((cp, index) => ({
+                        sequenceOrder: index + 1,
+                        name: cp.name,
+                        checkpointType: getCheckpointType(cp.icon, index, template.checkpoints.length),
+                        expectedDurationToNext: index < template.checkpoints.length - 1 ? 10 : undefined,
+                        expectedWaitTime: ['🚇', '🚌'].includes(cp.icon) ? 3 : 0,
+                        transportMode: index < template.checkpoints.length - 1 ? getTransportMode(cp.icon) : undefined,
+                      })),
+                    };
+                    await commuteApi.createRoute(dto);
+                    setSuccess('경로가 저장되었습니다!');
+                    setTimeout(() => navigate('/commute'), 800);
+                  } catch (err) {
+                    console.error('Failed to save route:', err);
+                    setError('저장에 실패했습니다.');
+                  } finally {
+                    setIsSaving(false);
+                    setSelectedTemplate(null);
+                  }
+                }}
+                disabled={isSaving}
+                style={{ '--template-gradient': template.gradient } as React.CSSProperties}
+              >
+                <span className="template-icon-v2">{template.icon}</span>
+                <span className="template-name-v2">{template.name}</span>
+                <div className="template-preview">
+                  {template.checkpoints.map((cp, i) => (
+                    <span key={i}>{cp.icon}</span>
+                  ))}
+                </div>
+                {isSaving && selectedTemplate?.id === template.id && (
+                  <span className="template-saving">저장 중...</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 메시지 표시 */}
+      {(error || success) && !showCustomForm && (
+        <div className={`notice ${error ? 'error' : 'success'}`} style={{ margin: '0 1rem 1rem' }}>
+          {error || success}
+        </div>
+      )}
+
       {/* Advanced Option - Custom Route Builder */}
-      {!selectedTemplate && (
+      {!showCustomForm && (
         <section className="route-advanced">
           <button
             type="button"

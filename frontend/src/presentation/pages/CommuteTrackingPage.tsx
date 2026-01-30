@@ -608,14 +608,53 @@ export function CommuteTrackingPage() {
             </section>
           )}
 
-          {/* Checkpoint Progress */}
+          {/* Checkpoint Progress - 고정 레이아웃 */}
           {selectedRoute && (
-            <section className="checkpoint-progress">
+            <section className="checkpoint-progress-v2">
               <h2>
                 {activeSession ? '진행 상황' : '체크포인트 미리보기'}
               </h2>
 
-              <div className="checkpoint-timeline">
+              {/* 현재 체크포인트 액션 버튼 - 항상 상단에 고정 */}
+              {activeSession && activeSession.status === 'in_progress' && (
+                <div className="current-checkpoint-action">
+                  {(() => {
+                    const recordedIds = new Set(activeSession.checkpointRecords.map((r) => r.checkpointId));
+                    const currentCheckpoint = selectedRoute.checkpoints.find((cp) => !recordedIds.has(cp.id));
+                    const isLast = currentCheckpoint && selectedRoute.checkpoints.indexOf(currentCheckpoint) === selectedRoute.checkpoints.length - 1;
+
+                    if (!currentCheckpoint) return null;
+
+                    return (
+                      <button
+                        type="button"
+                        className={`btn btn-checkpoint-main ${isLast ? 'btn-finish' : ''}`}
+                        onClick={() => {
+                          if (isLast) {
+                            handleRecordCheckpoint(currentCheckpoint.id).then(() => {
+                              handleCompleteSession();
+                            });
+                          } else {
+                            handleRecordCheckpoint(currentCheckpoint.id);
+                          }
+                        }}
+                      >
+                        <span className="checkpoint-main-icon">
+                          {isLast ? '🏁' : '📍'}
+                        </span>
+                        <span className="checkpoint-main-text">
+                          <strong>{currentCheckpoint.name}</strong>
+                          <span>{isLast ? '도착 완료!' : '도착 체크'}</span>
+                        </span>
+                        <span className="checkpoint-main-arrow">→</span>
+                      </button>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* 전체 체크포인트 타임라인 - 고정 위치 */}
+              <div className="checkpoint-timeline-v2">
                 {selectedRoute.checkpoints.map((checkpoint, index) => {
                   const status = getCheckpointStatus(checkpoint);
                   const recordedInfo = getRecordedInfo(checkpoint.id);
@@ -624,91 +663,45 @@ export function CommuteTrackingPage() {
                   return (
                     <div
                       key={checkpoint.id}
-                      className={`timeline-item ${status}`}
+                      className={`timeline-step ${status}`}
                     >
-                      <div className="timeline-marker">
-                        {status === 'completed' ? '✓' : index + 1}
+                      {/* 연결선 */}
+                      {index > 0 && (
+                        <div className={`timeline-line ${status === 'pending' ? '' : 'active'}`} />
+                      )}
+
+                      {/* 체크포인트 마커 */}
+                      <div className="timeline-marker-v2">
+                        {status === 'completed' ? (
+                          <span className="marker-check">✓</span>
+                        ) : status === 'current' ? (
+                          <span className="marker-current">●</span>
+                        ) : (
+                          <span className="marker-pending">{index + 1}</span>
+                        )}
                       </div>
 
-                      <div className="timeline-content">
-                        <div className="timeline-header">
-                          <span className="checkpoint-name">{checkpoint.name}</span>
-                          {checkpoint.lineInfo && (
-                            <span className="line-badge">{checkpoint.lineInfo}</span>
-                          )}
-                        </div>
-
-                        {/* Recorded info */}
-                        {recordedInfo && (
-                          <div className="recorded-info">
-                            <span className="arrival-time">
-                              {recordedInfo.arrivalTimeString} 도착
-                            </span>
+                      {/* 체크포인트 정보 */}
+                      <div className="timeline-info">
+                        <span className="checkpoint-name-v2">{checkpoint.name}</span>
+                        {recordedInfo ? (
+                          <span className="checkpoint-time recorded">
+                            {recordedInfo.arrivalTimeString}
                             {recordedInfo.durationFromPrevious !== undefined && (
-                              <span className={`duration ${recordedInfo.isDelayed ? 'delayed' : ''}`}>
-                                {recordedInfo.durationFromPrevious}분
-                                {recordedInfo.delayMinutes !== 0 && (
-                                  <span className="delay-badge">{recordedInfo.delayStatus}</span>
-                                )}
+                              <span className={recordedInfo.isDelayed ? 'delayed' : ''}>
+                                ({recordedInfo.durationFromPrevious}분)
                               </span>
                             )}
-                            {recordedInfo.actualWaitTime > 0 && (
-                              <span className="wait-time">
-                                대기 {recordedInfo.actualWaitTime}분
-                                {recordedInfo.waitDelayMinutes !== 0 && (
-                                  <span className="wait-delay">{recordedInfo.waitDelayStatus}</span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Expected info (when not recorded) */}
-                        {!recordedInfo && !isLast && (
-                          <div className="expected-info">
-                            {typeof checkpoint.expectedDurationToNext === 'number' && (
-                              <span>이동 {checkpoint.expectedDurationToNext}분</span>
-                            )}
-                            {checkpoint.expectedWaitTime > 0 && (
-                              <span className="wait-expected">
-                                대기 {checkpoint.expectedWaitTime}분
-                              </span>
-                            )}
-                            {checkpoint.transportMode && (
-                              <span className="transport-mode">
-                                {checkpoint.transportMode === 'walk' && '🚶'}
-                                {checkpoint.transportMode === 'subway' && '🚇'}
-                                {checkpoint.transportMode === 'bus' && '🚌'}
-                                {checkpoint.transportMode === 'transfer' && '🔄'}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Action button for current checkpoint */}
-                        {status === 'current' && activeSession && (
-                          <div className="checkpoint-action">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-checkpoint"
-                              onClick={() => {
-                                if (isLast) {
-                                  handleRecordCheckpoint(checkpoint.id).then(() => {
-                                    handleCompleteSession();
-                                  });
-                                } else {
-                                  handleRecordCheckpoint(checkpoint.id);
-                                }
-                              }}
-                            >
-                              {isLast ? '🏁 최종 도착!' : '✓ 도착'}
-                            </button>
-                          </div>
-                        )}
+                          </span>
+                        ) : !isLast && typeof checkpoint.expectedDurationToNext === 'number' ? (
+                          <span className="checkpoint-time expected">
+                            {checkpoint.transportMode === 'subway' && '🚇'}
+                            {checkpoint.transportMode === 'bus' && '🚌'}
+                            {checkpoint.transportMode === 'walk' && '🚶'}
+                            {' '}{checkpoint.expectedDurationToNext}분
+                          </span>
+                        ) : null}
                       </div>
-
-                      {/* Connector line */}
-                      {!isLast && <div className="timeline-connector" />}
                     </div>
                   );
                 })}

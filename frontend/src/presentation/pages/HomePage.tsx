@@ -341,186 +341,146 @@ export function HomePage() {
         </div>
       )}
 
-      {/* Dashboard Grid */}
-      <div className="dashboard-grid">
-        {/* Quick Action Card */}
-        <div className="dashboard-card dashboard-card-action">
-          <div className="card-header">
-            <span className="card-icon">🚀</span>
-            <h2>빠른 액션</h2>
+      {/* 핵심 기능 3단계: 출근 전 / 출근 중 / 퇴근 후 */}
+      <div className="commute-phases">
+        {/* Phase 1: 출근 전 - 알림 */}
+        <section className="phase-card phase-before">
+          <div className="phase-header">
+            <span className="phase-number">1</span>
+            <div className="phase-title">
+              <h2>🌅 출근 전</h2>
+              <p>날씨·교통 알림 받기</p>
+            </div>
           </div>
-          <div className="quick-actions">
-            <button
-              type="button"
-              className="quick-action-btn"
-              onClick={() => navigate('/commute')}
-            >
-              <span className="quick-action-icon">⏱️</span>
-              <span>트래킹 시작</span>
-            </button>
-            <button
-              type="button"
-              className="quick-action-btn"
-              onClick={() => navigate('/alerts')}
-            >
-              <span className="quick-action-icon">🔔</span>
-              <span>알림 설정</span>
-            </button>
-          </div>
-        </div>
 
-        {/* Next Alert Card */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <span className="card-icon">🔔</span>
-            <h2>다음 알림</h2>
-          </div>
           {nextAlert ? (
-            <div className="next-alert-content">
-              <div className="next-alert-time">{nextAlert.time}</div>
-              <div className="next-alert-type">{nextAlert.type} 알림</div>
-            </div>
-          ) : (
-            <div className="empty-state-mini">
-              <p>설정된 알림이 없어요</p>
-              <Link to="/alerts" className="btn btn-ghost btn-sm">
-                알림 추가
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Card */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <span className="card-icon">📊</span>
-            <h2>이번 주 통계</h2>
-          </div>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-value">-</span>
-              <span className="stat-label">평균 소요</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-value">-</span>
-              <span className="stat-label">출퇴근 횟수</span>
-            </div>
-          </div>
-          <Link to="/commute/dashboard" className="btn btn-ghost btn-sm card-link">
-            자세히 보기 →
-          </Link>
-        </div>
-
-        {/* Alerts Summary Card */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <span className="card-icon">⚙️</span>
-            <h2>알림 설정</h2>
-            <Link to="/alerts" className="btn btn-ghost btn-sm">
-              관리
-            </Link>
-          </div>
-          {alerts.length > 0 ? (
-            <div className="alerts-summary">
-              {alerts.slice(0, 3).map((alert) => (
-                <div key={alert.id} className={`alert-summary-item ${!alert.enabled ? 'disabled' : ''}`}>
-                  <span className="alert-summary-icon">
-                    {alert.alertTypes.includes('weather') ? '🌤️' : '🚇'}
-                  </span>
-                  <span className="alert-summary-name">{alert.name}</span>
-                  <span className={`alert-summary-status ${alert.enabled ? 'active' : ''}`}>
-                    {alert.enabled ? '활성' : '비활성'}
-                  </span>
-                </div>
-              ))}
-              {alerts.length > 3 && (
-                <p className="alerts-more">+{alerts.length - 3}개 더</p>
-              )}
-            </div>
-          ) : (
-            <div className="empty-state-mini">
-              <p>설정된 알림이 없어요</p>
-              <Link to="/alerts" className="btn btn-primary btn-sm">
-                알림 설정하기
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Routes Card - Full Width */}
-        <div className="dashboard-card dashboard-card-full">
-          <div className="card-header">
-            <span className="card-icon">📍</span>
-            <h2>내 경로</h2>
-            <Link to="/routes" className="btn btn-ghost btn-sm">
-              + 추가
-            </Link>
-          </div>
-          {routes.length > 0 ? (
-            <div className="routes-list">
-              {routes.map((route) => (
-                <div key={route.id} className="route-item">
-                  <div className="route-info">
-                    <span className="route-icon">
-                      {route.routeType === 'morning' ? '🏢' : route.routeType === 'evening' ? '🏠' : '📍'}
-                    </span>
-                    <div className="route-details">
-                      <strong>{route.name}</strong>
-                      <span className="muted">
-                        {route.totalExpectedDuration ? `약 ${route.totalExpectedDuration}분` : '시간 미측정'}
-                      </span>
-                    </div>
+            <div className="phase-content phase-alert-active">
+              <div className="next-alert-highlight">
+                <span className="alert-time">{nextAlert.time}</span>
+                <span className="alert-type">{nextAlert.type} 알림 예정</span>
+              </div>
+              <div className="alerts-mini-list">
+                {alerts.filter(a => a.enabled).slice(0, 2).map((alert) => (
+                  <div key={alert.id} className="alert-mini-item">
+                    <span>{alert.alertTypes.includes('weather') ? '🌤️' : '🚇'}</span>
+                    <span>{alert.name}</span>
                   </div>
+                ))}
+              </div>
+              <Link to="/alerts" className="btn btn-outline btn-sm">
+                알림 관리 →
+              </Link>
+            </div>
+          ) : (
+            <div className="phase-content phase-empty">
+              <p>알림을 설정하면 출근 전에 날씨와 교통 정보를 받아볼 수 있어요</p>
+              <Link to="/alerts" className="btn btn-primary">
+                🔔 알림 설정하기
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* Phase 2: 출근 중 - 트래킹 */}
+        <section className="phase-card phase-during">
+          <div className="phase-header">
+            <span className="phase-number">2</span>
+            <div className="phase-title">
+              <h2>🚶 출퇴근 중</h2>
+              <p>이동 시간 기록하기</p>
+            </div>
+          </div>
+
+          <div className="phase-content">
+            {routes.length > 0 ? (
+              <div className="routes-quick-list">
+                {routes.slice(0, 2).map((route) => (
+                  <button
+                    key={route.id}
+                    type="button"
+                    className="route-quick-btn"
+                    onClick={() => navigate('/commute', { state: { routeId: route.id } })}
+                  >
+                    <span className="route-quick-icon">
+                      {route.routeType === 'morning' ? '🏢' : '🏠'}
+                    </span>
+                    <span className="route-quick-name">{route.name}</span>
+                    <span className="route-quick-time">{route.totalExpectedDuration}분</span>
+                    <span className="route-quick-arrow">▶</span>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="route-quick-btn route-stopwatch"
+                  onClick={() => navigate('/commute?mode=stopwatch')}
+                >
+                  <span className="route-quick-icon">⏱️</span>
+                  <span className="route-quick-name">스톱워치</span>
+                  <span className="route-quick-time">간편 기록</span>
+                  <span className="route-quick-arrow">▶</span>
+                </button>
+              </div>
+            ) : (
+              <div className="phase-empty">
+                <p>경로를 등록하거나 스톱워치로 바로 기록하세요</p>
+                <div className="phase-actions-row">
+                  <Link to="/routes" className="btn btn-outline btn-sm">
+                    경로 등록
+                  </Link>
                   <button
                     type="button"
                     className="btn btn-primary btn-sm"
-                    onClick={() => navigate('/commute', { state: { routeId: route.id } })}
+                    onClick={() => navigate('/commute?mode=stopwatch')}
                   >
-                    시작
+                    ⏱️ 바로 시작
                   </button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state-mini">
-              <p>등록된 경로가 없어요</p>
-              <p className="muted">출퇴근 경로를 등록하면 더 정확한 분석이 가능해요</p>
-              <Link to="/routes" className="btn btn-primary btn-sm">
-                경로 등록하기
-              </Link>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        </section>
 
-        {/* Quick Links Card */}
-        <div className="dashboard-card dashboard-card-full">
-          <div className="card-header">
-            <span className="card-icon">🔗</span>
-            <h2>바로가기</h2>
+        {/* Phase 3: 퇴근 후 - 분석 */}
+        <section className="phase-card phase-after">
+          <div className="phase-header">
+            <span className="phase-number">3</span>
+            <div className="phase-title">
+              <h2>📊 퇴근 후</h2>
+              <p>통근 패턴 분석</p>
+            </div>
           </div>
-          <div className="quick-links">
-            <Link to="/alerts" className="quick-link">
-              <span className="quick-link-icon">🌅</span>
-              <div className="quick-link-text">
-                <strong>출근 전</strong>
-                <span>알림 설정</span>
+
+          <div className="phase-content">
+            <div className="stats-preview">
+              <div className="stat-mini">
+                <span className="stat-mini-value">-</span>
+                <span className="stat-mini-label">평균 시간</span>
               </div>
-            </Link>
-            <Link to="/commute" className="quick-link">
-              <span className="quick-link-icon">🚶</span>
-              <div className="quick-link-text">
-                <strong>출퇴근 중</strong>
-                <span>시간 추적</span>
+              <div className="stat-mini">
+                <span className="stat-mini-value">-</span>
+                <span className="stat-mini-label">이번 주</span>
               </div>
-            </Link>
-            <Link to="/commute/dashboard" className="quick-link">
-              <span className="quick-link-icon">📊</span>
-              <div className="quick-link-text">
-                <strong>퇴근 후</strong>
-                <span>기록 리뷰</span>
-              </div>
+            </div>
+            <Link to="/commute/dashboard" className="btn btn-outline btn-sm">
+              통계 보기 →
             </Link>
           </div>
+        </section>
+      </div>
+
+      {/* 설정 영역 */}
+      <div className="dashboard-settings">
+        <div className="settings-row">
+          <Link to="/alerts" className="settings-link">
+            <span>🔔</span>
+            <span>알림 설정</span>
+            <span className="settings-badge">{alerts.filter(a => a.enabled).length}개 활성</span>
+          </Link>
+          <Link to="/routes" className="settings-link">
+            <span>📍</span>
+            <span>경로 관리</span>
+            <span className="settings-badge">{routes.length}개 등록</span>
+          </Link>
         </div>
       </div>
 

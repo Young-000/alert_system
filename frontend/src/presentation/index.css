@@ -5254,6 +5254,228 @@ kbd {
   background: var(--success);
 }
 
+/* ========== CHECKPOINT PROGRESS V2 (개선된 버전) ========== */
+.checkpoint-progress-v2 {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+
+.checkpoint-progress-v2 h2 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* 현재 체크포인트 액션 버튼 - 항상 상단 고정 */
+.current-checkpoint-action {
+  margin-bottom: 1.25rem;
+}
+
+.btn-checkpoint-main {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.btn-checkpoint-main:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-checkpoint-main.btn-finish {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.btn-checkpoint-main.btn-finish:hover {
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.checkpoint-main-icon {
+  font-size: 1.5rem;
+}
+
+.checkpoint-main-text {
+  flex: 1;
+}
+
+.checkpoint-main-text strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 0.15rem;
+}
+
+.checkpoint-main-text span {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.checkpoint-main-arrow {
+  font-size: 1.25rem;
+  opacity: 0.8;
+}
+
+/* 타임라인 V2 - 가로 레이아웃 */
+.checkpoint-timeline-v2 {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  gap: 0;
+  padding: 0.5rem 0;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 70px;
+  flex: 1;
+}
+
+/* 연결선 */
+.timeline-line {
+  position: absolute;
+  top: 14px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.timeline-line.active {
+  background: var(--success);
+}
+
+/* 마커 V2 */
+.timeline-marker-v2 {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 1;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.timeline-step.completed .timeline-marker-v2 {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.timeline-step.current .timeline-marker-v2 {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  animation: pulse-soft 2s infinite;
+}
+
+.timeline-step.pending .timeline-marker-v2 {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+  color: var(--ink-muted);
+}
+
+@keyframes pulse-soft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+}
+
+.marker-check { font-size: 0.7rem; }
+.marker-current { font-size: 0.5rem; }
+.marker-pending { font-size: 0.7rem; }
+
+/* 체크포인트 정보 */
+.timeline-info {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.checkpoint-name-v2 {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}
+
+.timeline-step.pending .checkpoint-name-v2 {
+  color: var(--ink-muted);
+}
+
+.checkpoint-time {
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 0.2rem;
+}
+
+.checkpoint-time.recorded {
+  color: var(--success);
+}
+
+.checkpoint-time.expected {
+  color: var(--ink-muted);
+}
+
+.checkpoint-time .delayed {
+  color: var(--error);
+}
+
+/* 모바일 세로 레이아웃 */
+@media (max-width: 480px) {
+  .checkpoint-timeline-v2 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .timeline-step {
+    flex-direction: row;
+    align-items: center;
+    min-width: auto;
+    padding: 0.5rem 0;
+  }
+
+  .timeline-line {
+    top: auto;
+    left: 13px;
+    right: auto;
+    width: 2px;
+    height: 100%;
+    transform: translateY(-50%);
+  }
+
+  .timeline-info {
+    margin-top: 0;
+    margin-left: 0.75rem;
+    text-align: left;
+  }
+
+  .checkpoint-name-v2 {
+    max-width: none;
+  }
+}
+
 /* Tracking Actions */
 .tracking-actions {
   display: flex;
@@ -6003,6 +6225,182 @@ kbd {
 .template-card.selected .timeline-connector {
   background: var(--template-color, var(--primary));
   opacity: 0.4;
+}
+
+/* ========== ROUTE SETUP V2 (간소화된 버전) ========== */
+
+/* 저장된 경로 섹션 */
+.route-saved {
+  padding: 0 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.route-saved h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.saved-routes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.saved-route-item {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.saved-route-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  transition: background 0.2s ease;
+}
+
+.saved-route-link:hover {
+  background: var(--bg-subtle);
+}
+
+.saved-route-icon {
+  font-size: 1.5rem;
+}
+
+.saved-route-info {
+  flex: 1;
+}
+
+.saved-route-info strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.1rem;
+}
+
+.saved-route-info span {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.badge-primary {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.saved-route-arrow {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.saved-route-actions {
+  display: flex;
+  border-left: 1px solid var(--border);
+}
+
+.btn-icon {
+  padding: 0.75rem;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 1rem;
+  border: none;
+}
+
+.btn-icon:hover {
+  background: var(--bg-subtle);
+}
+
+.btn-icon-danger:hover {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+/* 템플릿 그리드 V2 - 원클릭 저장 */
+.template-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.template-card-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0.75rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.template-card-v2:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.template-card-v2:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.template-icon-v2 {
+  font-size: 2rem;
+}
+
+.template-name-v2 {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.template-preview {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.template-saving {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-lg);
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+  .template-grid-v2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .template-icon-v2 {
+    font-size: 1.5rem;
+  }
+
+  .saved-route-link {
+    padding: 0.75rem;
+  }
 }
 
 /* 1.2.5 Config Card */
@@ -7703,6 +8101,264 @@ kbd {
 .btn-lg {
   padding: 0.9rem 1.5rem;
   font-size: 1.05rem;
+}
+
+/* ========== COMMUTE PHASES (새 대시보드 레이아웃) ========== */
+.commute-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.phase-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.phase-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.phase-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.phase-number {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.phase-before .phase-number { background: var(--gradient-warm); }
+.phase-during .phase-number { background: var(--primary); }
+.phase-after .phase-number { background: var(--success); }
+
+.phase-title h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.phase-title p {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.phase-content {
+  padding-left: 2.75rem; /* align with title */
+}
+
+.phase-empty {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.phase-empty p {
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+  margin-bottom: 1rem;
+}
+
+.phase-actions-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Phase 1: Alert Active State */
+.phase-alert-active {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.next-alert-highlight {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.next-alert-highlight .alert-time {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.next-alert-highlight .alert-type {
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+
+.alerts-mini-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.alert-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+}
+
+/* Phase 2: Routes Quick List */
+.routes-quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.route-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-subtle);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.route-quick-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.route-quick-icon {
+  font-size: 1.25rem;
+}
+
+.route-quick-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.route-quick-time {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.route-quick-arrow {
+  color: var(--primary);
+  font-size: 0.8rem;
+}
+
+.route-stopwatch {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+}
+
+.route-stopwatch:hover {
+  background: var(--primary-light);
+  border-style: solid;
+  border-color: var(--primary);
+}
+
+/* Phase 3: Stats Preview */
+.stats-preview {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat-mini {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+}
+
+.stat-mini-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.stat-mini-label {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+/* Settings Row */
+.dashboard-settings {
+  margin-top: 1rem;
+}
+
+.settings-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.settings-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.settings-link:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-hover);
+}
+
+.settings-badge {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  background: var(--bg-subtle);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .phase-content {
+    padding-left: 0;
+  }
+
+  .phase-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .settings-row {
+    flex-direction: column;
+  }
+
+  .next-alert-highlight {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 }
 
 /* ========== GUEST HERO (Landing Page) ========== */
