@@ -104,8 +104,16 @@ export class RouteController {
    * 특정 경로 조회
    */
   @Get(':id')
-  async getRoute(@Param('id') id: string): Promise<RouteResponseDto> {
-    return this.manageRouteUseCase.getRouteById(id);
+  async getRoute(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RouteResponseDto> {
+    // 권한 검사: 해당 경로가 본인의 것인지 확인
+    const route = await this.manageRouteUseCase.getRouteById(id);
+    if (route.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 경로를 조회할 수 없습니다.');
+    }
+    return route;
   }
 
   /**
