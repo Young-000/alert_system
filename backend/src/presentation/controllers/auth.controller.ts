@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req, Res, Query, Logger, Optional, Inject } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req, Res, Logger, Optional, Inject } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -10,20 +10,6 @@ import { AuthService, AuthResponse } from '@infrastructure/auth/auth.service';
 import { GoogleProfile } from '@infrastructure/auth/google.strategy';
 import { Public } from '@infrastructure/auth/public.decorator';
 import { Throttle } from '@nestjs/throttler';
-
-// Google OAuth 용 커스텀 가드 (설정 없으면 스킵)
-class GoogleAuthGuardOptional extends AuthGuard('google') {
-  constructor(private isEnabled: boolean) {
-    super();
-  }
-
-  canActivate(context: any) {
-    if (!this.isEnabled) {
-      return false;
-    }
-    return super.canActivate(context);
-  }
-}
 
 @Controller('auth')
 export class AuthController {

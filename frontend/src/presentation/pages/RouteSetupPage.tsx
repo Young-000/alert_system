@@ -319,32 +319,36 @@ export function RouteSetupPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="route-hero">
-        <div className="route-hero-content">
-          <h1>나만의 출퇴근 경로</h1>
-          <p>템플릿을 선택하거나 스톱워치처럼 바로 기록하세요</p>
-        </div>
-      </section>
-
-      {/* Quick Start */}
-      <section className="route-quick-start">
-        <button
-          type="button"
-          className="quick-start-btn"
-          onClick={handleStartWithoutRoute}
-        >
-          <div className="quick-start-icon">⏱️</div>
-          <div className="quick-start-text">
-            <strong>바로 시작하기</strong>
-            <span>스톱워치처럼 시간만 기록</span>
+      {/* Hero Section - 커스텀 폼 표시 중에는 숨김 */}
+      {!showCustomForm && (
+        <section className="route-hero">
+          <div className="route-hero-content">
+            <h1>나만의 출퇴근 경로</h1>
+            <p>템플릿을 선택하거나 스톱워치처럼 바로 기록하세요</p>
           </div>
-          <span className="quick-start-arrow">→</span>
-        </button>
-      </section>
+        </section>
+      )}
 
-      {/* 저장된 경로 (먼저 표시) */}
-      {existingRoutes.length > 0 && !selectedTemplate && !showCustomForm && (
+      {/* Quick Start - 커스텀 폼 표시 중에는 숨김 */}
+      {!showCustomForm && (
+        <section className="route-quick-start">
+          <button
+            type="button"
+            className="quick-start-btn"
+            onClick={handleStartWithoutRoute}
+          >
+            <div className="quick-start-icon">⏱️</div>
+            <div className="quick-start-text">
+              <strong>바로 시작하기</strong>
+              <span>스톱워치처럼 시간만 기록</span>
+            </div>
+            <span className="quick-start-arrow">→</span>
+          </button>
+        </section>
+      )}
+
+      {/* 저장된 경로 (먼저 표시) - 커스텀 폼 표시 중에는 숨김 */}
+      {existingRoutes.length > 0 && !showCustomForm && (
         <section className="route-saved">
           <h2>저장된 경로</h2>
           <div className="saved-routes-list">
@@ -383,15 +387,10 @@ export function RouteSetupPage() {
               </div>
             ))}
           </div>
-          {(error || success) && (
-            <div className={`notice ${error ? 'error' : 'success'}`}>
-              {error || success}
-            </div>
-          )}
         </section>
       )}
 
-      {/* 새 경로 만들기 */}
+      {/* 새 경로 만들기 - 템플릿 선택 */}
       {!showCustomForm && (
         <section className="route-templates">
           <h2>{existingRoutes.length > 0 ? '새 경로 추가' : '경로 템플릿'}</h2>
@@ -404,9 +403,7 @@ export function RouteSetupPage() {
                 type="button"
                 className="template-card-v2"
                 onClick={async () => {
-                  // 원클릭 저장
                   setSelectedTemplate(template);
-                  // 바로 저장 실행
                   if (!userId) return;
                   setIsSaving(true);
                   setError('');
@@ -469,189 +466,200 @@ export function RouteSetupPage() {
               </button>
             ))}
           </div>
+
+          {/* 메시지 표시 */}
+          {(error || success) && (
+            <div className={`notice ${error ? 'error' : 'success'}`} style={{ marginTop: '1rem' }}>
+              {error || success}
+            </div>
+          )}
+
+          {/* 상세 설정 버튼 */}
+          <div className="route-advanced-toggle">
+            <button
+              type="button"
+              className="advanced-toggle"
+              onClick={() => setShowCustomForm(true)}
+            >
+              <span>직접 만들기</span>
+              <span className="toggle-icon">+</span>
+            </button>
+          </div>
         </section>
       )}
 
-      {/* 메시지 표시 */}
-      {(error || success) && !showCustomForm && (
-        <div className={`notice ${error ? 'error' : 'success'}`} style={{ margin: '0 1rem 1rem' }}>
-          {error || success}
-        </div>
-      )}
-
-      {/* Advanced Option - Custom Route Builder */}
-      {!showCustomForm && (
-        <section className="route-advanced">
-          <button
-            type="button"
-            className="advanced-toggle"
-            onClick={() => setShowCustomForm(!showCustomForm)}
-          >
-            <span>상세 설정</span>
-            <span className="toggle-icon">{showCustomForm ? '−' : '+'}</span>
-          </button>
-
-          {showCustomForm && (
-            <div className="custom-route-form">
+      {/* Custom Route Builder - 별도 섹션으로 분리 */}
+      {showCustomForm && (
+        <section className="route-custom-builder">
+          <div className="custom-route-form">
+            <div className="custom-form-header">
               <h3>{editingRoute ? '경로 수정' : '나만의 경로 만들기'}</h3>
-              <p className="muted">
-                {editingRoute ? '체크포인트와 설정을 수정하세요' : '버스→지하철→버스 등 여러 환승도 추가할 수 있어요'}
-              </p>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={handleCancelEdit}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <p className="muted">
+              {editingRoute ? '체크포인트와 설정을 수정하세요' : '집 → 지하철 → 버스 → 회사 등 나만의 경로를 설정하세요'}
+            </p>
 
-              {/* Route Name & Type */}
-              <div className="custom-form-row">
-                <div className="form-group">
-                  <label htmlFor="customRouteName">경로 이름</label>
-                  <input
-                    id="customRouteName"
-                    type="text"
-                    value={customRouteName}
-                    onChange={(e) => setCustomRouteName(e.target.value)}
-                    placeholder="예: 출근 경로"
-                    className="route-name-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="customRouteType">경로 유형</label>
-                  <select
-                    id="customRouteType"
-                    value={customRouteType}
-                    onChange={(e) => setCustomRouteType(e.target.value as RouteType)}
-                    className="route-type-select"
-                  >
-                    <option value="morning">🌅 출근</option>
-                    <option value="evening">🌆 퇴근</option>
-                    <option value="custom">📍 기타</option>
-                  </select>
-                </div>
+            {/* Route Name & Type */}
+            <div className="custom-form-row">
+              <div className="form-group">
+                <label htmlFor="customRouteName">경로 이름</label>
+                <input
+                  id="customRouteName"
+                  type="text"
+                  value={customRouteName}
+                  onChange={(e) => setCustomRouteName(e.target.value)}
+                  placeholder="예: 출근 경로"
+                  className="route-name-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="customRouteType">경로 유형</label>
+                <select
+                  id="customRouteType"
+                  value={customRouteType}
+                  onChange={(e) => setCustomRouteType(e.target.value as RouteType)}
+                  className="route-type-select"
+                >
+                  <option value="morning">🌅 출근</option>
+                  <option value="evening">🌆 퇴근</option>
+                  <option value="custom">📍 기타</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Checkpoints List */}
+            <div className="checkpoint-list">
+              <div className="checkpoint-list-header">
+                <span>체크포인트</span>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-small"
+                  onClick={addCustomCheckpoint}
+                >
+                  + 추가
+                </button>
               </div>
 
-              {/* Checkpoints List */}
-              <div className="checkpoint-list">
-                <div className="checkpoint-list-header">
-                  <span>체크포인트</span>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-small"
-                    onClick={addCustomCheckpoint}
-                  >
-                    + 추가
-                  </button>
-                </div>
-
-                {customCheckpoints.map((cp, index) => (
-                  <div key={cp.id} className="checkpoint-item">
-                    <div className="checkpoint-number">{index + 1}</div>
-                    <div className="checkpoint-fields">
-                      <div className="checkpoint-row">
-                        <select
-                          value={cp.icon}
-                          onChange={(e) => updateCustomCheckpoint(cp.id, 'icon', e.target.value)}
-                          className="icon-select"
-                          aria-label="아이콘 선택"
+              {customCheckpoints.map((cp, index) => (
+                <div key={cp.id} className="checkpoint-item">
+                  <div className="checkpoint-number">{index + 1}</div>
+                  <div className="checkpoint-fields">
+                    <div className="checkpoint-row">
+                      <select
+                        value={cp.icon}
+                        onChange={(e) => updateCustomCheckpoint(cp.id, 'icon', e.target.value)}
+                        className="icon-select"
+                        aria-label="아이콘 선택"
+                      >
+                        {CHECKPOINT_ICONS.map((icon) => (
+                          <option key={icon} value={icon}>{icon}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={cp.name}
+                        onChange={(e) => updateCustomCheckpoint(cp.id, 'name', e.target.value)}
+                        placeholder="체크포인트 이름"
+                        className="checkpoint-name-input"
+                      />
+                      {customCheckpoints.length > 2 && (
+                        <button
+                          type="button"
+                          className="btn-remove-checkpoint"
+                          onClick={() => removeCustomCheckpoint(cp.id)}
+                          aria-label="체크포인트 삭제"
                         >
-                          {CHECKPOINT_ICONS.map((icon) => (
-                            <option key={icon} value={icon}>{icon}</option>
+                          ×
+                        </button>
+                      )}
+                    </div>
+
+                    {index < customCheckpoints.length - 1 && (
+                      <div className="checkpoint-row checkpoint-transport">
+                        <select
+                          value={cp.transportMode}
+                          onChange={(e) => updateCustomCheckpoint(cp.id, 'transportMode', e.target.value)}
+                          className="transport-select"
+                          aria-label="이동 수단"
+                        >
+                          {TRANSPORT_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.icon} {opt.label}
+                            </option>
                           ))}
                         </select>
-                        <input
-                          type="text"
-                          value={cp.name}
-                          onChange={(e) => updateCustomCheckpoint(cp.id, 'name', e.target.value)}
-                          placeholder="체크포인트 이름"
-                          className="checkpoint-name-input"
-                        />
-                        {customCheckpoints.length > 2 && (
-                          <button
-                            type="button"
-                            className="btn-remove-checkpoint"
-                            onClick={() => removeCustomCheckpoint(cp.id)}
-                            aria-label="체크포인트 삭제"
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-
-                      {index < customCheckpoints.length - 1 && (
-                        <div className="checkpoint-row checkpoint-transport">
-                          <select
-                            value={cp.transportMode}
-                            onChange={(e) => updateCustomCheckpoint(cp.id, 'transportMode', e.target.value)}
-                            className="transport-select"
-                            aria-label="이동 수단"
-                          >
-                            {TRANSPORT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.icon} {opt.label}
-                              </option>
-                            ))}
-                          </select>
+                        <div className="time-input-group">
+                          <label>이동</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="120"
+                            value={cp.expectedDuration}
+                            onChange={(e) => updateCustomCheckpoint(cp.id, 'expectedDuration', parseInt(e.target.value) || 0)}
+                            className="time-input"
+                          />
+                          <span>분</span>
+                        </div>
+                        {(cp.transportMode === 'subway' || cp.transportMode === 'bus') && (
                           <div className="time-input-group">
-                            <label>이동</label>
+                            <label>대기</label>
                             <input
                               type="number"
                               min="0"
-                              max="120"
-                              value={cp.expectedDuration}
-                              onChange={(e) => updateCustomCheckpoint(cp.id, 'expectedDuration', parseInt(e.target.value) || 0)}
+                              max="30"
+                              value={cp.waitTime}
+                              onChange={(e) => updateCustomCheckpoint(cp.id, 'waitTime', parseInt(e.target.value) || 0)}
                               className="time-input"
                             />
                             <span>분</span>
                           </div>
-                          {(cp.transportMode === 'subway' || cp.transportMode === 'bus') && (
-                            <div className="time-input-group">
-                              <label>대기</label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="30"
-                                value={cp.waitTime}
-                                onChange={(e) => updateCustomCheckpoint(cp.id, 'waitTime', parseInt(e.target.value) || 0)}
-                                className="time-input"
-                              />
-                              <span>분</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-
-              {/* Total Time Preview */}
-              <div className="custom-route-preview">
-                <span>예상 총 소요시간:</span>
-                <strong>
-                  {customCheckpoints.reduce((sum, cp) => sum + cp.expectedDuration + cp.waitTime, 0)}분
-                </strong>
-              </div>
-
-              {/* Error/Success */}
-              {error && <div className="notice error">{error}</div>}
-              {success && <div className="notice success">{success}</div>}
-
-              {/* Actions */}
-              <div className="custom-form-actions">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={handleCancelEdit}
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={editingRoute ? handleUpdateRoute : handleSaveCustomRoute}
-                  disabled={isSavingCustom}
-                >
-                  {isSavingCustom ? '저장 중...' : editingRoute ? '수정 완료' : '경로 저장'}
-                </button>
-              </div>
+                </div>
+              ))}
             </div>
-          )}
+
+            {/* Total Time Preview */}
+            <div className="custom-route-preview">
+              <span>예상 총 소요시간:</span>
+              <strong>
+                {customCheckpoints.reduce((sum, cp) => sum + cp.expectedDuration + cp.waitTime, 0)}분
+              </strong>
+            </div>
+
+            {/* Error/Success */}
+            {error && <div className="notice error">{error}</div>}
+            {success && <div className="notice success">{success}</div>}
+
+            {/* Actions */}
+            <div className="custom-form-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={handleCancelEdit}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={editingRoute ? handleUpdateRoute : handleSaveCustomRoute}
+                disabled={isSavingCustom}
+              >
+                {isSavingCustom ? '저장 중...' : editingRoute ? '수정 완료' : '경로 저장'}
+              </button>
+            </div>
+          </div>
         </section>
       )}
 

@@ -229,7 +229,7 @@ export class ManageCommuteSessionUseCase {
     return this.toSessionResponseDto(session, route?.checkpoints.length || 0, route);
   }
 
-  async getHistory(userId: string, limit = 20, offset = 0): Promise<CommuteHistoryResponseDto> {
+  async getHistory(userId: string, limit = 20, _offset = 0): Promise<CommuteHistoryResponseDto> {
     if (!this.sessionRepository || !this.routeRepository) {
       throw new Error('Required repositories not available');
     }

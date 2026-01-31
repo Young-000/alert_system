@@ -3,6 +3,7 @@ import { SchedulerTriggerController } from '../controllers/scheduler-trigger.con
 import { SchedulerLegacyController } from '../controllers/scheduler-legacy.controller';
 import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 import { SmartNotificationModule } from './smart-notification.module';
+import { CommuteModule } from './commute.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { PostgresSubwayStationRepository } from '@infrastructure/persistence/postgres-subway-station.repository';
@@ -22,7 +23,7 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
 
 @Module({
-  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule],
+  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule],
   controllers: [SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {

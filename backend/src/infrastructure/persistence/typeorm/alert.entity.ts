@@ -46,6 +46,9 @@ export class AlertEntity {
   @Column({ type: 'uuid', nullable: true, name: 'subway_station_id' })
   subwayStationId?: string;
 
+  @Column({ type: 'uuid', nullable: true, name: 'route_id' })
+  routeId?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -47,6 +47,7 @@ export class PostgresAlertRepository implements IAlertRepository {
     entity.enabled = alert.enabled;
     entity.busStopId = alert.busStopId;
     entity.subwayStationId = alert.subwayStationId;
+    entity.routeId = alert.routeId;
     return entity;
   }
 
@@ -59,6 +60,9 @@ export class PostgresAlertRepository implements IAlertRepository {
       entity.busStopId,
       entity.subwayStationId,
       entity.id,
+      false, // smartSchedulingEnabled
+      undefined, // smartSchedulingConfig
+      entity.routeId,
     );
     if (!entity.enabled) {
       alert.disable();

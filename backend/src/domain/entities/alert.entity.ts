@@ -42,6 +42,7 @@ export class Alert {
   public enabled: boolean;
   public busStopId?: string;
   public subwayStationId?: string;
+  public routeId?: string;
 
   // Smart scheduling properties
   public smartSchedulingEnabled: boolean;
@@ -66,6 +67,7 @@ export class Alert {
     id?: string,
     smartSchedulingEnabled = false,
     smartSchedulingConfig?: Partial<SmartSchedulingConfig>,
+    routeId?: string,
   ) {
     this.id = id || uuidv4();
     this.userId = userId;
@@ -75,6 +77,7 @@ export class Alert {
     this.enabled = true;
     this.busStopId = busStopId;
     this.subwayStationId = subwayStationId;
+    this.routeId = routeId;
 
     // Smart scheduling initialization
     this.smartSchedulingEnabled = smartSchedulingEnabled;
@@ -143,6 +146,7 @@ export class Alert {
       enabled: this.enabled,
       busStopId: this.busStopId,
       subwayStationId: this.subwayStationId,
+      routeId: this.routeId,
       smartSchedulingEnabled: this.smartSchedulingEnabled,
       smartSchedulingConfig: this.smartSchedulingConfig,
       notificationTime: this.notificationTime,

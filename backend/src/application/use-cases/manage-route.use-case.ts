@@ -7,8 +7,6 @@ import {
   CommuteRoute,
   RouteCheckpoint,
   RouteType,
-  CheckpointType,
-  TransportMode,
 } from '@domain/entities/commute-route.entity';
 import {
   CreateRouteDto,

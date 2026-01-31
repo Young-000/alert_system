@@ -15,9 +15,13 @@ import { CommuteModule } from './modules/commute.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
+import { DevController } from './controllers/dev.controller';
+
+// 개발 모드에서만 DevController 활성화
+const isDev = process.env.NODE_ENV !== 'production';
 
 @Module({
-  controllers: [HealthController],
+  controllers: isDev ? [HealthController, DevController] : [HealthController],
   imports: [
     DatabaseModule,
     QueueModule,

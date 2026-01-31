@@ -1,34 +1,97 @@
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { RouteType, CheckpointType, TransportMode } from '@domain/entities/commute-route.entity';
 
 // ========== Route DTOs ==========
 
-export interface CreateCheckpointDto {
+export class CreateCheckpointDto {
+  @IsNumber()
+  @Min(0)
   sequenceOrder: number;
+
+  @IsString()
   name: string;
+
+  @IsEnum(CheckpointType)
   checkpointType: CheckpointType;
+
+  @IsOptional()
+  @IsString()
   linkedStationId?: string;
+
+  @IsOptional()
+  @IsString()
   linkedBusStopId?: string;
+
+  @IsOptional()
+  @IsString()
   lineInfo?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   expectedDurationToNext?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   expectedWaitTime?: number;
+
+  @IsOptional()
+  @IsEnum(TransportMode)
   transportMode?: TransportMode;
 }
 
-export interface CreateRouteDto {
+export class CreateRouteDto {
+  @IsString()
   userId: string;
+
+  @IsString()
   name: string;
+
+  @IsEnum(RouteType)
   routeType: RouteType;
+
+  @IsOptional()
+  @IsBoolean()
   isPreferred?: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCheckpointDto)
   checkpoints: CreateCheckpointDto[];
 }
 
-export interface UpdateRouteDto {
+export class UpdateRouteDto {
+  @IsOptional()
+  @IsString()
   name?: string;
+
+  @IsOptional()
+  @IsEnum(RouteType)
   routeType?: RouteType;
+
+  @IsOptional()
+  @IsBoolean()
   isPreferred?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCheckpointDto)
   checkpoints?: CreateCheckpointDto[];
 }
 
+// Response DTOs (used for type safety, no validation needed)
 export interface RouteResponseDto {
   id: string;
   userId: string;
@@ -60,24 +123,45 @@ export interface CheckpointResponseDto {
 
 // ========== Session DTOs ==========
 
-export interface StartSessionDto {
+export class StartSessionDto {
+  @IsString()
   userId: string;
+
+  @IsString()
   routeId: string;
+
+  @IsOptional()
+  @IsString()
   weatherCondition?: string;
 }
 
-export interface RecordCheckpointDto {
+export class RecordCheckpointDto {
+  @IsString()
   sessionId: string;
+
+  @IsString()
   checkpointId: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   actualWaitTime?: number;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }
 
-export interface CompleteSessionDto {
+export class CompleteSessionDto {
+  @IsString()
   sessionId: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }
 
+// Response DTOs (interfaces for type safety)
 export interface SessionResponseDto {
   id: string;
   userId: string;

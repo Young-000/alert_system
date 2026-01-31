@@ -22,6 +22,7 @@ interface CheckpointInfo {
   id: string;
   name: string;
   checkpointType: CheckpointType;
+  sequenceOrder: number;
   expectedDurationToNext?: number;
   expectedWaitTime: number;
 }
@@ -127,6 +128,7 @@ export class GetCommuteStatsUseCase {
           id: cp.id,
           name: cp.name,
           checkpointType: cp.checkpointType,
+          sequenceOrder: cp.sequenceOrder,
           expectedDurationToNext: cp.expectedDurationToNext,
           expectedWaitTime: cp.expectedWaitTime,
         });
@@ -224,9 +226,9 @@ export class GetCommuteStatsUseCase {
 
     return stats.sort((a, b) => {
       // Sort by sequence order if we have checkpoint info
-      const infoA = checkpointInfoMap.get(a.checkpointId);
-      const infoB = checkpointInfoMap.get(b.checkpointId);
-      return 0; // Keep original order
+      const seqA = checkpointInfoMap.get(a.checkpointId)?.sequenceOrder ?? 0;
+      const seqB = checkpointInfoMap.get(b.checkpointId)?.sequenceOrder ?? 0;
+      return seqA - seqB;
     });
   }
 

@@ -66,6 +66,9 @@ export function CommuteTrackingPage() {
 
   // Load routes and check for active session (only in route mode)
   useEffect(() => {
+    // Track mounted state to prevent state updates after unmount
+    let isMounted = true;
+
     if (isStopwatchMode) {
       setIsLoading(false);
       return;
@@ -84,6 +87,9 @@ export function CommuteTrackingPage() {
           commuteApi.getInProgressSession(userId),
         ]);
 
+        // Only update state if still mounted
+        if (!isMounted) return;
+
         setRoutes(userRoutes);
 
         if (inProgress) {
@@ -98,21 +104,31 @@ export function CommuteTrackingPage() {
           setSelectedRoute(preferred);
         }
       } catch (err) {
+        if (!isMounted) return;
         console.error('Failed to load data:', err);
         setError('데이터를 불러오는데 실패했습니다.');
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId, commuteApi, isStopwatchMode, routeIdParam]);
 
   // Timer effect for route-based session
   useEffect(() => {
+    let isMounted = true;
+
     if (activeSession && activeSession.status === 'in_progress') {
       const startTime = new Date(activeSession.startedAt).getTime();
       const updateTimer = () => {
+        if (!isMounted) return;
         const now = Date.now();
         setElapsedTime(Math.floor((now - startTime) / 1000));
       };
@@ -121,17 +137,26 @@ export function CommuteTrackingPage() {
       timerRef.current = setInterval(updateTimer, 1000);
 
       return () => {
+        isMounted = false;
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
         }
       };
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [activeSession]);
 
   // Stopwatch timer effect
   useEffect(() => {
+    let isMounted = true;
+
     if (stopwatchState === 'running' && stopwatchStartTime) {
       const updateStopwatch = () => {
+        if (!isMounted) return;
         const now = Date.now();
         setElapsedTime(Math.floor((now - stopwatchStartTime) / 1000) + pausedTime);
       };
@@ -140,12 +165,41 @@ export function CommuteTrackingPage() {
       timerRef.current = setInterval(updateStopwatch, 100); // More frequent for smoother display
 
       return () => {
+        isMounted = false;
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
         }
       };
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [stopwatchState, stopwatchStartTime, pausedTime]);
+
+  // Warn user when trying to close browser with active session
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only show warning if there's an active session or stopwatch running
+      if (
+        (activeSession && activeSession.status === 'in_progress') ||
+        stopwatchState === 'running' ||
+        stopwatchState === 'paused'
+      ) {
+        e.preventDefault();
+        // Modern browsers ignore custom messages, but this is required for the dialog to show
+        e.returnValue = '진행 중인 기록이 있습니다. 페이지를 나가시겠습니까?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [activeSession, stopwatchState]);
 
   // Format time for route mode
   const formatTime = (seconds: number) => {

@@ -71,4 +71,36 @@ export class CachedWeatherApiClient implements IWeatherApiClient {
       throw error;
     }
   }
+
+  // 예보 데이터는 캐시 없이 직접 호출 (시간별로 자주 변경됨)
+  async getWeatherWithForecast(lat: number, lng: number): Promise<Weather> {
+    const startTime = Date.now();
+
+    try {
+      const weather = await this.weatherClient.getWeatherWithForecast(lat, lng);
+      const responseTime = Date.now() - startTime;
+
+      await this.cacheService.logApiCall({
+        apiName: 'OpenWeatherMap',
+        endpoint: `/weather+forecast?lat=${lat}&lon=${lng}`,
+        success: true,
+        responseTimeMs: responseTime,
+      });
+
+      return weather;
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      await this.cacheService.logApiCall({
+        apiName: 'OpenWeatherMap',
+        endpoint: `/weather+forecast?lat=${lat}&lon=${lng}`,
+        success: false,
+        responseTimeMs: responseTime,
+        errorMessage,
+      });
+
+      throw error;
+    }
+  }
 }

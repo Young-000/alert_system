@@ -212,9 +212,9 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
 
       await this.client.send(command);
       this.logger.log(`Cancelled notification schedule for alert ${alertId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 스케줄이 없으면 무시
-      if (error.name === 'ResourceNotFoundException') {
+      if (error instanceof Error && error.name === 'ResourceNotFoundException') {
         this.logger.debug(`Schedule for alert ${alertId} not found, nothing to cancel`);
         return;
       }
@@ -234,8 +234,8 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
 
       await this.client.send(command);
       return true;
-    } catch (error: any) {
-      if (error.name === 'ResourceNotFoundException') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'ResourceNotFoundException') {
         return false;
       }
       throw error;

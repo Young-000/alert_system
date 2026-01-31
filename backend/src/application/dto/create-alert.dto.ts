@@ -68,4 +68,8 @@ export class CreateAlertDto {
   @IsOptional()
   @IsString()
   subwayStationId?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: '유효한 경로 ID가 필요합니다.' })
+  routeId?: string;
 }

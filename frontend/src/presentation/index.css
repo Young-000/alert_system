@@ -6854,13 +6854,58 @@ kbd {
   margin-top: 0.25rem;
 }
 
+/* Route Advanced Toggle */
+.route-advanced-toggle {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Route Custom Builder Section */
+.route-custom-builder {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+
 /* Custom Route Form */
 .custom-route-form {
-  margin-top: 1rem;
   padding: 1.25rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+}
+
+.custom-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+}
+
+.custom-form-header h3 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1.5rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: -0.5rem -0.5rem 0 0;
+}
+
+.btn-close:hover {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
 }
 
 .custom-route-form h3 {
