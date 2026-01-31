@@ -65,26 +65,48 @@ export function AlertSettingsPage() {
   const userId = localStorage.getItem('userId') || '';
 
   // Load existing alerts
-  const loadAlerts = useCallback(async () => {
+  useEffect(() => {
     if (!userId) {
       setIsLoadingAlerts(false);
       return;
     }
+
+    let isMounted = true;
     setIsLoadingAlerts(true);
+
+    const fetchAlerts = async () => {
+      try {
+        const userAlerts = await alertApiClient.getAlertsByUser(userId);
+        if (!isMounted) return;
+        setAlerts(userAlerts);
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('Failed to load alerts:', err);
+        setError('알림 목록을 불러오는데 실패했습니다.');
+      } finally {
+        if (isMounted) {
+          setIsLoadingAlerts(false);
+        }
+      }
+    };
+
+    fetchAlerts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  // Reload alerts helper function
+  const reloadAlerts = useCallback(async () => {
+    if (!userId) return;
     try {
       const userAlerts = await alertApiClient.getAlertsByUser(userId);
       setAlerts(userAlerts);
     } catch (err) {
-      console.error('Failed to load alerts:', err);
-      setError('알림 목록을 불러오는데 실패했습니다.');
-    } finally {
-      setIsLoadingAlerts(false);
+      console.error('Failed to reload alerts:', err);
     }
   }, [userId]);
-
-  useEffect(() => {
-    loadAlerts();
-  }, [loadAlerts]);
 
   // Unified search for subway + bus
   useEffect(() => {
@@ -268,7 +290,7 @@ export function AlertSettingsPage() {
 
       await alertApiClient.createAlert(dto);
       setSuccess('✓ 날씨 알림이 설정되었습니다!');
-      await loadAlerts();
+      await reloadAlerts();
 
       // 설정된 알림 목록으로 스크롤
       setTimeout(() => {
@@ -292,7 +314,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, alerts, loadAlerts]);
+  }, [userId, alerts, reloadAlerts]);
 
   // Submit alert
   const handleSubmit = useCallback(async () => {
@@ -328,7 +350,7 @@ export function AlertSettingsPage() {
 
       await alertApiClient.createAlert(dto);
       setSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
-      loadAlerts();
+      reloadAlerts();
 
       // Reset wizard
       setTimeout(() => {
@@ -353,7 +375,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, loadAlerts]);
+  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, reloadAlerts]);
 
   const handleDeleteClick = (alert: Alert) => {
     setDeleteTarget({ id: alert.id, name: alert.name });
@@ -364,7 +386,7 @@ export function AlertSettingsPage() {
     setIsDeleting(true);
     try {
       await alertApiClient.deleteAlert(deleteTarget.id);
-      loadAlerts();
+      reloadAlerts();
       setDeleteTarget(null);
     } catch {
       setError('삭제에 실패했습니다.');
@@ -402,7 +424,7 @@ export function AlertSettingsPage() {
         name: editForm.name,
         schedule: cronSchedule,
       });
-      loadAlerts();
+      reloadAlerts();
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
       setTimeout(() => setSuccess(''), 2000);
@@ -945,7 +967,7 @@ export function AlertSettingsPage() {
                     onClick={async () => {
                       try {
                         await alertApiClient.toggleAlert(alert.id);
-                        loadAlerts();
+                        reloadAlerts();
                       } catch {
                         setError('알림 상태 변경에 실패했습니다.');
                       }

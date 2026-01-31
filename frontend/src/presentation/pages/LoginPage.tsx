@@ -21,6 +21,8 @@ export function LoginPage() {
 
   // 서버 예열 (Cold Start 대응)
   useEffect(() => {
+    let isMounted = true;
+
     const warmUpServer = async () => {
       const startTime = Date.now();
       try {
@@ -28,6 +30,7 @@ export function LoginPage() {
           method: 'GET',
           signal: AbortSignal.timeout(45000), // 45초 타임아웃
         });
+        if (!isMounted) return;
         if (response.ok) {
           setServerStatus('ready');
           const elapsed = Date.now() - startTime;
@@ -37,17 +40,28 @@ export function LoginPage() {
         }
       } catch {
         // 실패해도 사용자가 시도할 수 있도록 ready로 설정
-        setServerStatus('ready');
+        if (isMounted) {
+          setServerStatus('ready');
+        }
       }
     };
     warmUpServer();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Google OAuth 상태 확인
   useEffect(() => {
+    if (serverStatus !== 'ready') return;
+
+    let isMounted = true;
+
     const checkGoogleStatus = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/google/status`);
+        if (!isMounted) return;
         if (response.ok) {
           const data = await response.json();
           setIsGoogleEnabled(data.enabled);
@@ -56,10 +70,12 @@ export function LoginPage() {
         // Google 상태 확인 실패 시 무시
       }
     };
-    // 서버가 준비되면 Google 상태 확인
-    if (serverStatus === 'ready') {
-      checkGoogleStatus();
-    }
+
+    checkGoogleStatus();
+
+    return () => {
+      isMounted = false;
+    };
   }, [serverStatus]);
 
   const handleGoogleLogin = () => {

@@ -53,6 +53,8 @@ export function CommuteDashboardPage() {
 
   // Load data from API
   useEffect(() => {
+    let isMounted = true;
+
     if (!userId) {
       setIsLoading(false);
       return;
@@ -65,6 +67,7 @@ export function CommuteDashboardPage() {
           commuteApi.getStats(userId, 30),
           commuteApi.getHistory(userId, 10),
         ]);
+        if (!isMounted) return;
         setStats(statsData);
         setHistory(historyData);
 
@@ -72,13 +75,20 @@ export function CommuteDashboardPage() {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
       } catch (err) {
+        if (!isMounted) return;
         console.error('Failed to load stats:', err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId, commuteApi]);
 
   const selectedRouteStats = stats?.routeStats.find((r) => r.routeId === selectedRouteId);

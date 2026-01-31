@@ -111,10 +111,25 @@ export function RouteSetupPage() {
   // Load existing routes
   useEffect(() => {
     if (!userId) return;
+
+    let isMounted = true;
+
     commuteApi
       .getUserRoutes(userId)
-      .then(setExistingRoutes)
-      .catch(console.error);
+      .then((routes) => {
+        if (isMounted) {
+          setExistingRoutes(routes);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error('Failed to load routes:', err);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId, commuteApi]);
 
   const handleStartWithoutRoute = () => {

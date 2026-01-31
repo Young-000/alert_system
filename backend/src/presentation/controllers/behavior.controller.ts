@@ -10,7 +10,11 @@ import {
   Logger,
   Inject,
   Optional,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
   TrackBehaviorUseCase,
   TrackDepartureDto,
@@ -25,6 +29,10 @@ import { IUserPatternRepository } from '@domain/repositories/user-pattern.reposi
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
+
+interface AuthenticatedRequest extends Request {
+  user: { userId: string; email: string };
+}
 
 interface TrackEventDto {
   userId: string;
@@ -43,6 +51,7 @@ interface DepartureConfirmedDto {
 }
 
 @Controller('behavior')
+@UseGuards(AuthGuard('jwt'))
 export class BehaviorController {
   private readonly logger = new Logger(BehaviorController.name);
 
@@ -60,7 +69,14 @@ export class BehaviorController {
 
   @Post('track')
   @HttpCode(HttpStatus.OK)
-  async trackEvent(@Body() dto: TrackEventDto): Promise<{ success: boolean }> {
+  async trackEvent(
+    @Body() dto: TrackEventDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ success: boolean }> {
+    // 권한 검사: 자신의 행동만 기록 가능
+    if (dto.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 행동을 기록할 수 없습니다.');
+    }
     const eventType = this.mapEventType(dto.eventType);
     if (!eventType) {
       this.logger.warn(`Unknown event type: ${dto.eventType}`);
@@ -81,8 +97,13 @@ export class BehaviorController {
   @Post('departure-confirmed')
   @HttpCode(HttpStatus.OK)
   async confirmDeparture(
-    @Body() dto: DepartureConfirmedDto
+    @Body() dto: DepartureConfirmedDto,
+    @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
+    // 권한 검사: 자신의 출발만 확인 가능
+    if (dto.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 출발을 확인할 수 없습니다.');
+    }
     const trackDto: TrackDepartureDto = {
       userId: dto.userId,
       alertId: dto.alertId,
@@ -100,8 +121,13 @@ export class BehaviorController {
   @Post('notification-opened')
   @HttpCode(HttpStatus.OK)
   async notificationOpened(
-    @Body() dto: { userId: string; alertId: string; notificationId?: string }
+    @Body() dto: { userId: string; alertId: string; notificationId?: string },
+    @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
+    // 권한 검사: 자신의 알림 열기만 기록 가능
+    if (dto.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 알림 기록에 접근할 수 없습니다.');
+    }
     await this.trackBehaviorUseCase.trackNotificationOpened(
       dto.userId,
       dto.alertId,
@@ -117,7 +143,12 @@ export class BehaviorController {
   @Get('patterns/:userId')
   async getUserPatterns(
     @Param('userId') userId: string,
+    @Request() req: AuthenticatedRequest,
   ): Promise<{ patterns: UserPattern[]; message?: string }> {
+    // 권한 검사: 자신의 패턴만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 패턴 정보에 접근할 수 없습니다.');
+    }
     if (!this.userPatternRepository) {
       return { patterns: [], message: 'Pattern repository not available' };
     }
@@ -132,8 +163,13 @@ export class BehaviorController {
   @Get('commute-history/:userId')
   async getCommuteHistory(
     @Param('userId') userId: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit: string | undefined,
+    @Request() req: AuthenticatedRequest,
   ): Promise<{ records: CommuteRecord[]; message?: string }> {
+    // 권한 검사: 자신의 기록만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 통근 기록에 접근할 수 없습니다.');
+    }
     if (!this.commuteRecordRepository) {
       return { records: [], message: 'Commute record repository not available' };
     }
@@ -150,11 +186,16 @@ export class BehaviorController {
   async predictOptimalDeparture(
     @Param('userId') userId: string,
     @Param('alertId') alertId: string,
-    @Query('weather') weather?: string,
-    @Query('transitDelay') transitDelay?: string,
-    @Query('isRaining') isRaining?: string,
-    @Query('temperature') temperature?: string,
+    @Query('weather') weather: string | undefined,
+    @Query('transitDelay') transitDelay: string | undefined,
+    @Query('isRaining') isRaining: string | undefined,
+    @Query('temperature') temperature: string | undefined,
+    @Request() req: AuthenticatedRequest,
   ): Promise<DeparturePrediction | { error: string }> {
+    // 권한 검사: 자신의 예측만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 예측 정보에 접근할 수 없습니다.');
+    }
     if (!this.predictOptimalDepartureUseCase) {
       return { error: 'Prediction service not available' };
     }
@@ -174,12 +215,17 @@ export class BehaviorController {
   @Get('analytics/:userId')
   async getBehaviorAnalytics(
     @Param('userId') userId: string,
+    @Request() req: AuthenticatedRequest,
   ): Promise<{
     totalPatterns: number;
     totalCommuteRecords: number;
     averageConfidence: number;
     hasEnoughData: boolean;
   }> {
+    // 권한 검사: 자신의 분석만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 분석 정보에 접근할 수 없습니다.');
+    }
     const patterns = this.userPatternRepository
       ? await this.userPatternRepository.findByUserId(userId)
       : [];

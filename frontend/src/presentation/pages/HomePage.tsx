@@ -79,6 +79,8 @@ export function HomePage() {
 
   // Load dashboard data
   useEffect(() => {
+    let isMounted = true;
+
     if (!userId) {
       setIsLoading(false);
       return;
@@ -92,16 +94,24 @@ export function HomePage() {
           alertApiClient.getAlertsByUser(userId).catch(() => []),
           commuteApiClient.getUserRoutes(userId).catch(() => []),
         ]);
+        if (!isMounted) return;
         setAlerts(alertsData);
         setRoutes(routesData);
       } catch (err) {
+        if (!isMounted) return;
         console.error('Failed to load dashboard data:', err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId]);
 
   // Clean up URL params and auto-hide confirmation (side effects for external system)

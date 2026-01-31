@@ -10,7 +10,11 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ManageRouteUseCase } from '@application/use-cases/manage-route.use-case';
 import { RecommendBestRouteUseCase } from '@application/use-cases/recommend-best-route.use-case';
 import {
@@ -23,10 +27,13 @@ import {
   RouteRecommendationQueryDto,
 } from '@application/dto/route-recommendation.dto';
 import { RouteType } from '@domain/entities/commute-route.entity';
-import { Public } from '@infrastructure/auth/public.decorator';
+
+interface AuthenticatedRequest extends Request {
+  user: { userId: string; email: string };
+}
 
 @Controller('routes')
-@Public()
+@UseGuards(AuthGuard('jwt'))
 export class RouteController {
   private readonly logger = new Logger(RouteController.name);
 
@@ -40,7 +47,14 @@ export class RouteController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createRoute(@Body() dto: CreateRouteDto): Promise<RouteResponseDto> {
+  async createRoute(
+    @Body() dto: CreateRouteDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RouteResponseDto> {
+    // 권한 검사: 자신의 경로만 생성 가능
+    if (dto.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 경로를 생성할 수 없습니다.');
+    }
     this.logger.log(`Creating route for user ${dto.userId}: ${dto.name}`);
     return this.manageRouteUseCase.createRoute(dto);
   }
@@ -52,8 +66,13 @@ export class RouteController {
   @Get('user/:userId')
   async getUserRoutes(
     @Param('userId') userId: string,
-    @Query('type') routeType?: string
+    @Query('type') routeType: string | undefined,
+    @Request() req: AuthenticatedRequest,
   ): Promise<RouteResponseDto[]> {
+    // 권한 검사: 자신의 경로만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 경로를 조회할 수 없습니다.');
+    }
     if (routeType) {
       return this.manageRouteUseCase.getRoutesByUserIdAndType(
         userId,
@@ -70,8 +89,13 @@ export class RouteController {
   @Get('user/:userId/recommend')
   async getRouteRecommendation(
     @Param('userId') userId: string,
-    @Query() query: RouteRecommendationQueryDto
+    @Query() query: RouteRecommendationQueryDto,
+    @Request() req: AuthenticatedRequest,
   ): Promise<RouteRecommendationResponseDto> {
+    // 권한 검사: 자신의 경로 추천만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 추천 정보에 접근할 수 없습니다.');
+    }
     this.logger.log(`Getting route recommendation for user ${userId}, weather: ${query.weather}`);
     return this.recommendBestRouteUseCase.execute(userId, query.weather);
   }
@@ -90,8 +114,14 @@ export class RouteController {
   @Patch(':id')
   async updateRoute(
     @Param('id') id: string,
-    @Body() dto: UpdateRouteDto
+    @Body() dto: UpdateRouteDto,
+    @Request() req: AuthenticatedRequest,
   ): Promise<RouteResponseDto> {
+    // 권한 검사: 해당 경로가 본인의 것인지 확인
+    const existingRoute = await this.manageRouteUseCase.getRouteById(id);
+    if (existingRoute.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 경로를 수정할 수 없습니다.');
+    }
     this.logger.log(`Updating route ${id}`);
     return this.manageRouteUseCase.updateRoute(id, dto);
   }
@@ -101,7 +131,15 @@ export class RouteController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteRoute(@Param('id') id: string): Promise<void> {
+  async deleteRoute(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
+    // 권한 검사: 해당 경로가 본인의 것인지 확인
+    const existingRoute = await this.manageRouteUseCase.getRouteById(id);
+    if (existingRoute.userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 경로를 삭제할 수 없습니다.');
+    }
     this.logger.log(`Deleting route ${id}`);
     await this.manageRouteUseCase.deleteRoute(id);
   }
