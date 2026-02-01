@@ -9062,3 +9062,586 @@ kbd {
     font-size: 1.25rem;
   }
 }
+
+/* ========================================
+   Apple Style Route Page
+   ======================================== */
+.apple-route-page {
+  min-height: 100vh;
+  background: #f5f5f7;
+}
+
+.apple-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.apple-back {
+  font-size: 1.5rem;
+  color: #007aff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  width: 40px;
+}
+
+.apple-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-nav-link {
+  font-size: 1rem;
+  color: #007aff;
+  text-decoration: none;
+  width: 60px;
+  text-align: right;
+}
+
+/* Empty State */
+.apple-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.apple-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.apple-empty h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+}
+
+.apple-empty p {
+  font-size: 1rem;
+  color: #86868b;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.apple-btn-primary {
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.apple-btn-primary:hover {
+  background: #0066d6;
+}
+
+.apple-btn-primary:disabled {
+  background: #86868b;
+  cursor: not-allowed;
+}
+
+.apple-btn-full {
+  width: 100%;
+}
+
+.apple-btn-secondary {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.apple-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: #86868b;
+  font-size: 1rem;
+}
+
+/* Route List */
+.apple-route-list {
+  padding: 1.5rem 1rem;
+}
+
+.route-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #86868b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.apple-route-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.route-card-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.apple-route-card .route-icon {
+  font-size: 1.75rem;
+}
+
+.apple-route-card .route-info {
+  flex: 1;
+}
+
+.apple-route-card .route-info strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.25rem;
+}
+
+.apple-route-card .route-info span {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.apple-route-card .route-arrow {
+  color: #c7c7cc;
+  font-size: 0.8rem;
+}
+
+.route-delete {
+  padding: 1rem;
+  background: none;
+  border: none;
+  color: #ff3b30;
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.route-delete:hover {
+  opacity: 1;
+}
+
+.apple-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem;
+  background: white;
+  border: 2px dashed #c7c7cc;
+  border-radius: 12px;
+  color: #007aff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apple-add-btn:hover {
+  border-color: #007aff;
+  background: #f0f8ff;
+}
+
+.add-icon {
+  font-size: 1.25rem;
+}
+
+/* Step Flow */
+.apple-step {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 60px);
+}
+
+.apple-step-content {
+  flex: 1;
+  padding: 2rem 1.5rem;
+}
+
+.apple-question {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+}
+
+.apple-step-footer {
+  padding: 1rem 1.5rem 2rem;
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Type Cards */
+.apple-type-cards {
+  display: flex;
+  gap: 1rem;
+}
+
+.apple-type-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  background: white;
+  border: 2px solid #e5e5ea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apple-type-card:hover {
+  border-color: #007aff;
+}
+
+.apple-type-card.selected {
+  border-color: #007aff;
+  background: #f0f8ff;
+}
+
+.apple-type-card .type-icon {
+  font-size: 3rem;
+}
+
+.apple-type-card .type-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-type-card .type-desc {
+  font-size: 0.9rem;
+  color: #86868b;
+}
+
+/* Search Box */
+.apple-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e5e5ea;
+  margin-bottom: 1rem;
+}
+
+.apple-search-box:focus-within {
+  border-color: #007aff;
+}
+
+.apple-search-box .search-icon {
+  font-size: 1.25rem;
+  color: #86868b;
+}
+
+.apple-search-input {
+  flex: 1;
+  border: none;
+  font-size: 1.1rem;
+  color: #1d1d1f;
+  outline: none;
+  background: transparent;
+}
+
+.apple-search-input::placeholder {
+  color: #c7c7cc;
+}
+
+.search-clear {
+  background: #e5e5ea;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #86868b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-searching {
+  text-align: center;
+  padding: 2rem;
+  color: #86868b;
+}
+
+.apple-no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #86868b;
+}
+
+.apple-search-hint {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #86868b;
+}
+
+.apple-search-hint p {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.apple-search-hint .hint-example {
+  font-size: 0.9rem;
+  color: #c7c7cc;
+}
+
+/* Station List */
+.apple-station-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.apple-station-list li {
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.apple-station-list li:last-child {
+  border-bottom: none;
+}
+
+.apple-station-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.apple-station-item:hover {
+  background: #f5f5f7;
+}
+
+.apple-station-item:active {
+  background: #e5e5ea;
+}
+
+.apple-station-item .station-icon {
+  font-size: 1.5rem;
+}
+
+.apple-station-item .station-info {
+  flex: 1;
+}
+
+.apple-station-item .station-info strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #1d1d1f;
+  margin-bottom: 0.15rem;
+}
+
+.apple-station-item .station-info span {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.apple-station-item .station-arrow {
+  color: #007aff;
+  font-size: 1.25rem;
+}
+
+/* Route Preview */
+.apple-route-preview {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.route-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.route-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.point-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.point-icon.start {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+}
+
+.point-icon.station {
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+}
+
+.point-icon.end {
+  background: linear-gradient(135deg, #ff9500 0%, #ffcc00 100%);
+}
+
+.point-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.point-sub {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.route-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  color: #86868b;
+  font-size: 0.85rem;
+}
+
+.route-line::before,
+.route-line::after {
+  content: '';
+  width: 2px;
+  height: 12px;
+  background: #e5e5ea;
+}
+
+.route-line span {
+  padding: 0 0.75rem;
+}
+
+.change-station-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  color: #007aff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.change-station-btn:hover {
+  text-decoration: underline;
+}
+
+/* Info Card */
+.apple-info-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #f0f8ff;
+  border-radius: 12px;
+}
+
+.apple-info-card .info-icon {
+  font-size: 1.25rem;
+}
+
+.apple-info-card p {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #007aff;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.apple-error {
+  padding: 1rem;
+  background: #fff2f2;
+  border-radius: 12px;
+  color: #ff3b30;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Mobile Optimization */
+@media (max-width: 390px) {
+  .apple-question {
+    font-size: 1.75rem;
+  }
+
+  .apple-type-card {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .apple-type-card .type-icon {
+    font-size: 2.5rem;
+  }
+
+  .point-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+}
