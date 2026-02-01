@@ -9625,6 +9625,219 @@ kbd {
   margin-top: 1rem;
 }
 
+/* Choice Cards - "네, 더 있어요" / "아니요" */
+.apple-choice-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.apple-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border: 2px solid #e5e5ea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.apple-choice-card:hover {
+  border-color: #007aff;
+  background: #f5f9ff;
+}
+
+.apple-choice-card.primary {
+  border-color: #007aff;
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+  color: white;
+}
+
+.apple-choice-card.primary:hover {
+  opacity: 0.9;
+}
+
+.apple-choice-card .choice-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+.apple-choice-card.primary .choice-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.apple-choice-card .choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.apple-choice-card .choice-text strong {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.apple-choice-card .choice-text span {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* Route Progress - 지금까지 경로 */
+.apple-route-progress {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.progress-title {
+  font-size: 0.85rem;
+  color: #86868b;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.progress-route {
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-point {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+}
+
+.progress-point.start {
+  color: #34c759;
+}
+
+.progress-point.end {
+  color: #ff9500;
+}
+
+.progress-segment {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.progress-line {
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e5e5ea;
+}
+
+.progress-line.dashed {
+  background: repeating-linear-gradient(
+    to bottom,
+    #e5e5ea 0,
+    #e5e5ea 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.progress-stop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f5f5f7;
+  border-radius: 12px;
+  margin: 0.5rem 0;
+}
+
+.progress-stop .stop-icon {
+  font-size: 1.25rem;
+}
+
+.progress-stop .stop-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.progress-stop .stop-line {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.progress-stop .stop-remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff3b30;
+  color: white;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+}
+
+.progress-stop .stop-remove:hover {
+  background: #d63030;
+}
+
+/* Route So Far - 미니 경로 미리보기 */
+.route-so-far {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: #f5f5f7;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.route-point-mini {
+  padding: 0.25rem 0.5rem;
+  background: white;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.route-point-mini.stop {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.route-arrow-mini {
+  color: #86868b;
+  font-size: 0.85rem;
+}
+
+/* Transport mode icons for confirm */
+.point-icon.subway {
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+}
+
+.point-icon.bus {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+}
+
+.route-segment-full {
+  display: contents;
+}
+
 /* Mobile Optimization */
 @media (max-width: 390px) {
   .apple-question {
@@ -9643,5 +9856,15 @@ kbd {
     width: 48px;
     height: 48px;
     font-size: 1.5rem;
+  }
+
+  .apple-choice-card {
+    padding: 1rem;
+  }
+
+  .apple-choice-card .choice-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
   }
 }

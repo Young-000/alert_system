@@ -5,10 +5,25 @@ import {
   type CreateRouteDto,
   type RouteResponse,
   type RouteType,
+  type CreateCheckpointDto,
 } from '@infrastructure/api/commute-api.client';
-import { subwayApiClient, type SubwayStation } from '@infrastructure/api';
+import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
 
-type SetupStep = 'select-type' | 'select-station' | 'confirm';
+type SetupStep =
+  | 'select-type'      // 출근/퇴근 선택
+  | 'select-transport' // 교통수단 선택
+  | 'select-station'   // 역/정류장 검색
+  | 'ask-more'         // 더 거쳐가나요?
+  | 'confirm';         // 최종 확인
+
+type TransportMode = 'subway' | 'bus';
+
+interface SelectedStop {
+  id: string;
+  name: string;
+  line: string;
+  transportMode: TransportMode;
+}
 
 export function RouteSetupPage() {
   const navigate = useNavigate();
@@ -24,11 +39,15 @@ export function RouteSetupPage() {
   const [step, setStep] = useState<SetupStep>('select-type');
   const [routeType, setRouteType] = useState<RouteType>('morning');
 
-  // 역 검색
+  // 교통수단 & 정류장
+  const [currentTransport, setCurrentTransport] = useState<TransportMode>('subway');
+  const [selectedStops, setSelectedStops] = useState<SelectedStop[]>([]);
+
+  // 검색
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SubwayStation[]>([]);
+  const [subwayResults, setSubwayResults] = useState<SubwayStation[]>([]);
+  const [busResults, setBusResults] = useState<BusStop[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<SubwayStation | null>(null);
 
   // 저장
   const [isSaving, setIsSaving] = useState(false);
@@ -57,35 +76,57 @@ export function RouteSetupPage() {
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
 
-  // 역 검색
-  const searchStations = useCallback(async (query: string) => {
+  // 역/정류장 검색
+  const searchStops = useCallback(async (query: string) => {
     if (!query || query.length < 1) {
-      setSearchResults([]);
+      setSubwayResults([]);
+      setBusResults([]);
       return;
     }
 
     setIsSearching(true);
     try {
-      const results = await subwayApiClient.searchStations(query);
-      setSearchResults(results.slice(0, 6));
+      if (currentTransport === 'subway') {
+        const results = await subwayApiClient.searchStations(query);
+        setSubwayResults(results.slice(0, 6));
+        setBusResults([]);
+      } else {
+        const results = await busApiClient.searchStops(query);
+        setBusResults(results.slice(0, 6));
+        setSubwayResults([]);
+      }
     } catch {
-      setSearchResults([]);
+      setSubwayResults([]);
+      setBusResults([]);
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [currentTransport]);
 
-  // 역 선택
-  const handleSelectStation = (station: SubwayStation) => {
-    setSelectedStation(station);
+  // 역/정류장 선택
+  const handleSelectStop = (stop: SubwayStation | BusStop) => {
+    const isSubway = 'line' in stop;
+    const newStop: SelectedStop = {
+      id: isSubway ? stop.id : (stop as BusStop).nodeId,
+      name: stop.name,
+      line: isSubway ? stop.line : '',
+      transportMode: currentTransport,
+    };
+    setSelectedStops(prev => [...prev, newStop]);
     setSearchQuery('');
-    setSearchResults([]);
-    setStep('confirm');
+    setSubwayResults([]);
+    setBusResults([]);
+    setStep('ask-more');
+  };
+
+  // 정류장 삭제
+  const removeStop = (index: number) => {
+    setSelectedStops(prev => prev.filter((_, i) => i !== index));
   };
 
   // 경로 저장
   const handleSave = async () => {
-    if (!userId || !selectedStation) return;
+    if (!userId || selectedStops.length === 0) return;
 
     setIsSaving(true);
     setError('');
@@ -94,22 +135,44 @@ export function RouteSetupPage() {
       const routeName = routeType === 'morning' ? '출근 경로' : '퇴근 경로';
       const isToWork = routeType === 'morning';
 
+      // 체크포인트 생성
+      const checkpoints: CreateCheckpointDto[] = [];
+      let seq = 1;
+
+      // 시작점
+      checkpoints.push({
+        sequenceOrder: seq++,
+        name: isToWork ? '집' : '회사',
+        checkpointType: isToWork ? 'home' : 'work',
+        transportMode: 'walk',
+      });
+
+      // 중간 정류장들
+      for (const stop of selectedStops) {
+        checkpoints.push({
+          sequenceOrder: seq++,
+          name: stop.name,
+          checkpointType: stop.transportMode === 'subway' ? 'subway' : 'bus_stop',
+          linkedStationId: stop.transportMode === 'subway' ? stop.id : undefined,
+          linkedBusStopId: stop.transportMode === 'bus' ? stop.id : undefined,
+          lineInfo: stop.line,
+          transportMode: stop.transportMode,
+        });
+      }
+
+      // 도착점
+      checkpoints.push({
+        sequenceOrder: seq,
+        name: isToWork ? '회사' : '집',
+        checkpointType: isToWork ? 'work' : 'home',
+      });
+
       const dto: CreateRouteDto = {
         userId,
         name: routeName,
         routeType,
         isPreferred: existingRoutes.length === 0,
-        checkpoints: isToWork
-          ? [
-              { sequenceOrder: 1, name: '집', checkpointType: 'home', transportMode: 'walk' },
-              { sequenceOrder: 2, name: selectedStation.name, checkpointType: 'subway', linkedStationId: selectedStation.id, lineInfo: selectedStation.line, transportMode: 'subway' },
-              { sequenceOrder: 3, name: '회사', checkpointType: 'work' },
-            ]
-          : [
-              { sequenceOrder: 1, name: '회사', checkpointType: 'work', transportMode: 'walk' },
-              { sequenceOrder: 2, name: selectedStation.name, checkpointType: 'subway', linkedStationId: selectedStation.id, lineInfo: selectedStation.line, transportMode: 'subway' },
-              { sequenceOrder: 3, name: '집', checkpointType: 'home' },
-            ],
+        checkpoints,
       };
 
       await commuteApi.createRoute(dto);
@@ -125,7 +188,7 @@ export function RouteSetupPage() {
   const startCreating = () => {
     setIsCreating(true);
     setStep('select-type');
-    setSelectedStation(null);
+    setSelectedStops([]);
     setSearchQuery('');
     setError('');
   };
@@ -134,7 +197,7 @@ export function RouteSetupPage() {
   const cancelCreating = () => {
     setIsCreating(false);
     setStep('select-type');
-    setSelectedStation(null);
+    setSelectedStops([]);
     setSearchQuery('');
   };
 
@@ -147,6 +210,28 @@ export function RouteSetupPage() {
     } catch {
       // ignore
     }
+  };
+
+  // 현재까지 경로 미리보기 렌더링
+  const renderRouteSoFar = () => {
+    const isToWork = routeType === 'morning';
+    const start = isToWork ? '집' : '회사';
+
+    return (
+      <div className="route-so-far">
+        <span className="route-point-mini">{start}</span>
+        {selectedStops.map((stop, i) => (
+          <span key={i} className="route-segment">
+            <span className="route-arrow-mini">→</span>
+            <span className="route-point-mini stop">
+              {stop.transportMode === 'subway' ? '🚇' : '🚌'} {stop.name}
+            </span>
+          </span>
+        ))}
+        <span className="route-arrow-mini">→</span>
+        <span className="route-point-mini">?</span>
+      </div>
+    );
   };
 
   // 로그인 필요
@@ -225,6 +310,58 @@ export function RouteSetupPage() {
               <button
                 type="button"
                 className="apple-btn-primary apple-btn-full"
+                onClick={() => setStep('select-transport')}
+              >
+                다음
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Step 2: 교통수단 선택 */}
+        {step === 'select-transport' && (
+          <section className="apple-step">
+            <div className="apple-step-content">
+              <h1 className="apple-question">
+                {selectedStops.length === 0
+                  ? '어떤 교통수단을\n타세요?'
+                  : '다음은 어떤\n교통수단이에요?'}
+              </h1>
+
+              {selectedStops.length > 0 && renderRouteSoFar()}
+
+              <div className="apple-type-cards">
+                <button
+                  type="button"
+                  className={`apple-type-card ${currentTransport === 'subway' ? 'selected' : ''}`}
+                  onClick={() => setCurrentTransport('subway')}
+                >
+                  <span className="type-icon">🚇</span>
+                  <span className="type-label">지하철</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`apple-type-card ${currentTransport === 'bus' ? 'selected' : ''}`}
+                  onClick={() => setCurrentTransport('bus')}
+                >
+                  <span className="type-icon">🚌</span>
+                  <span className="type-label">버스</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="apple-step-footer">
+              <button
+                type="button"
+                className="apple-btn-secondary"
+                onClick={() => setStep(selectedStops.length === 0 ? 'select-type' : 'ask-more')}
+              >
+                이전
+              </button>
+              <button
+                type="button"
+                className="apple-btn-primary"
                 onClick={() => setStep('select-station')}
               >
                 다음
@@ -233,21 +370,27 @@ export function RouteSetupPage() {
           </section>
         )}
 
-        {/* Step 2: 역 선택 */}
+        {/* Step 3: 역/정류장 검색 */}
         {step === 'select-station' && (
           <section className="apple-step">
             <div className="apple-step-content">
-              <h1 className="apple-question">어떤 역을<br />이용하세요?</h1>
+              <h1 className="apple-question">
+                {currentTransport === 'subway'
+                  ? '어떤 역을\n이용하세요?'
+                  : '어떤 정류장을\n이용하세요?'}
+              </h1>
+
+              {selectedStops.length > 0 && renderRouteSoFar()}
 
               <div className="apple-search-box">
                 <span className="search-icon">🔍</span>
                 <input
                   type="text"
-                  placeholder="역 이름으로 검색"
+                  placeholder={currentTransport === 'subway' ? '역 이름으로 검색' : '정류장 이름으로 검색'}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    searchStations(e.target.value);
+                    searchStops(e.target.value);
                   }}
                   className="apple-search-input"
                   autoFocus
@@ -258,7 +401,8 @@ export function RouteSetupPage() {
                     className="search-clear"
                     onClick={() => {
                       setSearchQuery('');
-                      setSearchResults([]);
+                      setSubwayResults([]);
+                      setBusResults([]);
                     }}
                   >
                     ✕
@@ -270,14 +414,15 @@ export function RouteSetupPage() {
                 <div className="apple-searching">검색 중...</div>
               )}
 
-              {searchResults.length > 0 && (
+              {/* 지하철 검색 결과 */}
+              {subwayResults.length > 0 && (
                 <ul className="apple-station-list">
-                  {searchResults.map((station) => (
+                  {subwayResults.map((station) => (
                     <li key={station.id}>
                       <button
                         type="button"
                         className="apple-station-item"
-                        onClick={() => handleSelectStation(station)}
+                        onClick={() => handleSelectStop(station)}
                       >
                         <span className="station-icon">🚇</span>
                         <span className="station-info">
@@ -291,7 +436,29 @@ export function RouteSetupPage() {
                 </ul>
               )}
 
-              {searchQuery && !isSearching && searchResults.length === 0 && (
+              {/* 버스 검색 결과 */}
+              {busResults.length > 0 && (
+                <ul className="apple-station-list">
+                  {busResults.map((stop) => (
+                    <li key={stop.nodeId}>
+                      <button
+                        type="button"
+                        className="apple-station-item"
+                        onClick={() => handleSelectStop(stop)}
+                      >
+                        <span className="station-icon">🚌</span>
+                        <span className="station-info">
+                          <strong>{stop.name}</strong>
+                          <span>{stop.stopNo || ''}</span>
+                        </span>
+                        <span className="station-arrow">→</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {searchQuery && !isSearching && subwayResults.length === 0 && busResults.length === 0 && (
                 <div className="apple-no-results">
                   검색 결과가 없습니다
                 </div>
@@ -299,8 +466,12 @@ export function RouteSetupPage() {
 
               {!searchQuery && (
                 <div className="apple-search-hint">
-                  <p>🚇 지하철역 이름을 검색하세요</p>
-                  <p className="hint-example">예: 강남, 홍대입구, 여의도</p>
+                  <p>{currentTransport === 'subway' ? '🚇 지하철역' : '🚌 버스 정류장'} 이름을 검색하세요</p>
+                  <p className="hint-example">
+                    {currentTransport === 'subway'
+                      ? '예: 강남, 홍대입구, 여의도'
+                      : '예: 강남역, 시청앞, 명동'}
+                  </p>
                 </div>
               )}
             </div>
@@ -309,7 +480,7 @@ export function RouteSetupPage() {
               <button
                 type="button"
                 className="apple-btn-secondary"
-                onClick={() => setStep('select-type')}
+                onClick={() => setStep('select-transport')}
               >
                 이전
               </button>
@@ -317,67 +488,136 @@ export function RouteSetupPage() {
           </section>
         )}
 
-        {/* Step 3: 확인 */}
-        {step === 'confirm' && selectedStation && (
+        {/* Step 4: 더 거쳐가나요? */}
+        {step === 'ask-more' && (
+          <section className="apple-step">
+            <div className="apple-step-content">
+              <h1 className="apple-question">다른 곳도<br />거쳐가시나요?</h1>
+
+              {/* 현재까지 경로 표시 */}
+              <div className="apple-route-progress">
+                <div className="progress-title">지금까지 경로</div>
+                <div className="progress-route">
+                  <span className="progress-point start">
+                    {routeType === 'morning' ? '🏠 집' : '🏢 회사'}
+                  </span>
+                  {selectedStops.map((stop, i) => (
+                    <div key={i} className="progress-segment">
+                      <div className="progress-line" />
+                      <div className="progress-stop">
+                        <span className="stop-icon">
+                          {stop.transportMode === 'subway' ? '🚇' : '🚌'}
+                        </span>
+                        <span className="stop-name">{stop.name}</span>
+                        <span className="stop-line">{stop.line}</span>
+                        <button
+                          type="button"
+                          className="stop-remove"
+                          onClick={() => removeStop(i)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="progress-segment">
+                    <div className="progress-line dashed" />
+                    <span className="progress-point end">
+                      {routeType === 'morning' ? '🏢 회사' : '🏠 집'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="apple-choice-cards">
+                <button
+                  type="button"
+                  className="apple-choice-card"
+                  onClick={() => setStep('select-transport')}
+                >
+                  <span className="choice-icon">➕</span>
+                  <span className="choice-text">
+                    <strong>네, 더 있어요</strong>
+                    <span>환승하거나 다른 곳을 거쳐요</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className="apple-choice-card primary"
+                  onClick={() => setStep('confirm')}
+                >
+                  <span className="choice-icon">✓</span>
+                  <span className="choice-text">
+                    <strong>아니요, 이게 끝이에요</strong>
+                    <span>바로 목적지로 가요</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Step 5: 최종 확인 */}
+        {step === 'confirm' && selectedStops.length > 0 && (
           <section className="apple-step">
             <div className="apple-step-content">
               <h1 className="apple-question">이 경로가<br />맞나요?</h1>
 
               <div className="apple-route-preview">
                 <div className="route-visual">
-                  {routeType === 'morning' ? (
-                    <>
-                      <div className="route-point">
-                        <div className="point-icon start">🏠</div>
-                        <div className="point-label">집</div>
-                      </div>
+                  {/* 시작점 */}
+                  <div className="route-point">
+                    <div className="point-icon start">
+                      {routeType === 'morning' ? '🏠' : '🏢'}
+                    </div>
+                    <div className="point-label">
+                      {routeType === 'morning' ? '집' : '회사'}
+                    </div>
+                  </div>
+
+                  {/* 중간 정류장들 */}
+                  {selectedStops.map((stop, i) => (
+                    <div key={i} className="route-segment-full">
                       <div className="route-line">
-                        <span>🚶 도보</span>
+                        <span>
+                          {i === 0 ? '🚶 도보' : (selectedStops[i-1].transportMode === 'subway' ? '🚇 지하철' : '🚌 버스')}
+                        </span>
                       </div>
                       <div className="route-point">
-                        <div className="point-icon station">🚇</div>
-                        <div className="point-label">{selectedStation.name}</div>
-                        <div className="point-sub">{selectedStation.line}</div>
+                        <div className={`point-icon ${stop.transportMode}`}>
+                          {stop.transportMode === 'subway' ? '🚇' : '🚌'}
+                        </div>
+                        <div className="point-label">{stop.name}</div>
+                        <div className="point-sub">{stop.line}</div>
                       </div>
-                      <div className="route-line">
-                        <span>🚇 지하철</span>
-                      </div>
-                      <div className="route-point">
-                        <div className="point-icon end">🏢</div>
-                        <div className="point-label">회사</div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="route-point">
-                        <div className="point-icon start">🏢</div>
-                        <div className="point-label">회사</div>
-                      </div>
-                      <div className="route-line">
-                        <span>🚶 도보</span>
-                      </div>
-                      <div className="route-point">
-                        <div className="point-icon station">🚇</div>
-                        <div className="point-label">{selectedStation.name}</div>
-                        <div className="point-sub">{selectedStation.line}</div>
-                      </div>
-                      <div className="route-line">
-                        <span>🚇 지하철</span>
-                      </div>
-                      <div className="route-point">
-                        <div className="point-icon end">🏠</div>
-                        <div className="point-label">집</div>
-                      </div>
-                    </>
-                  )}
+                    </div>
+                  ))}
+
+                  {/* 마지막 구간 + 도착점 */}
+                  <div className="route-line">
+                    <span>
+                      {selectedStops[selectedStops.length - 1].transportMode === 'subway'
+                        ? '🚇 지하철'
+                        : '🚌 버스'}
+                    </span>
+                  </div>
+                  <div className="route-point">
+                    <div className="point-icon end">
+                      {routeType === 'morning' ? '🏢' : '🏠'}
+                    </div>
+                    <div className="point-label">
+                      {routeType === 'morning' ? '회사' : '집'}
+                    </div>
+                  </div>
                 </div>
 
                 <button
                   type="button"
                   className="change-station-btn"
-                  onClick={() => setStep('select-station')}
+                  onClick={() => setStep('ask-more')}
                 >
-                  다른 역 선택
+                  경로 수정하기
                 </button>
               </div>
 
