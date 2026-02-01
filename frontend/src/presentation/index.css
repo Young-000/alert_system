@@ -9868,3 +9868,591 @@ kbd {
     font-size: 1rem;
   }
 }
+
+/* ========== COMMUTE PAGE - 출퇴근 기록 ========== */
+.commute-page {
+  background: #f5f5f7;
+  min-height: 100vh;
+}
+
+.commute-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #e5e5ea;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.commute-nav .nav-back {
+  font-size: 1.25rem;
+  color: #007aff;
+  text-decoration: none;
+}
+
+.commute-nav .nav-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.commute-nav .nav-action {
+  font-size: 0.9rem;
+  color: #007aff;
+  text-decoration: none;
+}
+
+.commute-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: #86868b;
+}
+
+.commute-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.commute-empty .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.commute-empty h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+}
+
+.commute-empty p {
+  color: #86868b;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+/* Tab Navigation */
+.commute-tabs {
+  display: flex;
+  background: white;
+  padding: 0.5rem;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.commute-tabs .tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.commute-tabs .tab-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.commute-tabs .tab-btn.active {
+  background: #007aff;
+  color: white;
+}
+
+.commute-tabs .tab-btn .tab-icon {
+  font-size: 1.25rem;
+}
+
+.commute-tabs .tab-btn .tab-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  color: #ff3b30;
+  font-size: 0.5rem;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Content Area */
+.commute-content {
+  padding: 1rem;
+}
+
+/* Ready Section */
+.ready-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ready-section .section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.route-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.route-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.route-card:hover {
+  background: #f5f5f7;
+}
+
+.route-card.selected {
+  border-color: #007aff;
+  background: #f0f7ff;
+}
+
+.route-card .route-emoji {
+  font-size: 2rem;
+}
+
+.route-card .route-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.route-card .route-details strong {
+  font-size: 1.1rem;
+  color: #1d1d1f;
+}
+
+.route-card .route-path {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.route-card .route-time {
+  font-size: 0.9rem;
+  color: #007aff;
+}
+
+.route-card .check-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #007aff;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.9rem;
+}
+
+/* Start Action */
+.start-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 20px;
+}
+
+.btn-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-start:hover {
+  transform: scale(1.02);
+}
+
+.btn-start:active {
+  transform: scale(0.98);
+}
+
+.btn-start .start-icon {
+  font-size: 1.5rem;
+}
+
+.start-hint {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.link-routes {
+  text-align: center;
+  color: #007aff;
+  font-size: 0.9rem;
+}
+
+/* Tracking Section */
+.tracking-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.no-session {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: white;
+  border-radius: 20px;
+}
+
+.no-session .no-session-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-session h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+}
+
+.no-session p {
+  color: #86868b;
+  margin-bottom: 1.5rem;
+}
+
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background: #f5f5f7;
+  color: #007aff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Timer Card */
+.timer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+  color: white;
+  border-radius: 20px;
+}
+
+.timer-card .timer-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.timer-card .timer-value {
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-card .timer-progress {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.timer-progress .delayed {
+  color: #ffcc00;
+}
+
+.timer-progress .on-time {
+  color: #30d158;
+}
+
+/* Checkpoint Action */
+.checkpoint-action {
+  margin: 0.5rem 0;
+}
+
+.btn-checkpoint {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 1.25rem;
+  background: white;
+  border: 2px solid #007aff;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-checkpoint:hover {
+  background: #f0f7ff;
+}
+
+.btn-checkpoint.finish {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+  border-color: transparent;
+  color: white;
+}
+
+.btn-checkpoint .checkpoint-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.btn-checkpoint .checkpoint-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.btn-checkpoint .checkpoint-text strong {
+  font-size: 1.1rem;
+}
+
+.btn-checkpoint .checkpoint-text span {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.btn-checkpoint .checkpoint-arrow {
+  font-size: 1.25rem;
+  color: #007aff;
+}
+
+.btn-checkpoint.finish .checkpoint-arrow {
+  color: white;
+}
+
+/* Checkpoint Timeline */
+.checkpoint-timeline {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.checkpoint-timeline h3 {
+  font-size: 0.9rem;
+  color: #86868b;
+  margin-bottom: 1rem;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.timeline-item .timeline-line {
+  position: absolute;
+  left: 13px;
+  top: -0.5rem;
+  width: 2px;
+  height: calc(100% + 0.5rem);
+  background: #e5e5ea;
+}
+
+.timeline-item .timeline-line.active {
+  background: #007aff;
+}
+
+.timeline-item .timeline-marker {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e5ea;
+  color: #86868b;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.timeline-item.completed .timeline-marker {
+  background: #007aff;
+  color: white;
+}
+
+.timeline-item.current .timeline-marker {
+  background: #007aff;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.timeline-item .timeline-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timeline-item .timeline-name {
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.timeline-item.pending .timeline-name {
+  color: #86868b;
+}
+
+.timeline-item .timeline-time {
+  font-size: 0.85rem;
+}
+
+.timeline-item .timeline-time.recorded {
+  color: #34c759;
+}
+
+.timeline-item .timeline-time.expected {
+  color: #86868b;
+}
+
+/* Cancel Button */
+.btn-cancel {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background: transparent;
+  color: #ff3b30;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  text-decoration: underline;
+}
+
+/* Completed Card */
+.completed-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 1.5rem;
+  background: white;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.completed-card .completed-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.completed-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 1.5rem;
+}
+
+.completed-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.completed-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.completed-stats .stat-label {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.completed-stats .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #007aff;
+}
+
+.redirect-hint {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+/* Error Display */
+.commute-error {
+  position: fixed;
+  bottom: 2rem;
+  left: 1rem;
+  right: 1rem;
+  padding: 1rem;
+  background: #ff3b30;
+  color: white;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Mobile Optimizations for Commute */
+@media (max-width: 390px) {
+  .commute-tabs .tab-btn {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .commute-tabs .tab-btn .tab-icon {
+    font-size: 1rem;
+  }
+
+  .timer-card .timer-value {
+    font-size: 2.5rem;
+  }
+
+  .route-card {
+    padding: 0.75rem;
+  }
+
+  .route-card .route-emoji {
+    font-size: 1.5rem;
+  }
+}

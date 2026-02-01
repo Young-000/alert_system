@@ -8,33 +8,7 @@ import {
   type CheckpointRecordResponse,
 } from '@infrastructure/api/commute-api.client';
 
-// Stopwatch record stored in localStorage
-interface StopwatchRecord {
-  id: string;
-  startedAt: string;
-  completedAt: string;
-  totalDurationSeconds: number;
-  type: 'morning' | 'evening' | 'custom';
-  notes?: string;
-}
-
-const STOPWATCH_STORAGE_KEY = 'commute_stopwatch_records';
-
-function getStopwatchRecords(): StopwatchRecord[] {
-  try {
-    const data = localStorage.getItem(STOPWATCH_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveStopwatchRecord(record: StopwatchRecord): void {
-  const records = getStopwatchRecords();
-  records.unshift(record);
-  // Keep only last 50 records
-  localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify(records.slice(0, 50)));
-}
+type ViewTab = 'ready' | 'tracking' | 'history';
 
 export function CommuteTrackingPage() {
   const navigate = useNavigate();
@@ -42,8 +16,6 @@ export function CommuteTrackingPage() {
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = getCommuteApiClient();
 
-  // Check for stopwatch mode
-  const isStopwatchMode = searchParams.get('mode') === 'stopwatch';
   const routeIdParam = searchParams.get('routeId');
 
   // State
@@ -53,26 +25,23 @@ export function CommuteTrackingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Timer (shared between modes)
+  // Tab state - 자동으로 현재 상태에 맞는 탭 선택
+  const [activeTab, setActiveTab] = useState<ViewTab>('ready');
+
+  // Timer
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stopwatch mode state
-  const [stopwatchState, setStopwatchState] = useState<'idle' | 'running' | 'paused' | 'completed'>('idle');
-  const [stopwatchStartTime, setStopwatchStartTime] = useState<number | null>(null);
-  const [pausedTime, setPausedTime] = useState(0);
-  const [stopwatchType, setStopwatchType] = useState<'morning' | 'evening' | 'custom'>('morning');
-  const [completedDuration, setCompletedDuration] = useState(0);
-
-  // Load routes and check for active session (only in route mode)
+  // Redirect if not logged in
   useEffect(() => {
-    // Track mounted state to prevent state updates after unmount
-    let isMounted = true;
-
-    if (isStopwatchMode) {
-      setIsLoading(false);
-      return;
+    if (!userId) {
+      navigate('/login');
     }
+  }, [userId, navigate]);
+
+  // Load routes and check for active session
+  useEffect(() => {
+    let isMounted = true;
 
     if (!userId) {
       setIsLoading(false);
@@ -87,7 +56,6 @@ export function CommuteTrackingPage() {
           commuteApi.getInProgressSession(userId),
         ]);
 
-        // Only update state if still mounted
         if (!isMounted) return;
 
         setRoutes(userRoutes);
@@ -96,6 +64,7 @@ export function CommuteTrackingPage() {
           setActiveSession(inProgress);
           const route = userRoutes.find((r) => r.id === inProgress.routeId);
           setSelectedRoute(route || null);
+          setActiveTab('tracking'); // 진행 중인 세션이 있으면 트래킹 탭으로
         } else if (routeIdParam) {
           const route = userRoutes.find((r) => r.id === routeIdParam);
           setSelectedRoute(route || null);
@@ -119,9 +88,9 @@ export function CommuteTrackingPage() {
     return () => {
       isMounted = false;
     };
-  }, [userId, commuteApi, isStopwatchMode, routeIdParam]);
+  }, [userId, commuteApi, routeIdParam]);
 
-  // Timer effect for route-based session
+  // Timer effect
   useEffect(() => {
     let isMounted = true;
 
@@ -150,45 +119,11 @@ export function CommuteTrackingPage() {
     };
   }, [activeSession]);
 
-  // Stopwatch timer effect
-  useEffect(() => {
-    let isMounted = true;
-
-    if (stopwatchState === 'running' && stopwatchStartTime) {
-      const updateStopwatch = () => {
-        if (!isMounted) return;
-        const now = Date.now();
-        setElapsedTime(Math.floor((now - stopwatchStartTime) / 1000) + pausedTime);
-      };
-
-      updateStopwatch();
-      timerRef.current = setInterval(updateStopwatch, 100); // More frequent for smoother display
-
-      return () => {
-        isMounted = false;
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-      };
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [stopwatchState, stopwatchStartTime, pausedTime]);
-
   // Warn user when trying to close browser with active session
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Only show warning if there's an active session or stopwatch running
-      if (
-        (activeSession && activeSession.status === 'in_progress') ||
-        stopwatchState === 'running' ||
-        stopwatchState === 'paused'
-      ) {
+      if (activeSession && activeSession.status === 'in_progress') {
         e.preventDefault();
-        // Modern browsers ignore custom messages, but this is required for the dialog to show
         e.returnValue = '진행 중인 기록이 있습니다. 페이지를 나가시겠습니까?';
         return e.returnValue;
       }
@@ -199,72 +134,16 @@ export function CommuteTrackingPage() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [activeSession, stopwatchState]);
+  }, [activeSession]);
 
-  // Format time for route mode
+  // Format time
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}분 ${secs.toString().padStart(2, '0')}초`;
   };
 
-  // Format time for stopwatch (00:00:00)
-  const formatStopwatchTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Stopwatch controls
-  const handleStartStopwatch = () => {
-    setStopwatchStartTime(Date.now());
-    setStopwatchState('running');
-    setError('');
-  };
-
-  const handlePauseStopwatch = () => {
-    setPausedTime(elapsedTime);
-    setStopwatchState('paused');
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-  };
-
-  const handleResumeStopwatch = () => {
-    setStopwatchStartTime(Date.now());
-    setStopwatchState('running');
-  };
-
-  const handleCompleteStopwatch = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    const finalDuration = elapsedTime;
-    setCompletedDuration(finalDuration);
-    setStopwatchState('completed');
-
-    // Save to localStorage
-    const record: StopwatchRecord = {
-      id: Date.now().toString(),
-      startedAt: new Date(Date.now() - finalDuration * 1000).toISOString(),
-      completedAt: new Date().toISOString(),
-      totalDurationSeconds: finalDuration,
-      type: stopwatchType,
-    };
-    saveStopwatchRecord(record);
-  };
-
-  const handleResetStopwatch = () => {
-    setStopwatchState('idle');
-    setStopwatchStartTime(null);
-    setPausedTime(0);
-    setElapsedTime(0);
-    setCompletedDuration(0);
-  };
-
-  // Start session (route mode)
+  // Start session
   const handleStartSession = async () => {
     if (!selectedRoute) {
       setError('경로를 선택해주세요.');
@@ -278,10 +157,11 @@ export function CommuteTrackingPage() {
         weatherCondition: '맑음',
       });
       setActiveSession(session);
+      setActiveTab('tracking');
       setError('');
     } catch (err) {
       console.error('Failed to start session:', err);
-      setError('세션 시작에 실패했습니다.');
+      setError('기록 시작에 실패했습니다.');
     }
   };
 
@@ -318,7 +198,7 @@ export function CommuteTrackingPage() {
       }, 2000);
     } catch (err) {
       console.error('Failed to complete session:', err);
-      setError('세션 완료에 실패했습니다.');
+      setError('기록 완료에 실패했습니다.');
     }
   };
 
@@ -332,9 +212,10 @@ export function CommuteTrackingPage() {
       await commuteApi.cancelSession(activeSession.id);
       setActiveSession(null);
       setElapsedTime(0);
+      setActiveTab('ready');
     } catch (err) {
       console.error('Failed to cancel session:', err);
-      setError('세션 취소에 실패했습니다.');
+      setError('취소에 실패했습니다.');
     }
   };
 
@@ -367,311 +248,170 @@ export function CommuteTrackingPage() {
     [activeSession]
   );
 
-  // ========== STOPWATCH MODE RENDER ==========
-  if (isStopwatchMode) {
-    return (
-      <main className="page stopwatch-page">
-        <nav className="nav">
-          <div className="brand">
-            <Link to="/routes" className="nav-back">←</Link>
-            <strong>스톱워치 모드</strong>
-          </div>
-          <div className="nav-actions">
-            <Link className="btn btn-ghost" to="/commute/dashboard">
-              통계
-            </Link>
-          </div>
-        </nav>
-
-        <div className="stopwatch-container">
-          {/* Type Selection (only when idle) */}
-          {stopwatchState === 'idle' && (
-            <section className="stopwatch-type-section">
-              <h2>어떤 출퇴근인가요?</h2>
-              <div className="stopwatch-type-buttons">
-                <button
-                  type="button"
-                  className={`type-btn ${stopwatchType === 'morning' ? 'active' : ''}`}
-                  onClick={() => setStopwatchType('morning')}
-                >
-                  <span className="type-icon">🌅</span>
-                  <span>출근</span>
-                </button>
-                <button
-                  type="button"
-                  className={`type-btn ${stopwatchType === 'evening' ? 'active' : ''}`}
-                  onClick={() => setStopwatchType('evening')}
-                >
-                  <span className="type-icon">🌆</span>
-                  <span>퇴근</span>
-                </button>
-              </div>
-            </section>
-          )}
-
-          {/* Timer Display */}
-          <section className="stopwatch-display-section">
-            <div className={`stopwatch-display ${stopwatchState === 'running' ? 'pulse' : ''}`}>
-              <span className="stopwatch-time">
-                {stopwatchState === 'completed'
-                  ? formatStopwatchTime(completedDuration)
-                  : formatStopwatchTime(elapsedTime)}
-              </span>
-              {stopwatchState === 'running' && (
-                <span className="stopwatch-label">기록 중...</span>
-              )}
-              {stopwatchState === 'paused' && (
-                <span className="stopwatch-label paused">일시정지</span>
-              )}
-            </div>
-          </section>
-
-          {/* Completed State */}
-          {stopwatchState === 'completed' && (
-            <section className="stopwatch-complete">
-              <div className="complete-badge">
-                <span className="complete-icon">✅</span>
-                <h2>{stopwatchType === 'morning' ? '출근' : '퇴근'} 완료!</h2>
-              </div>
-              <div className="complete-summary">
-                <div className="summary-item">
-                  <span className="summary-label">총 소요 시간</span>
-                  <span className="summary-value">
-                    {Math.floor(completedDuration / 60)}분 {completedDuration % 60}초
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">기록 시간</span>
-                  <span className="summary-value muted">
-                    {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              </div>
-              <div className="complete-actions">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={handleResetStopwatch}
-                >
-                  새로 시작
-                </button>
-                <Link to="/commute/dashboard" className="btn btn-primary">
-                  통계 보기
-                </Link>
-              </div>
-            </section>
-          )}
-
-          {/* Control Buttons */}
-          {stopwatchState !== 'completed' && (
-            <section className="stopwatch-controls">
-              {stopwatchState === 'idle' && (
-                <button
-                  type="button"
-                  className="btn btn-stopwatch btn-start"
-                  onClick={handleStartStopwatch}
-                >
-                  <span className="btn-icon">▶</span>
-                  <span>시작</span>
-                </button>
-              )}
-
-              {stopwatchState === 'running' && (
-                <div className="control-group">
-                  <button
-                    type="button"
-                    className="btn btn-stopwatch btn-pause"
-                    onClick={handlePauseStopwatch}
-                  >
-                    <span className="btn-icon">⏸</span>
-                    <span>일시정지</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-stopwatch btn-complete"
-                    onClick={handleCompleteStopwatch}
-                  >
-                    <span className="btn-icon">⏹</span>
-                    <span>완료</span>
-                  </button>
-                </div>
-              )}
-
-              {stopwatchState === 'paused' && (
-                <div className="control-group">
-                  <button
-                    type="button"
-                    className="btn btn-stopwatch btn-resume"
-                    onClick={handleResumeStopwatch}
-                  >
-                    <span className="btn-icon">▶</span>
-                    <span>재개</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-stopwatch btn-complete"
-                    onClick={handleCompleteStopwatch}
-                  >
-                    <span className="btn-icon">⏹</span>
-                    <span>완료</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={handleResetStopwatch}
-                  >
-                    초기화
-                  </button>
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* Hint */}
-          {stopwatchState === 'idle' && (
-            <p className="stopwatch-hint">
-              경로 설정 없이 시간만 기록하는 간편 모드입니다
-            </p>
-          )}
-
-          {error && <div className="notice error">{error}</div>}
-        </div>
-
-        <footer className="footer">
-          <p className="footer-text">출퇴근 메이트 · 스톱워치 모드</p>
-        </footer>
-      </main>
-    );
-  }
-
-  // ========== ROUTE MODE RENDER ==========
-  if (!userId) {
-    return (
-      <main className="page">
-        <nav className="nav">
-          <Link to="/" className="brand">← 홈</Link>
-        </nav>
-        <div className="notice warning">먼저 로그인해주세요.</div>
-      </main>
-    );
-  }
-
+  // Loading state
   if (isLoading) {
     return (
-      <main className="page">
-        <nav className="nav">
-          <Link to="/" className="brand">← 홈</Link>
+      <main className="page commute-page">
+        <nav className="commute-nav">
+          <Link to="/" className="nav-back">←</Link>
+          <span className="nav-title">출퇴근 기록</span>
+          <span />
         </nav>
-        <div className="loading-container">
-          <span className="spinner" />
-          <p>불러오는 중...</p>
+        <div className="commute-loading">불러오는 중...</div>
+      </main>
+    );
+  }
+
+  // No routes state
+  if (routes.length === 0) {
+    return (
+      <main className="page commute-page">
+        <nav className="commute-nav">
+          <Link to="/" className="nav-back">←</Link>
+          <span className="nav-title">출퇴근 기록</span>
+          <span />
+        </nav>
+        <div className="commute-empty">
+          <div className="empty-icon">🗺️</div>
+          <h2>경로를 먼저 설정해주세요</h2>
+          <p>출퇴근 경로를 설정하면<br />시간을 기록할 수 있어요</p>
+          <Link to="/routes" className="btn-primary">경로 설정하기</Link>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="page">
-      <nav className="nav">
-        <div className="brand">
-          <Link to="/" className="nav-back">← </Link>
-          <strong>통근 트래킹</strong>
-        </div>
-        <div className="nav-actions">
-          <Link className="btn btn-ghost" to="/routes">
-            경로 설정
-          </Link>
-          <Link className="btn btn-ghost" to="/commute/dashboard">
-            통계
-          </Link>
-        </div>
+    <main className="page commute-page">
+      {/* Navigation */}
+      <nav className="commute-nav">
+        <Link to="/" className="nav-back">←</Link>
+        <span className="nav-title">출퇴근 기록</span>
+        <Link to="/commute/dashboard" className="nav-action">내 기록</Link>
       </nav>
 
-      {routes.length === 0 ? (
-        <div className="empty-state">
-          <span className="empty-icon">🗺️</span>
-          <h2>경로를 먼저 설정해주세요</h2>
-          <p>출퇴근 경로를 설정하면 트래킹을 시작할 수 있어요.</p>
-          <Link to="/routes" className="btn btn-primary">
-            경로 설정하기
-          </Link>
-        </div>
-      ) : (
-        <div className="tracking-container">
-          {/* Route Selection (only when no active session) */}
-          {!activeSession && (
-            <section className="route-selection">
-              <h2>경로 선택</h2>
-              <div className="route-buttons">
-                {routes.map((route) => (
-                  <button
-                    key={route.id}
-                    type="button"
-                    className={`route-button ${selectedRoute?.id === route.id ? 'active' : ''}`}
-                    onClick={() => setSelectedRoute(route)}
-                  >
-                    <span className="route-icon">
-                      {route.routeType === 'morning' ? '🌅' : route.routeType === 'evening' ? '🌆' : '🚶'}
-                    </span>
-                    <span className="route-name">{route.name}</span>
-                    <span className="route-duration">{route.totalExpectedDuration}분</span>
-                  </button>
-                ))}
-              </div>
-            </section>
+      {/* Tab Navigation */}
+      <div className="commute-tabs">
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'ready' ? 'active' : ''}`}
+          onClick={() => setActiveTab('ready')}
+          disabled={activeSession?.status === 'in_progress'}
+        >
+          <span className="tab-icon">🏠</span>
+          <span>출발 준비</span>
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'tracking' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tracking')}
+        >
+          <span className="tab-icon">🚶</span>
+          <span>이동 중</span>
+          {activeSession?.status === 'in_progress' && (
+            <span className="tab-badge">●</span>
           )}
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => navigate('/commute/dashboard')}
+        >
+          <span className="tab-icon">📊</span>
+          <span>기록</span>
+        </button>
+      </div>
 
-          {/* Active Session Status */}
-          {activeSession && activeSession.status === 'in_progress' && (
-            <section className="session-status">
-              <div className="timer-display">
-                <span className="timer-label">경과 시간</span>
-                <span className="timer-value">{formatTime(elapsedTime)}</span>
-              </div>
-              <div className="progress-info">
-                <span>진행률: {activeSession.progress}%</span>
-                <span>{activeSession.delayStatus}</span>
-              </div>
-            </section>
-          )}
+      {/* Tab Content */}
+      <div className="commute-content">
+        {/* 출발 준비 탭 */}
+        {activeTab === 'ready' && !activeSession && (
+          <section className="ready-section">
+            <h2 className="section-title">어디로 가시나요?</h2>
 
-          {/* Completed Session Summary */}
-          {activeSession && activeSession.status === 'completed' && (
-            <section className="session-complete">
-              <div className="complete-header">
-                <span className="complete-icon">✅</span>
-                <h2>통근 완료!</h2>
-              </div>
-              <div className="complete-stats">
-                <div className="stat-item">
-                  <span className="stat-label">총 소요 시간</span>
-                  <span className="stat-value">{activeSession.totalDurationMinutes}분</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">대기/환승 시간</span>
-                  <span className="stat-value highlight">{activeSession.totalWaitMinutes}분</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">지연 상태</span>
-                  <span className={`stat-value ${activeSession.totalDelayMinutes > 0 ? 'delayed' : 'on-time'}`}>
-                    {activeSession.delayStatus}
+            <div className="route-cards">
+              {routes.map((route) => (
+                <button
+                  key={route.id}
+                  type="button"
+                  className={`route-card ${selectedRoute?.id === route.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedRoute(route)}
+                >
+                  <span className="route-emoji">
+                    {route.routeType === 'morning' ? '🌅' : '🌆'}
                   </span>
-                </div>
+                  <div className="route-details">
+                    <strong>{route.name}</strong>
+                    <span className="route-path">
+                      {route.checkpoints.map(c => c.name).join(' → ')}
+                    </span>
+                    <span className="route-time">예상 {route.totalExpectedDuration}분</span>
+                  </div>
+                  {selectedRoute?.id === route.id && (
+                    <span className="check-icon">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {selectedRoute && (
+              <div className="start-action">
+                <button
+                  type="button"
+                  className="btn-start"
+                  onClick={handleStartSession}
+                >
+                  <span className="start-icon">🚀</span>
+                  <span>출발!</span>
+                </button>
+                <p className="start-hint">
+                  버튼을 누르면 시간 기록이 시작됩니다
+                </p>
               </div>
-              <p className="redirect-message">잠시 후 통계 페이지로 이동합니다...</p>
-            </section>
-          )}
+            )}
 
-          {/* Checkpoint Progress - 고정 레이아웃 */}
-          {selectedRoute && (
-            <section className="checkpoint-progress-v2">
-              <h2>
-                {activeSession ? '진행 상황' : '체크포인트 미리보기'}
-              </h2>
+            <Link to="/routes" className="link-routes">
+              경로 추가/수정 →
+            </Link>
+          </section>
+        )}
 
-              {/* 현재 체크포인트 액션 버튼 - 항상 상단에 고정 */}
-              {activeSession && activeSession.status === 'in_progress' && (
-                <div className="current-checkpoint-action">
+        {/* 이동 중 탭 */}
+        {activeTab === 'tracking' && (
+          <section className="tracking-section">
+            {/* No active session */}
+            {!activeSession && (
+              <div className="no-session">
+                <div className="no-session-icon">💤</div>
+                <h3>진행 중인 기록이 없어요</h3>
+                <p>출발 준비 탭에서 기록을 시작하세요</p>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setActiveTab('ready')}
+                >
+                  출발 준비로 이동
+                </button>
+              </div>
+            )}
+
+            {/* Active session - in progress */}
+            {activeSession && activeSession.status === 'in_progress' && selectedRoute && (
+              <>
+                {/* Timer */}
+                <div className="timer-card">
+                  <span className="timer-label">경과 시간</span>
+                  <span className="timer-value">{formatTime(elapsedTime)}</span>
+                  <div className="timer-progress">
+                    <span>진행률: {activeSession.progress}%</span>
+                    <span className={activeSession.totalDelayMinutes > 0 ? 'delayed' : 'on-time'}>
+                      {activeSession.delayStatus}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Current checkpoint action */}
+                <div className="checkpoint-action">
                   {(() => {
                     const recordedIds = new Set(activeSession.checkpointRecords.map((r) => r.checkpointId));
                     const currentCheckpoint = selectedRoute.checkpoints.find((cp) => !recordedIds.has(cp.id));
@@ -682,7 +422,7 @@ export function CommuteTrackingPage() {
                     return (
                       <button
                         type="button"
-                        className={`btn btn-checkpoint-main ${isLast ? 'btn-finish' : ''}`}
+                        className={`btn-checkpoint ${isLast ? 'finish' : ''}`}
                         onClick={() => {
                           if (isLast) {
                             handleRecordCheckpoint(currentCheckpoint.id).then(() => {
@@ -693,107 +433,93 @@ export function CommuteTrackingPage() {
                           }
                         }}
                       >
-                        <span className="checkpoint-main-icon">
+                        <span className="checkpoint-icon">
                           {isLast ? '🏁' : '📍'}
                         </span>
-                        <span className="checkpoint-main-text">
+                        <span className="checkpoint-text">
                           <strong>{currentCheckpoint.name}</strong>
                           <span>{isLast ? '도착 완료!' : '도착 체크'}</span>
                         </span>
-                        <span className="checkpoint-main-arrow">→</span>
+                        <span className="checkpoint-arrow">→</span>
                       </button>
                     );
                   })()}
                 </div>
-              )}
 
-              {/* 전체 체크포인트 타임라인 - 고정 위치 */}
-              <div className="checkpoint-timeline-v2">
-                {selectedRoute.checkpoints.map((checkpoint, index) => {
-                  const status = getCheckpointStatus(checkpoint);
-                  const recordedInfo = getRecordedInfo(checkpoint.id);
-                  const isLast = index === selectedRoute.checkpoints.length - 1;
+                {/* Checkpoint timeline */}
+                <div className="checkpoint-timeline">
+                  <h3>진행 상황</h3>
+                  {selectedRoute.checkpoints.map((checkpoint, index) => {
+                    const status = getCheckpointStatus(checkpoint);
+                    const recordedInfo = getRecordedInfo(checkpoint.id);
+                    const isLast = index === selectedRoute.checkpoints.length - 1;
 
-                  return (
-                    <div
-                      key={checkpoint.id}
-                      className={`timeline-step ${status}`}
-                    >
-                      {/* 연결선 */}
-                      {index > 0 && (
-                        <div className={`timeline-line ${status === 'pending' ? '' : 'active'}`} />
-                      )}
-
-                      {/* 체크포인트 마커 */}
-                      <div className="timeline-marker-v2">
-                        {status === 'completed' ? (
-                          <span className="marker-check">✓</span>
-                        ) : status === 'current' ? (
-                          <span className="marker-current">●</span>
-                        ) : (
-                          <span className="marker-pending">{index + 1}</span>
+                    return (
+                      <div
+                        key={checkpoint.id}
+                        className={`timeline-item ${status}`}
+                      >
+                        {index > 0 && (
+                          <div className={`timeline-line ${status === 'pending' ? '' : 'active'}`} />
                         )}
+                        <div className="timeline-marker">
+                          {status === 'completed' ? '✓' : status === 'current' ? '●' : (index + 1)}
+                        </div>
+                        <div className="timeline-content">
+                          <span className="timeline-name">{checkpoint.name}</span>
+                          {recordedInfo ? (
+                            <span className="timeline-time recorded">
+                              {recordedInfo.arrivalTimeString}
+                            </span>
+                          ) : !isLast && checkpoint.expectedDurationToNext ? (
+                            <span className="timeline-time expected">
+                              {checkpoint.transportMode === 'subway' && '🚇'}
+                              {checkpoint.transportMode === 'bus' && '🚌'}
+                              {checkpoint.transportMode === 'walk' && '🚶'}
+                              {' '}{checkpoint.expectedDurationToNext}분
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      {/* 체크포인트 정보 */}
-                      <div className="timeline-info">
-                        <span className="checkpoint-name-v2">{checkpoint.name}</span>
-                        {recordedInfo ? (
-                          <span className="checkpoint-time recorded">
-                            {recordedInfo.arrivalTimeString}
-                            {recordedInfo.durationFromPrevious !== undefined && (
-                              <span className={recordedInfo.isDelayed ? 'delayed' : ''}>
-                                ({recordedInfo.durationFromPrevious}분)
-                              </span>
-                            )}
-                          </span>
-                        ) : !isLast && typeof checkpoint.expectedDurationToNext === 'number' ? (
-                          <span className="checkpoint-time expected">
-                            {checkpoint.transportMode === 'subway' && '🚇'}
-                            {checkpoint.transportMode === 'bus' && '🚌'}
-                            {checkpoint.transportMode === 'walk' && '🚶'}
-                            {' '}{checkpoint.expectedDurationToNext}분
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
+                {/* Cancel button */}
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={handleCancelSession}
+                >
+                  기록 취소
+                </button>
+              </>
+            )}
+
+            {/* Completed session */}
+            {activeSession && activeSession.status === 'completed' && (
+              <div className="completed-card">
+                <div className="completed-icon">✅</div>
+                <h2>{selectedRoute?.routeType === 'morning' ? '출근' : '퇴근'} 완료!</h2>
+                <div className="completed-stats">
+                  <div className="stat">
+                    <span className="stat-label">총 소요 시간</span>
+                    <span className="stat-value">{activeSession.totalDurationMinutes}분</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-label">대기 시간</span>
+                    <span className="stat-value">{activeSession.totalWaitMinutes}분</span>
+                  </div>
+                </div>
+                <p className="redirect-hint">잠시 후 기록 페이지로 이동합니다...</p>
               </div>
-            </section>
-          )}
-
-          {/* Action Buttons */}
-          <div className="tracking-actions">
-            {!activeSession && selectedRoute && (
-              <button
-                type="button"
-                className="btn btn-primary btn-large btn-start"
-                onClick={handleStartSession}
-              >
-                🚀 출발!
-              </button>
             )}
+          </section>
+        )}
+      </div>
 
-            {activeSession && activeSession.status === 'in_progress' && (
-              <button
-                type="button"
-                className="btn btn-danger-outline"
-                onClick={handleCancelSession}
-              >
-                취소
-              </button>
-            )}
-          </div>
-
-          {/* Error display */}
-          {error && <div className="notice error">{error}</div>}
-        </div>
-      )}
-
-      <footer className="footer">
-        <p className="footer-text">출퇴근 메이트 · 출퇴근 트래킹</p>
-      </footer>
+      {/* Error display */}
+      {error && <div className="commute-error">{error}</div>}
     </main>
   );
 }
