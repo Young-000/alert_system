@@ -36,6 +36,74 @@ export const subwayApiClient = {
   searchStations: jest.fn(),
 };
 
+export const commuteApiClient = {
+  getUserRoutes: jest.fn().mockResolvedValue([]),
+  createRoute: jest.fn().mockResolvedValue({}),
+  updateRoute: jest.fn().mockResolvedValue({}),
+  deleteRoute: jest.fn().mockResolvedValue(undefined),
+  getInProgressSession: jest.fn().mockResolvedValue(null),
+  startSession: jest.fn().mockResolvedValue({}),
+  recordCheckpoint: jest.fn().mockResolvedValue({}),
+  completeSession: jest.fn().mockResolvedValue({}),
+  cancelSession: jest.fn().mockResolvedValue(undefined),
+  getStats: jest.fn().mockResolvedValue({
+    totalCommutes: 0,
+    averageDuration: 0,
+    averageWaitTime: 0,
+    onTimeRate: 0,
+    recentCommutes: [],
+  }),
+  getHistory: jest.fn().mockResolvedValue([]),
+};
+
+// Factory function for CommuteApiClient
+export const getCommuteApiClient = jest.fn(() => commuteApiClient);
+
+// Type exports
+export type RouteType = 'commute_to_work' | 'commute_to_home' | 'other';
+export type TransportMode = 'walk' | 'subway' | 'bus' | 'taxi';
+export type CheckpointType = 'home' | 'subway' | 'bus' | 'transfer' | 'company' | 'other';
+
+export interface CreateRouteDto {
+  userId: string;
+  name: string;
+  type: RouteType;
+  isDefault: boolean;
+  checkpoints: {
+    name: string;
+    type: CheckpointType;
+    travelTime: number;
+    waitTime: number;
+    transportMode: TransportMode;
+    stationId?: string;
+    stationName?: string;
+  }[];
+}
+
+export interface RouteResponse {
+  id: string;
+  userId: string;
+  name: string;
+  type: RouteType;
+  isDefault: boolean;
+  checkpoints: {
+    id: string;
+    name: string;
+    type: CheckpointType;
+    travelTime: number;
+    waitTime: number;
+    transportMode: TransportMode;
+    sequence: number;
+  }[];
+}
+
+export const authApiClient = {
+  login: jest.fn(),
+  register: jest.fn(),
+  logout: jest.fn(),
+  verify: jest.fn(),
+};
+
 export type AlertType = 'weather' | 'airQuality' | 'bus' | 'subway';
 
 export interface Alert {

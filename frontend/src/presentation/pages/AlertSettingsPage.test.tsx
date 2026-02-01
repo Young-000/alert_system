@@ -4,18 +4,6 @@ import { AlertSettingsPage } from './AlertSettingsPage';
 import { alertApiClient } from '@infrastructure/api';
 import type { AlertType } from '@infrastructure/api';
 
-jest.mock('../hooks/usePushNotification', () => ({
-  usePushNotification: () => ({
-    permission: 'default',
-    subscription: null,
-    isSwReady: true,
-    swError: null,
-    requestPermission: jest.fn().mockResolvedValue('granted'),
-    subscribe: jest.fn().mockResolvedValue({ endpoint: 'test', keys: {} }),
-    unsubscribe: jest.fn(),
-  }),
-}));
-
 const mockAlertApiClient = alertApiClient as jest.Mocked<typeof alertApiClient>;
 
 describe('AlertSettingsPage', () => {

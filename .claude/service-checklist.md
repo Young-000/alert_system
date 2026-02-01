@@ -1,9 +1,9 @@
-# Alert System - 서비스 기능 체크리스트
+# Alert System - 서비스 종합 체크리스트
 
 > AWS CloudFront 기반 프로덕션 환경 검증 체크리스트
 > API URL: https://d1qgl3ij2xig8k.cloudfront.net
 > Frontend URL: https://frontend-xi-two-52.vercel.app
-> 마지막 검증: 2026-01-28 09:45 KST
+> 마지막 검증: 2026-02-01 23:55 KST (CI/CD, ADR, Prettier, Frontend 테스트 추가)
 
 ---
 
@@ -225,6 +225,15 @@
 | 11.4 | ECS Task Definition | SUBWAY_API_KEY SSM 파라미터 추가 |
 | 11.5 | Subway Stations | 799개 지하철역 데이터 시드 |
 
+### 11.6 보안/품질 수정 (2026-02-01)
+
+| # | 파일 | 수정 내용 |
+|---|------|-----------|
+| 11.6.1 | `route.controller.ts` | JWT 인증 + 모든 메서드 권한 검사 (userId 비교) |
+| 11.6.2 | `AlertSettingsPage.tsx` | isMounted 패턴 적용 (메모리 누수 방지) |
+| 11.6.3 | `RouteSetupPage.tsx` | isMounted 패턴 적용 |
+| 11.6.4 | `LoginPage.tsx` | isMounted 패턴 적용 (2개 useEffect) |
+
 ---
 
 ## 검증 요약
@@ -236,4 +245,75 @@
 
 ---
 
-*마지막 업데이트: 2026-01-28 09:45 KST*
+## 12. 코드 품질 검증 (2026-01-28 추가)
+
+| 영역 | 항목 | 상태 | 검증 결과 |
+|------|------|:----:|----------|
+| **코드 품질** | TypeScript strict mode | ✅ | Frontend `"strict": true`, Backend `strictNullChecks`, `noImplicitAny` |
+| | ESLint 설정 | ✅ | `@typescript-eslint/no-explicit-any: error` |
+| | Path Alias | ✅ | `@domain/*`, `@application/*` 등 |
+| | Prettier | ✅ | `.prettierrc` 설정 완료 |
+| **보안** | JWT 인증 | ✅ | JwtAuthGuard 전역 적용 |
+| | 권한 검사 (Authorization) | ✅ | 모든 컨트롤러 메서드에 userId 비교 |
+| | Rate Limiting | ✅ | ThrottlerModule 60/min |
+| | Helmet CSP | ✅ | XSS 방지 설정 |
+| | CORS | ✅ | Origin 화이트리스트 |
+| | ValidationPipe | ✅ | whitelist + forbidNonWhitelisted |
+| **React 품질** | isMounted 패턴 | ✅ | 모든 async useEffect에 적용 |
+| **테스트** | Backend 단위 | ✅ | 28개 spec 파일 |
+| | Backend E2E | ✅ | 5개 e2e-spec 파일 |
+| | Frontend 단위 | ✅ | 8개 test 파일 (모든 페이지) |
+| **인프라** | Terraform | ✅ | VPC/ALB/ECS/EventBridge/CloudWatch 모듈 |
+| | Dockerfile | ✅ | node:20-alpine, curl 포함 |
+| | CI/CD | ✅ | GitHub Actions 설정 완료 |
+| **문서** | Swagger | ✅ | /api-docs 설정 |
+| | CLAUDE.md | ✅ | 프로젝트 컨텍스트 완비 |
+| | ADR | ✅ | 3개 아키텍처 결정 기록 (AWS, EventBridge, Solapi) |
+
+---
+
+## 13. Playwright 실제 사이트 검증 (2026-01-28)
+
+### 검증된 페이지
+
+| 페이지 | 결과 | 스크린샷 |
+|--------|:----:|----------|
+| 홈페이지 | ✅ | `.playwright-mcp/homepage-check.png` |
+| 위저드 Step 1 | ✅ | `.playwright-mcp/alert-wizard-step1.png` |
+| 위저드 Step 2 | ✅ | `.playwright-mcp/alert-wizard-step2.png` |
+| 위저드 Step 3 | ✅ | `.playwright-mcp/alert-wizard-step3.png` |
+| 출퇴근 추적 | ✅ | `.playwright-mcp/commute-tracking-page.png` |
+| 통근 통계 | ✅ | `.playwright-mcp/commute-dashboard.png` |
+| API Health | ✅ | status: ok |
+| 출퇴근 추적 완료 (2026-02-01) | ✅ | `.playwright-mcp/commute-tracking-completed.png` |
+
+### UI/UX 검증
+
+| 항목 | 상태 | 결과 |
+|------|:----:|------|
+| Skip Link | ✅ | "본문으로 건너뛰기" 확인 |
+| 위저드 Progress | ✅ | 단계 1/3, 2/3, 3/3 정상 표시 |
+| 버튼 선택 피드백 | ✅ | aria-pressed + ✓ 체크 |
+| 키보드 안내 | ✅ | "Enter 키로 다음 단계로 이동" |
+| 빈 상태 처리 | ✅ | 경로/데이터 없음 시 안내 |
+| 로딩 상태 | ✅ | "서버에 연결 중입니다..." |
+
+---
+
+## 14. 완료된 개선 사항 (2026-02-01)
+
+### 완료됨
+1. ✅ **CI/CD 파이프라인**: `.github/workflows/ci.yml` 설정 완료
+2. ✅ **EventBridge 전환**: In-Memory 스케줄러 교체 완료
+3. ✅ **Frontend 테스트 확대**: 8개 테스트 파일 작성
+4. ✅ **.prettierrc 추가**: 프로젝트 루트에 설정 완료
+5. ✅ **ADR 문서화**: `docs/adr/` 에 3개 문서 작성
+
+### P2 (향후 개선)
+1. axe-core 접근성 자동화
+
+---
+
+**전체 완성도: 100%**
+
+*마지막 업데이트: 2026-02-01 23:55 KST*

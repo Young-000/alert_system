@@ -11,12 +11,11 @@ module.exports = {
     '^@domain/(.*)$': '<rootDir>/src/domain/$1',
     '^@application/(.*)$': '<rootDir>/src/application/$1',
     '^@infrastructure/api$': '<rootDir>/src/__mocks__/infrastructure/api/index.ts',
-    '^@infrastructure/api/api-client$': '<rootDir>/src/__mocks__/infrastructure/api/api-client.ts',
+    '^@infrastructure/api/(.*)$': '<rootDir>/src/__mocks__/infrastructure/api/index.ts',
     '^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
     '^@presentation/(.*)$': '<rootDir>/src/presentation/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^uuid$': '<rootDir>/src/__mocks__/uuid.ts',
-    '\\.\\./api/api-client$': '<rootDir>/src/__mocks__/infrastructure/api/api-client.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
 };

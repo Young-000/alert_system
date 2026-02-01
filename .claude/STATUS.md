@@ -7,10 +7,10 @@
 - **Repository**: local
 
 ## Status
-- **Current Status**: 🟢 Complete (Google OAuth + 알림톡 연동 완료)
+- **Current Status**: 🟢 Complete (AWS CloudFront + ECS Fargate 배포 완료)
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-01-27 03:00:00
+- **Last Updated**: 2026-02-01 06:23:08
 
 ## Infrastructure
 
@@ -50,11 +50,11 @@
 | CI/CD | 🟢 | Vercel 자동 배포 |
 
 ## Git Statistics
-- **Total Commits**: 24
-- **Last Commit**: 2026-01-26 01:34:51
-- **Last Commit Message**: docs: simplify CLAUDE.md with global reference
+- **Total Commits**: 63
+- **Last Commit**: 2026-02-01 06:23:08
+- **Last Commit Message**: fix: route.controller getRoute 메서드에 권한 검사 추가
 - **Current Branch**: main
-- **Uncommitted Changes**: 1 files
+- **Uncommitted Changes**: 91 files
 
 ## Implementation Status
 
@@ -124,11 +124,12 @@
 - **최신 배포**: https://frontend-iv289b99q-youngjaes-projects-fcb4b310.vercel.app
 - **자동 배포**: GitHub push 시 자동 배포
 
-### Backend (Render)
-- **URL**: https://alert-system-kdg9.onrender.com
+### Backend (AWS CloudFront + ECS Fargate)
+- **URL**: https://d1qgl3ij2xig8k.cloudfront.net
+- **인프라**: CloudFront → ALB → ECS Fargate
 - **로컬 개발**: `npm run start:dev` (포트 3001)
-- **프로덕션**: Render 무료 티어 (SQLite 모드)
-- **주의**: Cold Start 시 ~30초 지연 가능
+- **프로덕션**: AWS ECS Fargate (arm64)
+- **장점**: Render 대비 빠른 응답, 안정적인 스케일링
 
 ### 테스트 명령어
 ```bash
@@ -278,4 +279,54 @@ curl https://alert-system-kdg9.onrender.com/auth/google/status
 - `src/presentation/index.css` - Google 버튼 스타일
 
 ---
-*Last updated: 2026-01-27 03:00:00*
+
+## 2026-01-28 AWS 전환 완료 및 전체 검증
+
+### AWS 인프라
+| 서비스 | 상태 | 설명 |
+|--------|------|------|
+| CloudFront | ✅ | d1qgl3ij2xig8k.cloudfront.net |
+| ALB | ✅ | 타겟 그룹 healthy |
+| ECS Fargate | ✅ | arm64 컨테이너 |
+| Supabase | ✅ | PostgreSQL 연결 |
+
+### 브라우저 UI/UX 전체 검증 (Playwright MCP)
+| 기능 | 상태 | 비고 |
+|------|:----:|------|
+| 홈페이지 | ✅ | 모든 요소 정상 |
+| 로그인/로그아웃 | ✅ | JWT 토큰 관리 |
+| 회원가입 | ✅ | 새 계정 생성, 자동 리다이렉트 |
+| 알림 설정 위저드 | ✅ | 5단계 전체 정상 |
+| 지하철 검색 | ✅ | "강남" 검색 → 결과 표시 |
+| 알림 생성 | ✅ | POST /alerts → 201 |
+| 알림 토글/삭제 | ✅ | 정상 작동 |
+| 경로 설정 | ✅ | 체크포인트 설정 |
+| 경로 저장 | ✅ | POST /routes → 201 |
+| 통근 트래킹 | ✅ | 출발, 체크포인트 기록 |
+| 통계 페이지 | ✅ | 데이터 없음 메시지 |
+
+### API 응답 확인 (AWS CloudFront)
+| 엔드포인트 | 상태 | 응답 |
+|-----------|:----:|------|
+| POST /auth/register | ✅ | 201 |
+| POST /auth/login | ✅ | 200 |
+| GET /alerts/user/:id | ✅ | 200 |
+| GET /subway/stations | ✅ | 200 |
+| POST /alerts | ✅ | 201 |
+| POST /routes | ✅ | 201 |
+| POST /commute/start | ✅ | 200 |
+
+### 수정된 코드
+1. **스케줄러 초기화 로직 추가** (`notification.module.ts`)
+   - 서버 시작 시 DB에서 활성화된 알림 로드
+   - 기존 알림 자동 스케줄링
+   - 컨테이너 재시작 후에도 알림 유지
+
+### 알려진 이슈
+| 이슈 | 상태 | 설명 |
+|------|:----:|------|
+| "강남역" 검색 안됨 | ⚠️ | DB에 "강남"으로 저장 (개선 필요) |
+| In-Memory 스케줄러 | ⚠️ | AWS EventBridge로 전환 권장 |
+
+---
+*Last updated: 2026-01-28 23:59:00*
