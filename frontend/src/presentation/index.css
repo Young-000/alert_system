@@ -6388,6 +6388,201 @@ kbd {
   font-weight: 500;
 }
 
+/* ========================================
+   템플릿 미리보기 섹션
+   ======================================== */
+.route-preview-section {
+  padding: 1rem;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.preview-header {
+  padding: 1.5rem;
+  color: white;
+  text-align: center;
+}
+
+.preview-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.preview-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.preview-body {
+  padding: 1.5rem;
+}
+
+.preview-description {
+  text-align: center;
+  color: var(--ink-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.preview-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.preview-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 0.5rem;
+}
+
+.preview-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  transition: border-color 0.2s;
+}
+
+.preview-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* 경로 시각화 */
+.preview-route-visual {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.route-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.route-flow-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-checkpoint {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.flow-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+.flow-name {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 20px;
+  margin-left: 0;
+  border-left: 2px dashed var(--border);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.flow-transport {
+  font-size: 1rem;
+}
+
+.flow-duration {
+  color: var(--ink-muted);
+}
+
+/* 예상 시간 표시 */
+.preview-time {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.preview-time span {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.preview-time strong {
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+/* 액션 버튼 */
+.preview-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.preview-actions .btn {
+  flex: 1;
+}
+
+.preview-actions .btn-ghost {
+  flex: 0.8;
+}
+
+.preview-edit-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}
+
+.preview-edit-link:hover {
+  color: var(--primary);
+}
+
 /* 모바일 대응 */
 @media (max-width: 480px) {
   .template-grid-v2 {

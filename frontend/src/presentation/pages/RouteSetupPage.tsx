@@ -91,7 +91,6 @@ export function RouteSetupPage() {
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = getCommuteApiClient();
 
-  const [selectedTemplate, setSelectedTemplate] = useState<RouteTemplate | null>(null);
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -107,6 +106,9 @@ export function RouteSetupPage() {
   ]);
   const [isSavingCustom, setIsSavingCustom] = useState(false);
   const [editingRoute, setEditingRoute] = useState<RouteResponse | null>(null);
+
+  // 템플릿 선택 후 미리보기 모드
+  const [previewTemplate, setPreviewTemplate] = useState<RouteTemplate | null>(null);
 
   // Load existing routes
   useEffect(() => {
@@ -134,6 +136,93 @@ export function RouteSetupPage() {
 
   const handleStartWithoutRoute = () => {
     navigate('/commute?mode=stopwatch');
+  };
+
+  // 템플릿 선택 시 미리보기 화면으로 전환
+  const handleSelectTemplate = (template: RouteTemplate) => {
+    setPreviewTemplate(template);
+    // 템플릿 기반으로 커스텀 폼 초기화
+    setCustomRouteName(`${template.name} 경로`);
+    setCustomRouteType(template.type);
+    setCustomCheckpoints(
+      template.checkpoints.map((cp, index) => ({
+        id: String(index + 1),
+        name: cp.name,
+        icon: cp.icon,
+        transportMode: cp.icon === '🚇' ? 'subway' : cp.icon === '🚌' ? 'bus' : 'walk',
+        expectedDuration: index < template.checkpoints.length - 1 ? 10 : 0,
+        waitTime: ['🚇', '🚌'].includes(cp.icon) ? 3 : 0,
+      }))
+    );
+  };
+
+  // 미리보기에서 저장
+  const handleSaveFromPreview = async () => {
+    if (!userId || !previewTemplate) return;
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      const getTransportMode = (icon: string): TransportMode => {
+        switch (icon) {
+          case '🚇': return 'subway';
+          case '🚌': return 'bus';
+          case '🚗': return 'taxi';
+          case '🚴': return 'bike';
+          default: return 'walk';
+        }
+      };
+
+      type CheckpointTypeValue = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
+      const getCheckpointType = (icon: string, index: number, total: number): CheckpointTypeValue => {
+        if (index === 0) return 'home';
+        if (index === total - 1) return 'work';
+        if (icon === '🚇') return 'subway';
+        if (icon === '🚌') return 'bus_stop';
+        return 'transfer_point';
+      };
+
+      const dto: CreateRouteDto = {
+        userId,
+        name: customRouteName,
+        routeType: customRouteType,
+        isPreferred: existingRoutes.length === 0,
+        checkpoints: customCheckpoints.map((cp, index) => ({
+          sequenceOrder: index + 1,
+          name: cp.name,
+          checkpointType: getCheckpointType(cp.icon, index, customCheckpoints.length),
+          expectedDurationToNext: index < customCheckpoints.length - 1 ? cp.expectedDuration : undefined,
+          expectedWaitTime: cp.waitTime,
+          transportMode: index < customCheckpoints.length - 1 ? getTransportMode(cp.icon) : undefined,
+        })),
+      };
+
+      await commuteApi.createRoute(dto);
+      setSuccess('경로가 저장되었습니다! 🎉');
+
+      // Reload routes
+      const routes = await commuteApi.getUserRoutes(userId);
+      setExistingRoutes(routes);
+      setPreviewTemplate(null);
+
+      setTimeout(() => {
+        setSuccess('');
+        navigate('/commute');
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to save route:', err);
+      setError('저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 미리보기 취소
+  const handleCancelPreview = () => {
+    setPreviewTemplate(null);
+    setCustomRouteName('');
+    setError('');
   };
 
   const addCustomCheckpoint = () => {
@@ -220,7 +309,7 @@ export function RouteSetupPage() {
       }))
     );
     setShowCustomForm(true);
-    setSelectedTemplate(null);
+    setPreviewTemplate(null);
   };
 
   const handleUpdateRoute = async () => {
@@ -334,8 +423,8 @@ export function RouteSetupPage() {
         </div>
       </nav>
 
-      {/* Hero Section - 커스텀 폼 표시 중에는 숨김 */}
-      {!showCustomForm && (
+      {/* Hero Section - 미리보기/커스텀 폼 표시 중에는 숨김 */}
+      {!showCustomForm && !previewTemplate && (
         <section className="route-hero">
           <div className="route-hero-content">
             <h1>나만의 출퇴근 경로</h1>
@@ -344,8 +433,8 @@ export function RouteSetupPage() {
         </section>
       )}
 
-      {/* Quick Start - 커스텀 폼 표시 중에는 숨김 */}
-      {!showCustomForm && (
+      {/* Quick Start - 미리보기/커스텀 폼 표시 중에는 숨김 */}
+      {!showCustomForm && !previewTemplate && (
         <section className="route-quick-start">
           <button
             type="button"
@@ -362,8 +451,8 @@ export function RouteSetupPage() {
         </section>
       )}
 
-      {/* 저장된 경로 (먼저 표시) - 커스텀 폼 표시 중에는 숨김 */}
-      {existingRoutes.length > 0 && !showCustomForm && (
+      {/* 저장된 경로 (먼저 표시) - 미리보기/커스텀 폼 표시 중에는 숨김 */}
+      {existingRoutes.length > 0 && !showCustomForm && !previewTemplate && (
         <section className="route-saved">
           <h2>저장된 경로</h2>
           <div className="saved-routes-list">
@@ -405,11 +494,110 @@ export function RouteSetupPage() {
         </section>
       )}
 
+      {/* 템플릿 미리보기 화면 */}
+      {previewTemplate && !showCustomForm && (
+        <section className="route-preview-section">
+          <div className="preview-card">
+            <div className="preview-header" style={{ background: previewTemplate.gradient }}>
+              <span className="preview-icon">{previewTemplate.icon}</span>
+              <h2>{previewTemplate.name} 경로</h2>
+            </div>
+
+            <div className="preview-body">
+              <p className="preview-description">
+                이 경로로 출퇴근을 기록할 수 있어요.
+                <br />
+                필요하면 아래에서 수정하세요.
+              </p>
+
+              {/* 경로 이름 편집 */}
+              <div className="preview-form-group">
+                <label htmlFor="previewRouteName">경로 이름</label>
+                <input
+                  id="previewRouteName"
+                  type="text"
+                  value={customRouteName}
+                  onChange={(e) => setCustomRouteName(e.target.value)}
+                  className="preview-input"
+                />
+              </div>
+
+              {/* 경로 미리보기 */}
+              <div className="preview-route-visual">
+                <div className="route-flow">
+                  {customCheckpoints.map((cp, index) => (
+                    <div key={cp.id} className="route-flow-item">
+                      <div className="flow-checkpoint">
+                        <span className="flow-icon">{cp.icon}</span>
+                        <span className="flow-name">{cp.name}</span>
+                      </div>
+                      {index < customCheckpoints.length - 1 && (
+                        <div className="flow-arrow">
+                          <span className="flow-transport">
+                            {cp.transportMode === 'subway' ? '🚇' :
+                             cp.transportMode === 'bus' ? '🚌' : '🚶'}
+                          </span>
+                          <span className="flow-duration">{cp.expectedDuration}분</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 예상 시간 */}
+              <div className="preview-time">
+                <span>예상 총 소요시간</span>
+                <strong>
+                  {customCheckpoints.reduce((sum, cp) => sum + cp.expectedDuration + cp.waitTime, 0)}분
+                </strong>
+              </div>
+
+              {/* 에러/성공 메시지 */}
+              {error && <div className="notice error">{error}</div>}
+              {success && <div className="notice success">{success}</div>}
+
+              {/* 액션 버튼 */}
+              <div className="preview-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-lg"
+                  onClick={handleCancelPreview}
+                  disabled={isSaving}
+                >
+                  ← 다른 템플릿
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg"
+                  onClick={handleSaveFromPreview}
+                  disabled={isSaving}
+                >
+                  {isSaving ? '저장 중...' : '이 경로로 시작하기 →'}
+                </button>
+              </div>
+
+              {/* 상세 수정 링크 */}
+              <button
+                type="button"
+                className="btn btn-link preview-edit-link"
+                onClick={() => {
+                  setShowCustomForm(true);
+                  setPreviewTemplate(null);
+                }}
+              >
+                체크포인트 상세 수정하기
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 새 경로 만들기 - 템플릿 선택 */}
-      {!showCustomForm && (
+      {!showCustomForm && !previewTemplate && (
         <section className="route-templates">
-          <h2>{existingRoutes.length > 0 ? '새 경로 추가' : '경로 템플릿'}</h2>
-          <p className="section-desc">템플릿을 탭하면 바로 저장됩니다</p>
+          <h2>{existingRoutes.length > 0 ? '새 경로 추가' : '어떤 경로를 만들까요?'}</h2>
+          <p className="section-desc">템플릿을 선택하면 미리보기가 표시됩니다</p>
 
           <div className="template-grid-v2">
             {ROUTE_TEMPLATES.map((template) => (
@@ -417,54 +605,7 @@ export function RouteSetupPage() {
                 key={template.id}
                 type="button"
                 className="template-card-v2"
-                onClick={async () => {
-                  setSelectedTemplate(template);
-                  if (!userId) return;
-                  setIsSaving(true);
-                  setError('');
-                  try {
-                    const getTransportMode = (icon: string): TransportMode => {
-                      switch (icon) {
-                        case '🚇': return 'subway';
-                        case '🚌': return 'bus';
-                        case '🚗': return 'taxi';
-                        case '🚴': return 'bike';
-                        default: return 'walk';
-                      }
-                    };
-                    type CheckpointTypeValue = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
-                    const getCheckpointType = (icon: string, index: number, total: number): CheckpointTypeValue => {
-                      if (index === 0) return 'home';
-                      if (index === total - 1) return 'work';
-                      if (icon === '🚇') return 'subway';
-                      if (icon === '🚌') return 'bus_stop';
-                      return 'transfer_point';
-                    };
-                    const dto: CreateRouteDto = {
-                      userId,
-                      name: `${template.name} 경로`,
-                      routeType: template.type,
-                      isPreferred: existingRoutes.length === 0,
-                      checkpoints: template.checkpoints.map((cp, index) => ({
-                        sequenceOrder: index + 1,
-                        name: cp.name,
-                        checkpointType: getCheckpointType(cp.icon, index, template.checkpoints.length),
-                        expectedDurationToNext: index < template.checkpoints.length - 1 ? 10 : undefined,
-                        expectedWaitTime: ['🚇', '🚌'].includes(cp.icon) ? 3 : 0,
-                        transportMode: index < template.checkpoints.length - 1 ? getTransportMode(cp.icon) : undefined,
-                      })),
-                    };
-                    await commuteApi.createRoute(dto);
-                    setSuccess('경로가 저장되었습니다!');
-                    setTimeout(() => navigate('/commute'), 800);
-                  } catch (err) {
-                    console.error('Failed to save route:', err);
-                    setError('저장에 실패했습니다.');
-                  } finally {
-                    setIsSaving(false);
-                    setSelectedTemplate(null);
-                  }
-                }}
+                onClick={() => handleSelectTemplate(template)}
                 disabled={isSaving}
                 style={{ '--template-gradient': template.gradient } as React.CSSProperties}
               >
@@ -475,9 +616,6 @@ export function RouteSetupPage() {
                     <span key={i}>{cp.icon}</span>
                   ))}
                 </div>
-                {isSaving && selectedTemplate?.id === template.id && (
-                  <span className="template-saving">저장 중...</span>
-                )}
               </button>
             ))}
           </div>
@@ -496,7 +634,7 @@ export function RouteSetupPage() {
               className="advanced-toggle"
               onClick={() => setShowCustomForm(true)}
             >
-              <span>직접 만들기</span>
+              <span>처음부터 직접 만들기</span>
               <span className="toggle-icon">+</span>
             </button>
           </div>
