@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   getCommuteApiClient,
@@ -7,6 +7,7 @@ import {
   type RouteType,
   type TransportMode,
 } from '@infrastructure/api/commute-api.client';
+import { subwayApiClient, type SubwayStation } from '@infrastructure/api';
 
 interface SimpleCheckpoint {
   name: string;
@@ -20,6 +21,9 @@ interface CustomCheckpoint {
   transportMode: TransportMode;
   expectedDuration: number;
   waitTime: number;
+  // 역/정류장 정보
+  stationId?: string;
+  stationName?: string;
 }
 
 const TRANSPORT_OPTIONS: { value: TransportMode; label: string; icon: string }[] = [
@@ -109,6 +113,50 @@ export function RouteSetupPage() {
 
   // 템플릿 선택 후 미리보기 모드
   const [previewTemplate, setPreviewTemplate] = useState<RouteTemplate | null>(null);
+
+  // 역 검색 관련 상태
+  const [stationSearchQuery, setStationSearchQuery] = useState('');
+  const [stationSearchResults, setStationSearchResults] = useState<SubwayStation[]>([]);
+  const [isSearchingStation, setIsSearchingStation] = useState(false);
+  const [activeCheckpointId, setActiveCheckpointId] = useState<string | null>(null);
+
+  // 역 검색 함수
+  const searchStations = useCallback(async (query: string) => {
+    if (!query || query.length < 1) {
+      setStationSearchResults([]);
+      return;
+    }
+
+    setIsSearchingStation(true);
+    try {
+      const results = await subwayApiClient.searchStations(query);
+      setStationSearchResults(results.slice(0, 5)); // 최대 5개
+    } catch (err) {
+      console.error('Station search failed:', err);
+      setStationSearchResults([]);
+    } finally {
+      setIsSearchingStation(false);
+    }
+  }, []);
+
+  // 역 선택 시 체크포인트 업데이트
+  const handleSelectStation = (checkpointId: string, station: SubwayStation) => {
+    setCustomCheckpoints(prev =>
+      prev.map(cp =>
+        cp.id === checkpointId
+          ? {
+              ...cp,
+              name: station.name,
+              stationId: station.id,
+              stationName: `${station.name} (${station.line})`,
+            }
+          : cp
+      )
+    );
+    setStationSearchQuery('');
+    setStationSearchResults([]);
+    setActiveCheckpointId(null);
+  };
 
   // Load existing routes
   useEffect(() => {
@@ -522,22 +570,117 @@ export function RouteSetupPage() {
                 />
               </div>
 
-              {/* 경로 미리보기 */}
-              <div className="preview-route-visual">
-                <div className="route-flow">
+              {/* 체크포인트 설정 - 역/정류장 중심 */}
+              <div className="preview-checkpoints">
+                <label className="preview-checkpoints-label">경로 체크포인트</label>
+                <p className="preview-checkpoints-hint">
+                  지하철역을 선택하면 도착 정보를 알림에서 받을 수 있어요
+                </p>
+
+                <div className="checkpoint-cards">
                   {customCheckpoints.map((cp, index) => (
-                    <div key={cp.id} className="route-flow-item">
-                      <div className="flow-checkpoint">
-                        <span className="flow-icon">{cp.icon}</span>
-                        <span className="flow-name">{cp.name}</span>
+                    <div key={cp.id} className="checkpoint-card">
+                      <div className="checkpoint-card-header">
+                        <span className="checkpoint-number">{index + 1}</span>
+                        <span className="checkpoint-icon">{cp.icon}</span>
+                        {index === 0 && <span className="checkpoint-label">출발</span>}
+                        {index === customCheckpoints.length - 1 && <span className="checkpoint-label">도착</span>}
                       </div>
+
+                      {/* 지하철/버스 체크포인트: 역 검색 */}
+                      {(cp.icon === '🚇' || cp.icon === '🚌') ? (
+                        <div className="checkpoint-station-search">
+                          {cp.stationName ? (
+                            <div className="selected-station">
+                              <span className="station-name">{cp.stationName}</span>
+                              <button
+                                type="button"
+                                className="btn-change-station"
+                                onClick={() => {
+                                  setActiveCheckpointId(cp.id);
+                                  setStationSearchQuery('');
+                                }}
+                              >
+                                변경
+                              </button>
+                            </div>
+                          ) : activeCheckpointId === cp.id ? (
+                            <div className="station-search-input">
+                              <input
+                                type="text"
+                                placeholder={cp.icon === '🚇' ? '역 이름 검색...' : '정류장 검색...'}
+                                value={stationSearchQuery}
+                                onChange={(e) => {
+                                  setStationSearchQuery(e.target.value);
+                                  searchStations(e.target.value);
+                                }}
+                                autoFocus
+                                className="station-input"
+                              />
+                              {isSearchingStation && <span className="searching">검색 중...</span>}
+                              {stationSearchResults.length > 0 && (
+                                <ul className="station-results">
+                                  {stationSearchResults.map((station) => (
+                                    <li key={station.id}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSelectStation(cp.id, station)}
+                                        className="station-result-btn"
+                                      >
+                                        <strong>{station.name}</strong>
+                                        <span className="station-line">{station.line}</span>
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                              <button
+                                type="button"
+                                className="btn-cancel-search"
+                                onClick={() => setActiveCheckpointId(null)}
+                              >
+                                취소
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn-select-station"
+                              onClick={() => setActiveCheckpointId(cp.id)}
+                            >
+                              {cp.icon === '🚇' ? '🔍 지하철역 선택' : '🔍 버스 정류장 선택'}
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="checkpoint-name-display">
+                          <input
+                            type="text"
+                            value={cp.name}
+                            onChange={(e) => {
+                              setCustomCheckpoints(prev =>
+                                prev.map(c =>
+                                  c.id === cp.id ? { ...c, name: e.target.value } : c
+                                )
+                              );
+                            }}
+                            className="checkpoint-name-input"
+                            placeholder="장소 이름"
+                          />
+                        </div>
+                      )}
+
+                      {/* 이동 수단 표시 (마지막 제외) */}
                       {index < customCheckpoints.length - 1 && (
-                        <div className="flow-arrow">
-                          <span className="flow-transport">
+                        <div className="checkpoint-transport-indicator">
+                          <span className="transport-icon">
                             {cp.transportMode === 'subway' ? '🚇' :
                              cp.transportMode === 'bus' ? '🚌' : '🚶'}
                           </span>
-                          <span className="flow-duration">{cp.expectedDuration}분</span>
+                          <span className="transport-text">
+                            {cp.transportMode === 'subway' ? '지하철' :
+                             cp.transportMode === 'bus' ? '버스' : '도보'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -545,12 +688,10 @@ export function RouteSetupPage() {
                 </div>
               </div>
 
-              {/* 예상 시간 */}
-              <div className="preview-time">
-                <span>예상 총 소요시간</span>
-                <strong>
-                  {customCheckpoints.reduce((sum, cp) => sum + cp.expectedDuration + cp.waitTime, 0)}분
-                </strong>
+              {/* 안내 메시지 */}
+              <div className="preview-info-box">
+                <span className="info-icon">💡</span>
+                <p>소요시간은 실제 트래킹을 통해 자동으로 측정됩니다</p>
               </div>
 
               {/* 에러/성공 메시지 */}

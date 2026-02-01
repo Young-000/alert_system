@@ -6579,6 +6579,263 @@ kbd {
   padding: 0.5rem;
 }
 
+/* ========================================
+   체크포인트 카드 (역/정류장 검색 UI)
+   ======================================== */
+.preview-checkpoints {
+  margin-bottom: 1.5rem;
+}
+
+.preview-checkpoints-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.preview-checkpoints-hint {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-bottom: 1rem;
+}
+
+.checkpoint-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkpoint-card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+
+.checkpoint-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.checkpoint-card .checkpoint-number {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.checkpoint-card .checkpoint-icon {
+  font-size: 1.25rem;
+}
+
+.checkpoint-label {
+  font-size: 0.7rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+/* 역 선택된 상태 */
+.selected-station {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.selected-station .station-name {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.btn-change-station {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.btn-change-station:hover {
+  text-decoration: underline;
+}
+
+/* 역 선택 버튼 */
+.btn-select-station {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-select-station:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* 역 검색 입력 */
+.station-search-input {
+  position: relative;
+}
+
+.station-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.station-search-input .searching {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+/* 검색 결과 */
+.station-results {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.station-results li {
+  border-bottom: 1px solid var(--border);
+}
+
+.station-results li:last-child {
+  border-bottom: none;
+}
+
+.station-result-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.station-result-btn:hover {
+  background: var(--bg-elevated);
+}
+
+.station-result-btn strong {
+  color: var(--ink);
+}
+
+.station-line {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  background: var(--bg-elevated);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-cancel-search {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.btn-cancel-search:hover {
+  color: var(--ink);
+}
+
+/* 장소 이름 입력 */
+.checkpoint-name-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  background: white;
+}
+
+.checkpoint-name-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* 이동 수단 표시 */
+.checkpoint-transport-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.transport-icon {
+  font-size: 1rem;
+}
+
+/* 안내 박스 */
+.preview-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.preview-info-box .info-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.preview-info-box p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0369a1;
+  line-height: 1.4;
+}
+
 .preview-edit-link:hover {
   color: var(--primary);
 }
