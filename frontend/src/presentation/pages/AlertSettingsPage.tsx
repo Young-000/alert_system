@@ -616,6 +616,12 @@ export function AlertSettingsPage() {
               </button>
             </div>
 
+            {/* Quick action feedback messages */}
+            <div aria-live="polite" aria-atomic="true">
+              {error && <div className="notice error" role="alert">{error}</div>}
+              {success && <div className="notice success" role="status">{success}</div>}
+            </div>
+
             <div className="divider-text">
               <span>또는 직접 설정</span>
             </div>
