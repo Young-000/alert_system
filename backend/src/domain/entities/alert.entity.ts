@@ -1,3 +1,6 @@
+import { v4 as uuidv4 } from 'uuid';
+
+// 기존 AlertType (하위 호환 유지)
 export enum AlertType {
   WEATHER = 'weather',
   AIR_QUALITY = 'airQuality',
@@ -5,7 +8,43 @@ export enum AlertType {
   SUBWAY = 'subway',
 }
 
-import { v4 as uuidv4 } from 'uuid';
+// 새로운 알림 카테고리 (명확한 목적 기반)
+export enum AlertCategory {
+  // 날씨 알림: 오늘 전체 날씨 + 시간대별 변화 + 미세먼지
+  DAILY_WEATHER = 'daily_weather',
+
+  // 출발 알림: 경로 첫 구간 출발 알림 (실시간 교통정보 포함)
+  DEPARTURE_REMINDER = 'departure_reminder',
+}
+
+// 알림 트리거 방식
+export enum AlertTriggerType {
+  FIXED_TIME = 'fixed_time',           // 고정 시간 (매일 08:00)
+  SMART_DEPARTURE = 'smart_departure', // 도착 시간 기준 역산
+}
+
+// 출발 알림 설정
+export interface DepartureAlertConfig {
+  // 연결된 경로 ID (필수)
+  routeId: string;
+
+  // 트리거 방식
+  triggerType: AlertTriggerType;
+
+  // 고정 시간 모드 설정
+  fixedTime?: string;  // "08:00"
+
+  // 스마트 모드 설정
+  targetArrivalTime?: string;  // 회사 도착 희망 시간 "09:00"
+  bufferMinutes?: number;      // 여유 시간 (기본 10분)
+
+  // 첫 번째 체크포인트 정보 (자동 설정)
+  firstCheckpoint?: {
+    name: string;
+    transportMode: string;
+    lineInfo?: string;
+  };
+}
 
 /**
  * Smart scheduling configuration for adaptive notification timing
@@ -44,6 +83,11 @@ export class Alert {
   public subwayStationId?: string;
   public routeId?: string;
 
+  // 새로운 카테고리 기반 설정
+  public category: AlertCategory;
+  public triggerType: AlertTriggerType;
+  public departureConfig?: DepartureAlertConfig;
+
   // Smart scheduling properties
   public smartSchedulingEnabled: boolean;
   public smartSchedulingConfig: SmartSchedulingConfig;
@@ -68,6 +112,9 @@ export class Alert {
     smartSchedulingEnabled = false,
     smartSchedulingConfig?: Partial<SmartSchedulingConfig>,
     routeId?: string,
+    category?: AlertCategory,
+    triggerType?: AlertTriggerType,
+    departureConfig?: DepartureAlertConfig,
   ) {
     this.id = id || uuidv4();
     this.userId = userId;
@@ -79,6 +126,11 @@ export class Alert {
     this.subwayStationId = subwayStationId;
     this.routeId = routeId;
 
+    // 카테고리 자동 추론 (하위 호환성)
+    this.category = category || this.inferCategory(alertTypes);
+    this.triggerType = triggerType || AlertTriggerType.FIXED_TIME;
+    this.departureConfig = departureConfig;
+
     // Smart scheduling initialization
     this.smartSchedulingEnabled = smartSchedulingEnabled;
     this.smartSchedulingConfig = {
@@ -86,6 +138,15 @@ export class Alert {
       ...smartSchedulingConfig,
     };
     this.notificationTime = this.extractTimeFromSchedule(schedule);
+  }
+
+  // 기존 alertTypes에서 카테고리 추론 (하위 호환)
+  private inferCategory(alertTypes: AlertType[]): AlertCategory {
+    const hasTransit = alertTypes.includes(AlertType.BUS) || alertTypes.includes(AlertType.SUBWAY);
+    if (hasTransit && this.routeId) {
+      return AlertCategory.DEPARTURE_REMINDER;
+    }
+    return AlertCategory.DAILY_WEATHER;
   }
 
   private extractTimeFromSchedule(schedule: string): string | undefined {
@@ -136,6 +197,93 @@ export class Alert {
     this.enabled = true;
   }
 
+  // 날씨 알림인지 확인
+  isDailyWeatherAlert(): boolean {
+    return this.category === AlertCategory.DAILY_WEATHER;
+  }
+
+  // 출발 알림인지 확인
+  isDepartureReminderAlert(): boolean {
+    return this.category === AlertCategory.DEPARTURE_REMINDER;
+  }
+
+  // 출발 알림 설정 업데이트
+  updateDepartureConfig(config: Partial<DepartureAlertConfig>): void {
+    if (!this.departureConfig) {
+      this.departureConfig = config as DepartureAlertConfig;
+    } else {
+      this.departureConfig = {
+        ...this.departureConfig,
+        ...config,
+      };
+    }
+  }
+
+  // 카테고리 변경
+  updateCategory(category: AlertCategory): void {
+    this.category = category;
+  }
+
+  // 트리거 타입 변경
+  updateTriggerType(triggerType: AlertTriggerType): void {
+    this.triggerType = triggerType;
+  }
+
+  // 날씨 알림 생성 팩토리 메서드
+  static createDailyWeatherAlert(
+    userId: string,
+    name: string,
+    schedule: string,
+    includeAirQuality = true,
+  ): Alert {
+    const alertTypes = includeAirQuality
+      ? [AlertType.WEATHER, AlertType.AIR_QUALITY]
+      : [AlertType.WEATHER];
+
+    return new Alert(
+      userId,
+      name,
+      schedule,
+      alertTypes,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      undefined,
+      undefined,
+      AlertCategory.DAILY_WEATHER,
+      AlertTriggerType.FIXED_TIME,
+    );
+  }
+
+  // 출발 알림 생성 팩토리 메서드
+  static createDepartureAlert(
+    userId: string,
+    name: string,
+    departureConfig: DepartureAlertConfig,
+  ): Alert {
+    const schedule = departureConfig.fixedTime || '08:00';
+    const alertTypes = [AlertType.SUBWAY, AlertType.BUS]; // 교통 정보 포함
+
+    return new Alert(
+      userId,
+      name,
+      schedule,
+      alertTypes,
+      undefined,
+      undefined,
+      undefined,
+      departureConfig.triggerType === AlertTriggerType.SMART_DEPARTURE,
+      departureConfig.triggerType === AlertTriggerType.SMART_DEPARTURE
+        ? { targetArrivalTime: departureConfig.targetArrivalTime }
+        : undefined,
+      departureConfig.routeId,
+      AlertCategory.DEPARTURE_REMINDER,
+      departureConfig.triggerType,
+      departureConfig,
+    );
+  }
+
   toJSON() {
     return {
       id: this.id,
@@ -147,6 +295,9 @@ export class Alert {
       busStopId: this.busStopId,
       subwayStationId: this.subwayStationId,
       routeId: this.routeId,
+      category: this.category,
+      triggerType: this.triggerType,
+      departureConfig: this.departureConfig,
       smartSchedulingEnabled: this.smartSchedulingEnabled,
       smartSchedulingConfig: this.smartSchedulingConfig,
       notificationTime: this.notificationTime,

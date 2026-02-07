@@ -7,6 +7,7 @@ import {
 } from '@infrastructure/api';
 import type { Alert, AlertType, CreateAlertDto } from '@infrastructure/api';
 import type { SubwayStation, BusStop } from '@infrastructure/api';
+import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
 
 type WizardStep = 'type' | 'transport' | 'station' | 'routine' | 'confirm';
 
@@ -23,13 +24,6 @@ interface Routine {
   leaveWork: string;
 }
 
-const ALERT_TYPE_LABELS: Record<AlertType, string> = {
-  weather: '날씨',
-  airQuality: '미세먼지',
-  subway: '지하철',
-  bus: '버스',
-};
-
 export function AlertSettingsPage() {
   // Wizard state
   const [step, setStep] = useState<WizardStep>('type');
@@ -42,6 +36,17 @@ export function AlertSettingsPage() {
   const [searchResults, setSearchResults] = useState<TransportItem[]>([]);
   const [selectedTransports, setSelectedTransports] = useState<TransportItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // 역→노선 2단계 선택용 state
+  interface GroupedStation {
+    name: string;
+    lines: TransportItem[];
+  }
+  const [groupedStations, setGroupedStations] = useState<GroupedStation[]>([]);
+  const [selectedStation, setSelectedStation] = useState<GroupedStation | null>(null);
+
+  // 중복 알림 에러용 state
+  const [duplicateAlert, setDuplicateAlert] = useState<Alert | null>(null);
 
   // Routine state
   const [routine, setRoutine] = useState<Routine>({
@@ -62,7 +67,13 @@ export function AlertSettingsPage() {
   const [editForm, setEditForm] = useState({ name: '', schedule: '' });
   const [isEditing, setIsEditing] = useState(false);
 
+  // 경로 임포트용 state
+  const [savedRoutes, setSavedRoutes] = useState<RouteResponse[]>([]);
+  const [showRouteImport, setShowRouteImport] = useState(false);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null); // 연결된 경로 ID
+
   const userId = localStorage.getItem('userId') || '';
+  const commuteApi = getCommuteApiClient();
 
   // Load existing alerts
   useEffect(() => {
@@ -97,6 +108,18 @@ export function AlertSettingsPage() {
     };
   }, [userId]);
 
+  // Load saved routes for import option
+  useEffect(() => {
+    if (!userId) return;
+
+    let isMounted = true;
+    commuteApi.getUserRoutes(userId).then((routes) => {
+      if (isMounted) setSavedRoutes(routes);
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, [userId, commuteApi]);
+
   // Reload alerts helper function
   const reloadAlerts = useCallback(async () => {
     if (!userId) return;
@@ -108,10 +131,11 @@ export function AlertSettingsPage() {
     }
   }, [userId]);
 
-  // Unified search for subway + bus
+  // Unified search for subway + bus (with grouping for 2-step selection)
   useEffect(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) {
       setSearchResults([]);
+      setGroupedStations([]);
       return;
     }
 
@@ -150,11 +174,29 @@ export function AlertSettingsPage() {
 
         if (!controller.signal.aborted) {
           setSearchResults(results.slice(0, 15));
+
+          // 지하철 역 그룹화 (같은 역 이름을 가진 노선들)
+          if (transportTypes.includes('subway') && !transportTypes.includes('bus')) {
+            const stationMap = new Map<string, TransportItem[]>();
+            results.filter(r => r.type === 'subway').forEach(item => {
+              const existing = stationMap.get(item.name) || [];
+              stationMap.set(item.name, [...existing, item]);
+            });
+            const grouped: GroupedStation[] = Array.from(stationMap.entries()).map(([name, lines]) => ({
+              name,
+              lines,
+            }));
+            setGroupedStations(grouped);
+          } else {
+            setGroupedStations([]);
+          }
+
           setIsSearching(false);
         }
       } catch {
         if (!controller.signal.aborted) {
           setSearchResults([]);
+          setGroupedStations([]);
           setIsSearching(false);
         }
       }
@@ -201,6 +243,45 @@ export function AlertSettingsPage() {
     return true;
   };
 
+  // 경로에서 교통수단 임포트 + 경로 연결
+  const importFromRoute = (route: RouteResponse) => {
+    const transports: TransportItem[] = [];
+
+    for (const checkpoint of route.checkpoints) {
+      if (checkpoint.checkpointType === 'subway' && checkpoint.linkedStationId) {
+        transports.push({
+          type: 'subway',
+          id: checkpoint.linkedStationId,
+          name: checkpoint.name,
+          detail: checkpoint.lineInfo || '',
+        });
+      } else if (checkpoint.checkpointType === 'bus_stop' && checkpoint.linkedBusStopId) {
+        transports.push({
+          type: 'bus',
+          id: checkpoint.linkedBusStopId,
+          name: checkpoint.name,
+          detail: '',
+        });
+      }
+    }
+
+    if (transports.length > 0) {
+      setSelectedTransports(transports);
+      setWantsTransport(true);
+      setSelectedRouteId(route.id); // 경로 ID 연결
+      // 지하철/버스 종류 설정
+      const hasSubway = transports.some(t => t.type === 'subway');
+      const hasBus = transports.some(t => t.type === 'bus');
+      const types: ('subway' | 'bus')[] = [];
+      if (hasSubway) types.push('subway');
+      if (hasBus) types.push('bus');
+      setTransportTypes(types);
+      // 루틴 단계로 이동
+      setStep('routine');
+      setShowRouteImport(false);
+    }
+  };
+
   // Toggle transport selection
   const toggleTransport = (item: TransportItem) => {
     setSelectedTransports((prev) => {
@@ -214,11 +295,11 @@ export function AlertSettingsPage() {
 
   // Generate cron schedule from routine
   const generateSchedule = useCallback((): string => {
-    const times: string[] = [];
+    const times: number[] = [];
 
     if (wantsWeather) {
       const [h] = routine.wakeUp.split(':');
-      times.push(h);
+      times.push(parseInt(h, 10)); // 정수로 변환하여 leading zero 제거
     }
 
     if (wantsTransport) {
@@ -230,7 +311,12 @@ export function AlertSettingsPage() {
         notifyM += 60;
         notifyH -= 1;
       }
-      times.push(String(notifyH));
+      // Clamp to 0:00 instead of wrapping to previous day
+      if (notifyH < 0) {
+        notifyH = 0;
+        notifyM = 0;
+      }
+      times.push(notifyH);
 
       const [workH, workM] = routine.leaveWork.split(':').map(Number);
       let workNotifyH = workH;
@@ -239,10 +325,15 @@ export function AlertSettingsPage() {
         workNotifyM += 60;
         workNotifyH -= 1;
       }
-      times.push(String(workNotifyH));
+      // Clamp to 0:00 instead of wrapping to previous day
+      if (workNotifyH < 0) {
+        workNotifyH = 0;
+        workNotifyM = 0;
+      }
+      times.push(workNotifyH);
     }
 
-    const uniqueHours = [...new Set(times)].sort((a, b) => Number(a) - Number(b));
+    const uniqueHours = [...new Set(times)].sort((a, b) => a - b);
     return `0 ${uniqueHours.join(',')} * * *`;
   }, [wantsWeather, wantsTransport, routine]);
 
@@ -316,36 +407,81 @@ export function AlertSettingsPage() {
     }
   }, [userId, alerts, reloadAlerts]);
 
+  // cron 스케줄 정규화 (비교용)
+  const normalizeSchedule = useCallback((schedule: string): string => {
+    const parts = schedule.split(' ');
+    if (parts.length < 5) return schedule;
+    // Normalize: sort hours, keep minute as-is
+    const minute = parts[0];
+    const hours = parts[1].split(',').map(h => parseInt(h, 10)).filter(h => !isNaN(h)).sort((a, b) => a - b);
+    return `${minute} ${hours.join(',')} ${parts.slice(2).join(' ')}`;
+  }, []);
+
+  // 중복 알림 체크 함수
+  const checkDuplicateAlert = useCallback((schedule: string, alertTypes: AlertType[]): Alert | null => {
+    const normalizedNew = normalizeSchedule(schedule);
+    const newTypes = [...alertTypes].sort();
+
+    return alerts.find(existing => {
+      // 같은 스케줄 체크 (정규화된 전체 스케줄 비교)
+      const normalizedExisting = normalizeSchedule(existing.schedule);
+      if (normalizedNew !== normalizedExisting) return false;
+
+      // 같은 알림 타입 조합 체크
+      const existingTypes = [...existing.alertTypes].sort();
+      const sameTypes = existingTypes.length === newTypes.length &&
+        existingTypes.every((t, i) => t === newTypes[i]);
+
+      return sameTypes;
+    }) || null;
+  }, [alerts, normalizeSchedule]);
+
   // Submit alert
   const handleSubmit = useCallback(async () => {
     setError('');
+    setDuplicateAlert(null);
 
     if (!userId) {
       setError('로그인이 필요합니다.');
       return;
     }
 
+    // 알림 타입 생성
+    const alertTypes: AlertType[] = [];
+    if (wantsWeather) {
+      alertTypes.push('weather', 'airQuality');
+    }
+
+    const subwayStation = selectedTransports.find((t) => t.type === 'subway');
+    const busStop = selectedTransports.find((t) => t.type === 'bus');
+
+    if (subwayStation) alertTypes.push('subway');
+    if (busStop) alertTypes.push('bus');
+
+    const schedule = generateSchedule();
+
+    // 중복 체크
+    const duplicate = checkDuplicateAlert(schedule, alertTypes);
+    if (duplicate) {
+      setDuplicateAlert(duplicate);
+      // 스케줄에서 시간 추출
+      const parts = duplicate.schedule.split(' ');
+      const hours = parts[1]?.split(',').map(h => `${h.padStart(2, '0')}:00`).join(', ') || '';
+      setError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const alertTypes: AlertType[] = [];
-      if (wantsWeather) {
-        alertTypes.push('weather', 'airQuality');
-      }
-
-      const subwayStation = selectedTransports.find((t) => t.type === 'subway');
-      const busStop = selectedTransports.find((t) => t.type === 'bus');
-
-      if (subwayStation) alertTypes.push('subway');
-      if (busStop) alertTypes.push('bus');
-
       const dto: CreateAlertDto = {
         userId,
         name: generateAlertName(),
-        schedule: generateSchedule(),
+        schedule,
         alertTypes,
         subwayStationId: subwayStation?.id,
         busStopId: busStop?.id,
+        routeId: selectedRouteId || undefined, // 경로 연결
       };
 
       await alertApiClient.createAlert(dto);
@@ -360,6 +496,7 @@ export function AlertSettingsPage() {
         setTransportTypes([]);
         setSelectedTransports([]);
         setSearchQuery('');
+        setSelectedRouteId(null); // 경로 연결 초기화
         setSuccess('');
       }, 2000);
     } catch (err: unknown) {
@@ -375,7 +512,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, reloadAlerts]);
+  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, reloadAlerts, checkDuplicateAlert]);
 
   const handleDeleteClick = (alert: Alert) => {
     setDeleteTarget({ id: alert.id, name: alert.name });
@@ -498,6 +635,7 @@ export function AlertSettingsPage() {
       let notifyM = m - 15;
       let notifyH = h;
       if (notifyM < 0) { notifyM += 60; notifyH -= 1; }
+      if (notifyH < 0) { notifyH = 0; notifyM = 0; }
       times.push({
         time: `${String(notifyH).padStart(2, '0')}:${String(notifyM).padStart(2, '0')}`,
         content: `출근길 교통 (${selectedTransports.map((t) => t.name).join(', ')})`,
@@ -507,6 +645,7 @@ export function AlertSettingsPage() {
       let workNotifyM = wm - 15;
       let workNotifyH = wh;
       if (workNotifyM < 0) { workNotifyM += 60; workNotifyH -= 1; }
+      if (workNotifyH < 0) { workNotifyH = 0; workNotifyM = 0; }
       times.push({
         time: `${String(workNotifyH).padStart(2, '0')}:${String(workNotifyM).padStart(2, '0')}`,
         content: '퇴근길 교통',
@@ -575,15 +714,90 @@ export function AlertSettingsPage() {
         </div>
       )}
 
+      {/* 상단 알림 미리보기 - 설정된 알림이 있을 때만 표시 */}
+      {!isLoadingAlerts && alerts.length > 0 && (
+        <section className="alerts-preview-top">
+          <div className="preview-header-row">
+            <h2>내 알림</h2>
+            <span className="preview-count">{alerts.filter(a => a.enabled).length}개 활성</span>
+          </div>
+          <div className="preview-alerts-list">
+            {alerts.slice(0, 3).map((alert) => {
+              const parts = alert.schedule.split(' ');
+              const hours = parts.length >= 2
+                ? parts[1].split(',').map(h => `${h.padStart(2, '0')}:00`)
+                : ['--:--'];
+              return (
+                <div
+                  key={alert.id}
+                  className={`preview-alert-chip ${alert.enabled ? 'active' : 'inactive'}`}
+                >
+                  <span className="chip-icon">
+                    {alert.alertTypes.includes('weather') ? '🌤️' : '🚇'}
+                  </span>
+                  <span className="chip-name">{alert.name}</span>
+                  <span className="chip-time">{hours[0]}</span>
+                  <label className="toggle-mini">
+                    <input
+                      type="checkbox"
+                      checked={alert.enabled}
+                      onChange={async () => {
+                        try {
+                          await alertApiClient.toggleAlert(alert.id);
+                          reloadAlerts();
+                        } catch {
+                          setError('알림 상태 변경에 실패했습니다.');
+                        }
+                      }}
+                      aria-label={`${alert.name} ${alert.enabled ? '끄기' : '켜기'}`}
+                    />
+                    <span className="toggle-slider-mini" />
+                  </label>
+                </div>
+              );
+            })}
+            {alerts.length > 3 && (
+              <a href="#existing-alerts-section" className="preview-more-link">
+                +{alerts.length - 3}개 더보기
+              </a>
+            )}
+          </div>
+        </section>
+      )}
+
       <div id="wizard-content" className="wizard-container" style={{ display: isLoadingAlerts && userId ? 'none' : undefined }}>
-        {/* Progress Bar */}
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: `${(progress.current / progress.total) * 100}%` }}
-          />
+        {/* 개선된 스텝 인디케이터 */}
+        <div className="step-indicator" role="navigation" aria-label="설정 단계">
+          <div className={`step-item ${progress.current >= 1 ? 'active' : ''} ${progress.current > 1 ? 'completed' : ''}`}>
+            <div className="step-number">{progress.current > 1 ? '✓' : '1'}</div>
+            <div className="step-label">유형</div>
+          </div>
+          <div className="step-connector" />
+          {wantsTransport && (
+            <>
+              <div className={`step-item ${progress.current >= 2 ? 'active' : ''} ${progress.current > 2 ? 'completed' : ''}`}>
+                <div className="step-number">{progress.current > 2 ? '✓' : '2'}</div>
+                <div className="step-label">교통</div>
+              </div>
+              <div className="step-connector" />
+              <div className={`step-item ${progress.current >= 3 ? 'active' : ''} ${progress.current > 3 ? 'completed' : ''}`}>
+                <div className="step-number">{progress.current > 3 ? '✓' : '3'}</div>
+                <div className="step-label">역</div>
+              </div>
+              <div className="step-connector" />
+            </>
+          )}
+          <div className={`step-item ${step === 'routine' || step === 'confirm' ? 'active' : ''} ${step === 'confirm' ? 'completed' : ''}`}>
+            <div className="step-number">{step === 'confirm' ? '✓' : (wantsTransport ? '4' : '2')}</div>
+            <div className="step-label">시간</div>
+          </div>
+          <div className="step-connector" />
+          <div className={`step-item ${step === 'confirm' ? 'active' : ''}`}>
+            <div className="step-number">{wantsTransport ? '5' : '3'}</div>
+            <div className="step-label">확인</div>
+          </div>
         </div>
-        <p className="progress-text">{progress.current} / {progress.total}</p>
+        <p className="progress-text">{progress.current} / {progress.total} 단계</p>
 
         {/* Step: Type Selection */}
         {step === 'type' && (
@@ -616,10 +830,28 @@ export function AlertSettingsPage() {
               </button>
             </div>
 
-            {/* Quick action feedback messages */}
-            <div aria-live="polite" aria-atomic="true">
-              {error && <div className="notice error" role="alert">{error}</div>}
-              {success && <div className="notice success" role="status">{success}</div>}
+            {/* Quick action feedback messages - 토스트 스타일 */}
+            <div aria-live="polite" aria-atomic="true" className="toast-container">
+              {error && (
+                <div className="toast toast-error" role="alert">
+                  <span className="toast-icon" aria-hidden="true">⚠️</span>
+                  <span className="toast-message">{error}</span>
+                  <button
+                    type="button"
+                    className="toast-close"
+                    onClick={() => setError('')}
+                    aria-label="닫기"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {success && (
+                <div className="toast toast-success" role="status">
+                  <span className="toast-icon" aria-hidden="true">✅</span>
+                  <span className="toast-message">{success}</span>
+                </div>
+              )}
             </div>
 
             <div className="divider-text">
@@ -662,6 +894,73 @@ export function AlertSettingsPage() {
           <section className="wizard-step">
             <h1>어떤 교통수단을 이용하세요?</h1>
             <p className="muted">복수 선택 가능해요</p>
+
+            {/* 경로에서 가져오기 옵션 */}
+            {savedRoutes.length > 0 && !showRouteImport && (
+              <div className="route-import-banner">
+                <span className="import-icon">📍</span>
+                <div className="import-text">
+                  <strong>저장된 경로에서 가져오기</strong>
+                  <span className="muted">기존 출퇴근 경로의 역/정류장을 사용해요</span>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => setShowRouteImport(true)}
+                >
+                  선택
+                </button>
+              </div>
+            )}
+
+            {/* 경로 선택 목록 */}
+            {showRouteImport && (
+              <div className="route-import-list">
+                <div className="import-list-header">
+                  <h3>경로 선택</h3>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowRouteImport(false)}
+                    aria-label="닫기"
+                  >
+                    ×
+                  </button>
+                </div>
+                {savedRoutes.map(route => {
+                  const subwayStops = route.checkpoints.filter(c => c.checkpointType === 'subway');
+                  const busStops = route.checkpoints.filter(c => c.checkpointType === 'bus_stop');
+                  if (subwayStops.length === 0 && busStops.length === 0) return null;
+
+                  return (
+                    <button
+                      key={route.id}
+                      type="button"
+                      className="route-import-item"
+                      onClick={() => importFromRoute(route)}
+                    >
+                      <span className="route-icon">
+                        {route.routeType === 'morning' ? '🌅' : '🌆'}
+                      </span>
+                      <div className="route-import-info">
+                        <span className="route-name">{route.name}</span>
+                        <span className="route-stops">
+                          {subwayStops.map(s => `🚇${s.name}`).join(' ')}
+                          {busStops.map(s => `🚌${s.name}`).join(' ')}
+                        </span>
+                      </div>
+                      <span className="route-action">사용 →</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {!showRouteImport && (
+              <div className="divider-text">
+                <span>또는 직접 선택</span>
+              </div>
+            )}
 
             <div className="choice-grid" role="group" aria-label="교통수단 선택">
               <button
@@ -707,62 +1006,189 @@ export function AlertSettingsPage() {
             <h1>자주 이용하는 역/정류장을 검색하세요</h1>
             <p className="muted">출근길에 이용하는 곳을 선택해주세요</p>
 
-            <div className="search-box">
-              <span className="search-icon" aria-hidden="true">🔍</span>
-              <input
-                type="search"
-                className="search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="예: 강남역, 홍대입구"
-                autoFocus
-                aria-label="역 또는 정류장 검색"
-                autoComplete="off"
-              />
-            </div>
+            {/* 경로에서 빠른 선택 - 첫 번째 역/정류장 */}
+            {savedRoutes.length > 0 && selectedTransports.length === 0 && !selectedStation && (() => {
+              const routeStops: { route: RouteResponse; stop: TransportItem }[] = [];
+              savedRoutes.forEach(route => {
+                const firstSubway = route.checkpoints.find(c => c.checkpointType === 'subway' && c.linkedStationId);
+                const firstBus = route.checkpoints.find(c => c.checkpointType === 'bus_stop' && c.linkedBusStopId);
 
-            <div aria-live="polite" aria-busy={isSearching}>
-              {isSearching && <p className="muted">검색 중...</p>}
-            </div>
+                if (transportTypes.includes('subway') && firstSubway && firstSubway.linkedStationId) {
+                  routeStops.push({
+                    route,
+                    stop: {
+                      type: 'subway',
+                      id: firstSubway.linkedStationId,
+                      name: firstSubway.name,
+                      detail: firstSubway.lineInfo || '',
+                    },
+                  });
+                }
+                if (transportTypes.includes('bus') && firstBus && firstBus.linkedBusStopId) {
+                  routeStops.push({
+                    route,
+                    stop: {
+                      type: 'bus',
+                      id: firstBus.linkedBusStopId,
+                      name: firstBus.name,
+                      detail: '',
+                    },
+                  });
+                }
+              });
 
-            {searchResults.length > 0 ? (
-              <div className="search-results" role="listbox" aria-label="검색 결과">
-                {searchResults.map((item) => {
-                  const isSelected = selectedTransports.some(
-                    (t) => t.id === item.id && t.type === item.type
-                  );
-                  return (
-                    <button
-                      key={`${item.type}-${item.id}`}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      className={`search-result-item ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleTransport(item)}
-                    >
-                      <span className="result-icon" aria-hidden="true">
-                        {item.type === 'subway' ? '🚇' : '🚌'}
-                      </span>
-                      <div className="result-info">
-                        <strong>{item.name}</strong>
-                        <span className="muted">{item.detail}</span>
-                      </div>
-                      {isSelected && <span className="check-icon" aria-hidden="true">✓</span>}
-                    </button>
-                  );
-                })}
+              if (routeStops.length === 0) return null;
+
+              return (
+                <div className="quick-select-section">
+                  <p className="quick-select-label">내 경로에서 빠른 선택</p>
+                  <div className="quick-select-list">
+                    {routeStops.slice(0, 3).map(({ route, stop }) => (
+                      <button
+                        key={`${route.id}-${stop.id}`}
+                        type="button"
+                        className="quick-select-btn"
+                        onClick={() => {
+                          toggleTransport(stop);
+                        }}
+                      >
+                        <span className="qs-icon">{stop.type === 'subway' ? '🚇' : '🚌'}</span>
+                        <span className="qs-name">{stop.name}</span>
+                        <span className="qs-route">{route.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 역 선택 후 노선 선택 UI (2단계) */}
+            {selectedStation ? (
+              <div className="line-selection-step">
+                <button
+                  type="button"
+                  className="back-to-search"
+                  onClick={() => setSelectedStation(null)}
+                  aria-label="역 선택으로 돌아가기"
+                >
+                  ← {selectedStation.name}역
+                </button>
+                <h3 className="line-selection-title">노선을 선택하세요</h3>
+                <div className="line-grid" role="radiogroup" aria-label="노선 선택">
+                  {selectedStation.lines.map((line) => {
+                    const isSelected = selectedTransports.some(
+                      (t) => t.id === line.id && t.type === line.type
+                    );
+                    return (
+                      <button
+                        key={`${line.type}-${line.id}`}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={`line-chip-btn ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          toggleTransport(line);
+                          setSelectedStation(null);
+                          setSearchQuery('');
+                        }}
+                      >
+                        {line.detail}
+                        {isSelected && <span className="check-sm">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            ) : searchQuery.length >= 2 && !isSearching ? (
-              <div className="empty-state" role="status">
-                <span className="empty-icon" aria-hidden="true">🔍</span>
-                <p className="empty-title">검색 결과가 없습니다</p>
-                <p className="empty-desc">
-                  &quot;{searchQuery}&quot;에 해당하는 {transportTypes.includes('subway') && transportTypes.includes('bus') ? '역/정류장' : transportTypes.includes('subway') ? '역' : '정류장'}을 찾을 수 없어요.
-                  <br />
-                  다른 이름으로 검색해보세요.
-                </p>
-              </div>
-            ) : null}
+            ) : (
+              <>
+                <div className="search-box">
+                  <span className="search-icon" aria-hidden="true">🔍</span>
+                  <input
+                    type="search"
+                    className="search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="예: 강남역, 홍대입구"
+                    autoFocus
+                    aria-label="역 또는 정류장 검색"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div aria-live="polite" aria-busy={isSearching}>
+                  {isSearching && <p className="muted">검색 중...</p>}
+                </div>
+
+                {/* 지하철만 선택 시: 역 그룹 먼저 표시 */}
+                {groupedStations.length > 0 && transportTypes.length === 1 && transportTypes[0] === 'subway' ? (
+                  <div className="search-results station-groups" role="listbox" aria-label="역 검색 결과">
+                    {groupedStations.map((station) => (
+                      <button
+                        key={station.name}
+                        type="button"
+                        role="option"
+                        className="search-result-item station-group-item"
+                        onClick={() => {
+                          if (station.lines.length === 1) {
+                            // 노선이 1개면 바로 선택
+                            toggleTransport(station.lines[0]);
+                            setSearchQuery('');
+                          } else {
+                            // 노선이 여러 개면 2단계로
+                            setSelectedStation(station);
+                          }
+                        }}
+                      >
+                        <span className="result-icon" aria-hidden="true">🚇</span>
+                        <div className="result-info">
+                          <strong>{station.name}역</strong>
+                          <span className="muted line-count">{station.lines.length}개 노선</span>
+                        </div>
+                        <span className="arrow-icon" aria-hidden="true">→</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  // 버스 포함 또는 일반 검색 결과
+                  <div className="search-results" role="listbox" aria-label="검색 결과">
+                    {searchResults.map((item) => {
+                      const isSelected = selectedTransports.some(
+                        (t) => t.id === item.id && t.type === item.type
+                      );
+                      return (
+                        <button
+                          key={`${item.type}-${item.id}`}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          className={`search-result-item ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleTransport(item)}
+                        >
+                          <span className="result-icon" aria-hidden="true">
+                            {item.type === 'subway' ? '🚇' : '🚌'}
+                          </span>
+                          <div className="result-info">
+                            <strong>{item.name}</strong>
+                            <span className="muted">{item.detail}</span>
+                          </div>
+                          {isSelected && <span className="check-icon" aria-hidden="true">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : searchQuery.length >= 2 && !isSearching ? (
+                  <div className="empty-state" role="status">
+                    <span className="empty-icon" aria-hidden="true">🔍</span>
+                    <p className="empty-title">검색 결과가 없습니다</p>
+                    <p className="empty-desc">
+                      &quot;{searchQuery}&quot;에 해당하는 {transportTypes.includes('subway') && transportTypes.includes('bus') ? '역/정류장' : transportTypes.includes('subway') ? '역' : '정류장'}을 찾을 수 없어요.
+                      <br />
+                      다른 이름으로 검색해보세요.
+                    </p>
+                  </div>
+                ) : null}
+              </>
+            )}
 
             {selectedTransports.length > 0 && (
               <div className="selected-items">
@@ -795,50 +1221,88 @@ export function AlertSettingsPage() {
             <div className="routine-form">
               {wantsWeather && (
                 <div className="routine-item">
-                  <span className="routine-icon">⏰</span>
-                  <label>기상 시간</label>
-                  <input
-                    type="time"
-                    value={routine.wakeUp}
-                    onChange={(e) => setRoutine({ ...routine, wakeUp: e.target.value })}
-                  />
+                  <div className="routine-header">
+                    <span className="routine-icon" aria-hidden="true">⏰</span>
+                    <label htmlFor="wake-up-time">기상 시간</label>
+                  </div>
+                  <div className="time-picker">
+                    <input
+                      id="wake-up-time"
+                      type="time"
+                      value={routine.wakeUp}
+                      onChange={(e) => setRoutine({ ...routine, wakeUp: e.target.value })}
+                      className="time-input"
+                    />
+                    <div className="time-display">
+                      <span className="time-value">{routine.wakeUp}</span>
+                      <span className="time-period">{parseInt(routine.wakeUp.split(':')[0]) < 12 ? '오전' : '오후'}</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {wantsTransport && (
                 <>
                   <div className="routine-item">
-                    <span className="routine-icon">🚪</span>
-                    <label>출근 출발</label>
-                    <input
-                      type="time"
-                      value={routine.leaveHome}
-                      onChange={(e) => setRoutine({ ...routine, leaveHome: e.target.value })}
-                    />
+                    <div className="routine-header">
+                      <span className="routine-icon" aria-hidden="true">🚪</span>
+                      <label htmlFor="leave-home-time">출근 출발</label>
+                    </div>
+                    <div className="time-picker">
+                      <input
+                        id="leave-home-time"
+                        type="time"
+                        value={routine.leaveHome}
+                        onChange={(e) => setRoutine({ ...routine, leaveHome: e.target.value })}
+                        className="time-input"
+                      />
+                      <div className="time-display">
+                        <span className="time-value">{routine.leaveHome}</span>
+                        <span className="time-period">{parseInt(routine.leaveHome.split(':')[0]) < 12 ? '오전' : '오후'}</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="routine-item">
-                    <span className="routine-icon">🏠</span>
-                    <label>퇴근 출발</label>
-                    <input
-                      type="time"
-                      value={routine.leaveWork}
-                      onChange={(e) => setRoutine({ ...routine, leaveWork: e.target.value })}
-                    />
+                    <div className="routine-header">
+                      <span className="routine-icon" aria-hidden="true">🏠</span>
+                      <label htmlFor="leave-work-time">퇴근 출발</label>
+                    </div>
+                    <div className="time-picker">
+                      <input
+                        id="leave-work-time"
+                        type="time"
+                        value={routine.leaveWork}
+                        onChange={(e) => setRoutine({ ...routine, leaveWork: e.target.value })}
+                        className="time-input"
+                      />
+                      <div className="time-display">
+                        <span className="time-value">{routine.leaveWork}</span>
+                        <span className="time-period">{parseInt(routine.leaveWork.split(':')[0]) < 12 ? '오전' : '오후'}</span>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
             </div>
 
-            <div className="schedule-preview">
-              <h3>📬 알림 스케줄</h3>
-              {getNotificationTimes().map((item, i) => (
-                <div key={i} className="schedule-item">
-                  <span className="schedule-time">{item.time}</span>
-                  <span className="schedule-content">{item.content}</span>
-                </div>
-              ))}
-              <p className="muted schedule-note">* 교통 알림은 출발 15분 전에 발송됩니다</p>
+            {/* 알림 미리보기 */}
+            <div className="alert-preview-card">
+              <div className="preview-header">
+                <span className="preview-icon" aria-hidden="true">📬</span>
+                <h3>알림 미리보기</h3>
+              </div>
+              <div className="preview-list">
+                {getNotificationTimes().map((item, i) => (
+                  <div key={i} className="preview-item">
+                    <span className="preview-time">{item.time}</span>
+                    <span className="preview-content">{item.content}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="preview-note">
+                <span aria-hidden="true">💡</span> 교통 알림은 출발 15분 전에 발송됩니다
+              </p>
             </div>
           </section>
         )}
@@ -888,7 +1352,49 @@ export function AlertSettingsPage() {
             </div>
 
             <div aria-live="polite" aria-atomic="true">
-              {error && <div className="notice error" role="alert">{error}</div>}
+              {error && duplicateAlert ? (
+                <div className="duplicate-alert-warning" role="alert">
+                  <p className="warning-message">{error}</p>
+                  <p className="warning-suggestion">시간을 변경하거나 기존 알림을 수정해주세요.</p>
+                  <div className="duplicate-alert-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        // 기존 알림 수정 모드로 전환
+                        handleEditClick(duplicateAlert);
+                        setDuplicateAlert(null);
+                        setError('');
+                        // wizard 초기화하고 기존 알림 목록으로 스크롤
+                        setStep('type');
+                        setWantsWeather(false);
+                        setWantsTransport(false);
+                        setTransportTypes([]);
+                        setSelectedTransports([]);
+                        setTimeout(() => {
+                          const alertsSection = document.querySelector('.existing-alerts');
+                          alertsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
+                      }}
+                    >
+                      기존 알림 수정하기
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => {
+                        setDuplicateAlert(null);
+                        setError('');
+                        setStep('routine'); // 시간 설정 단계로 돌아가기
+                      }}
+                    >
+                      시간 변경하기
+                    </button>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="notice error" role="alert">{error}</div>
+              ) : null}
               {success && <div className="notice success" role="status">{success}</div>}
             </div>
           </section>
@@ -940,59 +1446,97 @@ export function AlertSettingsPage() {
         )}
       </div>
 
-      {/* Existing Alerts */}
+      {/* Existing Alerts - 개선된 UI */}
       {alerts.length > 0 && (
-        <section className="existing-alerts">
-          <h2>설정된 알림</h2>
-          <div className="alert-list">
-            {alerts.map((alert) => (
-              <article key={alert.id} className={`alert-card ${!alert.enabled ? 'disabled' : ''}`}>
-                <div className="alert-info">
-                  <strong>{alert.name}</strong>
-                  {!alert.enabled && <span className="status-badge disabled">비활성</span>}
-                  <div className="alert-tags">
-                    {alert.alertTypes.map((type) => (
-                      <span key={type} className="tag-small">
-                        {ALERT_TYPE_LABELS[type]}
-                      </span>
-                    ))}
+        <section id="existing-alerts-section" className="existing-alerts">
+          <div className="section-header-row">
+            <h2>설정된 알림</h2>
+            <span className="section-count">{alerts.filter(a => a.enabled).length}/{alerts.length} 활성</span>
+          </div>
+          <div className="alert-list-improved">
+            {alerts.map((alert) => {
+              // 시간 파싱
+              const parts = alert.schedule.split(' ');
+              const hours = parts.length >= 2
+                ? parts[1].split(',').map(h => `${h.padStart(2, '0')}:00`)
+                : ['--:--'];
+
+              return (
+                <article
+                  key={alert.id}
+                  className={`alert-item-card ${alert.enabled ? 'enabled' : 'disabled'}`}
+                >
+                  <div className="alert-item-header">
+                    <div className="alert-time-badges">
+                      {hours.map((time, i) => (
+                        <span key={i} className="alert-time-badge">{time}</span>
+                      ))}
+                    </div>
+                    <label className="toggle-compact">
+                      <input
+                        type="checkbox"
+                        checked={alert.enabled}
+                        onChange={async () => {
+                          try {
+                            await alertApiClient.toggleAlert(alert.id);
+                            reloadAlerts();
+                          } catch {
+                            setError('알림 상태 변경에 실패했습니다.');
+                          }
+                        }}
+                        aria-label={`${alert.name} ${alert.enabled ? '끄기' : '켜기'}`}
+                      />
+                      <span className="toggle-slider-compact" />
+                    </label>
                   </div>
-                </div>
-                <div className="alert-actions">
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-small"
-                    onClick={() => handleEditClick(alert)}
-                    aria-label={`${alert.name} 수정`}
-                  >
-                    수정
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn btn-small ${alert.enabled ? 'btn-outline' : 'btn-primary'}`}
-                    onClick={async () => {
-                      try {
-                        await alertApiClient.toggleAlert(alert.id);
-                        reloadAlerts();
-                      } catch {
-                        setError('알림 상태 변경에 실패했습니다.');
-                      }
-                    }}
-                    aria-label={`${alert.name} ${alert.enabled ? '비활성화' : '활성화'}`}
-                  >
-                    {alert.enabled ? '끄기' : '켜기'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger-outline btn-small"
-                    onClick={() => handleDeleteClick(alert)}
-                    aria-label={`${alert.name} 삭제`}
-                  >
-                    삭제
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="alert-item-body">
+                    <span className="alert-name">{alert.name}</span>
+                    <div className="alert-meta">
+                      <span className="alert-types">
+                        {alert.alertTypes.map((type) => {
+                          if (type === 'weather') return '🌤️';
+                          if (type === 'airQuality') return '💨';
+                          if (type === 'subway') return '🚇';
+                          if (type === 'bus') return '🚌';
+                          return '';
+                        }).join(' ')}
+                      </span>
+                      {alert.routeId && (() => {
+                        const linkedRoute = savedRoutes.find(r => r.id === alert.routeId);
+                        if (linkedRoute) {
+                          return (
+                            <span className="alert-route-link">
+                              📍 {linkedRoute.name}
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="alert-item-actions">
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => handleEditClick(alert)}
+                      aria-label="수정"
+                      title="수정"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-icon danger"
+                      onClick={() => handleDeleteClick(alert)}
+                      aria-label="삭제"
+                      title="삭제"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}

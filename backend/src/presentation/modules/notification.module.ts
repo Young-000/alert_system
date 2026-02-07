@@ -41,7 +41,8 @@ const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
     {
       provide: 'IWeatherApiClient',
       useFactory: () => {
-        const apiKey = process.env.WEATHER_API_KEY || '';
+        // 기상청 API는 공공데이터포털 키 사용 (미세먼지 API와 동일)
+        const apiKey = process.env.AIR_QUALITY_API_KEY || '';
         return new WeatherApiClient(apiKey);
       },
     },

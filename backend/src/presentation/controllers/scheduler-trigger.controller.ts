@@ -8,6 +8,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { timingSafeEqual } from 'crypto';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { Public } from '@infrastructure/auth/public.decorator';
 
@@ -30,6 +32,7 @@ export class SchedulerTriggerController {
 
   constructor(
     private readonly sendNotificationUseCase: SendNotificationUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -47,14 +50,18 @@ export class SchedulerTriggerController {
   ): Promise<{ success: boolean; message: string }> {
     // 스케줄러 시크릿 검증 (EventBridge에서 설정한 헤더)
     // 반드시 시크릿이 설정되어 있어야 하며, 일치해야 함
-    const expectedSecret = process.env.SCHEDULER_SECRET;
-    if (!expectedSecret) {
-      this.logger.error('SCHEDULER_SECRET environment variable is not configured');
-      throw new UnauthorizedException('Scheduler secret not configured');
+    const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
+    if (!expectedSecret || !schedulerSecret) {
+      this.logger.error('SCHEDULER_SECRET is not configured or secret header is missing');
+      throw new UnauthorizedException('Authentication failed');
     }
-    if (schedulerSecret !== expectedSecret) {
+
+    const expected = Buffer.from(expectedSecret, 'utf8');
+    const received = Buffer.from(schedulerSecret, 'utf8');
+    if (expected.length !== received.length ||
+        !timingSafeEqual(expected, received)) {
       this.logger.warn(`Invalid scheduler secret for alert ${payload.alertId}`);
-      throw new UnauthorizedException('Invalid scheduler secret');
+      throw new UnauthorizedException('Authentication failed');
     }
 
     this.logger.log(

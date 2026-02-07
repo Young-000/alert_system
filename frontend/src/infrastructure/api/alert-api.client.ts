@@ -11,6 +11,7 @@ export interface Alert {
   enabled: boolean;
   busStopId?: string;
   subwayStationId?: string;
+  routeId?: string; // 연결된 경로 ID
 }
 
 export interface CreateAlertDto {
@@ -20,6 +21,7 @@ export interface CreateAlertDto {
   alertTypes: AlertType[];
   busStopId?: string;
   subwayStationId?: string;
+  routeId?: string; // 연결된 경로 ID
 }
 
 export class AlertApiClient {

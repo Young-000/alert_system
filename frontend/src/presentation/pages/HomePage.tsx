@@ -1,31 +1,13 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { behaviorCollector } from '../../infrastructure/analytics/behavior-collector';
 import { alertApiClient } from '../../infrastructure/api';
-import { getCommuteApiClient, type RouteResponse } from '../../infrastructure/api/commute-api.client';
+import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '../../infrastructure/api/commute-api.client';
 import type { Alert } from '../../infrastructure/api';
 
 // Compute initial states outside of effects to avoid cascading renders
 function getInitialLoginState(): boolean {
   return !!localStorage.getItem('userId');
-}
-
-function getInitialDepartureState(): { showButton: boolean; alertId: string | null } {
-  const lastNotificationTime = localStorage.getItem('lastNotificationTime');
-  const lastAlertId = localStorage.getItem('lastAlertId');
-  if (lastNotificationTime && lastAlertId) {
-    const timeDiff = Date.now() - parseInt(lastNotificationTime, 10);
-    if (timeDiff < 30 * 60 * 1000) { // 30 minutes
-      return { showButton: true, alertId: lastAlertId };
-    }
-  }
-  return { showButton: false, alertId: null };
-}
-
-// Check initial URL params for departure confirmation
-function getInitialDepartureConfirmed(): boolean {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('departure') === 'confirmed';
 }
 
 // Get greeting based on time of day
@@ -48,16 +30,11 @@ function formatTime(date: Date): string {
 export function HomePage() {
   const navigate = useNavigate();
   const isLoggedIn = getInitialLoginState();
-  const initialDeparture = getInitialDepartureState();
-  const [showDepartureButton, setShowDepartureButton] = useState(initialDeparture.showButton);
-  const [departureConfirmed, setDepartureConfirmed] = useState(getInitialDepartureConfirmed);
-  const [activeAlertId] = useState<string | null>(initialDeparture.alertId);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const hasHandledUrlParam = useRef(false);
 
   // Dashboard data states
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [routes, setRoutes] = useState<RouteResponse[]>([]);
+  const [commuteStats, setCommuteStats] = useState<CommuteStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -90,13 +67,15 @@ export function HomePage() {
       setIsLoading(true);
       try {
         const commuteApiClient = getCommuteApiClient();
-        const [alertsData, routesData] = await Promise.all([
+        const [alertsData, routesData, statsData] = await Promise.all([
           alertApiClient.getAlertsByUser(userId).catch(() => []),
           commuteApiClient.getUserRoutes(userId).catch(() => []),
+          commuteApiClient.getStats(userId, 7).catch(() => null),
         ]);
         if (!isMounted) return;
         setAlerts(alertsData);
         setRoutes(routesData);
+        setCommuteStats(statsData);
       } catch (err) {
         if (!isMounted) return;
         console.error('Failed to load dashboard data:', err);
@@ -114,39 +93,6 @@ export function HomePage() {
     };
   }, [userId]);
 
-  // Clean up URL params and auto-hide confirmation (side effects for external system)
-  useEffect(() => {
-    if (searchParams.get('departure') === 'confirmed' && !hasHandledUrlParam.current) {
-      hasHandledUrlParam.current = true;
-      // Clear the query param (external system: browser URL)
-      searchParams.delete('departure');
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
-  // Auto-hide departure confirmation toast after 3 seconds
-  useEffect(() => {
-    if (departureConfirmed) {
-      const timer = setTimeout(() => setDepartureConfirmed(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [departureConfirmed]);
-
-  const handleDepartureConfirm = useCallback(async () => {
-    if (!activeAlertId) return;
-
-    await behaviorCollector.trackDepartureConfirmed({
-      alertId: activeAlertId,
-      source: 'app',
-    });
-
-    setDepartureConfirmed(true);
-    setShowDepartureButton(false);
-    localStorage.removeItem('lastNotificationTime');
-    localStorage.removeItem('lastAlertId');
-    // Note: setTimeout for hiding confirmation is handled by useEffect above
-  }, [activeAlertId]);
-
   // Get next alert time - memoized to avoid recalculation on every render
   const nextAlert = useMemo((): { time: string; type: string } | null => {
     const enabledAlerts = alerts.filter(a => a.enabled);
@@ -155,39 +101,54 @@ export function HomePage() {
     // Parse cron schedules to find next alert
     const now = new Date();
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Collect all upcoming alert times today
+    interface AlertTime { hour: number; minute: number; type: string }
+    const todayAlerts: AlertTime[] = [];
+    let earliestTomorrow: AlertTime | null = null;
 
     for (const alert of enabledAlerts) {
       const parts = alert.schedule.split(' ');
       if (parts.length >= 2) {
+        const minuteStr = parts[0];
+        const cronMinute = isNaN(Number(minuteStr)) ? 0 : Number(minuteStr);
         const hourStr = parts[1];
-        // Handle both single hour "7" and multiple hours "7,18"
         const hours = hourStr.includes(',')
           ? hourStr.split(',').map(Number).filter(h => !isNaN(h))
           : [Number(hourStr)].filter(h => !isNaN(h));
 
+        const alertType = alert.alertTypes.includes('weather') ? '날씨' : '교통';
+
         for (const hour of hours) {
-          if (hour > currentHour) {
-            return {
-              time: `${String(hour).padStart(2, '0')}:00`,
-              type: alert.alertTypes.includes('weather') ? '날씨' : '교통',
-            };
+          if (hour > currentHour || (hour === currentHour && cronMinute > currentMinute)) {
+            todayAlerts.push({ hour, minute: cronMinute, type: alertType });
+          }
+          // Track earliest for tomorrow fallback
+          if (!earliestTomorrow || hour < earliestTomorrow.hour ||
+              (hour === earliestTomorrow.hour && cronMinute < earliestTomorrow.minute)) {
+            earliestTomorrow = { hour, minute: cronMinute, type: alertType };
           }
         }
       }
     }
 
+    // Sort today's alerts and return the soonest
+    if (todayAlerts.length > 0) {
+      todayAlerts.sort((a, b) => a.hour !== b.hour ? a.hour - b.hour : a.minute - b.minute);
+      const next = todayAlerts[0];
+      return {
+        time: `${String(next.hour).padStart(2, '0')}:${String(next.minute).padStart(2, '0')}`,
+        type: next.type,
+      };
+    }
+
     // Return first alert of tomorrow
-    const firstAlert = enabledAlerts[0];
-    const parts = firstAlert.schedule.split(' ');
-    if (parts.length >= 2) {
-      const hourStr = parts[1];
-      const hour = hourStr.includes(',') ? hourStr.split(',')[0] : hourStr;
-      if (!isNaN(Number(hour))) {
-        return {
-          time: `내일 ${hour.padStart(2, '0')}:00`,
-          type: firstAlert.alertTypes.includes('weather') ? '날씨' : '교통',
-        };
-      }
+    if (earliestTomorrow) {
+      return {
+        time: `내일 ${String(earliestTomorrow.hour).padStart(2, '0')}:${String(earliestTomorrow.minute).padStart(2, '0')}`,
+        type: earliestTomorrow.type,
+      };
     }
 
     return null;
@@ -295,30 +256,17 @@ export function HomePage() {
           <span>나의 출퇴근 동반자</span>
         </div>
         <div className="nav-actions">
-          <Link className="btn btn-ghost" to="/commute">
-            트래킹
-          </Link>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={() => {
-              localStorage.removeItem('userId');
-              localStorage.removeItem('accessToken');
-              window.location.reload();
-            }}
+          {/* 설정 버튼 - 가장 접근하기 쉬운 위치 */}
+          <Link
+            className="btn btn-ghost nav-settings-btn"
+            to="/settings"
+            title="내 설정"
+            aria-label="내 설정"
           >
-            로그아웃
-          </button>
+            ⚙️
+          </Link>
         </div>
       </nav>
-
-      {/* Departure Confirmation Toast */}
-      {departureConfirmed && (
-        <div className="toast toast-success" role="alert" aria-live="polite">
-          <span className="toast-icon">✅</span>
-          <span>출발이 기록되었습니다! 오늘도 좋은 하루 되세요.</span>
-        </div>
-      )}
 
       {/* Dashboard Header */}
       <header id="main-content" className="dashboard-header">
@@ -330,26 +278,6 @@ export function HomePage() {
           </div>
         </div>
       </header>
-
-      {/* Quick Departure Button (shown after receiving notification) */}
-      {showDepartureButton && (
-        <div className="departure-banner">
-          <div className="departure-content">
-            <span className="departure-icon">🚶</span>
-            <div className="departure-text">
-              <strong>지금 출발하시나요?</strong>
-              <span className="muted">버튼을 눌러 출발 시간을 기록하세요</span>
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleDepartureConfirm}
-            >
-              지금 출발
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 핵심 기능 3단계: 출근 전 / 출근 중 / 퇴근 후 */}
       <div className="commute-phases">
@@ -463,11 +391,19 @@ export function HomePage() {
           <div className="phase-content">
             <div className="stats-preview">
               <div className="stat-mini">
-                <span className="stat-mini-value">-</span>
+                <span className="stat-mini-value">
+                  {commuteStats?.overallAverageDuration
+                    ? `${commuteStats.overallAverageDuration}분`
+                    : '-'}
+                </span>
                 <span className="stat-mini-label">평균 시간</span>
               </div>
               <div className="stat-mini">
-                <span className="stat-mini-value">-</span>
+                <span className="stat-mini-value">
+                  {commuteStats?.recentSessions != null
+                    ? `${commuteStats.recentSessions}회`
+                    : '-'}
+                </span>
                 <span className="stat-mini-label">이번 주</span>
               </div>
             </div>
@@ -478,23 +414,7 @@ export function HomePage() {
         </section>
       </div>
 
-      {/* 설정 영역 */}
-      <div className="dashboard-settings">
-        <div className="settings-row">
-          <Link to="/alerts" className="settings-link">
-            <span>🔔</span>
-            <span>알림 설정</span>
-            <span className="settings-badge">{alerts.filter(a => a.enabled).length}개 활성</span>
-          </Link>
-          <Link to="/routes" className="settings-link">
-            <span>📍</span>
-            <span>경로 관리</span>
-            <span className="settings-badge">{routes.length}개 등록</span>
-          </Link>
-        </div>
-      </div>
-
-      <footer className="footer">
+      <footer className="footer home-footer">
         <p className="footer-text">
           <span>출퇴근 메이트</span>
           <span className="footer-divider">·</span>

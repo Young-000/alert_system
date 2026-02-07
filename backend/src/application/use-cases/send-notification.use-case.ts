@@ -349,15 +349,66 @@ export class SendNotificationUseCase {
     };
   }
 
-  // 날씨 문자열: "오전 맑음 → 오후 구름 → 저녁 맑음"
+  // 날씨 문자열: "오전 맑음 → 오후 비(60%) → 저녁 흐림"
   private buildWeatherString(weather: Weather): string {
     const forecast = weather.forecast;
     if (!forecast?.hourlyForecasts?.length) {
       return weather.conditionKr;
     }
 
-    const slots = this.extractTimeSlots(forecast.hourlyForecasts);
-    return slots.map(s => `${s.slot} ${s.weather}`).join(' → ');
+    const slots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts);
+    return slots.map(s => {
+      // 비/눈 예보 시 강수확률 표시
+      if (s.rainProbability > 0 && this.isRainyCondition(s.weather)) {
+        return `${s.slot} ${s.weather}(${s.rainProbability}%)`;
+      }
+      return `${s.slot} ${s.weather}`;
+    }).join(' → ');
+  }
+
+  // 비/눈 관련 날씨인지 확인
+  private isRainyCondition(condition: string): boolean {
+    const rainyKeywords = ['비', '눈', '소나기', '뇌우', '이슬비', 'rain', 'snow', 'drizzle'];
+    return rainyKeywords.some(keyword => condition.toLowerCase().includes(keyword.toLowerCase()));
+  }
+
+  // 특이사항 생성 (오후 비, 일교차 등)
+  private buildWeatherHighlights(weather: Weather, airQuality?: AirQuality): string[] {
+    const highlights: string[] = [];
+    const forecast = weather.forecast;
+
+    if (forecast?.hourlyForecasts?.length) {
+      // 1. 비/눈 예보 감지
+      const rainySlots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts)
+        .filter(s => s.rainProbability >= 40 && this.isRainyCondition(s.weather));
+
+      if (rainySlots.length > 0) {
+        const slotNames = rainySlots.map(s => s.slot).join(', ');
+        const maxRainProb = Math.max(...rainySlots.map(s => s.rainProbability));
+        highlights.push(`☔ ${slotNames}에 비 예보(${maxRainProb}%), 우산 필수!`);
+      }
+
+      // 2. 일교차 감지
+      const tempDiff = forecast.maxTemp - forecast.minTemp;
+      if (tempDiff >= 10) {
+        highlights.push(`🌡️ 일교차 ${tempDiff}°C, 겉옷 챙기세요`);
+      }
+
+      // 3. 한파/폭염 감지
+      if (forecast.minTemp <= 0) {
+        highlights.push(`❄️ 영하권 추위, 방한용품 필수`);
+      } else if (forecast.maxTemp >= 33) {
+        highlights.push(`🥵 폭염 주의, 수분 섭취 필수`);
+      }
+    }
+
+    // 4. 미세먼지 나쁨
+    if (airQuality?.status && ['나쁨', '매우나쁨', 'Bad', 'Very Bad'].some(s =>
+      airQuality.status.toLowerCase().includes(s.toLowerCase()))) {
+      highlights.push(`😷 미세먼지 ${airQuality.status}, 마스크 착용`);
+    }
+
+    return highlights;
   }
 
   // 대기질 문자열
@@ -394,26 +445,72 @@ export class SendNotificationUseCase {
       .join('\n');
   }
 
-  // 시간대별 날씨 추출
-  private extractTimeSlots(hourlyForecasts: HourlyForecast[]): Array<{ slot: string; weather: string }> {
-    const slots: Array<{ slot: string; weather: string }> = [];
-    const seenSlots = new Set<string>();
+  // 시간대별 날씨 추출 (강수확률 포함)
+  private extractTimeSlotsWithRain(hourlyForecasts: HourlyForecast[]): Array<{
+    slot: string;
+    weather: string;
+    rainProbability: number;
+    temperature: number;
+  }> {
+    const slotMap = new Map<string, {
+      weather: string;
+      rainProbability: number;
+      temperature: number;
+      count: number;
+    }>();
 
+    // 시간대별로 그룹화하여 대표 값 계산
     for (const forecast of hourlyForecasts) {
-      if (!seenSlots.has(forecast.timeSlot)) {
-        seenSlots.add(forecast.timeSlot);
-        slots.push({ slot: forecast.timeSlot, weather: forecast.conditionKr });
+      const existing = slotMap.get(forecast.timeSlot);
+      if (existing) {
+        // 강수확률은 최대값, 온도는 평균
+        existing.rainProbability = Math.max(existing.rainProbability, forecast.rainProbability);
+        existing.temperature = (existing.temperature * existing.count + forecast.temperature) / (existing.count + 1);
+        existing.count++;
+        // 비/눈 조건이 있으면 우선
+        if (this.isRainyCondition(forecast.conditionKr)) {
+          existing.weather = forecast.conditionKr;
+        }
+      } else {
+        slotMap.set(forecast.timeSlot, {
+          weather: forecast.conditionKr,
+          rainProbability: forecast.rainProbability,
+          temperature: forecast.temperature,
+          count: 1,
+        });
       }
     }
 
-    const defaultSlots = ['오전', '오후', '저녁'];
-    for (const slot of defaultSlots) {
-      if (!seenSlots.has(slot)) {
-        slots.push({ slot, weather: '정보없음' });
+    // 순서대로 정렬
+    const slotOrder = ['오전', '오후', '저녁'];
+    const result = slotOrder
+      .filter(slot => slotMap.has(slot))
+      .map(slot => {
+        const data = slotMap.get(slot)!;
+        return {
+          slot,
+          weather: data.weather,
+          rainProbability: data.rainProbability,
+          temperature: Math.round(data.temperature),
+        };
+      });
+
+    // 누락된 슬롯 추가
+    for (const slot of slotOrder) {
+      if (!result.find(r => r.slot === slot)) {
+        result.push({ slot, weather: '정보없음', rainProbability: 0, temperature: 0 });
       }
     }
 
-    return slots.slice(0, 3);
+    return result.slice(0, 3);
+  }
+
+  // 기존 메서드 호환성 유지
+  private extractTimeSlots(hourlyForecasts: HourlyForecast[]): Array<{ slot: string; weather: string }> {
+    return this.extractTimeSlotsWithRain(hourlyForecasts).map(s => ({
+      slot: s.slot,
+      weather: s.weather,
+    }));
   }
 
   // 도착시간 포맷
@@ -423,53 +520,67 @@ export class SendNotificationUseCase {
     return `${minutes}분`;
   }
 
-  // 팁 생성 (경로 추천 포함)
+  // 팁 생성 (특이사항 기반, 우선순위: 비예보 > 한파/폭염 > 일교차 > 미세먼지 > 경로추천)
   private generateTip(data: NotificationData): string {
     const weather = data.weather;
     const airQuality = data.airQuality;
     const routeRec = data.routeRecommendation;
 
-    // 경로 추천이 있으면 우선 표시
+    // 1. 특이사항 기반 팁 생성 (새로운 로직)
+    if (weather) {
+      const highlights = this.buildWeatherHighlights(weather, airQuality);
+      if (highlights.length > 0) {
+        // 가장 중요한 특이사항 반환 (이모지 제거하고 간결하게)
+        return highlights[0].replace(/^[^\w가-힣]+/, '');
+      }
+
+      // 특이사항이 없으면 기본 날씨 팁
+      const forecast = weather.forecast;
+      if (forecast) {
+        // 시간대별 변화 감지 - 현재와 오후 날씨가 다른 경우
+        const slots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts);
+        const morningSlot = slots.find(s => s.slot === '오전');
+        const afternoonSlot = slots.find(s => s.slot === '오후');
+
+        if (morningSlot && afternoonSlot && morningSlot.weather !== afternoonSlot.weather) {
+          if (this.isRainyCondition(afternoonSlot.weather) && !this.isRainyCondition(morningSlot.weather)) {
+            return `오전은 ${morningSlot.weather}이지만 오후에 ${afternoonSlot.weather} 예보`;
+          }
+        }
+      }
+
+      // 현재 날씨 기반 팁
+      const temp = weather.temperature;
+      if (temp <= 5) return '두꺼운 외투 챙기세요';
+      if (temp >= 28) return '더위 주의, 수분 섭취하세요';
+
+      const condition = weather.condition.toLowerCase();
+      if (condition.includes('rain') || condition.includes('drizzle')) {
+        return '비 예보, 우산 챙기세요';
+      }
+      if (condition.includes('snow')) return '눈 예보, 미끄럼 주의';
+    }
+
+    // 2. 미세먼지
+    if (airQuality?.status) {
+      const status = airQuality.status.toLowerCase();
+      if (status.includes('나쁨') || status.includes('bad')) {
+        return '미세먼지 나쁨, 마스크 착용 권장';
+      }
+    }
+
+    // 3. 경로 추천
     if (routeRec && routeRec.totalScore >= 70) {
       const avgMin = routeRec.averageDuration;
       return `추천: "${routeRec.routeName}" (평균 ${avgMin}분)`;
     }
 
-    if (weather) {
-      const forecast = weather.forecast;
-
-      if (forecast) {
-        const tempDiff = forecast.maxTemp - forecast.minTemp;
-        if (tempDiff >= 10) {
-          return `낮밤 기온차 ${tempDiff}°C, 겉옷 챙기세요.`;
-        }
-      }
-
-      const temp = weather.temperature;
-      if (temp <= 0) return '영하권 추위, 방한용품 필수.';
-      if (temp <= 5) return '두꺼운 외투 챙기세요.';
-      if (temp >= 30) return '폭염 주의, 수분 보충하세요.';
-
-      const condition = weather.condition.toLowerCase();
-      if (condition.includes('rain') || condition.includes('drizzle')) {
-        return '비 예보, 우산 챙기세요.';
-      }
-      if (condition.includes('snow')) return '눈 예보, 미끄럼 주의.';
-    }
-
-    if (airQuality?.status) {
-      const status = airQuality.status.toLowerCase();
-      if (status === '나쁨' || status.includes('bad')) {
-        return '미세먼지 나쁨, 마스크 착용 권장.';
-      }
-    }
-
-    // 연결된 경로 정보
+    // 4. 연결된 경로 정보
     if (data.linkedRoute) {
-      return `${data.linkedRoute.name} 출발 준비하세요.`;
+      return `${data.linkedRoute.name} 출발 준비하세요`;
     }
 
-    return '좋은 하루 보내세요.';
+    return '좋은 하루 보내세요';
   }
 
   // 교통 팁

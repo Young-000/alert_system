@@ -41,7 +41,10 @@ coverage/
 # Docker
 docker-compose.override.yml
 
-.vercel
+.vercel/
+
+# Playwright MCP screenshots
+.playwright-mcp/
 
 # Terraform
 **/.terraform/

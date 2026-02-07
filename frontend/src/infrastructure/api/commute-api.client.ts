@@ -196,6 +196,74 @@ export interface CommuteStatsResponse {
   insights: string[];
 }
 
+// ========== Route Analytics Types ==========
+
+export interface SegmentStats {
+  checkpointName: string;
+  transportMode: string;
+  averageDuration: number;
+  minDuration: number;
+  maxDuration: number;
+  variability: 'stable' | 'variable' | 'unpredictable';
+  sampleCount: number;
+}
+
+export interface ConditionAnalysis {
+  byWeather: Record<string, { avgDuration: number; count: number }>;
+  byDayOfWeek: Record<string, { avgDuration: number; count: number }>;
+  byTimeSlot: Record<string, { avgDuration: number; count: number }>;
+}
+
+export interface ScoreFactors {
+  speed: number;
+  reliability: number;
+  comfort: number;
+}
+
+export interface RouteAnalyticsResponse {
+  routeId: string;
+  routeName: string;
+  totalTrips: number;
+  lastTripDate?: string;
+  duration: {
+    average: number;
+    min: number;
+    max: number;
+    stdDev: number;
+  };
+  segmentStats: SegmentStats[];
+  conditionAnalysis: ConditionAnalysis;
+  score: number;
+  grade: 'S' | 'A' | 'B' | 'C' | 'D';
+  scoreFactors: ScoreFactors;
+  summary: string;
+  variabilityText: string;
+  isRecommended: boolean;
+  lastCalculatedAt: string;
+}
+
+export interface RouteComparisonResponse {
+  routes: RouteAnalyticsResponse[];
+  winner: {
+    fastest: string;
+    mostReliable: string;
+    recommended: string;
+  };
+  analysis: {
+    timeDifference: number;
+    reliabilityDifference: number;
+  };
+}
+
+export interface AnalyticsSummaryResponse {
+  totalRoutes: number;
+  totalTrips: number;
+  averageScore: number;
+  bestRoute?: RouteAnalyticsResponse;
+  mostUsedRoute?: RouteAnalyticsResponse;
+  insights: string[];
+}
+
 // ========== API Client ==========
 
 export class CommuteApiClient {
@@ -268,6 +336,36 @@ export class CommuteApiClient {
 
   async getStats(userId: string, days = 30): Promise<CommuteStatsResponse> {
     return this.apiClient.get<CommuteStatsResponse>(`/commute/stats/${userId}?days=${days}`);
+  }
+
+  // ========== Analytics APIs ==========
+
+  async getRouteAnalytics(routeId: string): Promise<RouteAnalyticsResponse> {
+    return this.apiClient.get<RouteAnalyticsResponse>(`/analytics/routes/${routeId}`);
+  }
+
+  async recalculateRouteAnalytics(routeId: string): Promise<RouteAnalyticsResponse> {
+    return this.apiClient.post<RouteAnalyticsResponse>(`/analytics/routes/${routeId}/recalculate`);
+  }
+
+  async getUserAnalytics(userId: string): Promise<RouteAnalyticsResponse[]> {
+    return this.apiClient.get<RouteAnalyticsResponse[]>(`/analytics/user/${userId}`);
+  }
+
+  async compareRoutes(routeIds: string[]): Promise<RouteComparisonResponse> {
+    return this.apiClient.get<RouteComparisonResponse>(
+      `/analytics/compare?routeIds=${routeIds.join(',')}`
+    );
+  }
+
+  async getRecommendedRoutes(userId: string, limit = 3): Promise<RouteAnalyticsResponse[]> {
+    return this.apiClient.get<RouteAnalyticsResponse[]>(
+      `/analytics/recommend/${userId}?limit=${limit}`
+    );
+  }
+
+  async getAnalyticsSummary(userId: string): Promise<AnalyticsSummaryResponse> {
+    return this.apiClient.get<AnalyticsSummaryResponse>(`/analytics/summary/${userId}`);
   }
 }
 

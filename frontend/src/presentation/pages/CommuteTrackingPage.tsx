@@ -7,6 +7,7 @@ import {
   type CheckpointResponse,
   type CheckpointRecordResponse,
 } from '@infrastructure/api/commute-api.client';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 type ViewTab = 'ready' | 'tracking' | 'history';
 
@@ -17,6 +18,10 @@ export function CommuteTrackingPage() {
   const commuteApi = getCommuteApiClient();
 
   const routeIdParam = searchParams.get('routeId');
+  const modeParam = searchParams.get('mode'); // 'simple' = 시작/끝만 기록
+
+  // Simple Mode: 체크포인트 없이 시작/끝만 기록
+  const isSimpleMode = modeParam === 'simple';
 
   // State
   const [routes, setRoutes] = useState<RouteResponse[]>([]);
@@ -31,6 +36,13 @@ export function CommuteTrackingPage() {
   // Timer
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 취소 확인 모달
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  // Quick Complete 로딩 상태
+  const [isQuickCompleting, setIsQuickCompleting] = useState(false);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -136,11 +148,45 @@ export function CommuteTrackingPage() {
     };
   }, [activeSession]);
 
-  // Format time
-  const formatTime = (seconds: number) => {
+  // Warn user when trying to navigate away via in-app links during active session
+  useEffect(() => {
+    if (!activeSession || activeSession.status !== 'in_progress') return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('a');
+      if (!target) return;
+      const href = target.getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+
+      const confirmed = window.confirm('진행 중인 기록이 있습니다. 페이지를 나가시겠습니까?');
+      if (!confirmed) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [activeSession]);
+
+  // Format time - 대형 스톱워치용 (분:초 분리)
+  const formatTimeLarge = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}분 ${secs.toString().padStart(2, '0')}초`;
+    return {
+      minutes: mins.toString().padStart(2, '0'),
+      seconds: secs.toString().padStart(2, '0'),
+    };
+  };
+
+  // 진행률 계산
+  const calculateProgress = () => {
+    if (!activeSession || !selectedRoute) return 0;
+    const totalCheckpoints = selectedRoute.checkpoints.length;
+    const completedCheckpoints = activeSession.checkpointRecords.length;
+    return Math.round((completedCheckpoints / totalCheckpoints) * 100);
   };
 
   // Start session
@@ -202,20 +248,95 @@ export function CommuteTrackingPage() {
     }
   };
 
-  // Cancel session
-  const handleCancelSession = async () => {
+  // Simple Mode: 모든 체크포인트 자동 기록 후 완료
+  const handleQuickComplete = async () => {
+    if (!activeSession || !selectedRoute || isQuickCompleting) return;
+
+    setIsQuickCompleting(true);
+    setError('');
+
+    try {
+      // 미기록된 체크포인트들 기록
+      const recordedIds = new Set(activeSession.checkpointRecords.map(r => r.checkpointId));
+      const unrecordedCheckpoints = selectedRoute.checkpoints.filter(cp => !recordedIds.has(cp.id));
+
+      let currentSession = activeSession;
+
+      if (isSimpleMode && unrecordedCheckpoints.length > 1) {
+        // Simple mode: only record first unrecorded and last checkpoint
+        const firstUnrecorded = unrecordedCheckpoints[0];
+        const lastCheckpoint = unrecordedCheckpoints[unrecordedCheckpoints.length - 1];
+
+        currentSession = await commuteApi.recordCheckpoint({
+          sessionId: currentSession.id,
+          checkpointId: firstUnrecorded.id,
+          actualWaitTime: firstUnrecorded.expectedWaitTime || 0,
+        });
+
+        // Skip intermediate checkpoints, record them with zero wait time
+        for (let i = 1; i < unrecordedCheckpoints.length - 1; i++) {
+          currentSession = await commuteApi.recordCheckpoint({
+            sessionId: currentSession.id,
+            checkpointId: unrecordedCheckpoints[i].id,
+            actualWaitTime: 0,
+          });
+        }
+
+        currentSession = await commuteApi.recordCheckpoint({
+          sessionId: currentSession.id,
+          checkpointId: lastCheckpoint.id,
+          actualWaitTime: lastCheckpoint.expectedWaitTime || 0,
+        });
+      } else {
+        // Normal mode: record all checkpoints
+        for (const checkpoint of unrecordedCheckpoints) {
+          currentSession = await commuteApi.recordCheckpoint({
+            sessionId: currentSession.id,
+            checkpointId: checkpoint.id,
+            actualWaitTime: checkpoint.expectedWaitTime || 0,
+          });
+        }
+      }
+
+      // 세션 완료
+      const completedSession = await commuteApi.completeSession({
+        sessionId: currentSession.id,
+      });
+      setActiveSession(completedSession);
+
+      setTimeout(() => {
+        navigate('/commute/dashboard');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to quick complete session:', err);
+      setError('기록 완료에 실패했습니다.');
+    } finally {
+      setIsQuickCompleting(false);
+    }
+  };
+
+  // Cancel session - 모달 열기
+  const handleCancelClick = () => {
+    if (!activeSession) return;
+    setShowCancelConfirm(true);
+  };
+
+  // Cancel session - 확인
+  const handleCancelConfirm = async () => {
     if (!activeSession) return;
 
-    if (!confirm('정말 취소하시겠습니까?')) return;
-
+    setIsCancelling(true);
     try {
       await commuteApi.cancelSession(activeSession.id);
       setActiveSession(null);
       setElapsedTime(0);
       setActiveTab('ready');
+      setShowCancelConfirm(false);
     } catch (err) {
       console.error('Failed to cancel session:', err);
       setError('취소에 실패했습니다.');
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -315,7 +436,7 @@ export function CommuteTrackingPage() {
         <button
           type="button"
           className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => navigate('/commute/dashboard')}
+          onClick={() => navigate('/commute/dashboard?tab=history')}
         >
           <span className="tab-icon">📊</span>
           <span>기록</span>
@@ -367,6 +488,17 @@ export function CommuteTrackingPage() {
                 <p className="start-hint">
                   버튼을 누르면 시간 기록이 시작됩니다
                 </p>
+                {/* 간단 모드 안내 */}
+                <button
+                  type="button"
+                  className="btn-simple-mode"
+                  onClick={() => {
+                    navigate(`/commute?routeId=${selectedRoute.id}&mode=simple`);
+                    handleStartSession();
+                  }}
+                >
+                  ⚡ 간단 모드로 시작 (시작/끝만 기록)
+                </button>
               </div>
             )}
 
@@ -398,98 +530,171 @@ export function CommuteTrackingPage() {
             {/* Active session - in progress */}
             {activeSession && activeSession.status === 'in_progress' && selectedRoute && (
               <>
-                {/* Timer */}
-                <div className="timer-card">
-                  <span className="timer-label">경과 시간</span>
-                  <span className="timer-value">{formatTime(elapsedTime)}</span>
-                  <div className="timer-progress">
-                    <span>진행률: {activeSession.progress}%</span>
-                    <span className={activeSession.totalDelayMinutes > 0 ? 'delayed' : 'on-time'}>
-                      {activeSession.delayStatus}
-                    </span>
+                {/* 개선된 스톱워치 디스플레이 */}
+                <div className="stopwatch-card">
+                  <div className="stopwatch-display">
+                    <span className="stopwatch-label">경과 시간</span>
+                    <div className="stopwatch-time">
+                      <span className="time-large">{formatTimeLarge(elapsedTime).minutes}</span>
+                      <span className="time-separator">:</span>
+                      <span className="time-large">{formatTimeLarge(elapsedTime).seconds}</span>
+                    </div>
+                  </div>
+
+                  {/* 진행 바 + 체크포인트 마커 */}
+                  <div className="progress-tracker">
+                    <div className="progress-bar-track">
+                      <div
+                        className="progress-bar-fill"
+                        style={{ width: `${calculateProgress()}%` }}
+                        role="progressbar"
+                        aria-valuenow={calculateProgress()}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="진행률"
+                      />
+                      {/* 체크포인트 마커 */}
+                      {selectedRoute.checkpoints.map((cp, i) => {
+                        const position = ((i + 1) / selectedRoute.checkpoints.length) * 100;
+                        const status = getCheckpointStatus(cp);
+                        return (
+                          <div
+                            key={cp.id}
+                            className={`checkpoint-marker ${status}`}
+                            style={{ left: `${position}%` }}
+                            aria-label={`${cp.name} - ${status === 'completed' ? '완료' : status === 'current' ? '현재' : '대기중'}`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="progress-info">
+                      <span className="progress-percent">{calculateProgress()}%</span>
+                      <span className={`progress-status ${activeSession.totalDelayMinutes > 0 ? 'delayed' : 'on-time'}`}>
+                        {activeSession.delayStatus}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Current checkpoint action */}
-                <div className="checkpoint-action">
-                  {(() => {
-                    const recordedIds = new Set(activeSession.checkpointRecords.map((r) => r.checkpointId));
-                    const currentCheckpoint = selectedRoute.checkpoints.find((cp) => !recordedIds.has(cp.id));
-                    const isLast = currentCheckpoint && selectedRoute.checkpoints.indexOf(currentCheckpoint) === selectedRoute.checkpoints.length - 1;
+                {/* Simple Mode: 바로 완료 버튼만 표시 */}
+                {isSimpleMode ? (
+                  <div className="simple-mode-section">
+                    <div className="simple-mode-hint">
+                      <span>🚀</span>
+                      <p>{isQuickCompleting ? '기록 저장 중...' : '도착하면 아래 버튼을 눌러주세요'}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="arrive-btn finish simple-complete-btn"
+                      onClick={handleQuickComplete}
+                      disabled={isQuickCompleting}
+                    >
+                      {isQuickCompleting ? (
+                        <>
+                          <span className="spinner spinner-sm" aria-hidden="true" />
+                          <span className="arrive-text">저장 중...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="arrive-icon" aria-hidden="true">🏁</span>
+                          <span className="arrive-text">도착 완료!</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* 다음 체크포인트 강조 섹션 */}
+                    <div className="next-checkpoint-section">
+                      {(() => {
+                        const recordedIds = new Set(activeSession.checkpointRecords.map((r) => r.checkpointId));
+                        const currentCheckpoint = selectedRoute.checkpoints.find((cp) => !recordedIds.has(cp.id));
+                        const currentIndex = currentCheckpoint ? selectedRoute.checkpoints.indexOf(currentCheckpoint) : -1;
+                        const isLast = currentCheckpoint && currentIndex === selectedRoute.checkpoints.length - 1;
 
-                    if (!currentCheckpoint) return null;
+                        if (!currentCheckpoint) return null;
 
-                    return (
-                      <button
-                        type="button"
-                        className={`btn-checkpoint ${isLast ? 'finish' : ''}`}
-                        onClick={() => {
-                          if (isLast) {
-                            handleRecordCheckpoint(currentCheckpoint.id).then(() => {
-                              handleCompleteSession();
-                            });
-                          } else {
-                            handleRecordCheckpoint(currentCheckpoint.id);
-                          }
-                        }}
-                      >
-                        <span className="checkpoint-icon">
-                          {isLast ? '🏁' : '📍'}
-                        </span>
-                        <span className="checkpoint-text">
-                          <strong>{currentCheckpoint.name}</strong>
-                          <span>{isLast ? '도착 완료!' : '도착 체크'}</span>
-                        </span>
-                        <span className="checkpoint-arrow">→</span>
-                      </button>
-                    );
-                  })()}
-                </div>
+                        return (
+                          <div className="next-checkpoint-card">
+                            <div className="next-checkpoint-header">
+                              <span className="next-label">다음 목적지</span>
+                              <span className="next-step">{currentIndex + 1} / {selectedRoute.checkpoints.length}</span>
+                            </div>
+                            <div className="next-checkpoint-info">
+                              <span className="next-icon" aria-hidden="true">
+                                {currentCheckpoint.checkpointType === 'subway' ? '🚇' :
+                                 currentCheckpoint.checkpointType === 'bus_stop' ? '🚌' :
+                                 currentCheckpoint.checkpointType === 'work' ? '🏢' : '🏠'}
+                              </span>
+                              <span className="next-name">{currentCheckpoint.name}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className={`arrive-btn ${isLast ? 'finish' : ''}`}
+                              onClick={() => {
+                                if (isLast) {
+                                  handleRecordCheckpoint(currentCheckpoint.id).then(() => {
+                                    handleCompleteSession();
+                                  });
+                                } else {
+                                  handleRecordCheckpoint(currentCheckpoint.id);
+                                }
+                              }}
+                            >
+                              <span className="arrive-icon" aria-hidden="true">{isLast ? '🏁' : '🎯'}</span>
+                              <span className="arrive-text">{isLast ? '도착 완료!' : '도착'}</span>
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
 
-                {/* Checkpoint timeline */}
-                <div className="checkpoint-timeline">
-                  <h3>진행 상황</h3>
-                  {selectedRoute.checkpoints.map((checkpoint, index) => {
-                    const status = getCheckpointStatus(checkpoint);
-                    const recordedInfo = getRecordedInfo(checkpoint.id);
-                    const isLast = index === selectedRoute.checkpoints.length - 1;
+                    {/* Checkpoint timeline */}
+                    <div className="checkpoint-timeline">
+                      <h3>진행 상황</h3>
+                      {selectedRoute.checkpoints.map((checkpoint, index) => {
+                        const status = getCheckpointStatus(checkpoint);
+                        const recordedInfo = getRecordedInfo(checkpoint.id);
+                        const isLast = index === selectedRoute.checkpoints.length - 1;
 
-                    return (
-                      <div
-                        key={checkpoint.id}
-                        className={`timeline-item ${status}`}
-                      >
-                        {index > 0 && (
-                          <div className={`timeline-line ${status === 'pending' ? '' : 'active'}`} />
-                        )}
-                        <div className="timeline-marker">
-                          {status === 'completed' ? '✓' : status === 'current' ? '●' : (index + 1)}
-                        </div>
-                        <div className="timeline-content">
-                          <span className="timeline-name">{checkpoint.name}</span>
-                          {recordedInfo ? (
-                            <span className="timeline-time recorded">
-                              {recordedInfo.arrivalTimeString}
-                            </span>
-                          ) : !isLast && checkpoint.expectedDurationToNext ? (
-                            <span className="timeline-time expected">
-                              {checkpoint.transportMode === 'subway' && '🚇'}
-                              {checkpoint.transportMode === 'bus' && '🚌'}
-                              {checkpoint.transportMode === 'walk' && '🚶'}
-                              {' '}{checkpoint.expectedDurationToNext}분
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        return (
+                          <div
+                            key={checkpoint.id}
+                            className={`timeline-item ${status}`}
+                          >
+                            {index > 0 && (
+                              <div className={`timeline-line ${status === 'pending' ? '' : 'active'}`} />
+                            )}
+                            <div className="timeline-marker">
+                              {status === 'completed' ? '✓' : status === 'current' ? '●' : (index + 1)}
+                            </div>
+                            <div className="timeline-content">
+                              <span className="timeline-name">{checkpoint.name}</span>
+                              {recordedInfo ? (
+                                <span className="timeline-time recorded">
+                                  {recordedInfo.arrivalTimeString}
+                                </span>
+                              ) : !isLast && checkpoint.expectedDurationToNext ? (
+                                <span className="timeline-time expected">
+                                  {checkpoint.transportMode === 'subway' && '🚇'}
+                                  {checkpoint.transportMode === 'bus' && '🚌'}
+                                  {checkpoint.transportMode === 'walk' && '🚶'}
+                                  {' '}{checkpoint.expectedDurationToNext}분
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
 
                 {/* Cancel button */}
                 <button
                   type="button"
                   className="btn-cancel"
-                  onClick={handleCancelSession}
+                  onClick={handleCancelClick}
                 >
                   기록 취소
                 </button>
@@ -520,6 +725,21 @@ export function CommuteTrackingPage() {
 
       {/* Error display */}
       {error && <div className="commute-error">{error}</div>}
+
+      {/* 취소 확인 모달 */}
+      <ConfirmModal
+        open={showCancelConfirm}
+        title="기록 취소"
+        confirmText="취소하기"
+        cancelText="계속 기록"
+        confirmVariant="danger"
+        isLoading={isCancelling}
+        onConfirm={handleCancelConfirm}
+        onCancel={() => setShowCancelConfirm(false)}
+      >
+        <p>정말 취소하시겠습니까?</p>
+        <p className="muted">현재까지의 기록이 모두 삭제됩니다.</p>
+      </ConfirmModal>
     </main>
   );
 }

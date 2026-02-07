@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { Alert } from '@domain/entities/alert.entity';
@@ -7,6 +7,8 @@ import { INotificationScheduler } from '@application/ports/notification-schedule
 
 @Injectable()
 export class CreateAlertUseCase {
+  private readonly logger = new Logger(CreateAlertUseCase.name);
+
   constructor(
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,
     @Inject('IUserRepository') private userRepository: IUserRepository,
@@ -29,7 +31,18 @@ export class CreateAlertUseCase {
       dto.subwayStationId,
     );
     await this.alertRepository.save(alert);
-    await this.notificationScheduler.scheduleNotification(alert);
+
+    try {
+      await this.notificationScheduler.scheduleNotification(alert);
+    } catch (error) {
+      this.logger.error(
+        `Failed to schedule notification for alert ${alert.id}, rolling back`,
+        error,
+      );
+      await this.alertRepository.delete(alert.id);
+      throw error;
+    }
+
     return alert;
   }
 }

@@ -64,8 +64,8 @@ export function buildDataSourceOptions(): DataSourceOptions {
                      Boolean(databaseUrl?.includes('supabase.co')) ||
                      Boolean(process.env.DATABASE_HOST?.includes('supabase.com'));
   const synchronize =
-    process.env.DB_SYNCHRONIZE === 'true' ||
-    (!hasUrl && process.env.NODE_ENV === 'development');
+    process.env.NODE_ENV !== 'production' &&
+    process.env.DB_SYNCHRONIZE === 'true';
 
   const allEntities = [
     UserEntity,

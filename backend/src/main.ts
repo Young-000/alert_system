@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './presentation/app.module';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
   // 보안 헤더 설정 (Helmet)
@@ -44,7 +45,7 @@ async function bootstrap() {
         if (vercelPattern.test(origin)) {
           callback(null, true);
         } else {
-          console.warn(`CORS blocked origin: ${origin}`);
+          logger.warn(`CORS blocked origin: ${origin}`);
           callback(null, false);
         }
       }
@@ -91,8 +92,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger API Docs: http://localhost:${port}/api-docs`);
+  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Swagger API Docs: http://localhost:${port}/api-docs`);
 }
 bootstrap();
 

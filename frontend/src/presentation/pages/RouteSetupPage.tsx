@@ -1,5 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   getCommuteApiClient,
   type CreateRouteDto,
@@ -8,6 +25,7 @@ import {
   type CreateCheckpointDto,
 } from '@infrastructure/api/commute-api.client';
 import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 type SetupStep =
   | 'select-type'      // 출근/퇴근 선택
@@ -20,9 +38,89 @@ type TransportMode = 'subway' | 'bus';
 
 interface SelectedStop {
   id: string;
+  uniqueKey: string; // for drag-and-drop
   name: string;
   line: string;
   transportMode: TransportMode;
+}
+
+// Grouped station for line selection
+interface GroupedStation {
+  name: string;
+  lines: Array<{ line: string; id: string }>;
+}
+
+// Route validation result
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+// Sortable stop component for drag-and-drop
+function SortableStopItem({
+  stop,
+  index,
+  onRemove,
+  transferInfo,
+}: {
+  stop: SelectedStop;
+  index: number;
+  onRemove: (index: number) => void;
+  transferInfo: string | null;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: stop.uniqueKey });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`sortable-stop-item ${isDragging ? 'dragging' : ''}`}
+    >
+      {/* 드래그 핸들 - 터치 영역 44px 이상 확보 */}
+      <button
+        type="button"
+        className="drag-handle-btn"
+        aria-label="순서 변경"
+        {...attributes}
+        {...listeners}
+      >
+        <span className="drag-handle-icon" aria-hidden="true">☰</span>
+      </button>
+      <div className="sortable-stop-content">
+        <span className="stop-icon">
+          {stop.transportMode === 'subway' ? '🚇' : '🚌'}
+        </span>
+        <div className="stop-info">
+          <span className="stop-name">{stop.name}</span>
+          {stop.line && <span className="stop-line">{stop.line}</span>}
+          {transferInfo && (
+            <span className="transfer-badge">{transferInfo}</span>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="sortable-stop-remove"
+        onClick={() => onRemove(index)}
+        aria-label={`${stop.name} 삭제`}
+      >
+        ×
+      </button>
+    </div>
+  );
 }
 
 export function RouteSetupPage() {
@@ -33,6 +131,10 @@ export function RouteSetupPage() {
   // 기존 경로
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 정렬 및 편집
+  const [sortBy, setSortBy] = useState<'recent' | 'name' | 'created'>('recent');
+  const [editingRoute, setEditingRoute] = useState<RouteResponse | null>(null);
 
   // 새 경로 생성 플로우
   const [isCreating, setIsCreating] = useState(false);
@@ -49,9 +151,31 @@ export function RouteSetupPage() {
   const [busResults, setBusResults] = useState<BusStop[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // 호선 선택 모달
+  const [lineSelectionModal, setLineSelectionModal] = useState<GroupedStation | null>(null);
+
   // 저장
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
+
+  // 퇴근 경로 자동 생성 옵션
+  const [createReverse, setCreateReverse] = useState(true);
+
+  // 경로 이름
+  const [routeName, setRouteName] = useState('');
+
+  // 삭제 확인 모달
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // 기존 경로 로드
   useEffect(() => {
@@ -76,7 +200,119 @@ export function RouteSetupPage() {
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
 
-  // 역/정류장 검색
+  // 경로 검증 함수 (버스/지하철 혼합 지원)
+  const validateRoute = useCallback((stops: SelectedStop[]): ValidationResult => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (stops.length === 0) {
+      errors.push('최소 하나의 정류장을 선택해주세요');
+      return { isValid: false, errors, warnings };
+    }
+
+    // 1. 중복 역 검사 (같은 이름 + 같은 호선)
+    const seen = new Set<string>();
+    for (const stop of stops) {
+      const key = `${stop.name}-${stop.line}-${stop.transportMode}`;
+      if (seen.has(key)) {
+        errors.push(`"${stop.name} ${stop.line || ''}" ${stop.transportMode === 'subway' ? '역' : '정류장'}이 중복되었습니다`);
+      }
+      seen.add(key);
+    }
+
+    // 2. 연속 구간 검증
+    for (let i = 1; i < stops.length; i++) {
+      const prev = stops[i - 1];
+      const curr = stops[i];
+
+      // 2a. 지하철 → 지하철: 같은 호선이면서 다른 역인 경우 (정상적인 이동)
+      //     다른 호선이면서 같은 역이면 환승 (정상)
+      //     다른 호선이면서 다른 역이면 환승 누락 가능성 (에러)
+      if (prev.transportMode === 'subway' && curr.transportMode === 'subway') {
+        // 같은 호선 + 같은 역 = 의미없음
+        if (prev.line === curr.line && prev.name === curr.name) {
+          errors.push(`${prev.name}역 ${prev.line}이 연속으로 중복되었습니다.`);
+        }
+        // 같은 호선 + 다른 역 = 정상 (하지만 경고)
+        else if (prev.line === curr.line && prev.line !== '') {
+          warnings.push(
+            `${prev.name}과 ${curr.name}은 같은 ${curr.line}입니다. 중간역이라면 생략해도 됩니다.`
+          );
+        }
+        // 다른 호선 + 다른 역 = 환승역 누락 가능성
+        else if (prev.line !== curr.line && prev.name !== curr.name) {
+          errors.push(
+            `${prev.name}역(${prev.line})에서 ${curr.name}역(${curr.line})으로 직접 이동할 수 없습니다. 환승역을 추가해주세요.`
+          );
+        }
+        // 다른 호선 + 같은 역 = 환승 (정상)
+      }
+
+      // 2b. 버스 → 버스: 실제 환승 가능 여부 판단 어려움 - 경고만
+      if (prev.transportMode === 'bus' && curr.transportMode === 'bus') {
+        if (prev.name !== curr.name) {
+          warnings.push(
+            `${prev.name} → ${curr.name} 버스 환승이 가능한지 확인해주세요.`
+          );
+        }
+      }
+
+      // 2c. 버스 ↔ 지하철: 혼합 환승 - 정보 제공
+      if (prev.transportMode !== curr.transportMode) {
+        // 교통수단 변경 시 알림
+        const fromType = prev.transportMode === 'subway' ? '지하철' : '버스';
+        const toType = curr.transportMode === 'subway' ? '지하철' : '버스';
+        warnings.push(
+          `${prev.name}에서 ${fromType}→${toType} 환승이 있습니다. 환승 시간을 고려해주세요.`
+        );
+      }
+    }
+
+    return { isValid: errors.length === 0, errors, warnings };
+  }, []);
+
+  // 실시간 검증
+  const validation = useMemo(() => validateRoute(selectedStops), [selectedStops, validateRoute]);
+
+  // 정렬된 경로 목록
+  const sortedRoutes = useMemo(() => {
+    const routes = [...existingRoutes];
+    switch (sortBy) {
+      case 'name':
+        return routes.sort((a, b) => a.name.localeCompare(b.name));
+      case 'created':
+        return routes.sort((a, b) =>
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+      case 'recent':
+      default:
+        // 기본: 출근 먼저, 그 다음 퇴근
+        return routes.sort((a, b) => {
+          if (a.routeType === 'morning' && b.routeType !== 'morning') return -1;
+          if (a.routeType !== 'morning' && b.routeType === 'morning') return 1;
+          return 0;
+        });
+    }
+  }, [existingRoutes, sortBy]);
+
+  // 환승 정보 계산
+  const getTransferInfo = useCallback((from: SelectedStop, to: SelectedStop): string | null => {
+    // 교통수단이 다르면
+    if (from.transportMode !== to.transportMode) {
+      const fromIcon = from.transportMode === 'subway' ? '🚇' : '🚌';
+      const toIcon = to.transportMode === 'subway' ? '🚇' : '🚌';
+      return `${fromIcon}→${toIcon}`;
+    }
+
+    // 같은 교통수단이지만 호선이 다르면 (지하철 환승)
+    if (from.transportMode === 'subway' && from.line !== to.line && from.line && to.line) {
+      return `${from.line}→${to.line}`;
+    }
+
+    return null;
+  }, []);
+
+  // 역/정류장 검색 - 지하철은 역 이름으로 그룹화
   const searchStops = useCallback(async (query: string) => {
     if (!query || query.length < 1) {
       setSubwayResults([]);
@@ -88,7 +324,7 @@ export function RouteSetupPage() {
     try {
       if (currentTransport === 'subway') {
         const results = await subwayApiClient.searchStations(query);
-        setSubwayResults(results.slice(0, 6));
+        setSubwayResults(results.slice(0, 10)); // 더 많이 가져와서 그룹화
         setBusResults([]);
       } else {
         const results = await busApiClient.searchStops(query);
@@ -103,79 +339,193 @@ export function RouteSetupPage() {
     }
   }, [currentTransport]);
 
-  // 역/정류장 선택
-  const handleSelectStop = (stop: SubwayStation | BusStop) => {
-    const isSubway = 'line' in stop;
+  // 지하철 검색 결과를 역 이름으로 그룹화
+  const groupedSubwayResults = useMemo((): GroupedStation[] => {
+    const groups: Map<string, GroupedStation> = new Map();
+
+    for (const station of subwayResults) {
+      const existing = groups.get(station.name);
+      if (existing) {
+        // 중복 호선 방지
+        if (!existing.lines.some(l => l.line === station.line)) {
+          existing.lines.push({ line: station.line, id: station.id });
+        }
+      } else {
+        groups.set(station.name, {
+          name: station.name,
+          lines: [{ line: station.line, id: station.id }],
+        });
+      }
+    }
+
+    return Array.from(groups.values());
+  }, [subwayResults]);
+
+  // 역 선택 - 호선이 여러 개면 모달 표시
+  const handleStationClick = (grouped: GroupedStation) => {
+    if (grouped.lines.length === 1) {
+      // 호선이 하나면 바로 선택
+      handleSelectStopDirect(grouped.name, grouped.lines[0].line, grouped.lines[0].id);
+    } else {
+      // 호선이 여러 개면 모달 표시
+      setLineSelectionModal(grouped);
+    }
+  };
+
+  // 호선 선택 후 정류장 추가
+  const handleLineSelect = (stationName: string, line: string, stationId: string) => {
+    handleSelectStopDirect(stationName, line, stationId);
+    setLineSelectionModal(null);
+  };
+
+  // 정류장 직접 추가 (검증 포함)
+  const handleSelectStopDirect = (name: string, line: string, id: string) => {
     const newStop: SelectedStop = {
-      id: isSubway ? stop.id : (stop as BusStop).nodeId,
-      name: stop.name,
-      line: isSubway ? stop.line : '',
+      id,
+      uniqueKey: `${id}-${Date.now()}`,
+      name,
+      line,
       transportMode: currentTransport,
     };
-    setSelectedStops(prev => [...prev, newStop]);
+
+    const testStops = [...selectedStops, newStop];
+    const testValidation = validateRoute(testStops);
+
+    if (!testValidation.isValid) {
+      setError(testValidation.errors[0]);
+      return;
+    }
+
+    if (testValidation.warnings.length > 0) {
+      setWarning(testValidation.warnings[0]);
+    } else {
+      setWarning('');
+    }
+
+    setSelectedStops(testStops);
     setSearchQuery('');
     setSubwayResults([]);
     setBusResults([]);
+    setError('');
     setStep('ask-more');
+  };
+
+  // 버스 정류장 선택
+  const handleSelectBusStop = (stop: BusStop) => {
+    handleSelectStopDirect(stop.name, '', stop.nodeId);
   };
 
   // 정류장 삭제
   const removeStop = (index: number) => {
     setSelectedStops(prev => prev.filter((_, i) => i !== index));
+    setWarning('');
+    setError('');
   };
 
-  // 경로 저장
+  // 드래그 앤 드롭 완료
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setSelectedStops((items) => {
+        const oldIndex = items.findIndex((i) => i.uniqueKey === active.id);
+        const newIndex = items.findIndex((i) => i.uniqueKey === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  // 체크포인트 생성 헬퍼
+  const createCheckpoints = (stops: SelectedStop[], type: RouteType): CreateCheckpointDto[] => {
+    const checkpoints: CreateCheckpointDto[] = [];
+    let seq = 1;
+    const isToWork = type === 'morning';
+
+    // 시작점
+    checkpoints.push({
+      sequenceOrder: seq++,
+      name: isToWork ? '집' : '회사',
+      checkpointType: isToWork ? 'home' : 'work',
+      transportMode: 'walk',
+    });
+
+    // 중간 정류장들
+    for (const stop of stops) {
+      checkpoints.push({
+        sequenceOrder: seq++,
+        name: stop.name,
+        checkpointType: stop.transportMode === 'subway' ? 'subway' : 'bus_stop',
+        linkedStationId: stop.transportMode === 'subway' ? stop.id : undefined,
+        linkedBusStopId: stop.transportMode === 'bus' ? stop.id : undefined,
+        lineInfo: stop.line,
+        transportMode: stop.transportMode,
+      });
+    }
+
+    // 도착점
+    checkpoints.push({
+      sequenceOrder: seq,
+      name: isToWork ? '회사' : '집',
+      checkpointType: isToWork ? 'work' : 'home',
+    });
+
+    return checkpoints;
+  };
+
+  // 경로 저장 (신규 생성 또는 수정)
   const handleSave = async () => {
     if (!userId || selectedStops.length === 0) return;
+
+    // 최종 검증
+    if (!validation.isValid) {
+      setError(validation.errors[0]);
+      return;
+    }
 
     setIsSaving(true);
     setError('');
 
     try {
-      const routeName = routeType === 'morning' ? '출근 경로' : '퇴근 경로';
-      const isToWork = routeType === 'morning';
-
-      // 체크포인트 생성
-      const checkpoints: CreateCheckpointDto[] = [];
-      let seq = 1;
-
-      // 시작점
-      checkpoints.push({
-        sequenceOrder: seq++,
-        name: isToWork ? '집' : '회사',
-        checkpointType: isToWork ? 'home' : 'work',
-        transportMode: 'walk',
-      });
-
-      // 중간 정류장들
-      for (const stop of selectedStops) {
-        checkpoints.push({
-          sequenceOrder: seq++,
-          name: stop.name,
-          checkpointType: stop.transportMode === 'subway' ? 'subway' : 'bus_stop',
-          linkedStationId: stop.transportMode === 'subway' ? stop.id : undefined,
-          linkedBusStopId: stop.transportMode === 'bus' ? stop.id : undefined,
-          lineInfo: stop.line,
-          transportMode: stop.transportMode,
-        });
-      }
-
-      // 도착점
-      checkpoints.push({
-        sequenceOrder: seq,
-        name: isToWork ? '회사' : '집',
-        checkpointType: isToWork ? 'work' : 'home',
-      });
+      const defaultName = routeType === 'morning' ? '출근 경로' : '퇴근 경로';
+      const finalName = routeName.trim() || defaultName;
 
       const dto: CreateRouteDto = {
         userId,
-        name: routeName,
+        name: finalName,
         routeType,
         isPreferred: existingRoutes.length === 0,
-        checkpoints,
+        checkpoints: createCheckpoints(selectedStops, routeType),
       };
 
-      await commuteApi.createRoute(dto);
+      if (editingRoute) {
+        // 수정 모드: PUT API 호출
+        await commuteApi.updateRoute(editingRoute.id, dto);
+        // 경로 목록 새로고침 (타입 안전성을 위해 전체 리로드)
+        const updatedRoutes = await commuteApi.getUserRoutes(userId);
+        setExistingRoutes(updatedRoutes);
+      } else {
+        // 신규 생성: POST API 호출
+        await commuteApi.createRoute(dto);
+
+        // 출근 경로이고 퇴근 경로 자동 생성이 체크되어 있으면
+        if (routeType === 'morning' && createReverse) {
+          const reversedStops = [...selectedStops].reverse().map((stop, i) => ({
+            ...stop,
+            uniqueKey: `reverse-${stop.id}-${i}`,
+          }));
+
+          const reverseDto: CreateRouteDto = {
+            userId,
+            name: '퇴근 경로',
+            routeType: 'evening',
+            isPreferred: false,
+            checkpoints: createCheckpoints(reversedStops, 'evening'),
+          };
+
+          await commuteApi.createRoute(reverseDto);
+        }
+      }
+
       navigate('/commute');
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
@@ -191,7 +541,36 @@ export function RouteSetupPage() {
     setSelectedStops([]);
     setSearchQuery('');
     setError('');
+    setWarning('');
+    setCreateReverse(true);
+    setRouteName('');
+    setEditingRoute(null);
   };
+
+  // 기존 경로 수정 모드 진입
+  const handleEditRoute = useCallback((route: RouteResponse) => {
+    setEditingRoute(route);
+    setRouteType(route.routeType);
+    setRouteName(route.name || '');
+
+    // 체크포인트에서 교통수단 정류장만 추출
+    const stops: SelectedStop[] = route.checkpoints
+      .filter(cp => cp.checkpointType === 'subway' || cp.checkpointType === 'bus_stop')
+      .map((cp, index) => ({
+        id: cp.linkedStationId || cp.linkedBusStopId || `cp-${index}`,
+        uniqueKey: `edit-${cp.linkedStationId || cp.linkedBusStopId || index}-${Date.now()}-${index}`,
+        name: cp.name,
+        line: cp.lineInfo || '',
+        transportMode: cp.checkpointType === 'subway' ? 'subway' as TransportMode : 'bus' as TransportMode,
+      }));
+
+    setSelectedStops(stops);
+    setIsCreating(true);
+    setStep('ask-more'); // 경로 확인 단계로 바로 이동
+    setCreateReverse(false); // 수정 시에는 역방향 자동 생성 비활성화
+    setError('');
+    setWarning('');
+  }, []);
 
   // 취소
   const cancelCreating = () => {
@@ -199,17 +578,35 @@ export function RouteSetupPage() {
     setStep('select-type');
     setSelectedStops([]);
     setSearchQuery('');
+    setLineSelectionModal(null);
   };
 
-  // 삭제
-  const handleDelete = async (routeId: string) => {
-    if (!confirm('이 경로를 삭제할까요?')) return;
+  // 삭제 확인 요청
+  const handleDeleteClick = (route: RouteResponse) => {
+    setDeleteTarget({ id: route.id, name: route.name });
+  };
+
+  // 삭제 실행
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await commuteApi.deleteRoute(routeId);
-      setExistingRoutes(prev => prev.filter(r => r.id !== routeId));
+      await commuteApi.deleteRoute(deleteTarget.id);
+      setExistingRoutes(prev => prev.filter(r => r.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch {
-      // ignore
+      setError('삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // 승하차 구분 라벨 결정
+  const getStopLabel = (index: number, totalStops: number): string => {
+    if (totalStops === 1) return '승차';
+    if (index === 0) return '승차';
+    if (index === totalStops - 1) return '하차';
+    return '환승';
   };
 
   // 현재까지 경로 미리보기 렌더링
@@ -220,14 +617,19 @@ export function RouteSetupPage() {
     return (
       <div className="route-so-far">
         <span className="route-point-mini">{start}</span>
-        {selectedStops.map((stop, i) => (
-          <span key={i} className="route-segment">
-            <span className="route-arrow-mini">→</span>
-            <span className="route-point-mini stop">
-              {stop.transportMode === 'subway' ? '🚇' : '🚌'} {stop.name}
+        {selectedStops.map((stop, index) => {
+          const label = getStopLabel(index, selectedStops.length);
+          return (
+            <span key={stop.uniqueKey} className="route-segment">
+              <span className="route-arrow-mini">→</span>
+              <span className={`route-point-mini stop ${label === '환승' ? 'transfer' : ''}`}>
+                <span className="stop-label-mini">{label}</span>
+                {stop.transportMode === 'subway' ? '🚇' : '🚌'} {stop.name}
+                {stop.line && <span className="line-info-mini">{stop.line}</span>}
+              </span>
             </span>
-          </span>
-        ))}
+          );
+        })}
         <span className="route-arrow-mini">→</span>
         <span className="route-point-mini">?</span>
       </div>
@@ -267,15 +669,47 @@ export function RouteSetupPage() {
     );
   }
 
-  // 새 경로 생성 플로우
+  // 새 경로 생성 플로우 (또는 수정 모드)
   if (isCreating) {
     return (
       <main className="page apple-route-page">
         <nav className="apple-nav">
           <button type="button" className="apple-back" onClick={cancelCreating}>←</button>
-          <span className="apple-title">새 경로</span>
+          <span className="apple-title">{editingRoute ? '경로 수정' : '새 경로'}</span>
           <span />
         </nav>
+
+        {/* 호선 선택 모달 */}
+        {lineSelectionModal && (
+          <div className="line-selection-modal" onClick={() => setLineSelectionModal(null)}>
+            <div className="line-selection-content" onClick={(e) => e.stopPropagation()}>
+              <h3>{lineSelectionModal.name}역</h3>
+              <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                어떤 호선을 이용하세요?
+              </p>
+              <div className="line-selection-list">
+                {lineSelectionModal.lines.map(({ line, id }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className="line-selection-btn"
+                    onClick={() => handleLineSelect(lineSelectionModal.name, line, id)}
+                  >
+                    <span>🚇</span>
+                    <span>{line}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="line-selection-cancel"
+                onClick={() => setLineSelectionModal(null)}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Step 1: 출근/퇴근 선택 */}
         {step === 'select-type' && (
@@ -330,23 +764,40 @@ export function RouteSetupPage() {
 
               {selectedStops.length > 0 && renderRouteSoFar()}
 
-              <div className="apple-type-cards">
+              {/* 개선된 교통수단 선택기 - 아이콘 + 라벨 + 설명 */}
+              <div className="transport-selector" role="radiogroup" aria-label="교통수단 선택">
                 <button
                   type="button"
-                  className={`apple-type-card ${currentTransport === 'subway' ? 'selected' : ''}`}
+                  role="radio"
+                  aria-checked={currentTransport === 'subway'}
+                  className={`transport-option ${currentTransport === 'subway' ? 'selected' : ''}`}
                   onClick={() => setCurrentTransport('subway')}
                 >
-                  <span className="type-icon">🚇</span>
-                  <span className="type-label">지하철</span>
+                  <span className="transport-icon" aria-hidden="true">🚇</span>
+                  <div className="transport-text">
+                    <span className="transport-label">지하철</span>
+                    <span className="transport-desc">역 이름으로 검색</span>
+                  </div>
+                  {currentTransport === 'subway' && (
+                    <span className="transport-check" aria-hidden="true">✓</span>
+                  )}
                 </button>
 
                 <button
                   type="button"
-                  className={`apple-type-card ${currentTransport === 'bus' ? 'selected' : ''}`}
+                  role="radio"
+                  aria-checked={currentTransport === 'bus'}
+                  className={`transport-option ${currentTransport === 'bus' ? 'selected' : ''}`}
                   onClick={() => setCurrentTransport('bus')}
                 >
-                  <span className="type-icon">🚌</span>
-                  <span className="type-label">버스</span>
+                  <span className="transport-icon" aria-hidden="true">🚌</span>
+                  <div className="transport-text">
+                    <span className="transport-label">버스</span>
+                    <span className="transport-desc">정류장으로 검색</span>
+                  </div>
+                  {currentTransport === 'bus' && (
+                    <span className="transport-check" aria-hidden="true">✓</span>
+                  )}
                 </button>
               </div>
             </div>
@@ -374,10 +825,27 @@ export function RouteSetupPage() {
         {step === 'select-station' && (
           <section className="apple-step">
             <div className="apple-step-content">
+              {/* 승하차 흐름 안내 */}
+              <div className="boarding-flow-indicator">
+                {selectedStops.length === 0 ? (
+                  <span className="boarding-label boarding">
+                    🚇 {currentTransport === 'subway' ? '승차역' : '승차 정류장'} 선택
+                  </span>
+                ) : (
+                  <span className="boarding-label alighting">
+                    🚉 {currentTransport === 'subway' ? '하차역 또는 환승역' : '하차 정류장'} 선택
+                  </span>
+                )}
+              </div>
+
               <h1 className="apple-question">
-                {currentTransport === 'subway'
-                  ? '어떤 역을\n이용하세요?'
-                  : '어떤 정류장을\n이용하세요?'}
+                {selectedStops.length === 0
+                  ? currentTransport === 'subway'
+                    ? '어디서\n타시나요?'
+                    : '어디서\n타시나요?'
+                  : currentTransport === 'subway'
+                    ? '어디서\n내리시나요?'
+                    : '어디서\n내리시나요?'}
               </h1>
 
               {selectedStops.length > 0 && renderRouteSoFar()}
@@ -386,7 +854,7 @@ export function RouteSetupPage() {
                 <span className="search-icon">🔍</span>
                 <input
                   type="text"
-                  placeholder={currentTransport === 'subway' ? '역 이름으로 검색' : '정류장 이름으로 검색'}
+                  placeholder={currentTransport === 'subway' ? '역 이름으로 검색 (예: 강남)' : '정류장 이름으로 검색'}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -410,26 +878,35 @@ export function RouteSetupPage() {
                 )}
               </div>
 
+              {error && <div className="route-validation-error">⚠️ {error}</div>}
+
               {isSearching && (
                 <div className="apple-searching">검색 중...</div>
               )}
 
-              {/* 지하철 검색 결과 */}
-              {subwayResults.length > 0 && (
-                <ul className="apple-station-list">
-                  {subwayResults.map((station) => (
-                    <li key={station.id}>
+              {/* 지하철 검색 결과 - 그룹화된 역 표시 */}
+              {currentTransport === 'subway' && groupedSubwayResults.length > 0 && (
+                <ul className="search-results-list" role="listbox" aria-label="지하철역 검색 결과">
+                  {groupedSubwayResults.map((grouped) => (
+                    <li key={grouped.name} role="option" tabIndex={0}>
                       <button
                         type="button"
-                        className="apple-station-item"
-                        onClick={() => handleSelectStop(station)}
+                        className="search-result-item"
+                        onClick={() => handleStationClick(grouped)}
+                        aria-label={`${grouped.name}역 ${grouped.lines.length > 1 ? `(${grouped.lines.length}개 호선)` : grouped.lines[0].line}`}
                       >
-                        <span className="station-icon">🚇</span>
-                        <span className="station-info">
-                          <strong>{station.name}</strong>
-                          <span>{station.line}</span>
+                        <span className="result-icon" aria-hidden="true">🚇</span>
+                        <span className="result-info">
+                          <strong>{grouped.name}</strong>
+                          <span className="result-detail">
+                            {grouped.lines.length === 1
+                              ? grouped.lines[0].line
+                              : `${grouped.lines.map(l => l.line).join(', ')}`}
+                          </span>
                         </span>
-                        <span className="station-arrow">→</span>
+                        <span className="result-action" aria-hidden="true">
+                          {grouped.lines.length > 1 ? '호선 선택 ▼' : '선택 →'}
+                        </span>
                       </button>
                     </li>
                   ))}
@@ -438,27 +915,28 @@ export function RouteSetupPage() {
 
               {/* 버스 검색 결과 */}
               {busResults.length > 0 && (
-                <ul className="apple-station-list">
+                <ul className="search-results-list" role="listbox" aria-label="버스 정류장 검색 결과">
                   {busResults.map((stop) => (
-                    <li key={stop.nodeId}>
+                    <li key={stop.nodeId} role="option" tabIndex={0}>
                       <button
                         type="button"
-                        className="apple-station-item"
-                        onClick={() => handleSelectStop(stop)}
+                        className="search-result-item"
+                        onClick={() => handleSelectBusStop(stop)}
+                        aria-label={`${stop.name} 정류장 ${stop.stopNo ? `(${stop.stopNo})` : ''}`}
                       >
-                        <span className="station-icon">🚌</span>
-                        <span className="station-info">
+                        <span className="result-icon" aria-hidden="true">🚌</span>
+                        <span className="result-info">
                           <strong>{stop.name}</strong>
-                          <span>{stop.stopNo || ''}</span>
+                          <span className="result-detail">{stop.stopNo || '정류장'}</span>
                         </span>
-                        <span className="station-arrow">→</span>
+                        <span className="result-action" aria-hidden="true">선택 →</span>
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
 
-              {searchQuery && !isSearching && subwayResults.length === 0 && busResults.length === 0 && (
+              {searchQuery && !isSearching && groupedSubwayResults.length === 0 && busResults.length === 0 && (
                 <div className="apple-no-results">
                   검색 결과가 없습니다
                 </div>
@@ -472,6 +950,11 @@ export function RouteSetupPage() {
                       ? '예: 강남, 홍대입구, 여의도'
                       : '예: 강남역, 시청앞, 명동'}
                   </p>
+                  {currentTransport === 'subway' && (
+                    <p className="hint-note" style={{ marginTop: '0.5rem', color: 'var(--ink-muted)', fontSize: '0.8rem' }}>
+                      💡 역 이름 검색 후 원하는 호선을 선택할 수 있어요
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -488,38 +971,49 @@ export function RouteSetupPage() {
           </section>
         )}
 
-        {/* Step 4: 더 거쳐가나요? */}
+        {/* Step 4: 더 거쳐가나요? - 드래그앤드롭 가능 */}
         {step === 'ask-more' && (
           <section className="apple-step">
             <div className="apple-step-content">
               <h1 className="apple-question">다른 곳도<br />거쳐가시나요?</h1>
 
-              {/* 현재까지 경로 표시 */}
+              {/* 현재까지 경로 표시 - 드래그앤드롭 */}
               <div className="apple-route-progress">
-                <div className="progress-title">지금까지 경로</div>
+                <div className="progress-title">
+                  지금까지 경로
+                  {selectedStops.length > 1 && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginLeft: '0.5rem' }}>
+                      (드래그로 순서 변경)
+                    </span>
+                  )}
+                </div>
                 <div className="progress-route">
                   <span className="progress-point start">
                     {routeType === 'morning' ? '🏠 집' : '🏢 회사'}
                   </span>
-                  {selectedStops.map((stop, i) => (
-                    <div key={i} className="progress-segment">
-                      <div className="progress-line" />
-                      <div className="progress-stop">
-                        <span className="stop-icon">
-                          {stop.transportMode === 'subway' ? '🚇' : '🚌'}
-                        </span>
-                        <span className="stop-name">{stop.name}</span>
-                        <span className="stop-line">{stop.line}</span>
-                        <button
-                          type="button"
-                          className="stop-remove"
-                          onClick={() => removeStop(i)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+
+                  {/* Sortable stops */}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={selectedStops.map(s => s.uniqueKey)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {selectedStops.map((stop, i) => (
+                        <SortableStopItem
+                          key={stop.uniqueKey}
+                          stop={stop}
+                          index={i}
+                          onRemove={removeStop}
+                          transferInfo={i > 0 ? getTransferInfo(selectedStops[i - 1], stop) : null}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+
                   <div className="progress-segment">
                     <div className="progress-line dashed" />
                     <span className="progress-point end">
@@ -528,6 +1022,13 @@ export function RouteSetupPage() {
                   </div>
                 </div>
               </div>
+
+              {/* 검증 경고 */}
+              {warning && (
+                <div className="route-validation-warning">
+                  ⚠️ {warning}
+                </div>
+              )}
 
               <div className="apple-choice-cards">
                 <button
@@ -562,64 +1063,107 @@ export function RouteSetupPage() {
         {step === 'confirm' && selectedStops.length > 0 && (
           <section className="apple-step">
             <div className="apple-step-content">
-              <h1 className="apple-question">이 경로가<br />맞나요?</h1>
+              <h1 className="apple-question">{editingRoute ? '수정된 경로를<br />확인해주세요' : '이 경로가<br />맞나요?'}</h1>
 
-              <div className="apple-route-preview">
-                <div className="route-visual">
+              {/* 개선된 경로 미리보기 패널 */}
+              <div className="route-preview-panel">
+                <div className="preview-panel-header">
+                  <span className="preview-type-badge">
+                    {routeType === 'morning' ? '🌅 출근 경로' : '🌆 퇴근 경로'}
+                  </span>
+                  <span className="preview-stop-count">{selectedStops.length + 2}개 정류장</span>
+                </div>
+
+                {/* 시각적 경로 표시 */}
+                <div className="route-visual-enhanced">
                   {/* 시작점 */}
-                  <div className="route-point">
-                    <div className="point-icon start">
-                      {routeType === 'morning' ? '🏠' : '🏢'}
+                  <div className="preview-stop start">
+                    <div className="stop-marker">
+                      <span className="marker-icon">{routeType === 'morning' ? '🏠' : '🏢'}</span>
+                      <span className="marker-line" />
                     </div>
-                    <div className="point-label">
-                      {routeType === 'morning' ? '집' : '회사'}
+                    <div className="stop-details">
+                      <span className="stop-name-main">{routeType === 'morning' ? '집' : '회사'}</span>
+                      <span className="stop-transport">🚶 도보로 이동</span>
                     </div>
                   </div>
 
                   {/* 중간 정류장들 */}
-                  {selectedStops.map((stop, i) => (
-                    <div key={i} className="route-segment-full">
-                      <div className="route-line">
-                        <span>
-                          {i === 0 ? '🚶 도보' : (selectedStops[i-1].transportMode === 'subway' ? '🚇 지하철' : '🚌 버스')}
-                        </span>
-                      </div>
-                      <div className="route-point">
-                        <div className={`point-icon ${stop.transportMode}`}>
-                          {stop.transportMode === 'subway' ? '🚇' : '🚌'}
-                        </div>
-                        <div className="point-label">{stop.name}</div>
-                        <div className="point-sub">{stop.line}</div>
-                      </div>
-                    </div>
-                  ))}
+                  {selectedStops.map((stop, i) => {
+                    const transferInfo = i > 0 ? getTransferInfo(selectedStops[i - 1], stop) : null;
+                    const nextTransport = i < selectedStops.length - 1
+                      ? selectedStops[i].transportMode
+                      : selectedStops[i].transportMode;
 
-                  {/* 마지막 구간 + 도착점 */}
-                  <div className="route-line">
-                    <span>
-                      {selectedStops[selectedStops.length - 1].transportMode === 'subway'
-                        ? '🚇 지하철'
-                        : '🚌 버스'}
-                    </span>
-                  </div>
-                  <div className="route-point">
-                    <div className="point-icon end">
-                      {routeType === 'morning' ? '🏢' : '🏠'}
+                    return (
+                      <div key={stop.uniqueKey} className="preview-stop middle">
+                        <div className="stop-marker">
+                          <span className="marker-icon">
+                            {stop.transportMode === 'subway' ? '🚇' : '🚌'}
+                          </span>
+                          <span className="marker-line" />
+                        </div>
+                        <div className="stop-details">
+                          <span className="stop-name-main">{stop.name}</span>
+                          {stop.line && <span className="stop-line-info">{stop.line}</span>}
+                          {transferInfo && (
+                            <span className="stop-transfer-badge">{transferInfo} 환승</span>
+                          )}
+                          <span className="stop-transport">
+                            {nextTransport === 'subway' ? '🚇 지하철' : '🚌 버스'}로 이동
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* 도착점 */}
+                  <div className="preview-stop end">
+                    <div className="stop-marker">
+                      <span className="marker-icon">{routeType === 'morning' ? '🏢' : '🏠'}</span>
                     </div>
-                    <div className="point-label">
-                      {routeType === 'morning' ? '회사' : '집'}
+                    <div className="stop-details">
+                      <span className="stop-name-main">{routeType === 'morning' ? '회사' : '집'}</span>
+                      <span className="stop-complete">🎉 도착!</span>
                     </div>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  className="change-station-btn"
+                  className="preview-edit-btn"
                   onClick={() => setStep('ask-more')}
                 >
-                  경로 수정하기
+                  ✏️ 경로 수정하기
                 </button>
               </div>
+
+              {/* 경로 이름 입력 */}
+              <div className="route-name-input">
+                <label htmlFor="route-name-field">경로 이름 (선택)</label>
+                <input
+                  id="route-name-field"
+                  type="text"
+                  placeholder={routeType === 'morning' ? '예: 회사 출근, 강남 본사' : '예: 퇴근길, 집으로'}
+                  value={routeName}
+                  onChange={(e) => setRouteName(e.target.value)}
+                  maxLength={30}
+                  className="route-name-field"
+                />
+                <span className="char-count">{routeName.length}/30</span>
+              </div>
+
+              {/* 퇴근 경로 자동 생성 옵션 */}
+              {routeType === 'morning' && (
+                <label className="reverse-route-option">
+                  <input
+                    type="checkbox"
+                    checked={createReverse}
+                    onChange={(e) => setCreateReverse(e.target.checked)}
+                  />
+                  <span>퇴근 경로도 자동으로 만들기 (역순)</span>
+                </label>
+              )}
 
               <div className="apple-info-card">
                 <span className="info-icon">💡</span>
@@ -634,9 +1178,9 @@ export function RouteSetupPage() {
                 type="button"
                 className="apple-btn-primary apple-btn-full"
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={isSaving || !validation.isValid}
               >
-                {isSaving ? '저장 중...' : '경로 저장'}
+                {isSaving ? '저장 중...' : editingRoute ? '수정 완료' : (routeType === 'morning' && createReverse ? '경로 2개 저장' : '경로 저장')}
               </button>
             </div>
           </section>
@@ -654,7 +1198,7 @@ export function RouteSetupPage() {
         <Link to="/commute" className="apple-nav-link">트래킹</Link>
       </nav>
 
-      {existingRoutes.length === 0 ? (
+      {sortedRoutes.length === 0 ? (
         // 경로 없음
         <div className="apple-empty">
           <div className="apple-empty-icon">🚇</div>
@@ -665,39 +1209,108 @@ export function RouteSetupPage() {
           </button>
         </div>
       ) : (
-        // 경로 목록
+        // 경로 목록 - 개선된 UI
         <div className="apple-route-list">
           <section className="route-section">
-            <h2 className="section-title">내 경로</h2>
-            {existingRoutes.map((route) => (
-              <div key={route.id} className="apple-route-card">
-                <Link to={`/commute?routeId=${route.id}`} className="route-card-main">
+            <div className="route-section-header">
+              <h2 className="section-title">내 경로</h2>
+              <div className="section-header-actions">
+                <select
+                  className="sort-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  aria-label="정렬 기준"
+                >
+                  <option value="recent">기본순</option>
+                  <option value="name">이름순</option>
+                  <option value="created">생성일순</option>
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm header-add-btn"
+                  onClick={startCreating}
+                >
+                  + 새 경로
+                </button>
+              </div>
+            </div>
+
+            {sortedRoutes.map((route) => (
+              <div key={route.id} className="apple-route-card-improved">
+                {/* 메인 영역 - 클릭 시 수정 모드로 진입 */}
+                <button
+                  type="button"
+                  className="route-card-content"
+                  onClick={() => handleEditRoute(route)}
+                  aria-label={`${route.name} 수정하기`}
+                >
                   <span className="route-icon">
                     {route.routeType === 'morning' ? '🌅' : '🌆'}
                   </span>
                   <div className="route-info">
                     <strong>{route.name}</strong>
-                    <span>{route.checkpoints.map(c => c.name).join(' → ')}</span>
+                    <span className="route-path">{route.checkpoints.map(c => c.name).join(' → ')}</span>
+                    <span className="route-meta">
+                      예상 {route.totalExpectedDuration}분 · 수정하려면 탭
+                    </span>
                   </div>
-                  <span className="route-arrow">▶</span>
-                </Link>
-                <button
-                  type="button"
-                  className="route-delete"
-                  onClick={() => handleDelete(route.id)}
-                  aria-label="삭제"
-                >
-                  ×
                 </button>
+
+                {/* 액션 버튼들 - 분리됨 */}
+                <div className="route-card-actions">
+                  <Link
+                    to={`/commute?routeId=${route.id}`}
+                    className="route-action-btn primary"
+                    title="트래킹 시작"
+                    aria-label="트래킹 시작"
+                  >
+                    ▶️
+                  </Link>
+                  <button
+                    type="button"
+                    className="route-action-btn"
+                    onClick={() => handleEditRoute(route)}
+                    aria-label="수정"
+                    title="수정"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    type="button"
+                    className="route-action-btn danger"
+                    onClick={() => handleDeleteClick(route)}
+                    aria-label="삭제"
+                    title="삭제"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
             ))}
           </section>
 
-          <button type="button" className="apple-add-btn" onClick={startCreating}>
+          <button type="button" className="apple-add-btn secondary" onClick={startCreating}>
             <span className="add-icon">+</span>
-            <span>새 경로 추가</span>
+            <span>경로 더 추가하기</span>
           </button>
         </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {deleteTarget && (
+        <ConfirmModal
+          open={true}
+          title="경로 삭제"
+          confirmText="삭제"
+          cancelText="취소"
+          confirmVariant="danger"
+          isLoading={isDeleting}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+        >
+          <p>&ldquo;{deleteTarget.name}&rdquo; 경로를 삭제할까요?</p>
+          <p className="muted">삭제 후에는 복구할 수 없습니다.</p>
+        </ConfirmModal>
       )}
     </main>
   );

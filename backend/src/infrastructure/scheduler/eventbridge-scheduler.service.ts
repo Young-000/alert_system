@@ -35,7 +35,12 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
 
   constructor() {
     const region = process.env.AWS_REGION || 'ap-northeast-2';
-    const accountId = process.env.AWS_ACCOUNT_ID || '378898678278';
+    const accountId = process.env.AWS_ACCOUNT_ID;
+    if (!accountId) {
+      throw new Error(
+        'AWS_ACCOUNT_ID environment variable is required but not set',
+      );
+    }
 
     this.client = new SchedulerClient({ region });
 

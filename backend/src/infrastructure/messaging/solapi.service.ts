@@ -129,12 +129,12 @@ export class SolapiService implements ISolapiService {
   // 기존 템플릿 (하위 호환)
   async sendLegacyWeatherAlert(to: string, variables: LegacyWeatherVariables): Promise<void> {
     const stringVariables: Record<string, string> = {
-      '#{userName}': variables.userName,
-      '#{temperature}': variables.temperature,
-      '#{condition}': variables.condition,
-      '#{airLevel}': variables.airLevel,
-      '#{humidity}': variables.humidity,
-      '#{tip}': variables.tip,
+      userName: variables.userName,
+      temperature: variables.temperature,
+      condition: variables.condition,
+      airLevel: variables.airLevel,
+      humidity: variables.humidity,
+      tip: variables.tip,
     };
 
     await this.sendAlimtalk({
@@ -149,13 +149,13 @@ export class SolapiService implements ISolapiService {
     const templateId = timeType === 'morning' ? TEMPLATE_IDS.WEATHER_MORNING : TEMPLATE_IDS.WEATHER_EVENING;
 
     const stringVariables: Record<string, string> = {
-      '#{userName}': variables.userName,
-      '#{date}': variables.date,
-      '#{currentTemp}': variables.currentTemp,
-      '#{minTemp}': variables.minTemp,
-      '#{weather}': variables.weather,
-      '#{airQuality}': variables.airQuality,
-      '#{tip}': variables.tip,
+      userName: variables.userName,
+      date: variables.date,
+      currentTemp: variables.currentTemp,
+      minTemp: variables.minTemp,
+      weather: variables.weather,
+      airQuality: variables.airQuality,
+      tip: variables.tip,
     };
 
     await this.sendAlimtalk({ to, templateId, variables: stringVariables });
@@ -166,10 +166,10 @@ export class SolapiService implements ISolapiService {
     const templateId = timeType === 'morning' ? TEMPLATE_IDS.TRANSIT_MORNING : TEMPLATE_IDS.TRANSIT_EVENING;
 
     const stringVariables: Record<string, string> = {
-      '#{userName}': variables.userName,
-      '#{subwayInfo}': variables.subwayInfo,
-      '#{busInfo}': variables.busInfo,
-      '#{tip}': variables.tip,
+      userName: variables.userName,
+      subwayInfo: variables.subwayInfo,
+      busInfo: variables.busInfo,
+      tip: variables.tip,
     };
 
     await this.sendAlimtalk({ to, templateId, variables: stringVariables });
@@ -180,15 +180,15 @@ export class SolapiService implements ISolapiService {
     const templateId = timeType === 'morning' ? TEMPLATE_IDS.COMBINED_MORNING : TEMPLATE_IDS.COMBINED_EVENING;
 
     const stringVariables: Record<string, string> = {
-      '#{userName}': variables.userName,
-      '#{date}': variables.date,
-      '#{currentTemp}': variables.currentTemp,
-      '#{minTemp}': variables.minTemp,
-      '#{weather}': variables.weather,
-      '#{airQuality}': variables.airQuality,
-      '#{subwayInfo}': variables.subwayInfo,
-      '#{busInfo}': variables.busInfo,
-      '#{tip}': variables.tip,
+      userName: variables.userName,
+      date: variables.date,
+      currentTemp: variables.currentTemp,
+      minTemp: variables.minTemp,
+      weather: variables.weather,
+      airQuality: variables.airQuality,
+      subwayInfo: variables.subwayInfo,
+      busInfo: variables.busInfo,
+      tip: variables.tip,
     };
 
     await this.sendAlimtalk({ to, templateId, variables: stringVariables });

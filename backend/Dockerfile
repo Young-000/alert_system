@@ -1,20 +1,29 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl && \
+    addgroup -g 1001 nodejs && \
+    adduser -S -u 1001 -G nodejs nestjs
 
-# Install dependencies
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
-RUN npm ci --only=production
 
-# Copy source and build
-COPY . .
-RUN npm run build
+USER nestjs
 
-# Expose port
 EXPOSE 3000
 
-# Start the app
-CMD ["npm", "run", "start:prod"]
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/src/main"]

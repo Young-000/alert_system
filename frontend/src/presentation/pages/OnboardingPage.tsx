@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   getCommuteApiClient,
@@ -31,6 +31,12 @@ export function OnboardingPage() {
   const userId = localStorage.getItem('userId') || '';
   const userName = localStorage.getItem('userName') || '회원';
   const commuteApi = getCommuteApiClient();
+
+  useEffect(() => {
+    if (!userId) {
+      navigate('/login');
+    }
+  }, [userId, navigate]);
 
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [data, setData] = useState<OnboardingData>({
@@ -364,7 +370,7 @@ export function OnboardingPage() {
             {data.hasCommute ? (
               <p className="complete-desc">
                 출퇴근 경로가 생성되었어요.<br />
-                이제 출퇴근 시간을 기록해보세요!
+                이제 알림을 설정하면 매일 아침 날씨와 교통 정보를 받아볼 수 있어요!
               </p>
             ) : (
               <p className="complete-desc">
@@ -373,10 +379,29 @@ export function OnboardingPage() {
               </p>
             )}
 
+            {/* 알림 설정 추천 배너 */}
+            {data.hasCommute && (
+              <div className="alert-recommend-banner">
+                <div className="recommend-content">
+                  <span className="recommend-icon">🔔</span>
+                  <div className="recommend-text">
+                    <strong>출근 전 알림 받기</strong>
+                    <span>날씨·교통 알림을 카카오톡으로 받아보세요</span>
+                  </div>
+                </div>
+                <Link to="/alerts" className="btn btn-primary btn-sm">
+                  알림 설정 →
+                </Link>
+              </div>
+            )}
+
             <div className="complete-actions">
               {data.hasCommute ? (
                 <>
-                  <Link to="/commute" className="btn btn-primary btn-lg">
+                  <Link to="/alerts" className="btn btn-primary btn-lg">
+                    🔔 알림 설정하기
+                  </Link>
+                  <Link to="/commute" className="btn btn-outline">
                     트래킹 시작하기
                   </Link>
                   <Link to="/" className="btn btn-ghost">
