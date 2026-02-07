@@ -9,7 +9,7 @@ import {
   Index,
 } from 'typeorm';
 import { CommuteRouteEntity } from './commute-route.entity';
-import { SegmentStats, ConditionAnalysis, ScoreFactors } from '@domain/entities/route-analytics.entity';
+import { SegmentStats, ConditionAnalysis } from '@domain/entities/route-analytics.entity';
 
 @Entity('route_analytics', { schema: 'alert_system' })
 @Index(['routeId'], { unique: true })

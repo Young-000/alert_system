@@ -30,6 +30,7 @@ export class BusStopApiClient implements IBusStopApiClient {
     this.apiKey = apiKey || process.env.SUBWAY_API_KEY || '';
     this.client = axios.create({
       baseURL: 'http://openapi.seoul.go.kr:8088',
+      timeout: 10000,
     });
   }
 

@@ -25,7 +25,11 @@ import { buildDataSourceOptions } from './database.config';
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forRoot(buildDataSourceOptions()),
+    TypeOrmModule.forRoot({
+      ...buildDataSourceOptions(),
+      retryAttempts: process.env.NODE_ENV === 'production' ? 3 : 1,
+      retryDelay: 3000,
+    }),
     TypeOrmModule.forFeature([
       UserEntity,
       AlertEntity,

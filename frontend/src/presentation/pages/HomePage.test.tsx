@@ -9,8 +9,7 @@ describe('HomePage', () => {
         <HomePage />
       </MemoryRouter>
     );
-    // 여러 곳에 Alert System 텍스트가 있으므로 getAllByText 사용
-    const elements = screen.getAllByText('Alert System');
+    const elements = screen.getAllByText('출퇴근 메이트');
     expect(elements.length).toBeGreaterThan(0);
   });
 });

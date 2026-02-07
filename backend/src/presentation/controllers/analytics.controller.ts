@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CalculateRouteAnalyticsUseCase } from '@application/use-cases/calculate-route-analytics.use-case';
-import { RouteAnalytics, RouteComparison } from '@domain/entities/route-analytics.entity';
+import { RouteAnalytics } from '@domain/entities/route-analytics.entity';
 
 interface AuthenticatedRequest extends Request {
   user: { userId: string; email: string };
@@ -86,7 +86,7 @@ export class AnalyticsController {
   @Get('routes/:routeId')
   async getRouteAnalytics(
     @Param('routeId') routeId: string,
-    @Request() req: AuthenticatedRequest,
+    @Request() _req: AuthenticatedRequest,
   ): Promise<RouteAnalyticsResponseDto> {
     this.logger.log(`Getting analytics for route ${routeId}`);
     const analytics = await this.calculateAnalyticsUseCase.execute(routeId);
@@ -102,7 +102,7 @@ export class AnalyticsController {
   @HttpCode(HttpStatus.OK)
   async recalculateRouteAnalytics(
     @Param('routeId') routeId: string,
-    @Request() req: AuthenticatedRequest,
+    @Request() _req: AuthenticatedRequest,
   ): Promise<RouteAnalyticsResponseDto> {
     this.logger.log(`Recalculating analytics for route ${routeId}`);
     const analytics = await this.calculateAnalyticsUseCase.execute(routeId);
@@ -133,7 +133,7 @@ export class AnalyticsController {
   @Get('compare')
   async compareRoutes(
     @Query('routeIds') routeIds: string,
-    @Request() req: AuthenticatedRequest,
+    @Request() _req: AuthenticatedRequest,
   ): Promise<RouteComparisonResponseDto> {
     const ids = routeIds.split(',').map((id) => id.trim());
 

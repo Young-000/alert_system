@@ -96,6 +96,9 @@ export class AlimtalkService implements IAlimtalkService {
     };
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -103,7 +106,9 @@ export class AlimtalkService implements IAlimtalkService {
           'X-Secret-Key': this.secretKey,
         },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const result: NhnCloudResponse = await response.json();
 
@@ -133,6 +138,9 @@ export class AlimtalkService implements IAlimtalkService {
     const url = `${this.baseUrl.replace('api-alimtalk', 'api-sms')}/sms/v3.0/appkeys/${this.appKey}/sender/sms`;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -148,7 +156,9 @@ export class AlimtalkService implements IAlimtalkService {
             },
           ],
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const result = await response.json();
 

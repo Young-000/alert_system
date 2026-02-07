@@ -26,6 +26,7 @@ export class BusApiClient implements IBusApiClient {
   constructor(private apiKey: string) {
     this.client = axios.create({
       baseURL: 'http://ws.bus.go.kr/api/rest/arrive',
+      timeout: 10000,
       params: {
         serviceKey: this.apiKey,
         resultType: 'json',

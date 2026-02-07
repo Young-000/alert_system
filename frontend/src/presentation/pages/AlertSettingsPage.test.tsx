@@ -53,7 +53,8 @@ describe('AlertSettingsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('출근 알림')).toBeInTheDocument();
+      const elements = screen.getAllByText('출근 알림');
+      expect(elements.length).toBeGreaterThan(0);
     });
   });
 
@@ -120,11 +121,12 @@ describe('AlertSettingsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('테스트 알림')).toBeInTheDocument();
+      const elements = screen.getAllByText('테스트 알림');
+      expect(elements.length).toBeGreaterThan(0);
     });
 
     // 삭제 버튼 클릭 -> 모달 열림
-    const deleteButton = screen.getByLabelText('테스트 알림 삭제');
+    const deleteButton = screen.getByLabelText('삭제');
     fireEvent.click(deleteButton);
 
     // 모달의 삭제 확인 버튼 클릭
@@ -132,8 +134,9 @@ describe('AlertSettingsPage', () => {
       expect(screen.getByText('알림 삭제')).toBeInTheDocument();
     });
 
-    const confirmButton = screen.getByRole('button', { name: '삭제' });
-    fireEvent.click(confirmButton);
+    const deleteButtons = screen.getAllByRole('button', { name: '삭제' });
+    const confirmButton = deleteButtons.find(btn => btn.classList.contains('btn-danger'));
+    fireEvent.click(confirmButton!);
 
     await waitFor(() => {
       expect(mockAlertApiClient.deleteAlert).toHaveBeenCalledWith('alert-1');

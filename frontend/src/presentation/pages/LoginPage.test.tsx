@@ -68,7 +68,7 @@ describe('LoginPage', () => {
       await waitFor(() => {
         expect(localStorage.getItem('userId')).toBe('user-1');
         expect(localStorage.getItem('accessToken')).toBe('test-token');
-        expect(mockNavigate).toHaveBeenCalledWith('/alerts');
+        expect(mockNavigate).toHaveBeenCalledWith('/');
       });
     });
 
@@ -180,6 +180,9 @@ describe('LoginPage', () => {
       });
       fireEvent.change(screen.getByLabelText('이름'), {
         target: { value: '홍길동' },
+      });
+      fireEvent.change(screen.getByLabelText('전화번호'), {
+        target: { value: '01012345678' },
       });
       fireEvent.change(screen.getByLabelText('비밀번호'), {
         target: { value: 'password123' },

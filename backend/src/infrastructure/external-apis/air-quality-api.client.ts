@@ -13,6 +13,7 @@ export class AirQualityApiClient implements IAirQualityApiClient {
     this.apiKey = apiKey;
     this.client = axios.create({
       baseURL: 'https://apis.data.go.kr/B552584/ArpltnInforInqireSvc',
+      timeout: 10000,
     });
   }
 

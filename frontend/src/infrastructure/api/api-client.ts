@@ -63,7 +63,6 @@ export class ApiClient {
 
         // 재시도 전 대기 (점진적 증가)
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-        console.log(`API 재시도 중... (${attempt + 1}/${this.maxRetries})`);
       }
     }
 

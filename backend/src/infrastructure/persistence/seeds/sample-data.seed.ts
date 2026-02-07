@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { Logger } from '@nestjs/common';
 
 /**
  * Phase 2 테스트용 샘플 데이터 시드
@@ -103,6 +104,8 @@ export const SAMPLE_ALERTS = [
 /**
  * 샘플 데이터 삽입 함수
  */
+const logger = new Logger('SampleDataSeed');
+
 export async function seedSampleData(dataSource: DataSource): Promise<void> {
   const queryRunner = dataSource.createQueryRunner();
   await queryRunner.connect();
@@ -167,10 +170,10 @@ export async function seedSampleData(dataSource: DataSource): Promise<void> {
     }
 
     await queryRunner.commitTransaction();
-    console.log('Sample data seeded successfully!');
+    logger.log('Sample data seeded successfully!');
   } catch (error) {
     await queryRunner.rollbackTransaction();
-    console.error('Failed to seed sample data:', error);
+    logger.error('Failed to seed sample data:', error instanceof Error ? error.stack : String(error));
     throw error;
   } finally {
     await queryRunner.release();
@@ -196,7 +199,7 @@ export async function clearSampleData(dataSource: DataSource): Promise<void> {
     await queryRunner.query(`DELETE FROM alert_system.commute_sessions WHERE user_id = $1`, [SAMPLE_USER.id]);
     await queryRunner.query(`DELETE FROM alert_system.users WHERE id = $1`, [SAMPLE_USER.id]);
 
-    console.log('Sample data cleared successfully!');
+    logger.log('Sample data cleared successfully!');
   } finally {
     await queryRunner.release();
   }

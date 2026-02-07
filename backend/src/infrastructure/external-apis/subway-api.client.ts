@@ -25,6 +25,7 @@ export class SubwayApiClient implements ISubwayApiClient {
     this.apiKey = apiKey || process.env.SUBWAY_REALTIME_API_KEY || '';
     this.client = axios.create({
       baseURL: 'http://swopenAPI.seoul.go.kr/api/subway',
+      timeout: 10000,
     });
   }
 

@@ -3,6 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './presentation/app.module';
+import { AllExceptionsFilter } from './presentation/filters/http-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -54,6 +55,9 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'ngrok-skip-browser-warning'],
   });
+
+  // 전역 예외 필터 적용 (스택 트레이스 노출 방지)
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // 전역 ValidationPipe 적용
   app.useGlobalPipes(

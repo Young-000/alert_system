@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { behaviorCollector } from '../../infrastructure/analytics/behavior-collector';
-import { alertApiClient } from '../../infrastructure/api';
-import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '../../infrastructure/api/commute-api.client';
-import type { Alert } from '../../infrastructure/api';
+import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
+import { alertApiClient } from '@infrastructure/api';
+import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
+import type { Alert } from '@infrastructure/api';
 
 // Compute initial states outside of effects to avoid cascading renders
 function getInitialLoginState(): boolean {

@@ -512,7 +512,7 @@ export function AlertSettingsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, reloadAlerts, checkDuplicateAlert]);
+  }, [userId, wantsWeather, selectedTransports, generateAlertName, generateSchedule, reloadAlerts, checkDuplicateAlert, selectedRouteId]);
 
   const handleDeleteClick = (alert: Alert) => {
     setDeleteTarget({ id: alert.id, name: alert.name });
@@ -676,7 +676,7 @@ export function AlertSettingsPage() {
       </a>
       <nav className="nav">
         <div className="brand">
-          <strong>Alert System</strong>
+          <strong>출퇴근 메이트</strong>
           <span>출퇴근 알림</span>
         </div>
         <div className="nav-actions">
@@ -1660,7 +1660,7 @@ export function AlertSettingsPage() {
 
       <footer className="footer">
         <p className="footer-text">
-          <span>Alert System</span>
+          <span>출퇴근 메이트</span>
           <span className="footer-divider">·</span>
           <span>출퇴근 알림 서비스</span>
         </p>

@@ -12,7 +12,6 @@ import {
   ROUTE_ANALYTICS_REPOSITORY,
 } from '@domain/repositories/route-analytics.repository';
 import { CommuteSession, SessionStatus } from '@domain/entities/commute-session.entity';
-import { CheckpointRecord } from '@domain/entities/checkpoint-record.entity';
 import { CommuteRoute, TransportMode } from '@domain/entities/commute-route.entity';
 import {
   RouteAnalytics,

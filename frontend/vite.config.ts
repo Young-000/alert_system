@@ -17,10 +17,12 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'robots.txt'],
         manifest: {
-          name: 'Alert System',
-          short_name: 'Alert',
-          description: 'Daily commute alert system',
+          name: '출퇴근 메이트',
+          short_name: '출퇴근',
+          description: '출근/퇴근 시 필요한 정보를 통합 제공하는 알림 시스템',
           theme_color: '#ffffff',
+          background_color: '#ffffff',
+          orientation: 'portrait',
           icons: [
             {
               src: 'pwa-192x192.png',
@@ -30,7 +32,8 @@ export default defineConfig(({ mode }) => {
             {
               src: 'pwa-512x512.png',
               sizes: '512x512',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any maskable'
             }
           ]
         }

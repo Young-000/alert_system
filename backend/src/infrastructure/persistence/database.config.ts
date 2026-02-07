@@ -3,6 +3,7 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 import * as dotenv from 'dotenv';
 import * as pg from 'pg';
+import { Logger } from '@nestjs/common';
 import { UserEntity } from './typeorm/user.entity';
 import { AlertEntity } from './typeorm/alert.entity';
 import { SubwayStationEntity } from './typeorm/subway-station.entity';
@@ -107,10 +108,32 @@ export function buildDataSourceOptions(): DataSourceOptions {
     ? { ssl: { rejectUnauthorized: false }, extra: { ssl: { rejectUnauthorized: false } } }
     : { ssl: false };
 
+  // Connection pool 설정
+  const isProduction = process.env.NODE_ENV === 'production';
+  const poolSize = parseInt(process.env.DB_POOL_SIZE || (isProduction ? '10' : '5'));
+  const poolOptions = {
+    max: poolSize,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+  };
+
+  // Logging 설정
+  const logging = isProduction
+    ? ['error' as const, 'warn' as const]
+    : ['error' as const, 'warn' as const, 'query' as const];
+
+  // SSL extra와 pool 설정 머지
+  const existingExtra = (sslOptions as { extra?: Record<string, unknown> }).extra || {};
+
+  const dbLogger = new Logger('DatabaseConfig');
+  dbLogger.log(`Database config: pool=${poolSize}, logging=${logging.join(',')}, ssl=${isSupabase}`);
+
   return {
     ...baseOptions,
     ...connectionOptions,
     ...sslOptions,
+    extra: { ...existingExtra, ...poolOptions },
+    logging,
     // Fix for pg/TypeORM ESM/CommonJS compatibility
     driver: pg,
   };

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Headers, UnauthorizedException, Logger } from '@nestjs/common';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { Inject } from '@nestjs/common';
@@ -18,6 +18,8 @@ interface TriggerDto {
  */
 @Controller('scheduler-legacy')
 export class SchedulerLegacyController {
+  private readonly logger = new Logger(SchedulerLegacyController.name);
+
   constructor(
     private sendNotificationUseCase: SendNotificationUseCase,
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,
@@ -30,7 +32,11 @@ export class SchedulerLegacyController {
     @Headers('x-scheduler-key') schedulerKey: string,
   ): Promise<{ processed: number; errors: number }> {
     // 간단한 API 키 검증
-    const expectedKey = process.env.SCHEDULER_API_KEY || 'scheduler-secret-key';
+    const expectedKey = process.env.SCHEDULER_API_KEY;
+    if (!expectedKey) {
+      this.logger.error('SCHEDULER_API_KEY environment variable is not set');
+      throw new UnauthorizedException('Scheduler not configured');
+    }
     if (schedulerKey !== expectedKey) {
       throw new UnauthorizedException('Invalid scheduler key');
     }
@@ -44,7 +50,7 @@ export class SchedulerLegacyController {
         await this.sendNotificationUseCase.execute(dto.alertId);
         processed++;
       } catch (error) {
-        console.error(`Failed to send alert ${dto.alertId}:`, error);
+        this.logger.error(`Failed to send alert ${dto.alertId}:`, error instanceof Error ? error.stack : String(error));
         errors++;
       }
     } else {
@@ -57,7 +63,7 @@ export class SchedulerLegacyController {
           await this.sendNotificationUseCase.execute(alert.id);
           processed++;
         } catch (error) {
-          console.error(`Failed to send alert ${alert.id}:`, error);
+          this.logger.error(`Failed to send alert ${alert.id}:`, error instanceof Error ? error.stack : String(error));
           errors++;
         }
       }

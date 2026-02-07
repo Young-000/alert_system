@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CommuteDashboardPage } from './CommuteDashboardPage';
 
@@ -15,22 +15,24 @@ describe('CommuteDashboardPage', () => {
     Storage.prototype.getItem = jest.fn(() => 'test-user-id');
   });
 
-  it('should render dashboard page', () => {
+  it('should render dashboard page', async () => {
     render(
       <MemoryRouter>
         <CommuteDashboardPage />
       </MemoryRouter>
     );
-    expect(screen.getByText(/통근 통계/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('통근 통계')).toBeInTheDocument();
+    });
   });
 
-  it('should redirect to login if not authenticated', () => {
+  it('should show login message if not authenticated', () => {
     Storage.prototype.getItem = jest.fn(() => null);
     render(
       <MemoryRouter>
         <CommuteDashboardPage />
       </MemoryRouter>
     );
-    expect(mockNavigate).toHaveBeenCalledWith('/login');
+    expect(screen.getByText('먼저 로그인해주세요.')).toBeInTheDocument();
   });
 });

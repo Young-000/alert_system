@@ -123,6 +123,15 @@ module "ecs" {
 # ElastiCache Module - 비활성화 (비용 절감)
 # module "elasticache" { ... }
 
+# CloudFront Module
+module "cloudfront" {
+  source = "./modules/cloudfront"
+
+  project_name = var.project_name
+  environment  = var.environment
+  alb_dns_name = module.alb.dns_name
+}
+
 # EventBridge Module
 module "eventbridge" {
   source = "./modules/eventbridge"

@@ -24,7 +24,6 @@ export function LoginPage() {
     let isMounted = true;
 
     const warmUpServer = async () => {
-      const startTime = Date.now();
       try {
         const response = await fetch(`${API_BASE_URL}/health`, {
           method: 'GET',
@@ -33,10 +32,7 @@ export function LoginPage() {
         if (!isMounted) return;
         if (response.ok) {
           setServerStatus('ready');
-          const elapsed = Date.now() - startTime;
-          if (elapsed > 5000) {
-            console.log(`Server warmed up in ${(elapsed / 1000).toFixed(1)}s`);
-          }
+          // Server warm-up timing tracked silently
         }
       } catch {
         // 실패해도 사용자가 시도할 수 있도록 ready로 설정
@@ -130,7 +126,7 @@ export function LoginPage() {
       </a>
       <nav className="nav">
         <div className="brand">
-          <strong>Alert System</strong>
+          <strong>출퇴근 메이트</strong>
           <span>{mode === 'login' ? '로그인' : '회원가입'}</span>
         </div>
         <div className="nav-actions">
@@ -293,7 +289,7 @@ export function LoginPage() {
 
       <footer className="footer">
         <p className="footer-text">
-          <span>Alert System</span>
+          <span>출퇴근 메이트</span>
           <span className="footer-divider">·</span>
           <span>출퇴근 알림 서비스</span>
         </p>

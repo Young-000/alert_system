@@ -24,6 +24,8 @@ export const alertApiClient = {
   getAlertsByUser: jest.fn(),
   getAlert: jest.fn(),
   deleteAlert: jest.fn(),
+  toggleAlert: jest.fn(),
+  updateAlert: jest.fn(),
 };
 
 export const userApiClient = {
@@ -36,6 +38,22 @@ export const subwayApiClient = {
   searchStations: jest.fn(),
 };
 
+export const busApiClient = {
+  searchStops: jest.fn(),
+};
+
+export interface SubwayStation {
+  id: string;
+  name: string;
+  line: string;
+}
+
+export interface BusStop {
+  id: string;
+  name: string;
+  arsId: string;
+}
+
 export const commuteApiClient = {
   getUserRoutes: jest.fn().mockResolvedValue([]),
   createRoute: jest.fn().mockResolvedValue({}),
@@ -47,13 +65,20 @@ export const commuteApiClient = {
   completeSession: jest.fn().mockResolvedValue({}),
   cancelSession: jest.fn().mockResolvedValue(undefined),
   getStats: jest.fn().mockResolvedValue({
-    totalCommutes: 0,
-    averageDuration: 0,
-    averageWaitTime: 0,
-    onTimeRate: 0,
-    recentCommutes: [],
+    userId: 'test-user-id',
+    totalSessions: 0,
+    recentSessions: 0,
+    overallAverageDuration: 0,
+    overallAverageWaitTime: 0,
+    overallAverageDelay: 0,
+    waitTimePercentage: 0,
+    routeStats: [],
+    dayOfWeekStats: [],
+    weatherImpact: [],
+    insights: [],
   }),
   getHistory: jest.fn().mockResolvedValue([]),
+  getUserAnalytics: jest.fn().mockResolvedValue([]),
 };
 
 // Factory function for CommuteApiClient
@@ -115,6 +140,7 @@ export interface Alert {
   enabled: boolean;
   busStopId?: string;
   subwayStationId?: string;
+  routeId?: string;
 }
 
 export interface CreateAlertDto {

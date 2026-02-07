@@ -61,7 +61,7 @@ class BehaviorCollector {
     options?: TrackEventOptions
   ): Promise<void> {
     if (!this.isAvailable()) {
-      console.debug('Behavior tracking disabled or user not initialized');
+      // Behavior tracking disabled or user not initialized
       return;
     }
 
@@ -73,8 +73,7 @@ class BehaviorCollector {
         metadata: options?.metadata,
         source: options?.source || 'app',
       });
-    } catch (error) {
-      console.error('Failed to track behavior event:', error);
+    } catch {
       // Don't throw - tracking failures shouldn't break the app
     }
   }
@@ -84,7 +83,7 @@ class BehaviorCollector {
    */
   async trackDepartureConfirmed(options: TrackDepartureOptions): Promise<void> {
     if (!this.isAvailable()) {
-      console.debug('Behavior tracking disabled or user not initialized');
+      // Behavior tracking disabled or user not initialized
       return;
     }
 
@@ -96,9 +95,8 @@ class BehaviorCollector {
         weatherCondition: options.weatherCondition,
         transitDelayMinutes: options.transitDelayMinutes,
       });
-      console.log('Departure confirmed tracked successfully');
-    } catch (error) {
-      console.error('Failed to track departure confirmation:', error);
+    } catch {
+      // Tracking failures are non-critical
     }
   }
 

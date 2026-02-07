@@ -8,6 +8,8 @@ export function AuthCallbackPage() {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+
     const processCallback = () => {
       const token = searchParams.get('token');
       const userId = searchParams.get('userId');
@@ -25,7 +27,7 @@ export function AuthCallbackPage() {
           default:
             setErrorMessage('로그인 중 오류가 발생했습니다.');
         }
-        setTimeout(() => navigate('/login'), 3000);
+        timerId = setTimeout(() => navigate('/login'), 3000);
         return;
       }
 
@@ -40,15 +42,16 @@ export function AuthCallbackPage() {
         if (name) localStorage.setItem('userName', name);
 
         setStatus('success');
-        setTimeout(() => navigate('/alerts'), 500);
+        timerId = setTimeout(() => navigate('/alerts'), 500);
       } else {
         setStatus('error');
         setErrorMessage('인증 정보가 올바르지 않습니다.');
-        setTimeout(() => navigate('/login'), 3000);
+        timerId = setTimeout(() => navigate('/login'), 3000);
       }
     };
 
     processCallback();
+    return () => clearTimeout(timerId);
   }, [searchParams, navigate]);
 
   return (

@@ -21,16 +21,16 @@ describe('RouteSetupPage', () => {
         <RouteSetupPage />
       </MemoryRouter>
     );
-    expect(screen.getByText('경로 설정')).toBeInTheDocument();
+    expect(screen.getByText('경로')).toBeInTheDocument();
   });
 
-  it('should redirect to login if not authenticated', () => {
+  it('should show login message if not authenticated', () => {
     Storage.prototype.getItem = jest.fn(() => null);
     render(
       <MemoryRouter>
         <RouteSetupPage />
       </MemoryRouter>
     );
-    expect(mockNavigate).toHaveBeenCalledWith('/login');
+    expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
   });
 });
