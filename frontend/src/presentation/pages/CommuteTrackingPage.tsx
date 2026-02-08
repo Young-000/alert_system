@@ -41,6 +41,8 @@ export function CommuteTrackingPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
+  // 세션 시작 로딩 상태
+  const [isStarting, setIsStarting] = useState(false);
   // Quick Complete 로딩 상태
   const [isQuickCompleting, setIsQuickCompleting] = useState(false);
 
@@ -203,10 +205,10 @@ export function CommuteTrackingPage() {
 
   // Start session
   const handleStartSession = async () => {
-    if (!selectedRoute) {
-      setError('경로를 선택해주세요.');
-      return;
-    }
+    if (!selectedRoute || isStarting || activeSession) return;
+
+    setIsStarting(true);
+    setError('');
 
     try {
       const session = await commuteApi.startSession({
@@ -216,10 +218,11 @@ export function CommuteTrackingPage() {
       });
       setActiveSession(session);
       setActiveTab('tracking');
-      setError('');
     } catch (err) {
       console.error('Failed to start session:', err);
       setError('기록 시작에 실패했습니다.');
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -251,9 +254,15 @@ export function CommuteTrackingPage() {
       });
       setActiveSession(completedSession);
 
-      setTimeout(() => {
-        navigate('/commute/dashboard');
-      }, 2000);
+      const expected = selectedRoute?.totalExpectedDuration || 0;
+      const actual = completedSession.totalDurationMinutes || 0;
+      const hasAnomaly = expected > 0 && (actual > expected * 2 || actual < expected * 0.3);
+
+      if (!hasAnomaly) {
+        setTimeout(() => {
+          navigate('/commute/dashboard');
+        }, 2000);
+      }
     } catch (err) {
       console.error('Failed to complete session:', err);
       setError('기록 완료에 실패했습니다.');
@@ -316,9 +325,15 @@ export function CommuteTrackingPage() {
       });
       setActiveSession(completedSession);
 
-      setTimeout(() => {
-        navigate('/commute/dashboard');
-      }, 2000);
+      const expected = selectedRoute?.totalExpectedDuration || 0;
+      const actual = completedSession.totalDurationMinutes || 0;
+      const hasAnomaly = expected > 0 && (actual > expected * 2 || actual < expected * 0.3);
+
+      if (!hasAnomaly) {
+        setTimeout(() => {
+          navigate('/commute/dashboard');
+        }, 2000);
+      }
     } catch (err) {
       console.error('Failed to quick complete session:', err);
       setError('기록 완료에 실패했습니다.');
@@ -386,7 +401,7 @@ export function CommuteTrackingPage() {
     return (
       <main className="page commute-page">
         <nav className="commute-nav">
-          <Link to="/" className="nav-back">←</Link>
+          <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
           <span className="nav-title">출퇴근 기록</span>
           <span />
         </nav>
@@ -400,7 +415,7 @@ export function CommuteTrackingPage() {
     return (
       <main className="page commute-page">
         <nav className="commute-nav">
-          <Link to="/" className="nav-back">←</Link>
+          <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
           <span className="nav-title">출퇴근 기록</span>
           <span />
         </nav>
@@ -418,7 +433,7 @@ export function CommuteTrackingPage() {
     <main className="page commute-page">
       {/* Navigation */}
       <nav className="commute-nav">
-        <Link to="/" className="nav-back">←</Link>
+        <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
         <span className="nav-title">출퇴근 기록</span>
         <Link to="/commute/dashboard" className="nav-action">내 기록</Link>
       </nav>
@@ -462,54 +477,80 @@ export function CommuteTrackingPage() {
           <section className="ready-section">
             <h2 className="section-title">어디로 가시나요?</h2>
 
-            <div className="route-cards">
-              {routes.map((route) => (
-                <button
-                  key={route.id}
-                  type="button"
-                  className={`route-card ${selectedRoute?.id === route.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedRoute(route)}
-                >
-                  <span className="route-emoji">
-                    {route.routeType === 'morning' ? '🌅' : '🌆'}
-                  </span>
-                  <div className="route-details">
-                    <strong>{route.name}</strong>
-                    <span className="route-path">
-                      {route.checkpoints.map(c => c.name).join(' → ')}
-                    </span>
-                    <span className="route-time">예상 {route.totalExpectedDuration}분</span>
-                  </div>
-                  {selectedRoute?.id === route.id && (
-                    <span className="check-icon">✓</span>
-                  )}
-                </button>
-              ))}
-            </div>
+            {/* 출근 경로 */}
+            {routes.filter(r => r.routeType === 'morning').length > 0 && (
+              <div className="route-group">
+                <h3 className="route-group-title">🌅 출근 경로</h3>
+                <div className="route-cards">
+                  {routes.filter(r => r.routeType === 'morning').map((route) => (
+                    <button
+                      key={route.id}
+                      type="button"
+                      className={`route-card ${selectedRoute?.id === route.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedRoute(route)}
+                    >
+                      <div className="route-details">
+                        <strong>{route.name}</strong>
+                        <span className="route-path route-path-clamp">
+                          {route.checkpoints.map(c => c.name).join(' → ')}
+                        </span>
+                        <span className="route-time">
+                          {(route.totalExpectedDuration ?? 0) > 0 ? `예상 ${route.totalExpectedDuration}분` : '측정 전'}
+                        </span>
+                      </div>
+                      {selectedRoute?.id === route.id && (
+                        <span className="check-icon">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* 퇴근 경로 */}
+            {routes.filter(r => r.routeType === 'evening').length > 0 && (
+              <div className="route-group">
+                <h3 className="route-group-title">🌆 퇴근 경로</h3>
+                <div className="route-cards">
+                  {routes.filter(r => r.routeType === 'evening').map((route) => (
+                    <button
+                      key={route.id}
+                      type="button"
+                      className={`route-card ${selectedRoute?.id === route.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedRoute(route)}
+                    >
+                      <div className="route-details">
+                        <strong>{route.name}</strong>
+                        <span className="route-path route-path-clamp">
+                          {route.checkpoints.map(c => c.name).join(' → ')}
+                        </span>
+                        <span className="route-time">
+                          {(route.totalExpectedDuration ?? 0) > 0 ? `예상 ${route.totalExpectedDuration}분` : '측정 전'}
+                        </span>
+                      </div>
+                      {selectedRoute?.id === route.id && (
+                        <span className="check-icon">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {selectedRoute && (
-              <div className="start-action">
+              <div className="start-action start-action-sticky">
+                <p className="start-hint">
+                  {(selectedRoute.totalExpectedDuration ?? 0) > 0
+                    ? `예상 ${selectedRoute.totalExpectedDuration}분 (최근 기록 기반)`
+                    : '기록하면 예상 시간이 자동 계산돼요'}
+                </p>
                 <button
                   type="button"
                   className="btn-start"
                   onClick={handleStartSession}
+                  disabled={isStarting}
                 >
                   <span className="start-icon">🚀</span>
-                  <span>출발!</span>
-                </button>
-                <p className="start-hint">
-                  버튼을 누르면 시간 기록이 시작됩니다
-                </p>
-                {/* 간단 모드 안내 */}
-                <button
-                  type="button"
-                  className="btn-simple-mode"
-                  onClick={() => {
-                    navigate(`/commute?routeId=${selectedRoute.id}&mode=simple`);
-                    handleStartSession();
-                  }}
-                >
-                  ⚡ 간단 모드로 시작 (시작/끝만 기록)
+                  <span>{isStarting ? '시작 중...' : '출발!'}</span>
                 </button>
               </div>
             )}
@@ -584,89 +625,43 @@ export function CommuteTrackingPage() {
                     </div>
                     <div className="progress-info">
                       <span className="progress-percent">{calculateProgress()}%</span>
-                      <span className={`progress-status ${activeSession.totalDelayMinutes > 0 ? 'delayed' : 'on-time'}`}>
-                        {activeSession.delayStatus}
-                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Simple Mode: 바로 완료 버튼만 표시 */}
-                {isSimpleMode ? (
-                  <div className="simple-mode-section">
-                    <div className="simple-mode-hint">
-                      <span>🚀</span>
-                      <p>{isQuickCompleting ? '기록 저장 중...' : '도착하면 아래 버튼을 눌러주세요'}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="arrive-btn finish simple-complete-btn"
-                      onClick={handleQuickComplete}
-                      disabled={isQuickCompleting}
-                    >
-                      {isQuickCompleting ? (
-                        <>
-                          <span className="spinner spinner-sm" aria-hidden="true" />
-                          <span className="arrive-text">저장 중...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="arrive-icon" aria-hidden="true">🏁</span>
-                          <span className="arrive-text">도착 완료!</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {/* 다음 체크포인트 강조 섹션 */}
-                    <div className="next-checkpoint-section">
-                      {(() => {
-                        const recordedIds = new Set(activeSession.checkpointRecords.map((r) => r.checkpointId));
-                        const currentCheckpoint = selectedRoute.checkpoints.find((cp) => !recordedIds.has(cp.id));
-                        const currentIndex = currentCheckpoint ? selectedRoute.checkpoints.indexOf(currentCheckpoint) : -1;
-                        const isLast = currentCheckpoint && currentIndex === selectedRoute.checkpoints.length - 1;
+                {/* 메인 도착 버튼 - 모든 모드 공통 */}
+                <div className="quick-arrive-section">
+                  <p className="arrive-hint">
+                    {isQuickCompleting ? '기록 저장 중...' : '도착하면 아래 버튼을 눌러주세요'}
+                  </p>
+                  <button
+                    type="button"
+                    className="arrive-btn finish simple-complete-btn"
+                    onClick={handleQuickComplete}
+                    disabled={isQuickCompleting}
+                  >
+                    {isQuickCompleting ? (
+                      <>
+                        <span className="spinner spinner-sm" aria-hidden="true" />
+                        <span className="arrive-text">저장 중...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="arrive-icon" aria-hidden="true">🏁</span>
+                        <span className="arrive-text">도착 완료!</span>
+                      </>
+                    )}
+                  </button>
+                </div>
 
-                        if (!currentCheckpoint) return null;
-
-                        return (
-                          <div className="next-checkpoint-card">
-                            <div className="next-checkpoint-header">
-                              <span className="next-label">다음 목적지</span>
-                              <span className="next-step">{currentIndex + 1} / {selectedRoute.checkpoints.length}</span>
-                            </div>
-                            <div className="next-checkpoint-info">
-                              <span className="next-icon" aria-hidden="true">
-                                {currentCheckpoint.checkpointType === 'subway' ? '🚇' :
-                                 currentCheckpoint.checkpointType === 'bus_stop' ? '🚌' :
-                                 currentCheckpoint.checkpointType === 'work' ? '🏢' : '🏠'}
-                              </span>
-                              <span className="next-name">{currentCheckpoint.name}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className={`arrive-btn ${isLast ? 'finish' : ''}`}
-                              onClick={() => {
-                                if (isLast) {
-                                  handleRecordCheckpoint(currentCheckpoint.id).then(() => {
-                                    handleCompleteSession();
-                                  });
-                                } else {
-                                  handleRecordCheckpoint(currentCheckpoint.id);
-                                }
-                              }}
-                            >
-                              <span className="arrive-icon" aria-hidden="true">{isLast ? '🏁' : '🎯'}</span>
-                              <span className="arrive-text">{isLast ? '도착 완료!' : '도착'}</span>
-                            </button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Checkpoint timeline */}
+                {/* 상세 체크포인트 - 접기 */}
+                {!isSimpleMode && (
+                  <details className="checkpoint-details-accordion">
+                    <summary className="checkpoint-summary">
+                      <span>📍 구간별 기록하기</span>
+                      <span className="expand-icon">▼</span>
+                    </summary>
                     <div className="checkpoint-timeline">
-                      <h3>진행 상황</h3>
                       {selectedRoute.checkpoints.map((checkpoint, index) => {
                         const status = getCheckpointStatus(checkpoint);
                         const recordedInfo = getRecordedInfo(checkpoint.id);
@@ -689,6 +684,22 @@ export function CommuteTrackingPage() {
                                 <span className="timeline-time recorded">
                                   {recordedInfo.arrivalTimeString}
                                 </span>
+                              ) : status === 'current' ? (
+                                <button
+                                  type="button"
+                                  className="arrive-btn-mini"
+                                  onClick={() => {
+                                    if (isLast) {
+                                      handleRecordCheckpoint(checkpoint.id).then(() => {
+                                        handleCompleteSession();
+                                      });
+                                    } else {
+                                      handleRecordCheckpoint(checkpoint.id);
+                                    }
+                                  }}
+                                >
+                                  도착
+                                </button>
                               ) : !isLast && checkpoint.expectedDurationToNext ? (
                                 <span className="timeline-time expected">
                                   {checkpoint.transportMode === 'subway' && '🚇'}
@@ -702,7 +713,7 @@ export function CommuteTrackingPage() {
                         );
                       })}
                     </div>
-                  </>
+                  </details>
                 )}
 
                 {/* Cancel button */}
@@ -717,23 +728,45 @@ export function CommuteTrackingPage() {
             )}
 
             {/* Completed session */}
-            {activeSession && activeSession.status === 'completed' && (
-              <div className="completed-card">
-                <div className="completed-icon">✅</div>
-                <h2>{selectedRoute?.routeType === 'morning' ? '출근' : '퇴근'} 완료!</h2>
-                <div className="completed-stats">
-                  <div className="stat">
-                    <span className="stat-label">총 소요 시간</span>
-                    <span className="stat-value">{activeSession.totalDurationMinutes}분</span>
+            {activeSession && activeSession.status === 'completed' && (() => {
+              const expected = selectedRoute?.totalExpectedDuration || 0;
+              const actual = activeSession.totalDurationMinutes || 0;
+              const isAnomaly = expected > 0 && (actual > expected * 2 || actual < expected * 0.3);
+
+              return (
+                <div className="completed-card">
+                  <div className="completed-icon">✅</div>
+                  <h2>{selectedRoute?.routeType === 'morning' ? '출근' : '퇴근'} 완료!</h2>
+                  <div className="completed-stats">
+                    <div className="stat">
+                      <span className="stat-label">총 소요 시간</span>
+                      <span className="stat-value">{actual}분</span>
+                    </div>
                   </div>
-                  <div className="stat">
-                    <span className="stat-label">대기 시간</span>
-                    <span className="stat-value">{activeSession.totalWaitMinutes}분</span>
-                  </div>
+                  {isAnomaly ? (
+                    <div className="anomaly-banner">
+                      <span className="anomaly-icon">🤔</span>
+                      <p>이 기록이 맞나요? ({actual}분)</p>
+                      <p className="anomaly-hint">예상 {expected}분과 차이가 커요</p>
+                      <div className="anomaly-actions">
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => navigate('/commute/dashboard?tab=history')}
+                        >맞아요</button>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => navigate('/commute/dashboard?tab=history')}
+                        >수정하기</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="redirect-hint">잠시 후 기록 페이지로 이동합니다...</p>
+                  )}
                 </div>
-                <p className="redirect-hint">잠시 후 기록 페이지로 이동합니다...</p>
-              </div>
-            )}
+              );
+            })()}
           </section>
         )}
       </div>

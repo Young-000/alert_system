@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/routes', icon: '📍', label: '경로', matchPaths: ['/routes', '/commute'] },
   { path: '/alerts', icon: '🔔', label: '알림', matchPaths: ['/alerts'] },
   { path: '/commute/dashboard', icon: '📊', label: '기록', matchPaths: ['/commute/dashboard'] },
+  { path: '/settings', icon: '⚙️', label: '설정', matchPaths: ['/settings', '/notifications'] },
 ];
 
 export function BottomNavigation() {

@@ -1040,8 +1040,8 @@ export function AlertSettingsPage() {
               if (routeStops.length === 0) return null;
 
               return (
-                <div className="quick-select-section">
-                  <p className="quick-select-label">내 경로에서 빠른 선택</p>
+                <div className="quick-select-section quick-select-highlighted">
+                  <p className="quick-select-label">⭐ 내 경로에서 추천</p>
                   <div className="quick-select-list">
                     {routeStops.slice(0, 3).map(({ route, stop }) => (
                       <button
@@ -1472,6 +1472,37 @@ export function AlertSettingsPage() {
                         <span key={i} className="alert-time-badge">{time}</span>
                       ))}
                     </div>
+                    <span className="alert-name">{alert.name}</span>
+                  </div>
+                  <div className="alert-item-body">
+                    <div className="alert-meta">
+                      <span className="alert-types">
+                        {alert.alertTypes.map((type) => {
+                          if (type === 'weather') return '🌤️';
+                          if (type === 'airQuality') return '💨';
+                          if (type === 'subway') return '🚇';
+                          if (type === 'bus') return '🚌';
+                          return '';
+                        }).join(' ')}
+                      </span>
+                      {/* 날씨 전용 알림 라벨 */}
+                      {alert.alertTypes.includes('weather') && !alert.alertTypes.includes('subway') && !alert.alertTypes.includes('bus') && (
+                        <span className="alert-type-label weather-label">날씨</span>
+                      )}
+                      {alert.routeId && (() => {
+                        const linkedRoute = savedRoutes.find(r => r.id === alert.routeId);
+                        if (linkedRoute) {
+                          return (
+                            <span className="alert-route-link">
+                              📍 {linkedRoute.name}
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="alert-item-actions">
                     <label className="toggle-compact">
                       <input
                         type="checkbox"
@@ -1488,33 +1519,6 @@ export function AlertSettingsPage() {
                       />
                       <span className="toggle-slider-compact" />
                     </label>
-                  </div>
-                  <div className="alert-item-body">
-                    <span className="alert-name">{alert.name}</span>
-                    <div className="alert-meta">
-                      <span className="alert-types">
-                        {alert.alertTypes.map((type) => {
-                          if (type === 'weather') return '🌤️';
-                          if (type === 'airQuality') return '💨';
-                          if (type === 'subway') return '🚇';
-                          if (type === 'bus') return '🚌';
-                          return '';
-                        }).join(' ')}
-                      </span>
-                      {alert.routeId && (() => {
-                        const linkedRoute = savedRoutes.find(r => r.id === alert.routeId);
-                        if (linkedRoute) {
-                          return (
-                            <span className="alert-route-link">
-                              📍 {linkedRoute.name}
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="alert-item-actions">
                     <button
                       type="button"
                       className="btn-icon"
