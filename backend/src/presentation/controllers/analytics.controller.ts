@@ -86,12 +86,14 @@ export class AnalyticsController {
   @Get('routes/:routeId')
   async getRouteAnalytics(
     @Param('routeId') routeId: string,
-    @Request() _req: AuthenticatedRequest,
+    @Request() req: AuthenticatedRequest,
   ): Promise<RouteAnalyticsResponseDto> {
     this.logger.log(`Getting analytics for route ${routeId}`);
-    const analytics = await this.calculateAnalyticsUseCase.execute(routeId);
 
-    // 권한 검사는 use-case 내부에서 route 조회 시 처리되므로 여기서는 결과만 변환
+    // 권한 검사: 요청한 경로가 사용자 소유인지 확인
+    await this.validateRouteOwnership(req.user.userId, [routeId]);
+
+    const analytics = await this.calculateAnalyticsUseCase.execute(routeId);
     return this.toResponseDto(analytics);
   }
 
@@ -102,9 +104,13 @@ export class AnalyticsController {
   @HttpCode(HttpStatus.OK)
   async recalculateRouteAnalytics(
     @Param('routeId') routeId: string,
-    @Request() _req: AuthenticatedRequest,
+    @Request() req: AuthenticatedRequest,
   ): Promise<RouteAnalyticsResponseDto> {
     this.logger.log(`Recalculating analytics for route ${routeId}`);
+
+    // 권한 검사: 요청한 경로가 사용자 소유인지 확인
+    await this.validateRouteOwnership(req.user.userId, [routeId]);
+
     const analytics = await this.calculateAnalyticsUseCase.execute(routeId);
     return this.toResponseDto(analytics);
   }
@@ -133,7 +139,7 @@ export class AnalyticsController {
   @Get('compare')
   async compareRoutes(
     @Query('routeIds') routeIds: string,
-    @Request() _req: AuthenticatedRequest,
+    @Request() req: AuthenticatedRequest,
   ): Promise<RouteComparisonResponseDto> {
     const ids = routeIds.split(',').map((id) => id.trim());
 
@@ -144,6 +150,9 @@ export class AnalyticsController {
     if (ids.length > 5) {
       throw new Error('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
     }
+
+    // 권한 검사: 요청한 모든 경로가 사용자 소유인지 확인
+    await this.validateRouteOwnership(req.user.userId, ids);
 
     this.logger.log(`Comparing routes: ${ids.join(', ')}`);
     const comparison = await this.calculateAnalyticsUseCase.compareRoutes(ids);
@@ -237,6 +246,15 @@ export class AnalyticsController {
       mostUsedRoute: this.toResponseDto(mostUsedRoute),
       insights,
     };
+  }
+
+  private async validateRouteOwnership(userId: string, routeIds: string[]): Promise<void> {
+    const userAnalytics = await this.calculateAnalyticsUseCase.executeForUser(userId);
+    const userRouteIds = new Set(userAnalytics.map((a) => a.routeId));
+    const unauthorizedIds = routeIds.filter((id) => !userRouteIds.has(id));
+    if (unauthorizedIds.length > 0) {
+      throw new ForbiddenException('다른 사용자의 경로에 접근할 수 없습니다.');
+    }
   }
 
   private toResponseDto(analytics: RouteAnalytics): RouteAnalyticsResponseDto {

@@ -171,13 +171,25 @@ export function CommuteTrackingPage() {
     };
   }, [activeSession]);
 
-  // Format time - 대형 스톱워치용 (분:초 분리)
+  // Format time - 대형 스톱워치용 (분:초 분리, 24h+ 지원)
   const formatTimeLarge = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
+    const totalMins = Math.floor(seconds / 60);
     const secs = seconds % 60;
+    const hours = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+
+    if (hours > 0) {
+      return {
+        minutes: `${hours}:${mins.toString().padStart(2, '0')}`,
+        seconds: secs.toString().padStart(2, '0'),
+        hasHours: true,
+      };
+    }
+
     return {
       minutes: mins.toString().padStart(2, '0'),
       seconds: secs.toString().padStart(2, '0'),
+      hasHours: false,
     };
   };
 
@@ -535,6 +547,9 @@ export function CommuteTrackingPage() {
                   <div className="stopwatch-display">
                     <span className="stopwatch-label">경과 시간</span>
                     <div className="stopwatch-time">
+                      {formatTimeLarge(elapsedTime).hasHours && (
+                        <span className="time-label-hint">시:분</span>
+                      )}
                       <span className="time-large">{formatTimeLarge(elapsedTime).minutes}</span>
                       <span className="time-separator">:</span>
                       <span className="time-large">{formatTimeLarge(elapsedTime).seconds}</span>

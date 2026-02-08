@@ -1,5 +1,6 @@
 import { supabase, DbUser } from './client';
 import bcrypt from 'bcryptjs';
+import { safeSetItem } from '@infrastructure/storage/safe-storage';
 
 export interface AuthResult {
   success: boolean;
@@ -42,8 +43,8 @@ export class SupabaseAuthService {
       }
 
       // 로컬 스토리지에 저장
-      localStorage.setItem('userId', data.id);
-      localStorage.setItem('userPhone', data.phone_number);
+      safeSetItem('userId', data.id);
+      safeSetItem('userPhone', data.phone_number);
 
       return { success: true, user: data };
     } catch (err) {
@@ -72,8 +73,8 @@ export class SupabaseAuthService {
       }
 
       // 로컬 스토리지에 저장
-      localStorage.setItem('userId', user.id);
-      localStorage.setItem('userPhone', user.phone_number);
+      safeSetItem('userId', user.id);
+      safeSetItem('userPhone', user.phone_number);
 
       return { success: true, user };
     } catch (err) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { safeSetItem } from '@infrastructure/storage/safe-storage';
 import {
   getCommuteApiClient,
   type CreateRouteDto,
@@ -50,7 +51,7 @@ export function OnboardingPage() {
 
   // Skip onboarding and go to main
   const handleSkip = () => {
-    localStorage.setItem('onboardingCompleted', 'true');
+    safeSetItem('onboardingCompleted', 'true');
     navigate('/');
   };
 
@@ -129,7 +130,7 @@ export function OnboardingPage() {
 
       await commuteApi.createRoute(eveningDto);
 
-      localStorage.setItem('onboardingCompleted', 'true');
+      safeSetItem('onboardingCompleted', 'true');
       setStep('complete');
     } catch (err) {
       console.error('Failed to create route:', err);

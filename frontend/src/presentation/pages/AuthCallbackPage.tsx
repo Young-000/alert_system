@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { safeSetItem } from '@infrastructure/storage/safe-storage';
 
 export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -32,14 +33,14 @@ export function AuthCallbackPage() {
       }
 
       if (token && userId) {
-        localStorage.setItem('accessToken', token);
-        localStorage.setItem('userId', userId);
+        safeSetItem('accessToken', token);
+        safeSetItem('userId', userId);
 
         // 이메일과 이름도 저장 (선택적)
         const email = searchParams.get('email');
         const name = searchParams.get('name');
-        if (email) localStorage.setItem('userEmail', email);
-        if (name) localStorage.setItem('userName', name);
+        if (email) safeSetItem('userEmail', email);
+        if (name) safeSetItem('userName', name);
 
         setStatus('success');
         timerId = setTimeout(() => navigate('/alerts'), 500);
