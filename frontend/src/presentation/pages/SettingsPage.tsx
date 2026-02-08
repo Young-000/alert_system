@@ -113,6 +113,7 @@ export function SettingsPage() {
 
   // Toggle push notifications
   const handleTogglePush = async () => {
+    if (pushLoading) return;
     setPushLoading(true);
     try {
       if (pushEnabled) {

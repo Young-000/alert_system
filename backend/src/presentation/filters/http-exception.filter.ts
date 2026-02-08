@@ -40,7 +40,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const body =
       typeof message === 'string'
         ? { statusCode: status, message, path: request.url }
-        : { ...(message as object), path: request.url };
+        : typeof message === 'object' && message !== null
+          ? { ...(message as Record<string, unknown>), path: request.url }
+          : { statusCode: status, message: String(message), path: request.url };
 
     response.status(status).json(body);
   }

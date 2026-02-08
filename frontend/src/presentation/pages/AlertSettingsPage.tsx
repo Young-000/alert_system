@@ -375,7 +375,7 @@ export function AlertSettingsPage() {
       const dto: CreateAlertDto = {
         userId,
         name: '아침 날씨 알림',
-        schedule: '0 7 * * *', // 매일 오전 7시
+        schedule: '0 8 * * *', // 매일 오전 8시
         alertTypes: ['weather', 'airQuality'],
       };
 
@@ -817,7 +817,7 @@ export function AlertSettingsPage() {
                 <span className="quick-action-icon" aria-hidden="true">🌤️</span>
                 <div className="quick-action-text">
                   <strong>날씨 알림 바로 시작</strong>
-                  <span className="muted">매일 오전 7시 날씨 + 미세먼지 알림톡</span>
+                  <span className="muted">매일 오전 8시 날씨 + 미세먼지 알림톡</span>
                 </div>
               </div>
               <button

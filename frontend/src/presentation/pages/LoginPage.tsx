@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApiClient } from '@infrastructure/api';
+import { safeSetItem } from '@infrastructure/storage/safe-storage';
 
 type AuthMode = 'login' | 'register';
 
@@ -88,16 +89,16 @@ export function LoginPage() {
       try {
         if (mode === 'register') {
           const response = await authApiClient.register({ email, password, name, phoneNumber });
-          localStorage.setItem('userId', response.user.id);
-          localStorage.setItem('accessToken', response.accessToken);
-          localStorage.setItem('userName', name);
+          safeSetItem('userId', response.user.id);
+          safeSetItem('accessToken', response.accessToken);
+          safeSetItem('userName', name);
           // 신규 회원은 온보딩으로 이동
           navigate('/onboarding');
           return;
         } else {
           const response = await authApiClient.login({ email, password });
-          localStorage.setItem('userId', response.user.id);
-          localStorage.setItem('accessToken', response.accessToken);
+          safeSetItem('userId', response.user.id);
+          safeSetItem('accessToken', response.accessToken);
         }
         navigate('/');
       } catch (err: unknown) {

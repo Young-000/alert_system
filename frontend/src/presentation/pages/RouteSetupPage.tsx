@@ -471,11 +471,16 @@ export function RouteSetupPage() {
     handleSelectStopDirect(stop.name, '', stop.nodeId);
   };
 
-  // 정류장 삭제
+  // 정류장 삭제 (최소 1개 유지)
   const removeStop = (index: number) => {
-    setSelectedStops(prev => prev.filter((_, i) => i !== index));
+    setSelectedStops(prev => {
+      if (prev.length <= 1) {
+        setError('최소 하나의 정류장은 필요합니다.');
+        return prev;
+      }
+      return prev.filter((_, i) => i !== index);
+    });
     setWarning('');
-    setError('');
   };
 
   // 드래그 앤 드롭 완료
