@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   getCommuteApiClient,
   type CommuteStatsResponse,
@@ -32,6 +32,7 @@ function getStopwatchRecords(): StopwatchRecord[] {
 }
 
 export function CommuteDashboardPage() {
+  const navigate = useNavigate();
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = getCommuteApiClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -108,7 +109,7 @@ export function CommuteDashboardPage() {
     return (
       <main className="page">
         <nav className="nav">
-          <Link to="/" className="brand">← 홈</Link>
+          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)}>← 홈</button>
         </nav>
         <div className="notice warning">먼저 로그인해주세요.</div>
       </main>
@@ -119,7 +120,7 @@ export function CommuteDashboardPage() {
     return (
       <main className="page">
         <nav className="nav">
-          <Link to="/" className="brand">← 홈</Link>
+          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)}>← 홈</button>
         </nav>
         <div className="loading-container">
           <span className="spinner" />
@@ -133,7 +134,7 @@ export function CommuteDashboardPage() {
     <main className="page">
       <nav className="nav">
         <div className="brand">
-          <Link to="/" className="nav-back">← </Link>
+          <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
           <strong>통근 통계</strong>
         </div>
         <div className="nav-actions">
@@ -172,7 +173,7 @@ export function CommuteDashboardPage() {
                   className={`tab ${activeTab === 'routes' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('routes'); setSearchParams({ tab: 'routes' }, { replace: true }); }}
                 >
-                  구간 분석
+                  경로 비교
                 </button>
                 <button
                   type="button"
@@ -222,52 +223,12 @@ export function CommuteDashboardPage() {
                 </div>
               </section>
 
-              {/* 상세 30일 요약 - 접힘 처리 */}
-              <details className="detailed-stats-accordion">
-                <summary className="accordion-summary">
-                  <span>상세 통계 보기</span>
-                  <span className="expand-icon">▼</span>
-                </summary>
-                <div className="accordion-content">
-                  <div className="stats-grid-enhanced">
-                    <StatCard
-                      icon="🚶"
-                      title="통근 횟수"
-                      value={`${stats.recentSessions}회`}
-                    />
-                    <StatCard
-                      icon="⏱️"
-                      title="평균 소요 시간"
-                      value={`${stats.overallAverageDuration}분`}
-                    />
-                    <StatCard
-                      icon="⏳"
-                      title="평균 대기/환승"
-                      value={`${stats.overallAverageWaitTime}분`}
-                      highlight
-                    />
-                    <StatCard
-                      icon="📊"
-                      title="대기 비율"
-                      value={`${stats.waitTimePercentage}%`}
-                    />
-                  </div>
-                </div>
-              </details>
-
-              {/* Insights */}
+              {/* 인사이트 - 1개만 인라인 표시 */}
               {stats.insights.length > 0 && (
-                <section className="insights-section">
-                  <h2>💡 인사이트</h2>
-                  <div className="insights-list">
-                    {stats.insights.map((insight, index) => (
-                      <div key={index} className="insight-item">
-                        <span className="insight-bullet">•</span>
-                        <span className="insight-text">{insight}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                <div className="insight-inline">
+                  <span className="insight-icon">💡</span>
+                  <span className="insight-text">{stats.insights[0]}</span>
+                </div>
               )}
 
               {/* Day of Week Stats - 개선된 주간 차트 */}
@@ -499,69 +460,56 @@ export function CommuteDashboardPage() {
                   />
                 ) : (
                   <div className="history-list-enhanced">
-                    {history.sessions.map((session) => (
-                      <div key={session.id} className="history-card">
-                        <div className="history-card-header">
-                          <div className="history-date-badge">
-                            {new Date(session.startedAt).toLocaleDateString('ko-KR', {
-                              month: 'short',
-                              day: 'numeric',
-                              weekday: 'short',
-                            })}
-                          </div>
-                          {session.weatherCondition && (
-                            <span className="history-weather-icon" aria-label={session.weatherCondition}>
-                              {session.weatherCondition === '맑음' && '☀️'}
-                              {session.weatherCondition === '흐림' && '☁️'}
-                              {session.weatherCondition === '비' && '🌧️'}
-                              {session.weatherCondition === '눈' && '❄️'}
-                            </span>
-                          )}
-                        </div>
-                        <div className="history-card-body">
-                          <div className="history-route-name">
-                            <span className="route-type-icon" aria-hidden="true">
-                              {(session.routeName || '').includes('출근') ? '🏢' : '🏠'}
-                            </span>
-                            {session.routeName || '경로'}
-                          </div>
-                          <div className="history-time-info">
-                            <span className="history-start-time">
-                              출발 {new Date(session.startedAt).toLocaleTimeString('ko-KR', {
-                                hour: '2-digit',
-                                minute: '2-digit',
+                    {history.sessions.map((session) => {
+                      const startTime = new Date(session.startedAt).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      const endTime = session.completedAt
+                        ? new Date(session.completedAt).toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : null;
+                      const routeType = (session.routeName || '').includes('출근') ? 'morning' : 'evening';
+
+                      return (
+                        <div key={session.id} className="history-card">
+                          <div className="history-card-header">
+                            <div className="history-date-badge">
+                              {new Date(session.startedAt).toLocaleDateString('ko-KR', {
+                                month: 'short',
+                                day: 'numeric',
+                                weekday: 'short',
                               })}
+                            </div>
+                            <span className="history-route-type-badge">
+                              {routeType === 'morning' ? '🌅 출근' : '🌆 퇴근'}
                             </span>
-                            {session.totalDurationMinutes && (
-                              <span className="history-duration-badge">{session.totalDurationMinutes}분</span>
-                            )}
-                            {session.completedAt && (
-                              <span className="history-end-time">
-                                도착 {new Date(session.completedAt).toLocaleTimeString('ko-KR', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </span>
-                            )}
+                          </div>
+                          <div className="history-card-body">
+                            <div className="history-route-name">
+                              {session.routeName || '경로'}
+                            </div>
+                            <div className="history-time-flow">
+                              <span className="history-start-time">{startTime} 출발</span>
+                              <span className="history-time-arrow">→</span>
+                              {endTime && (
+                                <span className="history-end-time">{endTime} 도착</span>
+                              )}
+                              {session.totalDurationMinutes && (
+                                <span className="history-duration-badge">({session.totalDurationMinutes}분)</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="history-card-footer">
+                            <span className={`history-status-badge ${session.status}`}>
+                              {session.status === 'completed' ? '완료' : session.status === 'cancelled' ? '취소' : '진행중'}
+                            </span>
                           </div>
                         </div>
-                        <div className="history-card-footer">
-                          <span className={`history-status-badge ${session.status}`}>
-                            {session.status === 'completed' ? '완료' : session.status === 'cancelled' ? '취소' : '진행중'}
-                          </span>
-                          {session.totalDelayMinutes > 0 && (
-                            <span className="history-delay-badge delayed">
-                              +{session.totalDelayMinutes}분 지연
-                            </span>
-                          )}
-                          {session.totalWaitMinutes > 0 && (
-                            <span className="history-wait-badge">
-                              대기 {session.totalWaitMinutes}분
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -831,13 +779,6 @@ function CheckpointAnalysisBar({ checkpoint }: { checkpoint: CheckpointStats }) 
           </div>
         </div>
       </div>
-
-      {/* Delay indicator */}
-      {checkpoint.averageDelay !== 0 && (
-        <div className={`bar-delay ${checkpoint.averageDelay > 0 ? 'positive' : 'negative'}`}>
-          {checkpoint.averageDelay > 0 ? '+' : ''}{checkpoint.averageDelay}분
-        </div>
-      )}
 
       {/* Variability indicator */}
       {checkpoint.variability >= 3 && (

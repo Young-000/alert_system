@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { notificationApiClient } from '@infrastructure/api';
 import type { NotificationLog } from '@infrastructure/api';
 
@@ -38,6 +38,7 @@ function formatTime(dateStr: string): string {
 }
 
 export function NotificationHistoryPage(): JSX.Element {
+  const navigate = useNavigate();
   const userId = localStorage.getItem('userId') || '';
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -71,7 +72,7 @@ export function NotificationHistoryPage(): JSX.Element {
     return (
       <main className="page notification-history-page">
         <nav className="settings-nav">
-          <Link to="/" className="nav-back" aria-label="뒤로 가기">←</Link>
+          <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
           <span className="nav-title">알림 기록</span>
           <span />
         </nav>
@@ -88,7 +89,7 @@ export function NotificationHistoryPage(): JSX.Element {
   return (
     <main className="page notification-history-page">
       <nav className="settings-nav">
-        <Link to="/" className="nav-back" aria-label="뒤로 가기">←</Link>
+        <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
         <span className="nav-title">알림 기록</span>
         <span className="nav-badge">{total > 0 ? `${total}건` : ''}</span>
       </nav>

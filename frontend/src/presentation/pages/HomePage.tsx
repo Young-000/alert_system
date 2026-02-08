@@ -389,6 +389,86 @@ export function HomePage() {
         </div>
       </header>
 
+      {/* Quick Actions: Alerts + Commute Start - 최상단 배치 */}
+      <div className="home-actions-grid">
+        {/* Alerts Section */}
+        <section className="home-action-card">
+          <h2 className="section-title">알림</h2>
+          {nextAlert ? (
+            <div className="next-alert-compact">
+              <div className="next-alert-highlight">
+                <span className="alert-time">{nextAlert.time}</span>
+                <span className="alert-type">{nextAlert.type} 알림</span>
+              </div>
+              <div className="alerts-mini-list">
+                {alerts.filter(a => a.enabled).slice(0, 2).map((alert) => (
+                  <div key={alert.id} className="alert-mini-item">
+                    <span>{alert.alertTypes.includes('weather') ? '🌤️' : '🚇'}</span>
+                    <span>{alert.name}</span>
+                  </div>
+                ))}
+              </div>
+              <Link to="/alerts" className="btn btn-outline btn-sm">알림 관리 →</Link>
+            </div>
+          ) : (
+            <div className="phase-empty">
+              <p>알림을 설정하면 출근 전에 정보를 받아볼 수 있어요</p>
+              <Link to="/alerts" className="btn btn-primary btn-sm">🔔 알림 설정하기</Link>
+            </div>
+          )}
+        </section>
+
+        {/* Quick Commute Start */}
+        <section className="home-action-card">
+          <h2 className="section-title">출퇴근 기록</h2>
+          {routes.length > 0 ? (
+            <div className="routes-quick-list">
+              {routes.slice(0, 2).map((route) => (
+                <button
+                  key={route.id}
+                  type="button"
+                  className="route-quick-btn"
+                  onClick={() => navigate('/commute', { state: { routeId: route.id } })}
+                >
+                  <span className="route-quick-icon">
+                    {route.routeType === 'morning' ? '🏢' : '🏠'}
+                  </span>
+                  <span className="route-quick-name">{route.name}</span>
+                  <span className="route-quick-time">
+                    {(route.totalExpectedDuration ?? 0) > 0 ? `${route.totalExpectedDuration}분` : '측정 전'}
+                  </span>
+                  <span className="route-quick-arrow">▶</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                className="route-quick-btn route-stopwatch"
+                onClick={() => navigate('/commute?mode=stopwatch')}
+              >
+                <span className="route-quick-icon">⏱️</span>
+                <span className="route-quick-name">스톱워치</span>
+                <span className="route-quick-time">간편 기록</span>
+                <span className="route-quick-arrow">▶</span>
+              </button>
+            </div>
+          ) : (
+            <div className="phase-empty">
+              <p>경로를 등록하거나 스톱워치로 바로 기록하세요</p>
+              <div className="phase-actions-row">
+                <Link to="/routes" className="btn btn-outline btn-sm">경로 등록</Link>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => navigate('/commute?mode=stopwatch')}
+                >
+                  ⏱️ 바로 시작
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
       {/* Weather + Air Quality Card */}
       {weather && (
         <section className="weather-card" aria-label="현재 날씨">
@@ -475,84 +555,6 @@ export function HomePage() {
           </div>
         </section>
       )}
-
-      {/* Quick Actions: Commute Start + Alerts */}
-      <div className="home-actions-grid">
-        {/* Alerts Section */}
-        <section className="home-action-card">
-          <h2 className="section-title">알림</h2>
-          {nextAlert ? (
-            <div className="next-alert-compact">
-              <div className="next-alert-highlight">
-                <span className="alert-time">{nextAlert.time}</span>
-                <span className="alert-type">{nextAlert.type} 알림</span>
-              </div>
-              <div className="alerts-mini-list">
-                {alerts.filter(a => a.enabled).slice(0, 2).map((alert) => (
-                  <div key={alert.id} className="alert-mini-item">
-                    <span>{alert.alertTypes.includes('weather') ? '🌤️' : '🚇'}</span>
-                    <span>{alert.name}</span>
-                  </div>
-                ))}
-              </div>
-              <Link to="/alerts" className="btn btn-outline btn-sm">알림 관리 →</Link>
-            </div>
-          ) : (
-            <div className="phase-empty">
-              <p>알림을 설정하면 출근 전에 정보를 받아볼 수 있어요</p>
-              <Link to="/alerts" className="btn btn-primary btn-sm">🔔 알림 설정하기</Link>
-            </div>
-          )}
-        </section>
-
-        {/* Quick Commute Start */}
-        <section className="home-action-card">
-          <h2 className="section-title">출퇴근 기록</h2>
-          {routes.length > 0 ? (
-            <div className="routes-quick-list">
-              {routes.slice(0, 2).map((route) => (
-                <button
-                  key={route.id}
-                  type="button"
-                  className="route-quick-btn"
-                  onClick={() => navigate('/commute', { state: { routeId: route.id } })}
-                >
-                  <span className="route-quick-icon">
-                    {route.routeType === 'morning' ? '🏢' : '🏠'}
-                  </span>
-                  <span className="route-quick-name">{route.name}</span>
-                  <span className="route-quick-time">{route.totalExpectedDuration}분</span>
-                  <span className="route-quick-arrow">▶</span>
-                </button>
-              ))}
-              <button
-                type="button"
-                className="route-quick-btn route-stopwatch"
-                onClick={() => navigate('/commute?mode=stopwatch')}
-              >
-                <span className="route-quick-icon">⏱️</span>
-                <span className="route-quick-name">스톱워치</span>
-                <span className="route-quick-time">간편 기록</span>
-                <span className="route-quick-arrow">▶</span>
-              </button>
-            </div>
-          ) : (
-            <div className="phase-empty">
-              <p>경로를 등록하거나 스톱워치로 바로 기록하세요</p>
-              <div className="phase-actions-row">
-                <Link to="/routes" className="btn btn-outline btn-sm">경로 등록</Link>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => navigate('/commute?mode=stopwatch')}
-                >
-                  ⏱️ 바로 시작
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
-      </div>
 
       {/* Stats Preview */}
       <section className="home-stats-card">

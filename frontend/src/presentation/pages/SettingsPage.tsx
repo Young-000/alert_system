@@ -195,7 +195,7 @@ export function SettingsPage() {
     return (
       <main className="page settings-page">
         <nav className="settings-nav">
-          <Link to="/" className="nav-back">←</Link>
+          <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
           <span className="nav-title">설정</span>
           <span />
         </nav>
@@ -213,7 +213,7 @@ export function SettingsPage() {
     <main className="page settings-page">
       {/* Header */}
       <nav className="settings-nav">
-        <Link to="/" className="nav-back">←</Link>
+        <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
         <span className="nav-title">내 설정</span>
         <span />
       </nav>
