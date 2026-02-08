@@ -13421,23 +13421,32 @@ section.page {
 }
 
 .apple-route-card-improved .route-info strong {
+  display: block;
   font-size: 1rem;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .apple-route-card-improved .route-path {
+  display: block;
   font-size: 0.8rem;
   color: var(--ink-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .apple-route-card-improved .route-meta {
+  display: block;
   font-size: 0.75rem;
   color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .apple-route-card-improved .route-card-actions {
@@ -13450,12 +13459,12 @@ section.page {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   background: transparent;
   border: none;
   border-radius: var(--radius-md);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
