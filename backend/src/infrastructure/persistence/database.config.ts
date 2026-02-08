@@ -23,6 +23,9 @@ import { CommuteRouteEntity } from './typeorm/commute-route.entity';
 import { RouteCheckpointEntity } from './typeorm/route-checkpoint.entity';
 import { CommuteSessionEntity } from './typeorm/commute-session.entity';
 import { CheckpointRecordEntity } from './typeorm/checkpoint-record.entity';
+import { RouteAnalyticsEntity } from './typeorm/route-analytics.entity';
+import { NotificationLogEntity } from './typeorm/notification-log.entity';
+import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -47,6 +50,9 @@ export function buildDataSourceOptions(): DataSourceOptions {
       RouteCheckpointEntity,
       CommuteSessionEntity,
       CheckpointRecordEntity,
+      RouteAnalyticsEntity,
+      NotificationLogEntity,
+      PushSubscriptionEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -85,6 +91,9 @@ export function buildDataSourceOptions(): DataSourceOptions {
     RouteCheckpointEntity,
     CommuteSessionEntity,
     CheckpointRecordEntity,
+    RouteAnalyticsEntity,
+    NotificationLogEntity,
+    PushSubscriptionEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {

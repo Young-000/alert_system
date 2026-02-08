@@ -15,6 +15,7 @@ const RouteSetupPage = lazy(() => import('./pages/RouteSetupPage').then(m => ({ 
 const CommuteTrackingPage = lazy(() => import('./pages/CommuteTrackingPage').then(m => ({ default: m.CommuteTrackingPage })));
 const CommuteDashboardPage = lazy(() => import('./pages/CommuteDashboardPage').then(m => ({ default: m.CommuteDashboardPage })));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
+const NotificationHistoryPage = lazy(() => import('./pages/NotificationHistoryPage').then(m => ({ default: m.NotificationHistoryPage })));
 
 function PageLoader() {
   return (
@@ -47,6 +48,7 @@ function App() {
             <Route path="/routes" element={<RouteSetupPage />} />
             <Route path="/commute" element={<CommuteTrackingPage />} />
             <Route path="/commute/dashboard" element={<CommuteDashboardPage />} />
+            <Route path="/notifications" element={<NotificationHistoryPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

@@ -9,9 +9,12 @@ import { NotificationModule } from './modules/notification.module';
 import { AirQualityModule } from './modules/air-quality.module';
 import { SubwayModule } from './modules/subway.module';
 import { BusModule } from './modules/bus.module';
+import { WeatherModule } from './modules/weather.module';
 import { BehaviorModule } from './modules/behavior.module';
 import { PrivacyModule } from './modules/privacy.module';
 import { CommuteModule } from './modules/commute.module';
+import { NotificationHistoryModule } from './modules/notification-history.module';
+import { PushModule } from './modules/push.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
@@ -37,9 +40,12 @@ const isDev = process.env.NODE_ENV !== 'production';
     AirQualityModule,
     SubwayModule,
     BusModule,
+    WeatherModule,
     BehaviorModule,
     PrivacyModule,
     CommuteModule,
+    NotificationHistoryModule,
+    PushModule,
   ],
   providers: [
     // 전역 JWT 인증 가드

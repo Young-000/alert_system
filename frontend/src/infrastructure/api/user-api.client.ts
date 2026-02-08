@@ -35,4 +35,12 @@ export class UserApiClient {
   async updateLocation(id: string, location: NonNullable<User['location']>): Promise<User> {
     return this.apiClient.patch<User>(`/users/${id}/location`, { location });
   }
+
+  async exportData(id: string): Promise<Record<string, unknown>> {
+    return this.apiClient.get<Record<string, unknown>>(`/users/${id}/export-data`);
+  }
+
+  async deleteAllData(id: string): Promise<{ success: boolean }> {
+    return this.apiClient.delete<{ success: boolean }>(`/users/${id}/delete-all-data`);
+  }
 }

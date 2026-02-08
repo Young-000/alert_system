@@ -1,5 +1,15 @@
 /* Pretendard font loaded via <link> in index.html for non-blocking rendering */
 
+/* z-index hierarchy:
+   100  - sticky headers, apple-nav
+   1000 - bottom-nav
+   1001 - wizard-nav (above bottom-nav)
+   1002 - offline-banner
+   1003 - toast-container
+   1100 - tooltip
+   10000 - toast-success (top-level notifications)
+*/
+
 * {
   margin: 0;
   padding: 0;
@@ -39,6 +49,10 @@
   --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --gradient-warm: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
   --gradient-cool: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+
+  /* Surface Colors */
+  --surface: #ffffff;
+  --surface-tinted: #f1f5f9;
 
   /* Spacing & Radius */
   --radius-xl: 20px;
@@ -483,7 +497,7 @@ h3 {
 .chip::before {
   content: '•';
   color: var(--primary);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
 }
 
 .chip:hover {
@@ -1034,10 +1048,12 @@ h3 {
   border-color: var(--border-hover);
 }
 
-.btn:disabled {
+button.btn:disabled,
+a.btn:disabled,
+.btn[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none !important;
+  transform: none;
   pointer-events: none;
   box-shadow: none;
 }
@@ -2331,7 +2347,7 @@ a[aria-disabled="true"],
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 16px 20px;
   background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-card) 100%);
   border: 2px solid var(--primary);
@@ -2344,25 +2360,34 @@ a[aria-disabled="true"],
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex: 1;
 }
 
 .quick-action-icon {
   font-size: 2rem;
+  flex-shrink: 0;
 }
 
 .quick-action-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .quick-action-text strong {
   font-size: 1rem;
-  color: var(--text-primary);
+  color: var(--ink);
 }
 
 .quick-action-text .muted {
   font-size: 0.875rem;
+}
+
+.quick-action-card .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Divider with text */
@@ -3549,6 +3574,7 @@ a[aria-disabled="true"],
   justify-content: space-between;
   gap: 14px;
   padding: 16px 20px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
   background: var(--bg);
   border-top: 1px solid var(--border);
   position: sticky;
@@ -3556,7 +3582,7 @@ a[aria-disabled="true"],
   left: 0;
   right: 0;
   margin: 32px -20px 0 -20px;
-  z-index: 100;
+  z-index: 1001;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -3790,11 +3816,16 @@ a[aria-disabled="true"],
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  flex: 1;
 }
 
 .alert-info strong {
   font-size: 0.95rem;
   color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .alert-tags {
@@ -4921,6 +4952,7 @@ kbd {
 
 .checkpoint-content {
   flex: 1;
+  min-width: 0;
 }
 
 .checkpoint-row {
@@ -5384,6 +5416,7 @@ kbd {
 
 .timeline-content {
   flex: 1;
+  min-width: 0;
   padding-bottom: 1.5rem;
 }
 
@@ -5392,10 +5425,14 @@ kbd {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
+  min-width: 0;
 }
 
 .checkpoint-name {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recorded-info, .expected-info {
@@ -5511,17 +5548,25 @@ kbd {
 
 .checkpoint-main-text {
   flex: 1;
+  min-width: 0;
 }
 
 .checkpoint-main-text strong {
   display: block;
   font-size: 1.1rem;
   margin-bottom: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .checkpoint-main-text span {
   font-size: 0.85rem;
   opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .checkpoint-main-arrow {
@@ -5603,7 +5648,7 @@ kbd {
 }
 
 .marker-check { font-size: 0.7rem; }
-.marker-current { font-size: 0.5rem; }
+.marker-current { font-size: 0.65rem; }
 .marker-pending { font-size: 0.7rem; }
 
 /* 체크포인트 정보 */
@@ -7649,6 +7694,7 @@ kbd {
 
 .checkpoint-fields {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -9299,6 +9345,17 @@ kbd {
 
 /* Small Mobile */
 @media (max-width: 480px) {
+  /* Quick action card: wrap button to next line on small screens */
+  .quick-action-card {
+    flex-wrap: wrap;
+  }
+
+  .quick-action-card .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
   .greeting-emoji {
     font-size: 1.75rem;
   }
@@ -9472,6 +9529,7 @@ kbd {
 
 .route-card-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -9482,10 +9540,12 @@ kbd {
 
 .apple-route-card .route-icon {
   font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
 .apple-route-card .route-info {
   flex: 1;
+  min-width: 0;
 }
 
 .apple-route-card .route-info strong {
@@ -9494,11 +9554,18 @@ kbd {
   font-weight: 600;
   color: #1d1d1f;
   margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .apple-route-card .route-info span {
   font-size: 0.85rem;
   color: #86868b;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .apple-route-card .route-arrow {
@@ -10254,7 +10321,7 @@ kbd {
   top: 0.5rem;
   right: 1rem;
   color: #ff3b30;
-  font-size: 0.5rem;
+  font-size: 0.65rem;
   animation: pulse 1.5s infinite;
 }
 
@@ -10315,6 +10382,7 @@ kbd {
 
 .route-card .route-details {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -10323,11 +10391,17 @@ kbd {
 .route-card .route-details strong {
   font-size: 1.1rem;
   color: #1d1d1f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .route-card .route-path {
   font-size: 0.85rem;
   color: #86868b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .route-card .route-time {
@@ -10730,9 +10804,9 @@ kbd {
 }
 
 /* ========== NAV BADGE BUTTONS ========== */
-.nav-badge-btn {
+.btn.nav-badge-btn {
   font-size: 0.875rem;
-  padding: 0.25rem 0.5rem !important;
+  padding: 0.25rem 0.5rem;
   min-width: auto;
 }
 
@@ -12252,7 +12326,7 @@ kbd {
   }
 
   .chart-bar-value {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 
   .confirm-modal {
@@ -12319,13 +12393,277 @@ kbd {
 }
 
 /* 페이지 하단 여백 (네비게이션 높이 고려) */
-.page {
-  padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+main.page,
+div.page,
+section.page {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 /* 홈 푸터 숨김 (하단 네비게이션으로 대체) */
 .home-footer {
   display: none;
+}
+
+/* ========== 날씨 카드 ========== */
+.weather-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.weather-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.weather-temp {
+  flex: 1;
+}
+
+.temp-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.temp-condition {
+  display: block;
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.weather-detail {
+  white-space: nowrap;
+}
+
+.weather-forecast {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  scrollbar-width: none;
+}
+
+.weather-forecast::-webkit-scrollbar {
+  display: none;
+}
+
+.forecast-hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 56px;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+}
+
+.forecast-time {
+  opacity: 0.8;
+}
+
+.forecast-icon {
+  font-size: 1.25rem;
+}
+
+.forecast-temp {
+  font-weight: 600;
+}
+
+.forecast-rain {
+  color: #93c5fd;
+  font-size: 0.7rem;
+}
+
+/* ========== 실시간 도착정보 카드 ========== */
+.transit-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--text);
+}
+
+.transit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transit-station {
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+}
+
+.transit-station-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.transit-type-badge {
+  font-size: 1.25rem;
+}
+
+.transit-station-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.transit-loading {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+}
+
+.transit-empty {
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 4px 0;
+  margin: 0;
+}
+
+.transit-arrivals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.transit-arrival-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.arrival-route {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.arrival-dest {
+  flex: 1;
+  font-size: 0.8rem;
+}
+
+.arrival-time {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+/* ========== 홈 액션 그리드 ========== */
+.home-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+  .home-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-action-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.home-action-card .section-title {
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.next-alert-compact .next-alert-highlight {
+  margin-bottom: 8px;
+}
+
+.home-action-card .routes-quick-list {
+  gap: 6px;
+}
+
+.home-action-card .route-quick-btn {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}
+
+/* ========== 홈 통계 카드 ========== */
+.home-stats-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.home-stats-card .stats-preview {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.home-stats-card .stat-mini {
+  flex: 1;
+}
+
+.stats-insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+}
+
+.insight-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.insight-text {
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* ========== 설정 페이지 ========== */
@@ -12626,6 +12964,10 @@ kbd {
 
 .settings-info p {
   margin-bottom: 8px;
+}
+
+.danger-text {
+  color: var(--error);
 }
 
 /* ========== 소형 토글 스위치 ========== */
@@ -13080,6 +13422,9 @@ kbd {
 
 .apple-route-card-improved .route-info strong {
   font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .apple-route-card-improved .route-path {
@@ -13282,7 +13627,7 @@ kbd {
 }
 
 .chart-day-count {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   color: var(--ink-muted);
 }
 
@@ -13361,7 +13706,7 @@ kbd {
   }
 
   .chart-day-label {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 
   .chart-day-count {
@@ -13369,7 +13714,7 @@ kbd {
   }
 
   .chart-bar-value {
-    font-size: 0.55rem;
+    font-size: 0.65rem;
   }
 
   .settings-tab span:first-child {
@@ -13528,7 +13873,7 @@ kbd {
 /* 경로 미리보기 승하차 라벨 */
 .stop-label-mini {
   display: block;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--primary);
   text-transform: uppercase;
@@ -13933,6 +14278,10 @@ button.line-chip.selected {
   flex: 1;
   font-size: 1.1rem;
   font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .best-route-stats {
@@ -13999,6 +14348,10 @@ button.line-chip.selected {
   flex: 1;
   font-weight: 500;
   font-size: 0.9rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .comparison-bar-container {
@@ -14133,5 +14486,133 @@ button.line-chip.selected {
 /* Simple Mode 진행 바 숨김 */
 .simple-mode-active .progress-tracker {
   display: none;
+}
+
+/* ========== 알림 기록 페이지 ========== */
+.notification-history-page .nav-badge {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+}
+
+.notif-history-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-history-item {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.notif-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.notif-history-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.notif-history-status {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.status-success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.status-warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.status-error {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.notif-history-types {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.notif-type-badge {
+  font-size: 0.72rem;
+  background: var(--bg-subtle);
+  padding: 2px 8px;
+  border-radius: 8px;
+  color: var(--ink-secondary);
+}
+
+.notif-history-summary {
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
+  margin: 4px 0 8px;
+  line-height: 1.4;
+}
+
+.notif-history-time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.notif-load-more {
+  display: block;
+  margin: 16px auto;
+  padding: 10px 24px;
+}
+
+.error-banner {
+  background: var(--error-light);
+  color: var(--error);
+  padding: 10px 16px;
+  margin: 0 16px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ========== 공유 경로 배너 ========== */
+.shared-route-banner {
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-subtle) 100%);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+}
+
+.shared-route-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.shared-route-info strong {
+  font-size: 0.9rem;
+}
+
+.shared-route-info span {
+  font-size: 0.82rem;
+}
+
+.shared-route-actions {
+  display: flex;
+  gap: 8px;
 }
 

@@ -20,6 +20,8 @@ import { RouteCheckpointEntity } from './typeorm/route-checkpoint.entity';
 import { CommuteSessionEntity } from './typeorm/commute-session.entity';
 import { CheckpointRecordEntity } from './typeorm/checkpoint-record.entity';
 import { RouteAnalyticsEntity } from './typeorm/route-analytics.entity';
+import { NotificationLogEntity } from './typeorm/notification-log.entity';
+import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -52,6 +54,8 @@ import { buildDataSourceOptions } from './database.config';
       CommuteSessionEntity,
       CheckpointRecordEntity,
       RouteAnalyticsEntity,
+      NotificationLogEntity,
+      PushSubscriptionEntity,
     ]),
   ],
   exports: [TypeOrmModule],

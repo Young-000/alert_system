@@ -16,14 +16,17 @@ import { NotificationProcessor } from '@infrastructure/queue/notification.proces
 import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-memory-notification-scheduler.service';
 import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { INotificationScheduler } from '@application/ports/notification-scheduler';
+import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
+import { PushModule } from './push.module';
 
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
 
 @Module({
-  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule],
+  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity]), PushModule],
   controllers: [SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,7 @@ import {
   type RouteResponse,
   type RouteType,
   type CreateCheckpointDto,
+  type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
 import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -125,8 +126,16 @@ function SortableStopItem({
 
 export function RouteSetupPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = getCommuteApiClient();
+
+  // Shared route banner
+  const [sharedRoute, setSharedRoute] = useState<{
+    name: string;
+    routeType: RouteType;
+    checkpoints: Array<{ name: string; checkpointType: string; linkedStationId?: string; linkedBusStopId?: string; lineInfo?: string; transportMode?: string }>;
+  } | null>(null);
 
   // 기존 경로
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
@@ -199,6 +208,53 @@ export function RouteSetupPage() {
 
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
+
+  // Parse shared route from URL
+  useEffect(() => {
+    const shared = searchParams.get('shared');
+    if (!shared) return;
+    try {
+      const decoded = JSON.parse(decodeURIComponent(atob(shared)));
+      if (decoded.name && decoded.checkpoints) {
+        setSharedRoute(decoded);
+      }
+    } catch {
+      // Invalid shared data - ignore
+    }
+    // Clear shared param from URL
+    searchParams.delete('shared');
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  // Import shared route
+  const handleImportSharedRoute = async () => {
+    if (!sharedRoute || !userId) return;
+    setIsSaving(true);
+    setError('');
+    try {
+      const dto: CreateRouteDto = {
+        userId,
+        name: sharedRoute.name,
+        routeType: sharedRoute.routeType as RouteType,
+        checkpoints: sharedRoute.checkpoints.map((c, i) => ({
+          sequenceOrder: i,
+          name: c.name,
+          checkpointType: c.checkpointType as CheckpointType,
+          linkedStationId: c.linkedStationId,
+          linkedBusStopId: c.linkedBusStopId,
+          lineInfo: c.lineInfo,
+          transportMode: c.transportMode as TransportMode | undefined,
+        })),
+      };
+      const saved = await commuteApi.createRoute(dto);
+      setExistingRoutes(prev => [...prev, saved]);
+      setSharedRoute(null);
+    } catch {
+      setError('경로 가져오기에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // 경로 검증 함수 (버스/지하철 혼합 지원)
   const validateRoute = useCallback((stops: SelectedStop[]): ValidationResult => {
@@ -584,6 +640,39 @@ export function RouteSetupPage() {
   // 삭제 확인 요청
   const handleDeleteClick = (route: RouteResponse) => {
     setDeleteTarget({ id: route.id, name: route.name });
+  };
+
+  // Share route
+  const handleShareRoute = async (route: RouteResponse) => {
+    const routeData = {
+      name: route.name,
+      routeType: route.routeType,
+      checkpoints: route.checkpoints.map(c => ({
+        name: c.name,
+        checkpointType: c.checkpointType,
+        linkedStationId: c.linkedStationId,
+        linkedBusStopId: c.linkedBusStopId,
+        lineInfo: c.lineInfo,
+        transportMode: c.transportMode,
+      })),
+    };
+    const encoded = btoa(encodeURIComponent(JSON.stringify(routeData)));
+    const shareUrl = `${window.location.origin}/routes?shared=${encoded}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `출퇴근 경로: ${route.name}`,
+          text: route.checkpoints.map(c => c.name).join(' → '),
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled share
+      }
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('경로 링크가 복사되었습니다!');
+    }
   };
 
   // 삭제 실행
@@ -1198,6 +1287,34 @@ export function RouteSetupPage() {
         <Link to="/commute" className="apple-nav-link">트래킹</Link>
       </nav>
 
+      {/* Shared route banner */}
+      {sharedRoute && userId && (
+        <div className="shared-route-banner">
+          <div className="shared-route-info">
+            <strong>📥 공유 경로</strong>
+            <span>{sharedRoute.name}</span>
+            <span className="muted">{sharedRoute.checkpoints.map(c => c.name).join(' → ')}</span>
+          </div>
+          <div className="shared-route-actions">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleImportSharedRoute}
+              disabled={isSaving}
+            >
+              {isSaving ? '저장 중...' : '내 경로에 추가'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setSharedRoute(null)}
+            >
+              무시
+            </button>
+          </div>
+        </div>
+      )}
+
       {sortedRoutes.length === 0 ? (
         // 경로 없음
         <div className="apple-empty">
@@ -1274,6 +1391,15 @@ export function RouteSetupPage() {
                     title="수정"
                   >
                     ✏️
+                  </button>
+                  <button
+                    type="button"
+                    className="route-action-btn"
+                    onClick={() => handleShareRoute(route)}
+                    aria-label="공유"
+                    title="공유"
+                  >
+                    📤
                   </button>
                   <button
                     type="button"

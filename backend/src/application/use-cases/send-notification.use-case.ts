@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException, Optional, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { IUserRepository } from '@domain/repositories/user.repository';
 import { IWeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
@@ -24,6 +25,9 @@ import { INotificationRuleRepository, NOTIFICATION_RULE_REPOSITORY } from '@doma
 import { Recommendation } from '@domain/entities/recommendation.entity';
 import { RecommendBestRouteUseCase } from './recommend-best-route.use-case';
 import { RouteScoreDto } from '@application/dto/route-recommendation.dto';
+import { Repository } from 'typeorm';
+import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
+import { IWebPushService, WEB_PUSH_SERVICE } from '@infrastructure/messaging/web-push.service';
 import {
   ISolapiService,
   SOLAPI_SERVICE,
@@ -64,6 +68,8 @@ export class SendNotificationUseCase {
     @Optional() @Inject(SMART_MESSAGE_BUILDER) private smartMessageBuilder?: ISmartMessageBuilder,
     @Optional() @Inject(NOTIFICATION_RULE_REPOSITORY) private ruleRepository?: INotificationRuleRepository,
     @Optional() @Inject(SOLAPI_SERVICE) private solapiService?: ISolapiService,
+    @Optional() @InjectRepository(NotificationLogEntity) private notificationLogRepo?: Repository<NotificationLogEntity>,
+    @Optional() @Inject(WEB_PUSH_SERVICE) private webPushService?: IWebPushService,
   ) {}
 
   async execute(alertId: string): Promise<void> {
@@ -162,8 +168,26 @@ export class SendNotificationUseCase {
     // 출근/퇴근 판단 (알림 시간 기준)
     const timeType = this.determineTimeType(alert);
 
+    // Build summary for logging
+    const summaryParts: string[] = [];
+    if (data.weather) summaryParts.push(`${Math.round(data.weather.temperature)}° ${data.weather.conditionKr}`);
+    if (data.airQuality) summaryParts.push(`미세먼지 ${data.airQuality.status}`);
+    if (data.subwayStations?.length) summaryParts.push(`지하철 ${data.subwayStations.map(s => s.name).join(',')}`);
+    if (data.busStops?.length) summaryParts.push(`버스 ${data.busStops.length}개 정류장`);
+    const logSummary = summaryParts.join(' | ') || '알림 발송';
+
     try {
       await this.sendNotification(user.name, user.phoneNumber, alert, data, timeType);
+      await this.saveNotificationLog(alert, 'success', logSummary);
+      // Web push (best-effort, non-blocking)
+      if (this.webPushService) {
+        this.webPushService.sendToUser(
+          alert.userId,
+          `${alert.name}`,
+          logSummary,
+          '/',
+        ).catch(err => this.logger.warn(`Web push failed: ${err}`));
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send notification: ${errorMessage}`);
@@ -174,10 +198,30 @@ export class SendNotificationUseCase {
           const variables = this.buildLegacyVariables(user.name, data);
           await this.solapiService.sendLegacyWeatherAlert(user.phoneNumber, variables);
           this.logger.log(`Fallback notification sent`);
+          await this.saveNotificationLog(alert, 'fallback', logSummary);
         } catch (fallbackError) {
           this.logger.error(`Fallback also failed: ${fallbackError}`);
+          await this.saveNotificationLog(alert, 'failed', errorMessage);
         }
+      } else {
+        await this.saveNotificationLog(alert, 'failed', errorMessage);
       }
+    }
+  }
+
+  private async saveNotificationLog(alert: Alert, status: string, summary: string): Promise<void> {
+    if (!this.notificationLogRepo) return;
+    try {
+      await this.notificationLogRepo.save({
+        userId: alert.userId,
+        alertId: alert.id,
+        alertName: alert.name,
+        alertTypes: alert.alertTypes,
+        status,
+        summary,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to save notification log: ${err}`);
     }
   }
 

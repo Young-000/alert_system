@@ -14,12 +14,17 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'robots.txt'],
+        includeAssets: ['robots.txt', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
           name: '출퇴근 메이트',
           short_name: '출퇴근',
           description: '출근/퇴근 시 필요한 정보를 통합 제공하는 알림 시스템',
+          start_url: '/',
+          display: 'standalone',
           theme_color: '#ffffff',
           background_color: '#ffffff',
           orientation: 'portrait',
@@ -36,7 +41,10 @@ export default defineConfig(({ mode }) => {
               purpose: 'any maskable'
             }
           ]
-        }
+        },
+        injectManifest: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        },
       })
     ],
     resolve: {

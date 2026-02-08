@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { alertApiClient } from '@infrastructure/api';
+import { alertApiClient, userApiClient } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
 import type { Alert } from '@infrastructure/api';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
 
 type SettingsTab = 'profile' | 'routes' | 'alerts' | 'app';
 
@@ -27,6 +28,17 @@ export function SettingsPage() {
   // 로컬 데이터 초기화 모달
   const [showLocalDataReset, setShowLocalDataReset] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Push notifications
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
+  // Privacy
+  const [showDeleteAllData, setShowDeleteAllData] = useState(false);
+  const [isDeletingAllData, setIsDeletingAllData] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [privacyMessage, setPrivacyMessage] = useState('');
 
   const commuteApi = getCommuteApiClient();
 
@@ -90,6 +102,71 @@ export function SettingsPage() {
       console.error('Failed to delete:', err);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Check push notification status
+  useEffect(() => {
+    isPushSupported().then(setPushSupported);
+    isPushSubscribed().then(setPushEnabled);
+  }, []);
+
+  // Toggle push notifications
+  const handleTogglePush = async () => {
+    setPushLoading(true);
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush();
+        setPushEnabled(false);
+      } else {
+        const ok = await subscribeToPush();
+        setPushEnabled(ok);
+      }
+    } catch {
+      // Permission denied or error
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  // Export user data
+  const handleExportData = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    setPrivacyMessage('');
+    try {
+      const data = await userApiClient.exportData(userId);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `my-data-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setPrivacyMessage('데이터가 다운로드되었습니다.');
+    } catch {
+      setPrivacyMessage('데이터 내보내기에 실패했습니다.');
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => setPrivacyMessage(''), 3000);
+    }
+  };
+
+  // Delete all tracking data
+  const handleDeleteAllData = async () => {
+    setIsDeletingAllData(true);
+    setPrivacyMessage('');
+    try {
+      await userApiClient.deleteAllData(userId);
+      setShowDeleteAllData(false);
+      setPrivacyMessage('추적 데이터가 삭제되었습니다.');
+    } catch {
+      setPrivacyMessage('데이터 삭제에 실패했습니다.');
+    } finally {
+      setIsDeletingAllData(false);
+      setTimeout(() => setPrivacyMessage(''), 3000);
     }
   };
 
@@ -375,6 +452,88 @@ export function SettingsPage() {
                 </div>
               </div>
 
+              {/* Push Notifications */}
+              {pushSupported && (
+                <>
+                  <h2 className="section-title" style={{ marginTop: '1.5rem' }}>🔔 푸시 알림</h2>
+                  <div className="settings-card">
+                    <div className="settings-item">
+                      <span className="item-icon">📲</span>
+                      <div className="item-content">
+                        <span className="item-label">브라우저 푸시 알림</span>
+                        <span className="item-value item-value-small">
+                          {pushEnabled ? '활성화됨' : '비활성화'}
+                        </span>
+                      </div>
+                      <label className="toggle-compact">
+                        <input
+                          type="checkbox"
+                          checked={pushEnabled}
+                          onChange={handleTogglePush}
+                          disabled={pushLoading}
+                          aria-label="푸시 알림 켜기/끄기"
+                        />
+                        <span className="toggle-slider-compact" />
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Notification History Link */}
+              <div className="settings-card" style={{ marginTop: '1rem' }}>
+                <Link to="/notifications" className="settings-item" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <span className="item-icon">📋</span>
+                  <div className="item-content">
+                    <span className="item-label">알림 발송 기록</span>
+                    <span className="item-value item-value-small">발송 내역 확인</span>
+                  </div>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--ink-tertiary)' }}>→</span>
+                </Link>
+              </div>
+
+              {/* Privacy Section */}
+              <h2 className="section-title" style={{ marginTop: '1.5rem' }}>🔒 개인정보</h2>
+
+              <div className="settings-card">
+                <div className="settings-item">
+                  <span className="item-icon">📤</span>
+                  <div className="item-content">
+                    <span className="item-label">내 데이터 내보내기</span>
+                    <span className="item-value item-value-small">JSON 파일로 다운로드</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={handleExportData}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? '처리 중...' : '내보내기'}
+                  </button>
+                </div>
+
+                <div className="settings-item">
+                  <span className="item-icon">🗑️</span>
+                  <div className="item-content">
+                    <span className="item-label">추적 데이터 삭제</span>
+                    <span className="item-value item-value-small">행동 분석·출퇴근 기록</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm danger-text"
+                    onClick={() => setShowDeleteAllData(true)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+
+              {privacyMessage && (
+                <div className="toast-success" role="status" aria-live="polite" style={{ position: 'relative', marginTop: '0.75rem' }}>
+                  {privacyMessage}
+                </div>
+              )}
+
               <div className="settings-info">
                 <p>
                   <strong>출퇴근 메이트</strong>
@@ -422,6 +581,21 @@ export function SettingsPage() {
       >
         <p>로컬 스톱워치 기록을 삭제하시겠습니까?</p>
         <p className="muted">삭제된 데이터는 복구할 수 없습니다.</p>
+      </ConfirmModal>
+
+      {/* 추적 데이터 삭제 모달 */}
+      <ConfirmModal
+        open={showDeleteAllData}
+        title="추적 데이터 삭제"
+        confirmText="전체 삭제"
+        cancelText="취소"
+        confirmVariant="danger"
+        isLoading={isDeletingAllData}
+        onConfirm={handleDeleteAllData}
+        onCancel={() => setShowDeleteAllData(false)}
+      >
+        <p>행동 분석 데이터와 출퇴근 기록을 모두 삭제합니다.</p>
+        <p className="muted">계정과 알림 설정은 유지됩니다. 이 작업은 되돌릴 수 없습니다.</p>
       </ConfirmModal>
 
       {/* 초기화 완료 토스트 */}
