@@ -115,8 +115,8 @@ class BehaviorCollector {
         alertId,
         notificationId,
       });
-    } catch (error) {
-      console.error('Failed to track notification opened:', error);
+    } catch {
+      // Silent: analytics tracking failure is non-critical
     }
   }
 

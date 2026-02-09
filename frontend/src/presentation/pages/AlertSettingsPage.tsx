@@ -90,9 +90,8 @@ export function AlertSettingsPage() {
         const userAlerts = await alertApiClient.getAlertsByUser(userId);
         if (!isMounted) return;
         setAlerts(userAlerts);
-      } catch (err) {
+      } catch {
         if (!isMounted) return;
-        console.error('Failed to load alerts:', err);
         setError('알림 목록을 불러오는데 실패했습니다.');
       } finally {
         if (isMounted) {
@@ -126,8 +125,8 @@ export function AlertSettingsPage() {
     try {
       const userAlerts = await alertApiClient.getAlertsByUser(userId);
       setAlerts(userAlerts);
-    } catch (err) {
-      console.error('Failed to reload alerts:', err);
+    } catch {
+      // Silent: reload failure is non-critical
     }
   }, [userId]);
 
@@ -393,7 +392,6 @@ export function AlertSettingsPage() {
         setSuccess('');
       }, 5000);
     } catch (err: unknown) {
-      console.error('Quick weather alert creation failed:', err);
       const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
       if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
         setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
@@ -500,7 +498,6 @@ export function AlertSettingsPage() {
         setSuccess('');
       }, 2000);
     } catch (err: unknown) {
-      console.error('Alert creation failed:', err);
       const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
       if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
         setError('로그인이 만료되었습니다. 다시 로그인해주세요.');

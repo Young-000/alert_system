@@ -132,8 +132,7 @@ export function OnboardingPage() {
 
       safeSetItem('onboardingCompleted', 'true');
       setStep('complete');
-    } catch (err) {
-      console.error('Failed to create route:', err);
+    } catch {
       setError('경로 생성에 실패했습니다. 나중에 다시 시도해주세요.');
     } finally {
       setIsCreating(false);

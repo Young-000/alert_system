@@ -86,9 +86,8 @@ export function CommuteDashboardPage() {
         if (statsData.routeStats.length > 0) {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
-      } catch (err) {
+      } catch {
         if (!isMounted) return;
-        console.error('Failed to load stats:', err);
       } finally {
         if (isMounted) {
           setIsLoading(false);
