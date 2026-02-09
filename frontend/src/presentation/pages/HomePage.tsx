@@ -454,7 +454,7 @@ export function HomePage(): JSX.Element {
       )}
 
       {/* Stats Summary */}
-      {commuteStats && (commuteStats.overallAverageDuration || commuteStats.recentSessions) && (
+      {commuteStats && (commuteStats.overallAverageDuration > 0 || (commuteStats.recentSessions != null && commuteStats.recentSessions > 0)) && (
         <section className="home-stats" aria-label="이번 주 통근">
           <h3 className="home-stats-title">이번 주</h3>
           <div className="home-stats-row">
