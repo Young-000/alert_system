@@ -148,6 +148,7 @@ export function RouteSetupPage() {
 
   // 정렬 및 편집
   const [sortBy] = useState<'recent' | 'name' | 'created'>('recent');
+  const [routeTab, setRouteTab] = useState<'all' | 'morning' | 'evening'>('all');
   const [editingRoute, setEditingRoute] = useState<RouteResponse | null>(null);
 
   // 새 경로 생성 플로우
@@ -356,6 +357,11 @@ export function RouteSetupPage() {
         });
     }
   }, [existingRoutes, sortBy]);
+
+  const filteredRoutes = useMemo(() => {
+    if (routeTab === 'all') return sortedRoutes;
+    return sortedRoutes.filter(r => r.routeType === routeTab);
+  }, [sortedRoutes, routeTab]);
 
   // 환승 정보 계산
   const getTransferInfo = useCallback((from: SelectedStop, to: SelectedStop): string | null => {
@@ -1444,20 +1450,37 @@ export function RouteSetupPage() {
         </div>
       ) : (
         <div className="route-list-v2">
-          {/* 출근 경로 섹션 */}
-          {sortedRoutes.filter(r => r.routeType === 'morning').length > 0 && (
-            <section className="route-section-v2">
-              <h2 className="route-section-v2-title">출근</h2>
-              {sortedRoutes.filter(r => r.routeType === 'morning').map(renderRouteCard)}
-            </section>
-          )}
+          {/* 출근/퇴근 탭 필터 */}
+          <div className="route-filter-tabs">
+            <button
+              type="button"
+              className={`route-filter-tab ${routeTab === 'all' ? 'active' : ''}`}
+              onClick={() => setRouteTab('all')}
+            >
+              전체 ({sortedRoutes.length})
+            </button>
+            <button
+              type="button"
+              className={`route-filter-tab ${routeTab === 'morning' ? 'active' : ''}`}
+              onClick={() => setRouteTab('morning')}
+            >
+              출근 ({sortedRoutes.filter(r => r.routeType === 'morning').length})
+            </button>
+            <button
+              type="button"
+              className={`route-filter-tab ${routeTab === 'evening' ? 'active' : ''}`}
+              onClick={() => setRouteTab('evening')}
+            >
+              퇴근 ({sortedRoutes.filter(r => r.routeType === 'evening').length})
+            </button>
+          </div>
 
-          {/* 퇴근 경로 섹션 */}
-          {sortedRoutes.filter(r => r.routeType === 'evening').length > 0 && (
-            <section className="route-section-v2">
-              <h2 className="route-section-v2-title">퇴근</h2>
-              {sortedRoutes.filter(r => r.routeType === 'evening').map(renderRouteCard)}
-            </section>
+          {filteredRoutes.length === 0 ? (
+            <div className="route-filter-empty">
+              <p>{routeTab === 'morning' ? '출근' : '퇴근'} 경로가 없어요</p>
+            </div>
+          ) : (
+            filteredRoutes.map(renderRouteCard)
           )}
         </div>
       )}

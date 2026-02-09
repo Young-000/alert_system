@@ -150,18 +150,19 @@ export function CommuteTrackingPage(): JSX.Element {
     setError('');
 
     try {
-      // Auto-record any unrecorded checkpoints
+      // Auto-record any unrecorded checkpoints (parallel for speed)
       if (route) {
-        let currentSession = session;
-        const recordedIds = new Set(currentSession.checkpointRecords.map(r => r.checkpointId));
+        const recordedIds = new Set(session.checkpointRecords.map(r => r.checkpointId));
         const unrecorded = route.checkpoints.filter(cp => !recordedIds.has(cp.id));
 
-        for (const cp of unrecorded) {
-          currentSession = await commuteApi.recordCheckpoint({
-            sessionId: currentSession.id,
-            checkpointId: cp.id,
-            actualWaitTime: 0,
-          });
+        if (unrecorded.length > 0) {
+          await Promise.all(unrecorded.map(cp =>
+            commuteApi.recordCheckpoint({
+              sessionId: session.id,
+              checkpointId: cp.id,
+              actualWaitTime: 0,
+            })
+          ));
         }
       }
 
@@ -280,17 +281,38 @@ export function CommuteTrackingPage(): JSX.Element {
 
       <p className="commute-v2-timer-label">경과 시간</p>
 
-      {/* Route checkpoints (read-only display) */}
-      {route && route.checkpoints.length > 0 && (
-        <div className="commute-v2-route-preview">
-          {route.checkpoints.map((cp, i) => (
-            <span key={cp.id} className="commute-v2-cp">
-              {cp.name}
-              {i < route.checkpoints.length - 1 && (
-                <span className="commute-v2-cp-arrow"> → </span>
-              )}
-            </span>
-          ))}
+      {/* Route checkpoints - timeline view */}
+      {route && route.checkpoints.length > 0 && session && (
+        <div className="commute-timeline">
+          {route.checkpoints.map((cp, i) => {
+            const record = session.checkpointRecords.find(r => r.checkpointId === cp.id);
+            const isCompleted = !!record;
+            const isLast = i === route.checkpoints.length - 1;
+            // Current = first checkpoint that is not recorded
+            const firstUnrecordedIdx = route.checkpoints.findIndex(
+              c => !session.checkpointRecords.find(r => r.checkpointId === c.id)
+            );
+            const isCurrent = i === firstUnrecordedIdx;
+
+            return (
+              <div
+                key={cp.id}
+                className={`timeline-step ${isCompleted ? 'completed' : isCurrent ? 'current' : 'pending'}`}
+              >
+                <div className="timeline-marker" />
+                {!isLast && <div className="timeline-line" />}
+                <div className="timeline-content">
+                  <span className="timeline-name">{cp.name}</span>
+                  {isCompleted && record && (
+                    <span className="timeline-time">
+                      {record.actualWaitTime > 0 ? `대기 ${record.actualWaitTime}분` : '통과'}
+                    </span>
+                  )}
+                  {isCurrent && <span className="timeline-current-label">현재</span>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

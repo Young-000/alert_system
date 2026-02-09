@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
+
 interface StatCardProps {
-  icon?: string;
+  icon?: ReactNode;
   title: string;
   value: string | number;
   subtitle?: string;

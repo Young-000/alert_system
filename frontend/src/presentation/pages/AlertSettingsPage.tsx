@@ -339,11 +339,17 @@ export function AlertSettingsPage() {
   // Generate alert name
   const generateAlertName = useCallback(() => {
     const parts: string[] = [];
-    if (wantsWeather) parts.push('날씨');
     if (selectedTransports.length > 0) {
-      parts.push(selectedTransports.map((t) => t.name).join(', '));
+      // 첫 번째 역/정류장 이름만 사용 (간결한 이름)
+      parts.push(selectedTransports[0].name);
+      if (selectedTransports.length > 1) {
+        parts[0] += ` 외 ${selectedTransports.length - 1}곳`;
+      }
     }
-    return `${parts.join(' + ')} 알림`;
+    if (wantsWeather && selectedTransports.length === 0) {
+      parts.push('날씨');
+    }
+    return parts.length > 0 ? `${parts.join(' ')} 알림` : '출퇴근 알림';
   }, [wantsWeather, selectedTransports]);
 
   // Quick weather alert (one-click)
@@ -1433,6 +1439,26 @@ export function AlertSettingsPage() {
         )}
       </div>
 
+      {/* 빠른 알림 프리셋 - 위저드 없이 바로 생성 */}
+      {userId && (
+        <section className="alert-presets">
+          <h2 className="preset-title">빠른 알림 설정</h2>
+          <div className="preset-cards">
+            <button
+              type="button"
+              className="preset-card"
+              onClick={handleQuickWeatherAlert}
+              disabled={isSubmitting || !!alerts.find(a => a.name === '아침 날씨 알림')}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg>
+              <span className="preset-label">날씨 + 미세먼지</span>
+              <span className="preset-desc">매일 오전 8시</span>
+              {alerts.find(a => a.name === '아침 날씨 알림') && <span className="preset-done">설정됨</span>}
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Existing Alerts - 개선된 UI */}
       {alerts.length > 0 && (
         <section id="existing-alerts-section" className="existing-alerts">
@@ -1654,6 +1680,14 @@ export function AlertSettingsPage() {
           </div>
         </div>
       )}
+
+      <div className="cross-link-section">
+        <Link to="/commute/dashboard" className="cross-link-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>통계 보기</span>
+          <span className="cross-link-arrow">→</span>
+        </Link>
+      </div>
 
       <footer className="footer">
         <p className="footer-text">

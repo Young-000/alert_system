@@ -39,10 +39,15 @@ function getAqiStatus(pm10: number | undefined): { label: string; className: str
   return { label: '매우나쁨', className: 'aqi-very-bad' };
 }
 
-function getActiveRoute(routes: RouteResponse[]): RouteResponse | null {
+function getActiveRoute(
+  routes: RouteResponse[],
+  forceType?: 'auto' | 'morning' | 'evening'
+): RouteResponse | null {
   const hour = new Date().getHours();
-  // Morning: prefer morning routes, Evening: prefer evening routes
-  const isMorning = hour < 14;
+  const isMorning = forceType === 'auto' || !forceType
+    ? hour < 14
+    : forceType === 'morning';
+
   const preferred = routes.find(r =>
     r.isPreferred && (isMorning ? r.routeType === 'morning' : r.routeType === 'evening')
   );
@@ -126,6 +131,7 @@ export function HomePage(): JSX.Element {
   const [transitInfos, setTransitInfos] = useState<TransitArrivalInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
+  const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
 
   const userId = localStorage.getItem('userId') || '';
   const userName = localStorage.getItem('userName') || '';
@@ -185,7 +191,7 @@ export function HomePage(): JSX.Element {
   }, [userId]);
 
   // Load transit arrivals based on active route
-  const activeRoute = useMemo(() => getActiveRoute(routes), [routes]);
+  const activeRoute = useMemo(() => getActiveRoute(routes, forceRouteType), [routes, forceRouteType]);
 
   const loadTransitArrivals = useCallback(async (route: RouteResponse): Promise<void> => {
     const subwayStations = new Set<string>();
@@ -349,6 +355,22 @@ export function HomePage(): JSX.Element {
           </div>
         )}
       </header>
+
+      {/* Route type toggle */}
+      {hasRoutes && routes.length > 1 && (
+        <div className="route-type-toggle">
+          {(['auto', 'morning', 'evening'] as const).map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={`route-type-btn ${forceRouteType === type ? 'active' : ''}`}
+              onClick={() => setForceRouteType(type)}
+            >
+              {type === 'auto' ? '자동' : type === 'morning' ? '출근' : '퇴근'}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Today's Commute Card */}
       <section id="today-card" className="today-card" aria-label="오늘의 출퇴근">
