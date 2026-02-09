@@ -101,8 +101,12 @@ function SortableStopItem({
         <span className="drag-handle-icon" aria-hidden="true">☰</span>
       </button>
       <div className="sortable-stop-content">
-        <span className="stop-icon">
-          {stop.transportMode === 'subway' ? '🚇' : '🚌'}
+        <span className="stop-icon" aria-hidden="true">
+          {stop.transportMode === 'subway' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg>
+          )}
         </span>
         <div className="stop-info">
           <span className="stop-name">{stop.name}</span>
@@ -357,9 +361,9 @@ export function RouteSetupPage() {
   const getTransferInfo = useCallback((from: SelectedStop, to: SelectedStop): string | null => {
     // 교통수단이 다르면
     if (from.transportMode !== to.transportMode) {
-      const fromIcon = from.transportMode === 'subway' ? '🚇' : '🚌';
-      const toIcon = to.transportMode === 'subway' ? '🚇' : '🚌';
-      return `${fromIcon}→${toIcon}`;
+      const fromLabel = from.transportMode === 'subway' ? '지하철' : '버스';
+      const toLabel = to.transportMode === 'subway' ? '지하철' : '버스';
+      return `${fromLabel}→${toLabel}`;
     }
 
     // 같은 교통수단이지만 호선이 다르면 (지하철 환승)
@@ -750,7 +754,7 @@ export function RouteSetupPage() {
               <span className="route-arrow-mini">→</span>
               <span className={`route-point-mini stop ${label === '환승' ? 'transfer' : ''}`}>
                 <span className="stop-label-mini">{label}</span>
-                {stop.transportMode === 'subway' ? '🚇' : '🚌'} {stop.name}
+                {stop.name}
                 {stop.line && <span className="line-info-mini">{stop.line}</span>}
               </span>
             </span>
@@ -772,7 +776,7 @@ export function RouteSetupPage() {
           <span />
         </nav>
         <div className="apple-empty">
-          <div className="apple-empty-icon">🚇</div>
+          <div className="apple-empty-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></div>
           <h2>로그인이 필요해요</h2>
           <p>출퇴근 경로를 저장하려면<br />먼저 로그인해주세요</p>
           <Link to="/login" className="apple-btn-primary">로그인</Link>
@@ -821,7 +825,7 @@ export function RouteSetupPage() {
                     className="line-selection-btn"
                     onClick={() => handleLineSelect(lineSelectionModal.name, line, id)}
                   >
-                    <span>🚇</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
                     <span>{line}</span>
                   </button>
                 ))}
@@ -849,7 +853,7 @@ export function RouteSetupPage() {
                   className={`apple-type-card ${routeType === 'morning' ? 'selected' : ''}`}
                   onClick={() => setRouteType('morning')}
                 >
-                  <span className="type-icon">🌅</span>
+                  <span className="type-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg></span>
                   <span className="type-label">출근</span>
                   <span className="type-desc">집 → 회사</span>
                 </button>
@@ -859,7 +863,7 @@ export function RouteSetupPage() {
                   className={`apple-type-card ${routeType === 'evening' ? 'selected' : ''}`}
                   onClick={() => setRouteType('evening')}
                 >
-                  <span className="type-icon">🌆</span>
+                  <span className="type-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
                   <span className="type-label">퇴근</span>
                   <span className="type-desc">회사 → 집</span>
                 </button>
@@ -899,7 +903,7 @@ export function RouteSetupPage() {
                   className={`transport-option ${currentTransport === 'subway' ? 'selected' : ''}`}
                   onClick={() => setCurrentTransport('subway')}
                 >
-                  <span className="transport-icon" aria-hidden="true">🚇</span>
+                  <span className="transport-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
                   <div className="transport-text">
                     <span className="transport-label">지하철</span>
                     <span className="transport-desc">역 이름으로 검색</span>
@@ -916,7 +920,7 @@ export function RouteSetupPage() {
                   className={`transport-option ${currentTransport === 'bus' ? 'selected' : ''}`}
                   onClick={() => setCurrentTransport('bus')}
                 >
-                  <span className="transport-icon" aria-hidden="true">🚌</span>
+                  <span className="transport-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg></span>
                   <div className="transport-text">
                     <span className="transport-label">버스</span>
                     <span className="transport-desc">정류장으로 검색</span>
@@ -955,11 +959,11 @@ export function RouteSetupPage() {
               <div className="boarding-flow-indicator">
                 {selectedStops.length === 0 ? (
                   <span className="boarding-label boarding">
-                    🚇 {currentTransport === 'subway' ? '승차역' : '승차 정류장'} 선택
+                    {currentTransport === 'subway' ? '승차역' : '승차 정류장'} 선택
                   </span>
                 ) : (
                   <span className="boarding-label alighting">
-                    🚉 {currentTransport === 'subway' ? '하차역 또는 환승역' : '하차 정류장'} 선택
+                    {currentTransport === 'subway' ? '하차역 또는 환승역' : '하차 정류장'} 선택
                   </span>
                 )}
               </div>
@@ -977,8 +981,9 @@ export function RouteSetupPage() {
               {selectedStops.length > 0 && renderRouteSoFar()}
 
               <div className="apple-search-box">
-                <span className="search-icon">🔍</span>
+                <span className="search-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                 <input
+                  id="stop-search"
                   type="text"
                   placeholder={currentTransport === 'subway' ? '역 이름으로 검색 (예: 강남)' : '정류장 이름으로 검색'}
                   value={searchQuery}
@@ -1021,7 +1026,7 @@ export function RouteSetupPage() {
                         onClick={() => handleStationClick(grouped)}
                         aria-label={`${grouped.name}역 ${grouped.lines.length > 1 ? `(${grouped.lines.length}개 호선)` : grouped.lines[0].line}`}
                       >
-                        <span className="result-icon" aria-hidden="true">🚇</span>
+                        <span className="result-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
                         <span className="result-info">
                           <strong>{grouped.name}</strong>
                           <span className="result-detail">
@@ -1050,7 +1055,7 @@ export function RouteSetupPage() {
                         onClick={() => handleSelectBusStop(stop)}
                         aria-label={`${stop.name} 정류장 ${stop.stopNo ? `(${stop.stopNo})` : ''}`}
                       >
-                        <span className="result-icon" aria-hidden="true">🚌</span>
+                        <span className="result-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg></span>
                         <span className="result-info">
                           <strong>{stop.name}</strong>
                           <span className="result-detail">{stop.stopNo || '정류장'}</span>
@@ -1070,7 +1075,7 @@ export function RouteSetupPage() {
 
               {!searchQuery && (
                 <div className="apple-search-hint">
-                  <p>{currentTransport === 'subway' ? '🚇 지하철역' : '🚌 버스 정류장'} 이름을 검색하세요</p>
+                  <p>{currentTransport === 'subway' ? '지하철역' : '버스 정류장'} 이름을 검색하세요</p>
                   <p className="hint-example">
                     {currentTransport === 'subway'
                       ? '예: 강남, 홍대입구, 여의도'
@@ -1078,7 +1083,7 @@ export function RouteSetupPage() {
                   </p>
                   {currentTransport === 'subway' && (
                     <p className="hint-note" style={{ marginTop: '0.5rem', color: 'var(--ink-muted)', fontSize: '0.8rem' }}>
-                      💡 역 이름 검색 후 원하는 호선을 선택할 수 있어요
+                      역 이름 검색 후 원하는 호선을 선택할 수 있어요
                     </p>
                   )}
                 </div>
@@ -1115,7 +1120,7 @@ export function RouteSetupPage() {
                 </div>
                 <div className="progress-route">
                   <span className="progress-point start">
-                    {routeType === 'morning' ? '🏠 집' : '🏢 회사'}
+                    {routeType === 'morning' ? '집' : '회사'}
                   </span>
 
                   {/* Sortable stops */}
@@ -1143,7 +1148,7 @@ export function RouteSetupPage() {
                   <div className="progress-segment">
                     <div className="progress-line dashed" />
                     <span className="progress-point end">
-                      {routeType === 'morning' ? '🏢 회사' : '🏠 집'}
+                      {routeType === 'morning' ? '회사' : '집'}
                     </span>
                   </div>
                 </div>
@@ -1152,7 +1157,7 @@ export function RouteSetupPage() {
               {/* 검증 경고 */}
               {warning && (
                 <div className="route-validation-warning">
-                  ⚠️ {warning}
+                  {warning}
                 </div>
               )}
 
@@ -1195,7 +1200,7 @@ export function RouteSetupPage() {
               <div className="route-preview-panel">
                 <div className="preview-panel-header">
                   <span className="preview-type-badge">
-                    {routeType === 'morning' ? '🌅 출근 경로' : '🌆 퇴근 경로'}
+                    {routeType === 'morning' ? '출근 경로' : '퇴근 경로'}
                   </span>
                   <span className="preview-stop-count">{selectedStops.length + 2}개 정류장</span>
                 </div>
@@ -1205,12 +1210,12 @@ export function RouteSetupPage() {
                   {/* 시작점 */}
                   <div className="preview-stop start">
                     <div className="stop-marker">
-                      <span className="marker-icon">{routeType === 'morning' ? '🏠' : '🏢'}</span>
+                      <span className="marker-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
                       <span className="marker-line" />
                     </div>
                     <div className="stop-details">
                       <span className="stop-name-main">{routeType === 'morning' ? '집' : '회사'}</span>
-                      <span className="stop-transport">🚶 도보로 이동</span>
+                      <span className="stop-transport">도보로 이동</span>
                     </div>
                   </div>
 
@@ -1224,8 +1229,12 @@ export function RouteSetupPage() {
                     return (
                       <div key={stop.uniqueKey} className="preview-stop middle">
                         <div className="stop-marker">
-                          <span className="marker-icon">
-                            {stop.transportMode === 'subway' ? '🚇' : '🚌'}
+                          <span className="marker-icon" aria-hidden="true">
+                            {stop.transportMode === 'subway' ? (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+                            ) : (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg>
+                            )}
                           </span>
                           <span className="marker-line" />
                         </div>
@@ -1236,7 +1245,7 @@ export function RouteSetupPage() {
                             <span className="stop-transfer-badge">{transferInfo} 환승</span>
                           )}
                           <span className="stop-transport">
-                            {nextTransport === 'subway' ? '🚇 지하철' : '🚌 버스'}로 이동
+                            {nextTransport === 'subway' ? '지하철' : '버스'}로 이동
                           </span>
                         </div>
                       </div>
@@ -1246,11 +1255,11 @@ export function RouteSetupPage() {
                   {/* 도착점 */}
                   <div className="preview-stop end">
                     <div className="stop-marker">
-                      <span className="marker-icon">{routeType === 'morning' ? '🏢' : '🏠'}</span>
+                      <span className="marker-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
                     </div>
                     <div className="stop-details">
                       <span className="stop-name-main">{routeType === 'morning' ? '회사' : '집'}</span>
-                      <span className="stop-complete">🎉 도착!</span>
+                      <span className="stop-complete">도착!</span>
                     </div>
                   </div>
                 </div>
@@ -1260,7 +1269,7 @@ export function RouteSetupPage() {
                   className="preview-edit-btn"
                   onClick={() => setStep('ask-more')}
                 >
-                  ✏️ 경로 수정하기
+                  경로 수정하기
                 </button>
               </div>
 
@@ -1292,7 +1301,7 @@ export function RouteSetupPage() {
               )}
 
               <div className="apple-info-card">
-                <span className="info-icon">💡</span>
+                <span className="info-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
                 <p>소요시간은 실제 출퇴근을 기록하면서 자동으로 측정됩니다</p>
               </div>
 

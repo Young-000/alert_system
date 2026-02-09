@@ -555,7 +555,7 @@ export function AlertSettingsPage() {
     try {
       // Convert time to cron format
       const [hour, minute] = editForm.schedule.split(':');
-      const cronSchedule = `${parseInt(minute)} ${parseInt(hour)} * * *`;
+      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} * * *`;
 
       await alertApiClient.updateAlert(editTarget.id, {
         name: editForm.name,
@@ -708,8 +708,12 @@ export function AlertSettingsPage() {
                   key={alert.id}
                   className={`preview-alert-chip ${alert.enabled ? 'active' : 'inactive'}`}
                 >
-                  <span className="chip-icon">
-                    {alert.alertTypes.includes('weather') ? '🌤️' : '🚇'}
+                  <span className="chip-icon" aria-hidden="true">
+                    {alert.alertTypes.includes('weather') ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+                    )}
                   </span>
                   <span className="chip-name">{alert.name}</span>
                   <span className="chip-time">{hours[0]}</span>
@@ -780,7 +784,7 @@ export function AlertSettingsPage() {
           <section className="wizard-step">
             {/* 알림톡 안내 배너 */}
             <div className="alimtalk-banner">
-              <span className="alimtalk-icon" aria-hidden="true">📱</span>
+              <span className="alimtalk-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
               <div className="alimtalk-text">
                 <strong>카카오 알림톡으로 알림을 받아요</strong>
                 <span className="muted">회원가입 시 등록한 전화번호로 발송됩니다</span>
@@ -790,7 +794,7 @@ export function AlertSettingsPage() {
             {/* Quick Action: One-click Weather Alert */}
             <div className="quick-action-card">
               <div className="quick-action-content">
-                <span className="quick-action-icon" aria-hidden="true">🌤️</span>
+                <span className="quick-action-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg></span>
                 <div className="quick-action-text">
                   <strong>날씨 알림 바로 시작</strong>
                   <span className="muted">매일 오전 8시 날씨 + 미세먼지 알림톡</span>
@@ -810,7 +814,7 @@ export function AlertSettingsPage() {
             <div aria-live="polite" aria-atomic="true" className="toast-container">
               {error && (
                 <div className="toast toast-error" role="alert">
-                  <span className="toast-icon" aria-hidden="true">⚠️</span>
+                  <span className="toast-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
                   <span className="toast-message">{error}</span>
                   <button
                     type="button"
@@ -824,7 +828,7 @@ export function AlertSettingsPage() {
               )}
               {success && (
                 <div className="toast toast-success" role="status">
-                  <span className="toast-icon" aria-hidden="true">✅</span>
+                  <span className="toast-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
                   <span className="toast-message">{success}</span>
                 </div>
               )}
@@ -845,7 +849,7 @@ export function AlertSettingsPage() {
                 aria-pressed={wantsWeather}
                 aria-label="날씨 알림 선택"
               >
-                <span className="choice-icon" aria-hidden="true">🌤️</span>
+                <span className="choice-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg></span>
                 <span className="choice-title">날씨</span>
                 <span className="choice-desc">오늘 뭐 입지? 우산 필요해?</span>
               </button>
@@ -857,7 +861,7 @@ export function AlertSettingsPage() {
                 aria-pressed={wantsTransport}
                 aria-label="교통 알림 선택"
               >
-                <span className="choice-icon" aria-hidden="true">🚇</span>
+                <span className="choice-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
                 <span className="choice-title">교통</span>
                 <span className="choice-desc">지하철/버스 실시간 도착</span>
               </button>
@@ -874,7 +878,7 @@ export function AlertSettingsPage() {
             {/* 경로에서 가져오기 옵션 */}
             {savedRoutes.length > 0 && !showRouteImport && (
               <div className="route-import-banner">
-                <span className="import-icon">📍</span>
+                <span className="import-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
                 <div className="import-text">
                   <strong>저장된 경로에서 가져오기</strong>
                   <span className="muted">기존 출퇴근 경로의 역/정류장을 사용해요</span>
@@ -915,14 +919,15 @@ export function AlertSettingsPage() {
                       className="route-import-item"
                       onClick={() => importFromRoute(route)}
                     >
-                      <span className="route-icon">
-                        {route.routeType === 'morning' ? '🌅' : '🌆'}
+                      <span className={`route-type-badge ${route.routeType === 'morning' ? 'morning' : 'evening'}`}>
+                        {route.routeType === 'morning' ? '출근' : '퇴근'}
                       </span>
                       <div className="route-import-info">
                         <span className="route-name">{route.name}</span>
                         <span className="route-stops">
-                          {subwayStops.map(s => `🚇${s.name}`).join(' ')}
-                          {busStops.map(s => `🚌${s.name}`).join(' ')}
+                          {subwayStops.map(s => s.name).join(', ')}
+                          {subwayStops.length > 0 && busStops.length > 0 ? ' · ' : ''}
+                          {busStops.map(s => s.name).join(', ')}
                         </span>
                       </div>
                       <span className="route-action">사용 →</span>
@@ -952,7 +957,7 @@ export function AlertSettingsPage() {
                 aria-pressed={transportTypes.includes('subway')}
                 aria-label="지하철 선택"
               >
-                <span className="choice-icon" aria-hidden="true">🚇</span>
+                <span className="choice-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
                 <span className="choice-title">지하철</span>
               </button>
 
@@ -969,7 +974,7 @@ export function AlertSettingsPage() {
                 aria-pressed={transportTypes.includes('bus')}
                 aria-label="버스 선택"
               >
-                <span className="choice-icon" aria-hidden="true">🚌</span>
+                <span className="choice-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg></span>
                 <span className="choice-title">버스</span>
               </button>
             </div>
@@ -1028,7 +1033,7 @@ export function AlertSettingsPage() {
                           toggleTransport(stop);
                         }}
                       >
-                        <span className="qs-icon">{stop.type === 'subway' ? '🚇' : '🚌'}</span>
+                        <span className="qs-icon" aria-hidden="true">{stop.type === 'subway' ? '지하철' : '버스'}</span>
                         <span className="qs-name">{stop.name}</span>
                         <span className="qs-route">{route.name}</span>
                       </button>
@@ -1078,8 +1083,9 @@ export function AlertSettingsPage() {
             ) : (
               <>
                 <div className="search-box">
-                  <span className="search-icon" aria-hidden="true">🔍</span>
+                  <span className="search-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                   <input
+                    id="station-search"
                     type="search"
                     className="search-input"
                     value={searchQuery}
@@ -1115,12 +1121,12 @@ export function AlertSettingsPage() {
                           }
                         }}
                       >
-                        <span className="result-icon" aria-hidden="true">🚇</span>
+                        <span className="result-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
                         <div className="result-info">
                           <strong>{station.name}역</strong>
                           <span className="muted line-count">{station.lines.length}개 노선</span>
                         </div>
-                        <span className="arrow-icon" aria-hidden="true">→</span>
+                        <span className="arrow-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
                       </button>
                     ))}
                   </div>
@@ -1141,7 +1147,11 @@ export function AlertSettingsPage() {
                           onClick={() => toggleTransport(item)}
                         >
                           <span className="result-icon" aria-hidden="true">
-                            {item.type === 'subway' ? '🚇' : '🚌'}
+                            {item.type === 'subway' ? (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+                            ) : (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg>
+                            )}
                           </span>
                           <div className="result-info">
                             <strong>{item.name}</strong>
@@ -1154,7 +1164,7 @@ export function AlertSettingsPage() {
                   </div>
                 ) : searchQuery.length >= 2 && !isSearching ? (
                   <div className="empty-state" role="status">
-                    <span className="empty-icon" aria-hidden="true">🔍</span>
+                    <span className="empty-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                     <p className="empty-title">검색 결과가 없습니다</p>
                     <p className="empty-desc">
                       &quot;{searchQuery}&quot;에 해당하는 {transportTypes.includes('subway') && transportTypes.includes('bus') ? '역/정류장' : transportTypes.includes('subway') ? '역' : '정류장'}을 찾을 수 없어요.
@@ -1172,7 +1182,7 @@ export function AlertSettingsPage() {
                 <div className="selected-tags">
                   {selectedTransports.map((item) => (
                     <span key={`${item.type}-${item.id}`} className="tag">
-                      {item.type === 'subway' ? '🚇' : '🚌'} {item.name}
+                      {item.type === 'subway' ? '지하철' : '버스'} {item.name}
                       <button
                         type="button"
                         className="tag-remove"
@@ -1198,7 +1208,7 @@ export function AlertSettingsPage() {
               {wantsWeather && (
                 <div className="routine-item">
                   <div className="routine-header">
-                    <span className="routine-icon" aria-hidden="true">⏰</span>
+                    <span className="routine-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
                     <label htmlFor="wake-up-time">기상 시간</label>
                   </div>
                   <div className="time-picker">
@@ -1221,7 +1231,7 @@ export function AlertSettingsPage() {
                 <>
                   <div className="routine-item">
                     <div className="routine-header">
-                      <span className="routine-icon" aria-hidden="true">🚪</span>
+                      <span className="routine-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></span>
                       <label htmlFor="leave-home-time">출근 출발</label>
                     </div>
                     <div className="time-picker">
@@ -1241,7 +1251,7 @@ export function AlertSettingsPage() {
 
                   <div className="routine-item">
                     <div className="routine-header">
-                      <span className="routine-icon" aria-hidden="true">🏠</span>
+                      <span className="routine-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
                       <label htmlFor="leave-work-time">퇴근 출발</label>
                     </div>
                     <div className="time-picker">
@@ -1265,7 +1275,7 @@ export function AlertSettingsPage() {
             {/* 알림 미리보기 */}
             <div className="alert-preview-card">
               <div className="preview-header">
-                <span className="preview-icon" aria-hidden="true">📬</span>
+                <span className="preview-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
                 <h3>알림 미리보기</h3>
               </div>
               <div className="preview-list">
@@ -1277,7 +1287,8 @@ export function AlertSettingsPage() {
                 ))}
               </div>
               <p className="preview-note">
-                <span aria-hidden="true">💡</span> 교통 알림은 출발 15분 전에 발송됩니다
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                교통 알림은 출발 15분 전에 발송됩니다
               </p>
             </div>
           </section>
@@ -1290,20 +1301,20 @@ export function AlertSettingsPage() {
 
             <div className="confirm-card">
               <div className="confirm-section">
-                <h3>📋 알림 내용</h3>
+                <h3>알림 내용</h3>
                 <div className="confirm-items">
-                  {wantsWeather && <span className="confirm-tag">🌤️ 날씨</span>}
-                  {wantsWeather && <span className="confirm-tag">💨 미세먼지</span>}
+                  {wantsWeather && <span className="confirm-tag">날씨</span>}
+                  {wantsWeather && <span className="confirm-tag">미세먼지</span>}
                   {selectedTransports.map((t) => (
                     <span key={`${t.type}-${t.id}`} className="confirm-tag">
-                      {t.type === 'subway' ? '🚇' : '🚌'} {t.name}
+                      {t.type === 'subway' ? '지하철' : '버스'} {t.name}
                     </span>
                   ))}
                 </div>
               </div>
 
               <div className="confirm-section">
-                <h3>⏰ 알림 시간</h3>
+                <h3>알림 시간</h3>
                 {getNotificationTimes().map((item, i) => (
                   <div key={i} className="confirm-time">
                     <strong>{item.time}</strong>
@@ -1313,10 +1324,10 @@ export function AlertSettingsPage() {
               </div>
 
               <div className="confirm-section">
-                <h3>📱 알림 방법</h3>
+                <h3>알림 방법</h3>
                 <div className="delivery-methods">
                   <div className="delivery-method">
-                    <span className="delivery-icon">💬</span>
+                    <span className="delivery-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
                     <span>카카오 알림톡</span>
                     <span className="badge badge-primary">기본</span>
                   </div>
@@ -1347,6 +1358,9 @@ export function AlertSettingsPage() {
                         setWantsTransport(false);
                         setTransportTypes([]);
                         setSelectedTransports([]);
+                        setSelectedRouteId(null);
+                        setSearchQuery('');
+                        setSelectedStation(null);
                         setTimeout(() => {
                           const alertsSection = document.querySelector('.existing-alerts');
                           alertsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1586,7 +1600,7 @@ export function AlertSettingsPage() {
         >
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-icon" aria-hidden="true">✏️</div>
+              <div className="modal-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
               <h2 id="edit-modal-title" className="modal-title">알림 수정</h2>
             </div>
             <div className="modal-body">

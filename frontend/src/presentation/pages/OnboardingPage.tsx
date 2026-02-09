@@ -332,6 +332,7 @@ export function OnboardingPage() {
 
             <div className="duration-slider-container">
               <input
+                id="duration-slider"
                 type="range"
                 className="duration-slider"
                 min="10"
@@ -339,6 +340,7 @@ export function OnboardingPage() {
                 step="5"
                 value={data.estimatedDuration}
                 onChange={(e) => handleDurationChange(Number(e.target.value))}
+                aria-label="예상 소요 시간"
               />
               <div className="slider-labels">
                 <span>10분</span>
