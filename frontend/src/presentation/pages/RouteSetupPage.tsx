@@ -25,7 +25,7 @@ import {
   type CreateCheckpointDto,
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
-import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
+import { subwayApiClient, busApiClient, alertApiClient, type SubwayStation, type BusStop, type CreateAlertDto, type AlertType } from '@infrastructure/api';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 type SetupStep =
@@ -533,6 +533,51 @@ export function RouteSetupPage() {
     return checkpoints;
   };
 
+  // 경로 생성 후 기본 알림 자동 생성
+  const autoCreateAlerts = async (route: RouteResponse): Promise<void> => {
+    try {
+      const types: AlertType[] = [];
+      let subwayStationId: string | undefined;
+      let busStopId: string | undefined;
+
+      // 출근 경로면 날씨 + 미세먼지 추가
+      if (route.routeType === 'morning') {
+        types.push('weather', 'airQuality');
+      }
+
+      // 체크포인트에서 대중교통 정보 추출
+      for (const cp of route.checkpoints) {
+        if (cp.checkpointType === 'subway' && cp.linkedStationId && !subwayStationId) {
+          subwayStationId = cp.linkedStationId;
+          types.push('subway');
+        }
+        if (cp.checkpointType === 'bus_stop' && cp.linkedBusStopId && !busStopId) {
+          busStopId = cp.linkedBusStopId;
+          types.push('bus');
+        }
+      }
+
+      if (types.length === 0) return;
+
+      // 기본 스케줄: 출근 07:00, 퇴근 17:30
+      const schedule = route.routeType === 'morning' ? '0 7 * * *' : '30 17 * * *';
+
+      const alertDto: CreateAlertDto = {
+        userId: route.userId,
+        name: `${route.name} 알림`,
+        schedule,
+        alertTypes: types,
+        subwayStationId,
+        busStopId,
+        routeId: route.id,
+      };
+
+      await alertApiClient.createAlert(alertDto);
+    } catch {
+      // 알림 생성 실패해도 경로 저장은 성공으로 처리
+    }
+  };
+
   // 경로 저장 (신규 생성 또는 수정)
   const handleSave = async () => {
     if (!userId || selectedStops.length === 0) return;
@@ -566,7 +611,10 @@ export function RouteSetupPage() {
         setExistingRoutes(updatedRoutes);
       } else {
         // 신규 생성: POST API 호출
-        await commuteApi.createRoute(dto);
+        const saved = await commuteApi.createRoute(dto);
+
+        // 기본 알림 자동 생성 (경로 연결)
+        await autoCreateAlerts(saved);
 
         // 출근 경로이고 퇴근 경로 자동 생성이 체크되어 있으면
         if (routeType === 'morning' && createReverse) {
@@ -583,11 +631,12 @@ export function RouteSetupPage() {
             checkpoints: createCheckpoints(reversedStops, 'evening'),
           };
 
-          await commuteApi.createRoute(reverseDto);
+          const savedReverse = await commuteApi.createRoute(reverseDto);
+          await autoCreateAlerts(savedReverse);
         }
       }
 
-      navigate('/commute');
+      navigate('/');
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
