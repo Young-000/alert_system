@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
-import { alertApiClient, weatherApiClient, busApiClient, subwayApiClient } from '@infrastructure/api';
-import type { Alert, WeatherData, BusArrival, SubwayArrival } from '@infrastructure/api';
+import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, subwayApiClient } from '@infrastructure/api';
+import type { Alert, WeatherData, AirQualityData, BusArrival, SubwayArrival } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
 
 function getInitialLoginState(): boolean {
@@ -122,6 +122,7 @@ export function HomePage(): JSX.Element {
   const [routes, setRoutes] = useState<RouteResponse[]>([]);
   const [commuteStats, setCommuteStats] = useState<CommuteStatsResponse | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
   const [transitInfos, setTransitInfos] = useState<TransitArrivalInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
@@ -164,13 +165,20 @@ export function HomePage(): JSX.Element {
     return () => { isMounted = false; };
   }, [userId]);
 
-  // Load weather
+  // Load weather + air quality
   useEffect(() => {
     let isMounted = true;
     if (!userId) return;
 
-    weatherApiClient.getCurrentWeather(37.5665, 126.978)
+    const lat = 37.5665;
+    const lng = 126.978;
+
+    weatherApiClient.getCurrentWeather(lat, lng)
       .then(data => { if (isMounted) setWeather(data); })
+      .catch(() => {});
+
+    airQualityApiClient.getByLocation(lat, lng)
+      .then(data => { if (isMounted) setAirQualityData(data); })
       .catch(() => {});
 
     return () => { isMounted = false; };
@@ -288,7 +296,7 @@ export function HomePage(): JSX.Element {
     };
   }, [alerts]);
 
-  const airQuality = useMemo(() => getAqiStatus(undefined), []);
+  const airQuality = useMemo(() => getAqiStatus(airQualityData?.pm10), [airQualityData]);
 
   const handleStartCommute = async (): Promise<void> => {
     if (!activeRoute || isCommuteStarting) return;
