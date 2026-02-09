@@ -15570,3 +15570,204 @@ button.nav-back-btn {
   }
 }
 
+/* =============================================
+   REDESIGN v2: Route Page
+   경로 목록 카드 + 연결 알림 배지
+   ============================================= */
+
+.route-page-v2 {
+  padding: 0 20px 100px;
+}
+
+.route-page-v2-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.route-page-v2-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Empty */
+.route-empty-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px;
+  gap: 8px;
+}
+
+.route-empty-v2 h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 12px;
+}
+
+.route-empty-v2 p {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.route-empty-v2 .btn {
+  margin-top: 16px;
+}
+
+/* Section */
+.route-list-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.route-section-v2-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Route card */
+.route-card-v2 {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.route-card-v2:hover {
+  border-color: var(--border-hover);
+}
+
+.route-card-v2-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.route-card-v2-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.route-type-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.route-type-badge.morning {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.route-type-badge.evening {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.route-preferred-badge {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.route-alert-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+
+.route-card-v2-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.route-card-v2-path {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-card-v2-meta {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.route-card-v2-actions {
+  display: flex;
+  border-top: 1px solid var(--border);
+}
+
+.route-card-v2-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--ink-secondary);
+  min-height: 44px;
+  transition: background 0.1s;
+}
+
+.route-card-v2-action:last-child {
+  border-right: none;
+}
+
+.route-card-v2-action:active {
+  background: var(--bg-subtle);
+}
+
+.route-card-v2-action.danger:active {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.route-card-v2 + .route-card-v2 {
+  margin-top: 8px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .route-page-v2 {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
