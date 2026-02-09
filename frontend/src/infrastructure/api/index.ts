@@ -5,6 +5,7 @@ import { SubwayApiClient } from './subway-api.client';
 import { BusApiClient } from './bus-api.client';
 import { AuthApiClient } from './auth-api.client';
 import { WeatherApiClient } from './weather-api.client';
+import { AirQualityApiClient } from './air-quality-api.client';
 import { NotificationApiClient } from './notification-api.client';
 import { getCommuteApiClient } from './commute-api.client';
 
@@ -16,6 +17,7 @@ export const subwayApiClient = new SubwayApiClient(apiClient);
 export const busApiClient = new BusApiClient(apiClient);
 export const authApiClient = new AuthApiClient(apiClient);
 export const weatherApiClient = new WeatherApiClient(apiClient);
+export const airQualityApiClient = new AirQualityApiClient(apiClient);
 export const notificationApiClient = new NotificationApiClient(apiClient);
 export const commuteApiClient = getCommuteApiClient();
 
@@ -27,6 +29,8 @@ export { SubwayApiClient } from './subway-api.client';
 export { BusApiClient } from './bus-api.client';
 export { AuthApiClient } from './auth-api.client';
 export { WeatherApiClient } from './weather-api.client';
+export { AirQualityApiClient } from './air-quality-api.client';
+export type { AirQualityData } from './air-quality-api.client';
 export type { Alert, AlertType, CreateAlertDto } from './alert-api.client';
 export type { User, CreateUserDto } from './user-api.client';
 export type { SubwayStation, SubwayArrival } from './subway-api.client';

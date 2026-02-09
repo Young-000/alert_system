@@ -194,13 +194,13 @@ export function SettingsPage() {
   if (!userId) {
     return (
       <main className="page settings-page">
-        <nav className="settings-nav">
-          <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
-          <span className="nav-title">설정</span>
-          <span />
-        </nav>
+        <header className="settings-page-v2-header">
+          <h1>설정</h1>
+        </header>
         <div className="settings-empty">
-          <span className="empty-icon">🔐</span>
+          <span className="empty-icon-svg" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
           <h2>로그인이 필요해요</h2>
           <p>설정을 관리하려면 먼저 로그인하세요</p>
           <Link to="/login" className="btn btn-primary">로그인</Link>
@@ -212,11 +212,9 @@ export function SettingsPage() {
   return (
     <main className="page settings-page">
       {/* Header */}
-      <nav className="settings-nav">
-        <button type="button" className="nav-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
-        <span className="nav-title">내 설정</span>
-        <span />
-      </nav>
+      <header className="settings-page-v2-header">
+        <h1>내 설정</h1>
+      </header>
 
       {/* Tabs */}
       <div className="settings-tabs">
@@ -225,7 +223,7 @@ export function SettingsPage() {
           className={`settings-tab ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          <span>👤</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>프로필</span>
         </button>
         <button
@@ -233,7 +231,7 @@ export function SettingsPage() {
           className={`settings-tab ${activeTab === 'routes' ? 'active' : ''}`}
           onClick={() => setActiveTab('routes')}
         >
-          <span>📍</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <span>경로</span>
           {routes.length > 0 && <span className="tab-badge">{routes.length}</span>}
         </button>
@@ -242,7 +240,7 @@ export function SettingsPage() {
           className={`settings-tab ${activeTab === 'alerts' ? 'active' : ''}`}
           onClick={() => setActiveTab('alerts')}
         >
-          <span>🔔</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span>알림</span>
           {alerts.filter(a => a.enabled).length > 0 && (
             <span className="tab-badge">{alerts.filter(a => a.enabled).length}</span>
@@ -253,7 +251,7 @@ export function SettingsPage() {
           className={`settings-tab ${activeTab === 'app' ? 'active' : ''}`}
           onClick={() => setActiveTab('app')}
         >
-          <span>⚙️</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>앱</span>
         </button>
       </div>
@@ -272,11 +270,13 @@ export function SettingsPage() {
           {/* Profile Tab */}
           {activeTab === 'profile' && (
             <section className="settings-section">
-              <h2 className="section-title">👤 내 정보</h2>
+              <h2 className="section-title">내 정보</h2>
 
               <div className="settings-card">
                 <div className="settings-item">
-                  <span className="item-icon">📱</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">전화번호</span>
                     <span className="item-value">{phoneNumber || '미등록'}</span>
@@ -285,7 +285,9 @@ export function SettingsPage() {
                 </div>
 
                 <div className="settings-item">
-                  <span className="item-icon">🆔</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">사용자 ID</span>
                     <span className="item-value item-value-small">{userId.slice(0, 8)}...</span>
@@ -307,13 +309,15 @@ export function SettingsPage() {
           {activeTab === 'routes' && (
             <section className="settings-section">
               <div className="section-header">
-                <h2 className="section-title">📍 내 경로</h2>
+                <h2 className="section-title">내 경로</h2>
                 <Link to="/routes" className="section-action">+ 추가</Link>
               </div>
 
               {routes.length === 0 ? (
                 <div className="settings-empty-section">
-                  <span className="empty-icon">🗺️</span>
+                  <span className="empty-icon-svg" aria-hidden="true">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </span>
                   <p>등록된 경로가 없어요</p>
                   <Link to="/routes" className="btn btn-primary btn-sm">경로 추가하기</Link>
                 </div>
@@ -322,8 +326,8 @@ export function SettingsPage() {
                   {routes.map((route) => (
                     <div key={route.id} className="settings-list-item">
                       <div className="list-item-main">
-                        <span className="list-item-icon">
-                          {route.routeType === 'morning' ? '🌅' : '🌆'}
+                        <span className={`route-type-badge ${route.routeType}`}>
+                          {route.routeType === 'morning' ? '출근' : '퇴근'}
                         </span>
                         <div className="list-item-content">
                           <span className="list-item-title">{route.name}</span>
@@ -339,7 +343,7 @@ export function SettingsPage() {
                           title="트래킹 시작"
                           aria-label="트래킹 시작"
                         >
-                          ▶️
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         </Link>
                         <button
                           type="button"
@@ -347,7 +351,7 @@ export function SettingsPage() {
                           onClick={() => setDeleteModal({ type: 'route', id: route.id, name: route.name })}
                           aria-label="삭제"
                         >
-                          🗑️
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                       </div>
                     </div>
@@ -361,13 +365,15 @@ export function SettingsPage() {
           {activeTab === 'alerts' && (
             <section className="settings-section">
               <div className="section-header">
-                <h2 className="section-title">🔔 내 알림</h2>
+                <h2 className="section-title">내 알림</h2>
                 <Link to="/alerts" className="section-action">+ 추가</Link>
               </div>
 
               {alerts.length === 0 ? (
                 <div className="settings-empty-section">
-                  <span className="empty-icon">🔕</span>
+                  <span className="empty-icon-svg" aria-hidden="true">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </span>
                   <p>설정된 알림이 없어요</p>
                   <Link to="/alerts" className="btn btn-primary btn-sm">알림 설정하기</Link>
                 </div>
@@ -386,15 +392,13 @@ export function SettingsPage() {
                               {formatScheduleTime(alert.schedule)}
                             </span>
                           </div>
-                          <span className="list-item-subtitle">
-                            {alert.alertTypes.map(type => {
-                              if (type === 'weather') return '🌤️ 날씨';
-                              if (type === 'airQuality') return '💨 미세먼지';
-                              if (type === 'subway') return '🚇 지하철';
-                              if (type === 'bus') return '🚌 버스';
-                              return type;
-                            }).join(' · ')}
-                          </span>
+                          <div className="alert-type-tags">
+                            {alert.alertTypes.map(type => (
+                              <span key={type} className={`alert-type-tag ${type}`}>
+                                {type === 'weather' ? '날씨' : type === 'airQuality' ? '미세먼지' : type === 'subway' ? '지하철' : type === 'bus' ? '버스' : type}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="list-item-actions">
@@ -413,7 +417,7 @@ export function SettingsPage() {
                           onClick={() => setDeleteModal({ type: 'alert', id: alert.id, name: alert.name })}
                           aria-label="삭제"
                         >
-                          🗑️
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                       </div>
                     </div>
@@ -426,11 +430,13 @@ export function SettingsPage() {
           {/* App Settings Tab */}
           {activeTab === 'app' && (
             <section className="settings-section">
-              <h2 className="section-title">⚙️ 앱 설정</h2>
+              <h2 className="section-title">앱 설정</h2>
 
               <div className="settings-card">
                 <div className="settings-item">
-                  <span className="item-icon">📱</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">버전</span>
                     <span className="item-value">1.0.0</span>
@@ -438,7 +444,9 @@ export function SettingsPage() {
                 </div>
 
                 <div className="settings-item">
-                  <span className="item-icon">💾</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">로컬 데이터</span>
                     <span className="item-value">스톱워치 기록</span>
@@ -456,10 +464,12 @@ export function SettingsPage() {
               {/* Push Notifications */}
               {pushSupported && (
                 <>
-                  <h2 className="section-title" style={{ marginTop: '1.5rem' }}>🔔 푸시 알림</h2>
+                  <h2 className="section-title" style={{ marginTop: '1.5rem' }}>푸시 알림</h2>
                   <div className="settings-card">
                     <div className="settings-item">
-                      <span className="item-icon">📲</span>
+                      <span className="item-icon-svg" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                      </span>
                       <div className="item-content">
                         <span className="item-label">브라우저 푸시 알림</span>
                         <span className="item-value item-value-small">
@@ -484,21 +494,25 @@ export function SettingsPage() {
               {/* Notification History Link */}
               <div className="settings-card" style={{ marginTop: '1rem' }}>
                 <Link to="/notifications" className="settings-item" style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <span className="item-icon">📋</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">알림 발송 기록</span>
                     <span className="item-value item-value-small">발송 내역 확인</span>
                   </div>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--ink-tertiary)' }}>→</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                 </Link>
               </div>
 
               {/* Privacy Section */}
-              <h2 className="section-title" style={{ marginTop: '1.5rem' }}>🔒 개인정보</h2>
+              <h2 className="section-title" style={{ marginTop: '1.5rem' }}>개인정보</h2>
 
               <div className="settings-card">
                 <div className="settings-item">
-                  <span className="item-icon">📤</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">내 데이터 내보내기</span>
                     <span className="item-value item-value-small">JSON 파일로 다운로드</span>
@@ -514,7 +528,9 @@ export function SettingsPage() {
                 </div>
 
                 <div className="settings-item">
-                  <span className="item-icon">🗑️</span>
+                  <span className="item-icon-svg" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </span>
                   <div className="item-content">
                     <span className="item-label">추적 데이터 삭제</span>
                     <span className="item-value item-value-small">행동 분석·출퇴근 기록</span>

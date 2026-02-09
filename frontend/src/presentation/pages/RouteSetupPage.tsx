@@ -25,7 +25,7 @@ import {
   type CreateCheckpointDto,
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
-import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
+import { subwayApiClient, busApiClient, alertApiClient, type SubwayStation, type BusStop, type CreateAlertDto, type AlertType, type Alert } from '@infrastructure/api';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 type SetupStep =
@@ -139,6 +139,7 @@ export function RouteSetupPage() {
 
   // 기존 경로
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
+  const [userAlerts, setUserAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // 정렬 및 편집
@@ -194,17 +195,18 @@ export function RouteSetupPage() {
     }
 
     let isMounted = true;
-    commuteApi
-      .getUserRoutes(userId)
-      .then((routes) => {
-        if (isMounted) {
-          setExistingRoutes(routes);
-          setIsLoading(false);
-        }
-      })
-      .catch(() => {
-        if (isMounted) setIsLoading(false);
-      });
+    Promise.all([
+      commuteApi.getUserRoutes(userId),
+      alertApiClient.getAlertsByUser(userId).catch(() => [] as Alert[]),
+    ]).then(([routes, alerts]) => {
+      if (isMounted) {
+        setExistingRoutes(routes);
+        setUserAlerts(alerts);
+        setIsLoading(false);
+      }
+    }).catch(() => {
+      if (isMounted) setIsLoading(false);
+    });
 
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
@@ -533,6 +535,51 @@ export function RouteSetupPage() {
     return checkpoints;
   };
 
+  // 경로 생성 후 기본 알림 자동 생성
+  const autoCreateAlerts = async (route: RouteResponse): Promise<void> => {
+    try {
+      const types: AlertType[] = [];
+      let subwayStationId: string | undefined;
+      let busStopId: string | undefined;
+
+      // 출근 경로면 날씨 + 미세먼지 추가
+      if (route.routeType === 'morning') {
+        types.push('weather', 'airQuality');
+      }
+
+      // 체크포인트에서 대중교통 정보 추출
+      for (const cp of route.checkpoints) {
+        if (cp.checkpointType === 'subway' && cp.linkedStationId && !subwayStationId) {
+          subwayStationId = cp.linkedStationId;
+          types.push('subway');
+        }
+        if (cp.checkpointType === 'bus_stop' && cp.linkedBusStopId && !busStopId) {
+          busStopId = cp.linkedBusStopId;
+          types.push('bus');
+        }
+      }
+
+      if (types.length === 0) return;
+
+      // 기본 스케줄: 출근 07:00, 퇴근 17:30
+      const schedule = route.routeType === 'morning' ? '0 7 * * *' : '30 17 * * *';
+
+      const alertDto: CreateAlertDto = {
+        userId: route.userId,
+        name: `${route.name} 알림`,
+        schedule,
+        alertTypes: types,
+        subwayStationId,
+        busStopId,
+        routeId: route.id,
+      };
+
+      await alertApiClient.createAlert(alertDto);
+    } catch {
+      // 알림 생성 실패해도 경로 저장은 성공으로 처리
+    }
+  };
+
   // 경로 저장 (신규 생성 또는 수정)
   const handleSave = async () => {
     if (!userId || selectedStops.length === 0) return;
@@ -566,7 +613,10 @@ export function RouteSetupPage() {
         setExistingRoutes(updatedRoutes);
       } else {
         // 신규 생성: POST API 호출
-        await commuteApi.createRoute(dto);
+        const saved = await commuteApi.createRoute(dto);
+
+        // 기본 알림 자동 생성 (경로 연결)
+        await autoCreateAlerts(saved);
 
         // 출근 경로이고 퇴근 경로 자동 생성이 체크되어 있으면
         if (routeType === 'morning' && createReverse) {
@@ -583,11 +633,12 @@ export function RouteSetupPage() {
             checkpoints: createCheckpoints(reversedStops, 'evening'),
           };
 
-          await commuteApi.createRoute(reverseDto);
+          const savedReverse = await commuteApi.createRoute(reverseDto);
+          await autoCreateAlerts(savedReverse);
         }
       }
 
-      navigate('/commute');
+      navigate('/');
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -659,39 +710,6 @@ export function RouteSetupPage() {
   // 삭제 확인 요청
   const handleDeleteClick = (route: RouteResponse) => {
     setDeleteTarget({ id: route.id, name: route.name });
-  };
-
-  // Share route
-  const handleShareRoute = async (route: RouteResponse) => {
-    const routeData = {
-      name: route.name,
-      routeType: route.routeType,
-      checkpoints: route.checkpoints.map(c => ({
-        name: c.name,
-        checkpointType: c.checkpointType,
-        linkedStationId: c.linkedStationId,
-        linkedBusStopId: c.linkedBusStopId,
-        lineInfo: c.lineInfo,
-        transportMode: c.transportMode,
-      })),
-    };
-    const encoded = btoa(encodeURIComponent(JSON.stringify(routeData)));
-    const shareUrl = `${window.location.origin}/routes?shared=${encoded}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `출퇴근 경로: ${route.name}`,
-          text: route.checkpoints.map(c => c.name).join(' → '),
-          url: shareUrl,
-        });
-      } catch {
-        // User cancelled share
-      }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      alert('경로 링크가 복사되었습니다!');
-    }
   };
 
   // 삭제 실행
@@ -1297,20 +1315,88 @@ export function RouteSetupPage() {
     );
   }
 
+  // Helper: 경로에 연결된 알림 수
+  const getRouteAlertCount = (routeId: string): number =>
+    userAlerts.filter(a => a.routeId === routeId && a.enabled).length;
+
+  // 경로 카드 렌더링 (중복 제거)
+  const renderRouteCard = (route: RouteResponse): JSX.Element => {
+    const alertCount = getRouteAlertCount(route.id);
+    const isMorning = route.routeType === 'morning';
+    return (
+      <div key={route.id} className="route-card-v2">
+        <button
+          type="button"
+          className="route-card-v2-body"
+          onClick={() => handleEditRoute(route)}
+          aria-label={`${route.name} 수정하기`}
+        >
+          <div className="route-card-v2-top">
+            <span className={`route-type-badge ${isMorning ? 'morning' : 'evening'}`}>
+              {isMorning ? '출근' : '퇴근'}
+            </span>
+            {route.isPreferred && (
+              <span className="route-preferred-badge">기본</span>
+            )}
+            {alertCount > 0 && (
+              <span className="route-alert-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                </svg>
+                {alertCount}
+              </span>
+            )}
+          </div>
+          <strong className="route-card-v2-name">{route.name}</strong>
+          <span className="route-card-v2-path">{route.checkpoints.map(c => c.name).join(' → ')}</span>
+          <span className="route-card-v2-meta">
+            {(route.totalExpectedDuration ?? 0) > 0 ? `예상 ${route.totalExpectedDuration}분` : ''}
+          </span>
+        </button>
+        <div className="route-card-v2-actions">
+          <button
+            type="button"
+            className="route-card-v2-action"
+            onClick={() => navigate('/commute', { state: { routeId: route.id } })}
+            aria-label="출발하기"
+            title="출발하기"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" stroke="none">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </button>
+          <button type="button" className="route-card-v2-action" onClick={() => handleEditRoute(route)} aria-label="수정" title="수정">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+          <button type="button" className="route-card-v2-action danger" onClick={() => handleDeleteClick(route)} aria-label="삭제" title="삭제">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // 메인 화면: 경로 목록
   return (
-    <main className="page apple-route-page">
-      <nav className="apple-nav">
-        <button type="button" className="apple-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
-        <span className="apple-title">경로</span>
-        <Link to="/commute" className="apple-nav-link">트래킹</Link>
-      </nav>
+    <main className="page route-page-v2">
+      <header className="route-page-v2-header">
+        <h1>경로</h1>
+        <button type="button" className="btn btn-primary btn-sm" onClick={startCreating}>
+          + 새 경로
+        </button>
+      </header>
 
       {/* Shared route banner */}
       {sharedRoute && userId && (
         <div className="shared-route-banner">
           <div className="shared-route-info">
-            <strong>📥 공유 경로</strong>
+            <strong>공유 경로</strong>
             <span>{sharedRoute.name}</span>
             <span className="muted">{sharedRoute.checkpoints.map(c => c.name).join(' → ')}</span>
           </div>
@@ -1335,96 +1421,35 @@ export function RouteSetupPage() {
       )}
 
       {sortedRoutes.length === 0 ? (
-        // 경로 없음
-        <div className="apple-empty">
-          <div className="apple-empty-icon">🚇</div>
+        <div className="route-empty-v2">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="6" cy="19" r="3" />
+            <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+            <circle cx="18" cy="5" r="3" />
+          </svg>
           <h2>경로가 없어요</h2>
-          <p>출퇴근 경로를 추가하면<br />시간을 기록할 수 있어요</p>
-          <button type="button" className="apple-btn-primary" onClick={startCreating}>
+          <p>출퇴근 경로를 추가해보세요</p>
+          <button type="button" className="btn btn-primary" onClick={startCreating}>
             경로 추가
           </button>
         </div>
       ) : (
-        // 경로 목록 - 개선된 UI
-        <div className="apple-route-list">
-          <div className="route-list-header">
-            <button
-              type="button"
-              className="btn btn-primary btn-sm header-add-btn"
-              onClick={startCreating}
-            >
-              + 새 경로
-            </button>
-          </div>
-
+        <div className="route-list-v2">
           {/* 출근 경로 섹션 */}
           {sortedRoutes.filter(r => r.routeType === 'morning').length > 0 && (
-            <section className="route-section">
-              <h2 className="section-title">🌅 출근 경로</h2>
-              {sortedRoutes.filter(r => r.routeType === 'morning').map((route) => (
-                <div key={route.id} className="apple-route-card-improved">
-                  <button
-                    type="button"
-                    className="route-card-content"
-                    onClick={() => handleEditRoute(route)}
-                    aria-label={`${route.name} 수정하기`}
-                  >
-                    <span className="route-icon">🌅</span>
-                    <div className="route-info">
-                      <strong>{route.name}</strong>
-                      <span className="route-path route-path-clamp">{route.checkpoints.map(c => c.name).join(' → ')}</span>
-                      <span className="route-meta">
-                        {(route.totalExpectedDuration ?? 0) > 0 ? `예상 ${route.totalExpectedDuration}분` : '측정 전'} · 수정하려면 탭
-                      </span>
-                    </div>
-                  </button>
-                  <div className="route-card-actions">
-                    <Link to={`/commute?routeId=${route.id}`} className="route-action-btn primary" title="트래킹 시작" aria-label="트래킹 시작">▶️</Link>
-                    <button type="button" className="route-action-btn" onClick={() => handleEditRoute(route)} aria-label="수정" title="수정">✏️</button>
-                    <button type="button" className="route-action-btn" onClick={() => handleShareRoute(route)} aria-label="공유" title="공유">📤</button>
-                    <button type="button" className="route-action-btn danger" onClick={() => handleDeleteClick(route)} aria-label="삭제" title="삭제">🗑️</button>
-                  </div>
-                </div>
-              ))}
+            <section className="route-section-v2">
+              <h2 className="route-section-v2-title">출근</h2>
+              {sortedRoutes.filter(r => r.routeType === 'morning').map(renderRouteCard)}
             </section>
           )}
 
           {/* 퇴근 경로 섹션 */}
           {sortedRoutes.filter(r => r.routeType === 'evening').length > 0 && (
-            <section className="route-section">
-              <h2 className="section-title">🌆 퇴근 경로</h2>
-              {sortedRoutes.filter(r => r.routeType === 'evening').map((route) => (
-                <div key={route.id} className="apple-route-card-improved">
-                  <button
-                    type="button"
-                    className="route-card-content"
-                    onClick={() => handleEditRoute(route)}
-                    aria-label={`${route.name} 수정하기`}
-                  >
-                    <span className="route-icon">🌆</span>
-                    <div className="route-info">
-                      <strong>{route.name}</strong>
-                      <span className="route-path route-path-clamp">{route.checkpoints.map(c => c.name).join(' → ')}</span>
-                      <span className="route-meta">
-                        {(route.totalExpectedDuration ?? 0) > 0 ? `예상 ${route.totalExpectedDuration}분` : '측정 전'} · 수정하려면 탭
-                      </span>
-                    </div>
-                  </button>
-                  <div className="route-card-actions">
-                    <Link to={`/commute?routeId=${route.id}`} className="route-action-btn primary" title="트래킹 시작" aria-label="트래킹 시작">▶️</Link>
-                    <button type="button" className="route-action-btn" onClick={() => handleEditRoute(route)} aria-label="수정" title="수정">✏️</button>
-                    <button type="button" className="route-action-btn" onClick={() => handleShareRoute(route)} aria-label="공유" title="공유">📤</button>
-                    <button type="button" className="route-action-btn danger" onClick={() => handleDeleteClick(route)} aria-label="삭제" title="삭제">🗑️</button>
-                  </div>
-                </div>
-              ))}
+            <section className="route-section-v2">
+              <h2 className="route-section-v2-title">퇴근</h2>
+              {sortedRoutes.filter(r => r.routeType === 'evening').map(renderRouteCard)}
             </section>
           )}
-
-          <button type="button" className="apple-add-btn secondary" onClick={startCreating}>
-            <span className="add-icon">+</span>
-            <span>경로 더 추가하기</span>
-          </button>
         </div>
       )}
 
