@@ -176,6 +176,8 @@ export function SettingsPage() {
     localStorage.removeItem('userId');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('phoneNumber');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
     navigate('/');
     window.location.reload();
   };

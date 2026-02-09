@@ -77,7 +77,7 @@ resource "aws_iam_role_policy" "ecs_execution_ssm" {
           "ssm:GetParameters",
           "ssm:GetParameter"
         ]
-        Resource = "*"
+        Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/*"
       }
     ]
   })
@@ -118,14 +118,14 @@ resource "aws_iam_role_policy" "ecs_task_eventbridge" {
           "scheduler:UpdateSchedule",
           "scheduler:ListSchedules"
         ]
-        Resource = "*"
+        Resource = "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/${var.project_name}-${var.environment}-*"
       },
       {
         Effect = "Allow"
         Action = [
           "iam:PassRole"
         ]
-        Resource = "*"
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-${var.environment}-*"
         Condition = {
           StringEquals = {
             "iam:PassedToService" = "scheduler.amazonaws.com"
@@ -208,6 +208,7 @@ resource "aws_ecs_task_definition" "main" {
 }
 
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 # ECS Service
 resource "aws_ecs_service" "main" {

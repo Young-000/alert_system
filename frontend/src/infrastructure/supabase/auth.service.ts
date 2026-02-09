@@ -85,6 +85,9 @@ export class SupabaseAuthService {
     localStorage.removeItem('userId');
     localStorage.removeItem('userPhone');
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('phoneNumber');
   }
 
   // 현재 사용자 조회

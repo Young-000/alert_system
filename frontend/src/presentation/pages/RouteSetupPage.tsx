@@ -98,7 +98,7 @@ function SortableStopItem({
         {...attributes}
         {...listeners}
       >
-        <span className="drag-handle-icon" aria-hidden="true">☰</span>
+        <span className="drag-handle-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span>
       </button>
       <div className="sortable-stop-content">
         <span className="stop-icon" aria-hidden="true">
@@ -817,7 +817,7 @@ export function RouteSetupPage() {
 
         {/* 호선 선택 모달 */}
         {lineSelectionModal && (
-          <div className="line-selection-modal" onClick={() => setLineSelectionModal(null)}>
+          <div className="line-selection-modal" role="dialog" aria-modal="true" aria-label="호선 선택" onClick={() => setLineSelectionModal(null)} onKeyDown={(e) => { if (e.key === 'Escape') setLineSelectionModal(null); }}>
             <div className="line-selection-content" onClick={(e) => e.stopPropagation()}>
               <h3>{lineSelectionModal.name}역</h3>
               <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -1004,6 +1004,7 @@ export function RouteSetupPage() {
                   <button
                     type="button"
                     className="search-clear"
+                    aria-label="검색어 지우기"
                     onClick={() => {
                       setSearchQuery('');
                       setSubwayResults([]);
@@ -1015,7 +1016,7 @@ export function RouteSetupPage() {
                 )}
               </div>
 
-              {error && <div className="route-validation-error">⚠️ {error}</div>}
+              {error && <div className="route-validation-error"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {error}</div>}
 
               {isSearching && (
                 <div className="apple-searching">검색 중...</div>
@@ -1173,7 +1174,7 @@ export function RouteSetupPage() {
                   className="apple-choice-card"
                   onClick={() => setStep('select-transport')}
                 >
-                  <span className="choice-icon">➕</span>
+                  <span className="choice-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
                   <span className="choice-text">
                     <strong>네, 더 있어요</strong>
                     <span>환승하거나 다른 곳을 거쳐요</span>

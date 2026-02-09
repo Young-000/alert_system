@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers, UnauthorizedException, Logger } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Headers, UnauthorizedException, ForbiddenException, Logger } from '@nestjs/common';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { Inject } from '@nestjs/common';
@@ -14,7 +14,7 @@ interface TriggerDto {
  * Render 배포용 크론 트리거 (모든 알림 일괄 발송)
  * AWS 전환 후에는 scheduler-trigger.controller.ts 사용
  *
- * @deprecated AWS 전환 후 제거 예정
+ * @deprecated AWS EventBridge로 전환 완료. 프로덕션에서 비활성화됨.
  */
 @Controller('scheduler-legacy')
 export class SchedulerLegacyController {
@@ -31,6 +31,11 @@ export class SchedulerLegacyController {
     @Body() dto: TriggerDto,
     @Headers('x-scheduler-key') schedulerKey: string,
   ): Promise<{ processed: number; errors: number }> {
+    // 프로덕션에서는 EventBridge 사용 → legacy 엔드포인트 비활성화
+    if (process.env.AWS_SCHEDULER_ENABLED === 'true') {
+      throw new ForbiddenException('Legacy scheduler is disabled. Use EventBridge Scheduler.');
+    }
+
     // 간단한 API 키 검증
     const expectedKey = process.env.SCHEDULER_API_KEY;
     if (!expectedKey) {

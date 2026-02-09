@@ -20,12 +20,12 @@ export class ApiClient {
 }
 
 export const alertApiClient = {
-  createAlert: jest.fn(),
-  getAlertsByUser: jest.fn(),
-  getAlert: jest.fn(),
-  deleteAlert: jest.fn(),
-  toggleAlert: jest.fn(),
-  updateAlert: jest.fn(),
+  createAlert: jest.fn().mockResolvedValue({}),
+  getAlertsByUser: jest.fn().mockResolvedValue([]),
+  getAlert: jest.fn().mockResolvedValue(null),
+  deleteAlert: jest.fn().mockResolvedValue(undefined),
+  toggleAlert: jest.fn().mockResolvedValue(undefined),
+  updateAlert: jest.fn().mockResolvedValue({}),
 };
 
 export const userApiClient = {

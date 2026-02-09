@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   MinLength,
+  MaxLength,
   Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -36,10 +37,12 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: '비밀번호는 필수입니다.' })
   @MinLength(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' })
+  @MaxLength(72, { message: '비밀번호는 최대 72자까지 가능합니다.' })
   password: string;
 
   @IsString()
   @IsNotEmpty({ message: '이름은 필수입니다.' })
+  @MaxLength(50, { message: '이름은 최대 50자까지 가능합니다.' })
   name: string;
 
   @IsString()
@@ -56,9 +59,11 @@ export class CreateUserDto {
 export class LoginDto {
   @IsEmail({}, { message: '유효한 이메일 주소를 입력해주세요.' })
   @IsNotEmpty({ message: '이메일은 필수입니다.' })
+  @MaxLength(254, { message: '이메일은 최대 254자까지 가능합니다.' })
   email: string;
 
   @IsString()
   @IsNotEmpty({ message: '비밀번호는 필수입니다.' })
+  @MaxLength(72, { message: '비밀번호는 최대 72자까지 가능합니다.' })
   password: string;
 }

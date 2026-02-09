@@ -725,10 +725,11 @@ export function AlertSettingsPage() {
                       type="checkbox"
                       checked={alert.enabled}
                       onChange={async () => {
+                        setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
                         try {
                           await alertApiClient.toggleAlert(alert.id);
-                          reloadAlerts();
                         } catch {
+                          setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
                           setError('알림 상태 변경에 실패했습니다.');
                         }
                       }}
@@ -748,7 +749,7 @@ export function AlertSettingsPage() {
         </section>
       )}
 
-      <div id="wizard-content" className="wizard-container" style={{ display: isLoadingAlerts && userId ? 'none' : undefined }}>
+      <div id="wizard-content" className="wizard-container" style={{ display: (isLoadingAlerts && userId) || !userId ? 'none' : undefined }}>
         {/* 개선된 스텝 인디케이터 */}
         <div className="step-indicator" role="navigation" aria-label="설정 단계">
           <div className={`step-item ${progress.current >= 1 ? 'active' : ''} ${progress.current > 1 ? 'completed' : ''}`}>
@@ -1025,7 +1026,7 @@ export function AlertSettingsPage() {
 
               return (
                 <div className="quick-select-section quick-select-highlighted">
-                  <p className="quick-select-label">⭐ 내 경로에서 추천</p>
+                  <p className="quick-select-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--warning)" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 내 경로에서 추천</p>
                   <div className="quick-select-list">
                     {routeStops.slice(0, 3).map(({ route, stop }) => (
                       <button
@@ -1189,6 +1190,7 @@ export function AlertSettingsPage() {
                       <button
                         type="button"
                         className="tag-remove"
+                        aria-label={`${item.name} 제거`}
                         onClick={() => toggleTransport(item)}
                       >
                         ×
@@ -1515,10 +1517,11 @@ export function AlertSettingsPage() {
                         type="checkbox"
                         checked={alert.enabled}
                         onChange={async () => {
+                          setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
                           try {
                             await alertApiClient.toggleAlert(alert.id);
-                            reloadAlerts();
                           } catch {
+                            setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
                             setError('알림 상태 변경에 실패했습니다.');
                           }
                         }}

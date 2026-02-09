@@ -19,6 +19,7 @@ export type SessionStatus = 'in_progress' | 'completed' | 'cancelled';
 @Index(['routeId'])
 @Index(['userId', 'startedAt'])
 @Index(['status'])
+@Index(['userId', 'status'], { unique: true, where: "status = 'in_progress'" })
 export class CommuteSessionEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

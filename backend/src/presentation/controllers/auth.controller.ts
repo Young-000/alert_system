@@ -38,6 +38,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('register')
   async register(@Body() dto: CreateUserDto): Promise<AuthResponse> {
     const user = await this.createUserUseCase.execute(dto);

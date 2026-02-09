@@ -325,7 +325,10 @@ export function CommuteDashboardPage() {
                         <div
                           key={route.routeId}
                           className={`route-comparison-row ${selectedRouteId === route.routeId ? 'selected' : ''}`}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setSelectedRouteId(route.routeId)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRouteId(route.routeId); } }}
                         >
                           <div className="route-comparison-info">
                             <span className={`route-badge ${route.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
@@ -512,7 +515,23 @@ export function CommuteDashboardPage() {
                 )}
 
                 {history.hasMore && (
-                  <button type="button" className="btn btn-outline btn-load-more">
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-load-more"
+                    onClick={async () => {
+                      try {
+                        const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
+                        setHistory(prev => {
+                          if (!prev) return moreHistory;
+                          return {
+                            ...prev,
+                            sessions: [...prev.sessions, ...moreHistory.sessions],
+                            hasMore: moreHistory.hasMore,
+                          };
+                        });
+                      } catch { /* ignore */ }
+                    }}
+                  >
                     더 보기
                   </button>
                 )}
