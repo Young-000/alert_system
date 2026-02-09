@@ -17,12 +17,12 @@ interface OnboardingData {
   routeType: RouteType;
 }
 
-const TRANSPORT_OPTIONS: { value: TransportMode; label: string; icon: string; description: string }[] = [
-  { value: 'subway', label: '지하철', icon: '🚇', description: '주로 지하철로 이동해요' },
-  { value: 'bus', label: '버스', icon: '🚌', description: '버스를 주로 이용해요' },
-  { value: 'mixed', label: '지하철+버스', icon: '🔄', description: '여러 교통수단을 이용해요' },
-  { value: 'car', label: '자가용', icon: '🚗', description: '자가용으로 출퇴근해요' },
-  { value: 'walk', label: '도보/자전거', icon: '🚶', description: '걷거나 자전거로 이동해요' },
+const TRANSPORT_OPTIONS: { value: TransportMode; label: string; description: string }[] = [
+  { value: 'subway', label: '지하철', description: '주로 지하철로 이동해요' },
+  { value: 'bus', label: '버스', description: '버스를 주로 이용해요' },
+  { value: 'mixed', label: '지하철+버스', description: '여러 교통수단을 이용해요' },
+  { value: 'car', label: '자가용', description: '자가용으로 출퇴근해요' },
+  { value: 'walk', label: '도보/자전거', description: '걷거나 자전거로 이동해요' },
 ];
 
 const DURATION_PRESETS = [15, 30, 45, 60, 90];
@@ -208,7 +208,9 @@ export function OnboardingPage() {
         {/* Step: Welcome */}
         {step === 'welcome' && (
           <section className="onboarding-step welcome-step">
-            <div className="welcome-icon">👋</div>
+            <div className="welcome-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
             <h1>환영합니다{userName ? `, ${userName}님` : ''}!</h1>
             <p className="welcome-desc">
               출퇴근 메이트가 여러분의 출퇴근을 도와드릴게요.<br />
@@ -216,15 +218,15 @@ export function OnboardingPage() {
             </p>
             <div className="welcome-features">
               <div className="feature-item">
-                <span className="feature-icon">⏱️</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>출퇴근 시간 기록</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">📊</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 <span>통계 및 분석</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">🎯</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 <span>최적 경로 추천</span>
               </div>
             </div>
@@ -250,7 +252,7 @@ export function OnboardingPage() {
                 className="option-card"
                 onClick={() => handleCommuteAnswer(true)}
               >
-                <span className="option-icon">✅</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                 <span className="option-label">네, 있어요</span>
                 <span className="option-desc">매일 출퇴근해요</span>
               </button>
@@ -259,7 +261,7 @@ export function OnboardingPage() {
                 className="option-card"
                 onClick={() => handleCommuteAnswer(false)}
               >
-                <span className="option-icon">🏠</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 <span className="option-label">아니요</span>
                 <span className="option-desc">재택 또는 불규칙해요</span>
               </button>
@@ -289,7 +291,6 @@ export function OnboardingPage() {
                   className={`transport-card ${data.transportMode === option.value ? 'selected' : ''}`}
                   onClick={() => handleTransportSelect(option.value)}
                 >
-                  <span className="transport-icon">{option.icon}</span>
                   <span className="transport-label">{option.label}</span>
                 </button>
               ))}
@@ -366,7 +367,9 @@ export function OnboardingPage() {
         {/* Step: Complete */}
         {step === 'complete' && (
           <section className="onboarding-step complete-step">
-            <div className="complete-icon">🎉</div>
+            <div className="complete-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
             <h2>설정 완료!</h2>
             {data.hasCommute ? (
               <p className="complete-desc">
@@ -384,7 +387,7 @@ export function OnboardingPage() {
             {data.hasCommute && (
               <div className="alert-recommend-banner">
                 <div className="recommend-content">
-                  <span className="recommend-icon">🔔</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                   <div className="recommend-text">
                     <strong>출근 전 알림 받기</strong>
                     <span>날씨·교통 알림을 카카오톡으로 받아보세요</span>
@@ -400,7 +403,7 @@ export function OnboardingPage() {
               {data.hasCommute ? (
                 <>
                   <Link to="/alerts" className="btn btn-primary btn-lg">
-                    🔔 알림 설정하기
+                    알림 설정하기
                   </Link>
                   <Link to="/commute" className="btn btn-outline">
                     트래킹 시작하기
