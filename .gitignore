@@ -57,3 +57,6 @@ docker-compose.override.yml
 # SQLite (로컬 개발용)
 *.sqlite
 database.sqlite
+
+# Git worktrees
+.worktrees/
