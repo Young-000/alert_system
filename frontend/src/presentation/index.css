@@ -15771,3 +15771,79 @@ button.nav-back-btn {
   }
 }
 
+/* =============================================
+   REDESIGN v2: Alert Page
+   간소화된 알림 페이지 헤더 + 타입 태그
+   ============================================= */
+
+.alert-page-v2 {
+  padding-bottom: 100px;
+}
+
+.alert-page-v2-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.alert-page-v2-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Alert type tags */
+.alert-type-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.alert-type-tag {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.alert-type-tag.weather {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.alert-type-tag.airQuality {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.alert-type-tag.subway {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.alert-type-tag.bus {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* Route link in alert */
+.alert-route-link-v2 {
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .alert-page-v2 {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
