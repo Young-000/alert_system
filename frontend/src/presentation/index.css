@@ -15317,3 +15317,256 @@ button.nav-back-btn {
   }
 }
 
+/* =============================================
+   REDESIGN v2: Commute Tracking Page
+   출발/도착 2-step 단순화 + 대형 타이머
+   ============================================= */
+
+.commute-page-v2 {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Loading */
+.commute-v2-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--ink-muted);
+}
+
+/* Header */
+.commute-v2-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.commute-v2-back {
+  background: none;
+  border: none;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.commute-v2-back:active {
+  background: var(--bg-subtle);
+}
+
+.commute-v2-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Route badge */
+.commute-v2-route-badge {
+  display: inline-block;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-top: 8px;
+}
+
+/* Big Timer */
+.commute-v2-timer {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-top: 48px;
+  gap: 4px;
+}
+
+.commute-v2-timer-main {
+  font-size: 5rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+}
+
+.commute-v2-timer-sep {
+  font-size: 3.5rem;
+  font-weight: 300;
+  color: var(--ink-muted);
+  line-height: 1;
+  margin: 0 2px;
+}
+
+.commute-v2-timer-sub {
+  font-size: 3rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.commute-v2-timer-label {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  margin-top: 8px;
+}
+
+/* Route checkpoint preview */
+.commute-v2-route-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 16px 24px;
+  margin-top: 24px;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+}
+
+.commute-v2-cp {
+  white-space: nowrap;
+}
+
+.commute-v2-cp-arrow {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+/* Actions */
+.commute-v2-actions {
+  width: 100%;
+  padding: 0 24px;
+  margin-top: auto;
+  padding-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.commute-v2-arrive-btn {
+  width: 100%;
+  padding: 18px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  min-height: 60px;
+}
+
+.commute-v2-arrive-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.commute-v2-arrive-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.commute-v2-cancel-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.commute-v2-cancel-btn:active {
+  color: var(--error);
+}
+
+/* Error */
+.commute-v2-error {
+  color: var(--error);
+  font-size: 0.8125rem;
+  text-align: center;
+  padding: 8px 24px;
+}
+
+/* Completed State */
+.commute-v2-completed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 8px;
+}
+
+.completed-check-icon {
+  margin-bottom: 12px;
+}
+
+.completed-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.completed-duration {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.completed-duration-value {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.completed-duration-unit {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+
+.completed-comparison {
+  font-size: 0.9375rem;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+
+.completed-home-btn {
+  margin-top: 32px;
+  min-width: 200px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .commute-page-v2 {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
