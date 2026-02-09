@@ -38,7 +38,6 @@ export class SupabaseAuthService {
         .single();
 
       if (error) {
-        console.error('Register error:', error);
         return { success: false, error: '회원가입에 실패했습니다' };
       }
 
@@ -47,8 +46,7 @@ export class SupabaseAuthService {
       safeSetItem('userPhone', data.phone_number);
 
       return { success: true, user: data };
-    } catch (err) {
-      console.error('Register exception:', err);
+    } catch {
       return { success: false, error: '회원가입 중 오류가 발생했습니다' };
     }
   }
@@ -77,8 +75,7 @@ export class SupabaseAuthService {
       safeSetItem('userPhone', user.phone_number);
 
       return { success: true, user };
-    } catch (err) {
-      console.error('Login exception:', err);
+    } catch {
       return { success: false, error: '로그인 중 오류가 발생했습니다' };
     }
   }
@@ -88,6 +85,9 @@ export class SupabaseAuthService {
     localStorage.removeItem('userId');
     localStorage.removeItem('userPhone');
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('phoneNumber');
   }
 
   // 현재 사용자 조회

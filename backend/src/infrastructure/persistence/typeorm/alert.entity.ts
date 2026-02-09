@@ -24,7 +24,7 @@ export class AlertEntity {
   @Column('uuid', { name: 'user_id' })
   userId: string;
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 

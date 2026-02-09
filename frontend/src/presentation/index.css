@@ -3275,11 +3275,12 @@ a[aria-disabled="true"],
   transition: all 0.2s;
   color: var(--primary);
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  min-width: 28px;
+  min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
 }
 
 .tag-remove:hover {
@@ -5187,6 +5188,9 @@ kbd {
 
 .route-name {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .route-card-info {
@@ -5252,6 +5256,9 @@ kbd {
 
 .route-name {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .route-duration {
@@ -5319,6 +5326,12 @@ kbd {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+}
+
+@media (max-width: 374px) {
+  .complete-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .stat-item {
@@ -6003,6 +6016,12 @@ kbd {
   gap: 0.5rem;
 }
 
+@media (max-width: 480px) {
+  .route-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .route-stat {
   background: var(--bg-card);
   border-radius: var(--radius-md);
@@ -6061,6 +6080,10 @@ kbd {
 
 .bar-name {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
 }
 
 .bar-samples {
@@ -7593,8 +7616,8 @@ kbd {
 }
 
 .btn-close {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7731,8 +7754,8 @@ kbd {
 }
 
 .btn-remove-checkpoint {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9736,8 +9759,8 @@ kbd {
 .search-clear {
   background: #e5e5ea;
   border: none;
-  width: 24px;
-  height: 24px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: 50%;
   color: #86868b;
   font-size: 0.8rem;
@@ -10883,7 +10906,11 @@ kbd {
   border: none;
   color: var(--ink-muted);
   font-size: 1.25rem;
-  padding: 0.25rem;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -11082,6 +11109,10 @@ kbd {
 .route-comparison-name {
   font-weight: 600;
   color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
 }
 
 .route-comparison-count {
@@ -14116,6 +14147,9 @@ button.line-chip.selected {
   font-weight: 600;
   margin: 0;
   color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .analytics-trips {
@@ -14868,9 +14902,20 @@ button.nav-back-btn {
 
 /* 기록 카드 출근/퇴근 배지 */
 .history-route-type-badge {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--ink-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.history-route-type-badge.morning {
+  background: #FFF7ED;
+  color: #C2410C;
+}
+
+.history-route-type-badge.evening {
+  background: #EFF6FF;
+  color: #1D4ED8;
 }
 
 /* 날씨 전용 알림 라벨 */
@@ -15658,7 +15703,40 @@ button.nav-back-btn {
 .route-list-v2 {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+}
+
+/* Route filter tabs */
+.route-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.route-filter-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.route-filter-tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.route-filter-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
 }
 
 .route-section-v2-title {
@@ -15742,6 +15820,9 @@ button.nav-back-btn {
   font-size: 1rem;
   font-weight: 600;
   color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .route-card-v2-path {
@@ -15876,5 +15957,320 @@ button.nav-back-btn {
     max-width: 480px;
     margin: 0 auto;
   }
+}
+
+/* ─────────────────────────────────────────────
+   Route Badge (출근/퇴근 CSS badge)
+   ───────────────────────────────────────────── */
+.route-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.route-badge.morning {
+  background: #FFF7ED;
+  color: #C2410C;
+}
+
+.route-badge.evening {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+
+/* ─────────────────────────────────────────────
+   Weather condition icons (CSS-based)
+   ───────────────────────────────────────────── */
+.weather-icon--sunny,
+.weather-icon--cloudy,
+.weather-icon--rainy,
+.weather-icon--snowy,
+.weather-icon--default {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.weather-icon--sunny {
+  background: radial-gradient(circle, #FBBF24 40%, #FDE68A 100%);
+}
+
+.weather-icon--cloudy {
+  background: radial-gradient(circle, #94A3B8 40%, #CBD5E1 100%);
+}
+
+.weather-icon--rainy {
+  background: radial-gradient(circle, #60A5FA 40%, #93C5FD 100%);
+}
+
+.weather-icon--snowy {
+  background: radial-gradient(circle, #E0E7FF 40%, #F1F5F9 100%);
+  border: 1px solid #CBD5E1;
+}
+
+.weather-icon--default {
+  background: radial-gradient(circle, #A5B4FC 40%, #C7D2FE 100%);
+}
+
+/* Stopwatch history route type */
+.history-route.morning::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F97316;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.history-route.evening::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3B82F6;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.history-route.custom::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6B7280;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ─────────────────────────────────────────────
+   Cross-link cards (Dashboard ↔ Alerts)
+   ───────────────────────────────────────────── */
+.cross-link-section {
+  margin-top: 24px;
+  padding: 0 16px;
+}
+
+.cross-link-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.cross-link-card:hover {
+  background: var(--bg-hover);
+}
+
+.cross-link-arrow {
+  margin-left: auto;
+  color: var(--ink-muted);
+}
+
+/* ─────────────────────────────────────────────
+   Alert presets (빠른 알림 설정)
+   ───────────────────────────────────────────── */
+.alert-presets {
+  margin-bottom: 24px;
+}
+
+.preset-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+.preset-cards {
+  display: flex;
+  gap: 12px;
+}
+
+.preset-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.preset-card:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--bg-hover);
+}
+
+.preset-card:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.preset-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.preset-desc {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.preset-done {
+  font-size: 0.7rem;
+  color: var(--success);
+  font-weight: 500;
+}
+
+/* ─────────────────────────────────────────────
+   Route type toggle (HomePage)
+   ───────────────────────────────────────────── */
+.route-type-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: 12px;
+}
+
+.route-type-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.route-type-btn.active {
+  background: var(--bg-card);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ─────────────────────────────────────────────
+   Commute Timeline UI
+   ───────────────────────────────────────────── */
+.commute-timeline {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  margin: 16px 0;
+}
+
+.timeline-step {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding-left: 28px;
+  min-height: 44px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  z-index: 1;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  bottom: -16px;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-step.completed .timeline-marker {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.timeline-step.completed .timeline-line {
+  background: var(--success);
+}
+
+.timeline-step.current .timeline-marker {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb, 59, 130, 246), 0.15);
+}
+
+.timeline-step.pending .timeline-marker {
+  background: var(--bg-muted);
+  border-color: var(--border);
+}
+
+.timeline-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+.timeline-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.timeline-step.pending .timeline-name {
+  color: var(--ink-muted);
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+}
+
+.timeline-current-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(var(--primary-rgb, 59, 130, 246), 0.1);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
 }
 

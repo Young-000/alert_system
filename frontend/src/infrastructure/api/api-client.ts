@@ -34,6 +34,9 @@ export class ApiClient {
         if (error.response?.status === 401 && !isAuthEndpoint) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('userId');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('phoneNumber');
           window.location.href = '/login';
         }
         return Promise.reject(error);

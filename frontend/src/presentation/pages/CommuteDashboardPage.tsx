@@ -86,9 +86,8 @@ export function CommuteDashboardPage() {
         if (statsData.routeStats.length > 0) {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
-      } catch (err) {
+      } catch {
         if (!isMounted) return;
-        console.error('Failed to load stats:', err);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -149,7 +148,7 @@ export function CommuteDashboardPage() {
 
       {(!stats || stats.totalSessions === 0) && stopwatchRecords.length === 0 ? (
         <EmptyState
-          icon="📊"
+          icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>}
           title="아직 기록이 없어요"
           description="출퇴근 트래킹을 시작해보세요. 이동 시간을 기록하면 통계를 볼 수 있어요."
           actionLink="/commute"
@@ -190,7 +189,8 @@ export function CommuteDashboardPage() {
                 className={`tab ${activeTab === 'stopwatch' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('stopwatch'); setSearchParams({ tab: 'stopwatch' }, { replace: true }); }}
               >
-                ⏱️ 스톱워치 ({stopwatchRecords.length})
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                스톱워치 ({stopwatchRecords.length})
               </button>
             )}
             {routeAnalytics.length > 0 && (
@@ -199,7 +199,8 @@ export function CommuteDashboardPage() {
                 className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('analytics'); setSearchParams({ tab: 'analytics' }, { replace: true }); }}
               >
-                📊 분석
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                분석
               </button>
             )}
           </div>
@@ -211,12 +212,12 @@ export function CommuteDashboardPage() {
               <section className="stats-section stats-compact">
                 <div className="stats-grid-compact">
                   <StatCard
-                    icon="⏱️"
+                    icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
                     title="평균 시간"
                     value={`${stats.overallAverageDuration}분`}
                   />
                   <StatCard
-                    icon="🚶"
+                    icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h20"/><path d="M10 16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6"/><path d="M12 12H4"/></svg>}
                     title="이번 주"
                     value={`${stats.recentSessions}회`}
                   />
@@ -226,7 +227,7 @@ export function CommuteDashboardPage() {
               {/* 인사이트 - 1개만 인라인 표시 */}
               {stats.insights.length > 0 && (
                 <div className="insight-inline">
-                  <span className="insight-icon">💡</span>
+                  <span className="insight-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
                   <span className="insight-text">{stats.insights[0]}</span>
                 </div>
               )}
@@ -283,15 +284,12 @@ export function CommuteDashboardPage() {
               {/* Weather Impact */}
               {stats.weatherImpact.length > 1 && (
                 <section className="weather-section">
-                  <h2>🌤️ 날씨 영향</h2>
+                  <h2>날씨 영향</h2>
                   <div className="weather-list">
                     {stats.weatherImpact.map((weather) => (
                       <div key={weather.condition} className="weather-item">
                         <span className="weather-condition">
-                          {weather.condition === '맑음' && '☀️'}
-                          {weather.condition === '흐림' && '☁️'}
-                          {weather.condition === '비' && '🌧️'}
-                          {weather.condition === '눈' && '❄️'}
+                          <span className={`weather-icon weather-icon--${weather.condition === '맑음' ? 'sunny' : weather.condition === '흐림' ? 'cloudy' : weather.condition === '비' ? 'rainy' : weather.condition === '눈' ? 'snowy' : 'default'}`} aria-hidden="true" />
                           {' '}{weather.condition}
                         </span>
                         <span className="weather-duration">{weather.averageDuration}분</span>
@@ -315,7 +313,7 @@ export function CommuteDashboardPage() {
               {/* Route Comparison Section - 경로별 비교 */}
               {stats.routeStats.length > 1 && (
                 <section className="route-comparison-section">
-                  <h2>📊 경로별 비교</h2>
+                  <h2>경로별 비교</h2>
                   <p className="section-subtitle">어떤 경로가 더 빠를까요?</p>
 
                   <div className="route-comparison-chart">
@@ -327,11 +325,14 @@ export function CommuteDashboardPage() {
                         <div
                           key={route.routeId}
                           className={`route-comparison-row ${selectedRouteId === route.routeId ? 'selected' : ''}`}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setSelectedRouteId(route.routeId)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRouteId(route.routeId); } }}
                         >
                           <div className="route-comparison-info">
-                            <span className="route-comparison-icon">
-                              {route.routeName.includes('출근') ? '🌅' : '🌆'}
+                            <span className={`route-badge ${route.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
+                              {route.routeName.includes('출근') ? '출' : '퇴'}
                             </span>
                             <span className="route-comparison-name">{route.routeName}</span>
                             <span className="route-comparison-count">({route.totalSessions}회)</span>
@@ -361,7 +362,7 @@ export function CommuteDashboardPage() {
                     );
                     return fastest.totalSessions > 0 && (
                       <div className="best-route-notice">
-                        <span className="best-icon">🏆</span>
+                        <span className="best-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
                         <span><strong>{fastest.routeName}</strong>이 평균 {fastest.averageTotalDuration}분으로 가장 빨라요</span>
                       </div>
                     );
@@ -424,7 +425,7 @@ export function CommuteDashboardPage() {
                     {/* Bottleneck highlight */}
                     {selectedRouteStats.bottleneckCheckpoint && (
                       <div className="bottleneck-notice">
-                        <span className="bottleneck-icon">⚠️</span>
+                        <span className="bottleneck-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
                         <span>
                           <strong>{selectedRouteStats.bottleneckCheckpoint}</strong> 구간이 가장 지연이 많아요
                         </span>
@@ -434,7 +435,7 @@ export function CommuteDashboardPage() {
                     {/* Variable checkpoint */}
                     {selectedRouteStats.mostVariableCheckpoint && (
                       <div className="variable-notice">
-                        <span className="variable-icon">📈</span>
+                        <span className="variable-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
                         <span>
                           <strong>{selectedRouteStats.mostVariableCheckpoint}</strong> 구간은 시간이 들쑥날쑥해요
                         </span>
@@ -454,7 +455,7 @@ export function CommuteDashboardPage() {
 
                 {history.sessions.length === 0 ? (
                   <EmptyState
-                    icon="📝"
+                    icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>}
                     title="기록이 없어요"
                     description="트래킹을 시작하면 이동 기록이 여기에 표시됩니다."
                   />
@@ -483,8 +484,8 @@ export function CommuteDashboardPage() {
                                 weekday: 'short',
                               })}
                             </div>
-                            <span className="history-route-type-badge">
-                              {routeType === 'morning' ? '🌅 출근' : '🌆 퇴근'}
+                            <span className={`history-route-type-badge ${routeType}`}>
+                              {routeType === 'morning' ? '출근' : '퇴근'}
                             </span>
                           </div>
                           <div className="history-card-body">
@@ -514,7 +515,23 @@ export function CommuteDashboardPage() {
                 )}
 
                 {history.hasMore && (
-                  <button type="button" className="btn btn-outline btn-load-more">
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-load-more"
+                    onClick={async () => {
+                      try {
+                        const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
+                        setHistory(prev => {
+                          if (!prev) return moreHistory;
+                          return {
+                            ...prev,
+                            sessions: [...prev.sessions, ...moreHistory.sessions],
+                            hasMore: moreHistory.hasMore,
+                          };
+                        });
+                      } catch { /* ignore */ }
+                    }}
+                  >
                     더 보기
                   </button>
                 )}
@@ -527,15 +544,15 @@ export function CommuteDashboardPage() {
             <div className="tab-content">
               {/* Stopwatch Stats Summary */}
               <section className="stats-section">
-                <h2>⏱️ 스톱워치 기록 요약</h2>
+                <h2>스톱워치 기록 요약</h2>
                 <div className="stats-grid">
                   <div className="stat-card">
-                    <span className="stat-icon">🚶</span>
+                    <span className="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h20"/><path d="M10 16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6"/><path d="M12 12H4"/></svg></span>
                     <span className="stat-value">{stopwatchRecords.length}회</span>
                     <span className="stat-label">총 기록</span>
                   </div>
                   <div className="stat-card">
-                    <span className="stat-icon">⏱️</span>
+                    <span className="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
                     <span className="stat-value">
                       {Math.round(
                         stopwatchRecords.reduce((sum, r) => sum + r.totalDurationSeconds, 0) /
@@ -545,14 +562,14 @@ export function CommuteDashboardPage() {
                     <span className="stat-label">평균 소요 시간</span>
                   </div>
                   <div className="stat-card">
-                    <span className="stat-icon">🌅</span>
+                    <span className="stat-icon"><span className="route-badge morning" aria-hidden="true">출</span></span>
                     <span className="stat-value">
                       {stopwatchRecords.filter((r) => r.type === 'morning').length}회
                     </span>
                     <span className="stat-label">출근</span>
                   </div>
                   <div className="stat-card">
-                    <span className="stat-icon">🌆</span>
+                    <span className="stat-icon"><span className="route-badge evening" aria-hidden="true">퇴</span></span>
                     <span className="stat-value">
                       {stopwatchRecords.filter((r) => r.type === 'evening').length}회
                     </span>
@@ -568,8 +585,8 @@ export function CommuteDashboardPage() {
                   {stopwatchRecords.slice(0, 20).map((record) => (
                     <div key={record.id} className="history-item">
                       <div className="history-header">
-                        <span className="history-route">
-                          {record.type === 'morning' ? '🌅 출근' : record.type === 'evening' ? '🌆 퇴근' : '🚶 이동'}
+                        <span className={`history-route ${record.type}`}>
+                          {record.type === 'morning' ? '출근' : record.type === 'evening' ? '퇴근' : '이동'}
                         </span>
                         <span className="history-status completed">완료</span>
                       </div>
@@ -595,7 +612,8 @@ export function CommuteDashboardPage() {
                   ))}
                 </div>
                 <p className="stopwatch-hint">
-                  💡 스톱워치 기록은 이 기기에만 저장됩니다
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  스톱워치 기록은 이 기기에만 저장됩니다
                 </p>
               </section>
             </div>
@@ -606,7 +624,7 @@ export function CommuteDashboardPage() {
             <div className="tab-content">
               {/* Analytics Summary */}
               <section className="analytics-summary-section">
-                <h2>📊 경로 분석 점수</h2>
+                <h2>경로 분석 점수</h2>
                 <p className="section-subtitle">어떤 경로가 가장 좋을까요?</p>
 
                 <div className="analytics-cards">
@@ -619,14 +637,14 @@ export function CommuteDashboardPage() {
               {/* Best Route Recommendation */}
               {routeAnalytics.filter(a => a.isRecommended).length > 0 && (
                 <section className="recommendation-section">
-                  <h2>🏆 추천 경로</h2>
+                  <h2>추천 경로</h2>
                   {(() => {
                     const best = routeAnalytics.reduce((b, c) => c.score > b.score ? c : b);
                     return (
                       <div className="best-route-card">
                         <div className="best-route-header">
-                          <span className="best-route-icon">
-                            {best.routeName.includes('출근') ? '🌅' : '🌆'}
+                          <span className={`route-badge ${best.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
+                            {best.routeName.includes('출근') ? '출' : '퇴'}
                           </span>
                           <span className="best-route-name">{best.routeName}</span>
                           <span className={`grade-badge grade-${best.grade.toLowerCase()}`}>
@@ -657,7 +675,7 @@ export function CommuteDashboardPage() {
               {/* Route Comparison */}
               {routeAnalytics.length >= 2 && (
                 <section className="comparison-section">
-                  <h2>📈 경로 비교</h2>
+                  <h2>경로 비교</h2>
                   <div className="comparison-chart">
                     {routeAnalytics.map((analytics) => {
                       const maxScore = Math.max(...routeAnalytics.map(a => a.score || 1));
@@ -666,8 +684,8 @@ export function CommuteDashboardPage() {
                       return (
                         <div key={analytics.routeId} className="comparison-row">
                           <div className="comparison-info">
-                            <span className="comparison-icon">
-                              {analytics.routeName.includes('출근') ? '🌅' : '🌆'}
+                            <span className={`route-badge ${analytics.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
+                              {analytics.routeName.includes('출근') ? '출' : '퇴'}
                             </span>
                             <span className="comparison-name">{analytics.routeName}</span>
                             <span className={`grade-badge-small grade-${analytics.grade.toLowerCase()}`}>
@@ -696,22 +714,22 @@ export function CommuteDashboardPage() {
               <section className="score-factors-section">
                 <details className="score-factors-accordion">
                   <summary className="accordion-summary">
-                    <span>💡 점수는 어떻게 계산되나요?</span>
+                    <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> 점수는 어떻게 계산되나요?</span>
                     <span className="expand-icon">▼</span>
                   </summary>
                   <div className="accordion-content score-explanation">
                     <div className="score-factor">
-                      <span className="factor-icon">⚡</span>
+                      <span className="factor-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
                       <span className="factor-label">속도 (40%)</span>
                       <span className="factor-desc">예상 시간 대비 실제 시간</span>
                     </div>
                     <div className="score-factor">
-                      <span className="factor-icon">📊</span>
+                      <span className="factor-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
                       <span className="factor-label">일관성 (40%)</span>
                       <span className="factor-desc">매번 비슷한 시간이 걸리는지</span>
                     </div>
                     <div className="score-factor">
-                      <span className="factor-icon">🎯</span>
+                      <span className="factor-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
                       <span className="factor-label">편의성 (20%)</span>
                       <span className="factor-desc">환승 횟수, 대기 시간 비율</span>
                     </div>
@@ -722,6 +740,14 @@ export function CommuteDashboardPage() {
           )}
         </div>
       )}
+
+      <div className="cross-link-section">
+        <Link to="/alerts" className="cross-link-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span>알림 설정하기</span>
+          <span className="cross-link-arrow">→</span>
+        </Link>
+      </div>
 
       <footer className="footer">
         <p className="footer-text">출퇴근 메이트 · 출퇴근 통계</p>
@@ -803,8 +829,8 @@ function RouteAnalyticsCard({ analytics }: { analytics: RouteAnalyticsResponse }
   return (
     <div className={`analytics-card ${analytics.isRecommended ? 'recommended' : ''}`}>
       <div className="analytics-card-header">
-        <span className="analytics-icon">
-          {analytics.routeName.includes('출근') ? '🌅' : '🌆'}
+        <span className={`route-badge ${analytics.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
+          {analytics.routeName.includes('출근') ? '출' : '퇴'}
         </span>
         <div className="analytics-title-area">
           <h3 className="analytics-route-name">{analytics.routeName}</h3>
@@ -836,15 +862,15 @@ function RouteAnalyticsCard({ analytics }: { analytics: RouteAnalyticsResponse }
 
         <div className="analytics-details">
           <div className="analytics-detail-row">
-            <span className="detail-label">⏱️ 평균</span>
+            <span className="detail-label">평균</span>
             <span className="detail-value">{analytics.duration.average}분</span>
           </div>
           <div className="analytics-detail-row">
-            <span className="detail-label">📊 범위</span>
+            <span className="detail-label">범위</span>
             <span className="detail-value">{analytics.duration.min}-{analytics.duration.max}분</span>
           </div>
           <div className="analytics-detail-row">
-            <span className="detail-label">📈 편차</span>
+            <span className="detail-label">편차</span>
             <span className="detail-value">±{analytics.duration.stdDev}분</span>
           </div>
         </div>
@@ -879,7 +905,8 @@ function RouteAnalyticsCard({ analytics }: { analytics: RouteAnalyticsResponse }
 
       {analytics.isRecommended && (
         <div className="recommended-badge">
-          🏆 추천
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          추천
         </div>
       )}
     </div>

@@ -61,8 +61,8 @@ export function SettingsPage() {
         if (!isMounted) return;
         setAlerts(alertsData);
         setRoutes(routesData);
-      } catch (err) {
-        console.error('Failed to load settings data:', err);
+      } catch {
+        // Non-critical: individual API calls already have .catch fallbacks
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -80,8 +80,8 @@ export function SettingsPage() {
       setAlerts(prev => prev.map(a =>
         a.id === alertId ? { ...a, enabled: !a.enabled } : a
       ));
-    } catch (err) {
-      console.error('Failed to toggle alert:', err);
+    } catch {
+      // Silent: toggle is optimistic, UI already updated
     }
   };
 
@@ -98,8 +98,8 @@ export function SettingsPage() {
         setRoutes(prev => prev.filter(r => r.id !== deleteModal.id));
       }
       setDeleteModal(null);
-    } catch (err) {
-      console.error('Failed to delete:', err);
+    } catch {
+      // Error handling delegated to UI state
     } finally {
       setIsDeleting(false);
     }
@@ -176,6 +176,8 @@ export function SettingsPage() {
     localStorage.removeItem('userId');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('phoneNumber');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
     navigate('/');
     window.location.reload();
   };

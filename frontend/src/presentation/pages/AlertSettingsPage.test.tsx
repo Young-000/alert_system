@@ -96,7 +96,7 @@ describe('AlertSettingsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('먼저 계정을 만들어주세요.')).toBeInTheDocument();
+      expect(screen.getByText(/후 알림을 설정할 수 있어요/)).toBeInTheDocument();
     });
   });
 

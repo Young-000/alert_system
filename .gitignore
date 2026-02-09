@@ -60,3 +60,10 @@ database.sqlite
 
 # Git worktrees
 .worktrees/
+
+# Screenshots (development artifacts)
+*.png
+!frontend/public/**/*.png
+
+# Temporary checklists
+*CHECKLIST*.md

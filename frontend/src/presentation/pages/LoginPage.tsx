@@ -92,6 +92,7 @@ export function LoginPage() {
           safeSetItem('userId', response.user.id);
           safeSetItem('accessToken', response.accessToken);
           safeSetItem('userName', name);
+          if (phoneNumber) safeSetItem('phoneNumber', phoneNumber);
           // 신규 회원은 온보딩으로 이동
           navigate('/onboarding');
           return;
@@ -99,6 +100,8 @@ export function LoginPage() {
           const response = await authApiClient.login({ email, password });
           safeSetItem('userId', response.user.id);
           safeSetItem('accessToken', response.accessToken);
+          if (response.user.name) safeSetItem('userName', response.user.name);
+          if (response.user.phoneNumber) safeSetItem('phoneNumber', response.user.phoneNumber);
         }
         navigate('/');
       } catch (err: unknown) {

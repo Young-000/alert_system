@@ -12,11 +12,18 @@ import {
 
 /**
  * 개발/테스트용 API 컨트롤러
- * 프로덕션에서는 비활성화하거나 인증 필요
+ * 프로덕션에서는 app.module.ts에서 제외됨
+ * 이중 안전: NODE_ENV === 'production'이면 모든 요청 거부
  */
 @Controller('dev')
 @Public()
 export class DevController {
+  private assertNotProduction(): void {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Dev endpoints are not available in production');
+    }
+  }
+
   private readonly logger = new Logger(DevController.name);
 
   constructor(@InjectDataSource() private dataSource: DataSource) {}
@@ -27,6 +34,7 @@ export class DevController {
    */
   @Post('seed')
   async seedSampleData(): Promise<{ success: boolean; message: string; data: object }> {
+    this.assertNotProduction();
     this.logger.log('Seeding sample data...');
 
     try {
@@ -57,6 +65,7 @@ export class DevController {
    */
   @Delete('seed')
   async clearSampleData(): Promise<{ success: boolean; message: string }> {
+    this.assertNotProduction();
     this.logger.log('Clearing sample data...');
 
     try {
@@ -77,6 +86,7 @@ export class DevController {
    */
   @Get('seed')
   getSampleDataInfo(): object {
+    this.assertNotProduction();
     return {
       user: SAMPLE_USER,
       routes: SAMPLE_ROUTES,
@@ -96,6 +106,7 @@ export class DevController {
    */
   @Get('phase2-guide')
   getPhase2Guide(): object {
+    this.assertNotProduction();
     return {
       title: 'Phase 2 기능 테스트 가이드',
       steps: [

@@ -16,9 +16,10 @@ RUN apk add --no-cache curl && \
     addgroup -g 1001 nodejs && \
     adduser -S -u 1001 -G nodejs nestjs
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
 
 USER nestjs
 
