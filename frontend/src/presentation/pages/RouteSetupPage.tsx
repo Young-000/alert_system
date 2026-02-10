@@ -1336,6 +1336,41 @@ export function RouteSetupPage() {
     userAlerts.filter(a => a.routeId === routeId && a.enabled).length;
 
   // 경로 카드 렌더링 (중복 제거)
+  const handleShareRoute = async (route: RouteResponse): Promise<void> => {
+    const shareData = {
+      name: route.name,
+      routeType: route.routeType,
+      checkpoints: route.checkpoints.map(cp => ({
+        name: cp.name,
+        transportMode: cp.transportMode,
+        expectedWaitTime: cp.expectedWaitTime,
+      })),
+    };
+    const encoded = btoa(encodeURIComponent(JSON.stringify(shareData)));
+    const shareUrl = `${window.location.origin}/routes?shared=${encoded}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `출퇴근 경로: ${route.name}`,
+          text: `${route.name} 경로를 공유합니다.`,
+          url: shareUrl,
+        });
+      } catch {
+        // share cancelled
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setError('');
+        setWarning('공유 링크가 복사되었습니다!');
+        setTimeout(() => setWarning(''), 3000);
+      } catch {
+        setError('링크 복사에 실패했습니다.');
+      }
+    }
+  };
+
   const renderRouteCard = (route: RouteResponse): JSX.Element => {
     const alertCount = getRouteAlertCount(route.id);
     const isMorning = route.routeType === 'morning';
@@ -1379,6 +1414,12 @@ export function RouteSetupPage() {
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" stroke="none">
               <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </button>
+          <button type="button" className="route-card-v2-action" onClick={() => handleShareRoute(route)} aria-label="공유" title="공유">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
             </svg>
           </button>
           <button type="button" className="route-card-v2-action" onClick={() => handleEditRoute(route)} aria-label="수정" title="수정">
