@@ -349,8 +349,8 @@ export function HomePage(): JSX.Element {
           {userName && <p className="home-user-name">{userName}님</p>}
         </div>
         {weather && (
-          <div className="home-weather-badge">
-            <span>{getWeatherIcon(weather.condition)}</span>
+          <div className="home-weather-badge" aria-label={`현재 날씨 ${weather.conditionKr || weather.condition} ${Math.round(weather.temperature)}도`}>
+            <span aria-hidden="true">{getWeatherIcon(weather.condition)}</span>
             <span className="home-weather-temp">{Math.round(weather.temperature)}°</span>
           </div>
         )}
@@ -396,7 +396,11 @@ export function HomePage(): JSX.Element {
               </div>
               <h2 className="today-route-name">{activeRoute.name}</h2>
               <p className="today-route-detail">
-                {activeRoute.checkpoints.map(cp => cp.name).filter(Boolean).join(' → ')}
+                {(() => {
+                  const names = activeRoute.checkpoints.map(cp => cp.name).filter(Boolean);
+                  if (names.length <= 3) return names.join(' → ');
+                  return `${names[0]} → (${names.length - 2}곳 경유) → ${names[names.length - 1]}`;
+                })()}
               </p>
             </div>
 
@@ -447,6 +451,66 @@ export function HomePage(): JSX.Element {
         )}
       </section>
 
+      {/* Alert Section - always visible */}
+      <section className="home-alert-section" aria-label="알림">
+        {nextAlert ? (
+          <Link to="/alerts" className="next-alert-bar">
+            <span className="next-alert-label">다음 알림</span>
+            <span className="next-alert-time">{nextAlert.time}</span>
+            <span className="next-alert-type">{nextAlert.label}</span>
+          </Link>
+        ) : (
+          <Link to="/alerts" className="home-alert-cta">
+            <span className="home-alert-cta-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </span>
+            <span className="home-alert-cta-text">
+              알림을 설정하면 출발 전 날씨와 교통 정보를 알려드려요
+            </span>
+            <span className="home-alert-cta-arrow" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </span>
+          </Link>
+        )}
+      </section>
+
+      {/* Stats Section - always visible */}
+      <section className="home-stats" aria-label="이번 주 통근">
+        <h3 className="home-stats-title">이번 주</h3>
+        {commuteStats && (commuteStats.overallAverageDuration > 0 || (commuteStats.recentSessions != null && commuteStats.recentSessions > 0)) ? (
+          <>
+            <div className="home-stats-row">
+              <div className="home-stat">
+                <span className="home-stat-value">
+                  {commuteStats.overallAverageDuration ? `${commuteStats.overallAverageDuration}분` : '-'}
+                </span>
+                <span className="home-stat-label">평균</span>
+              </div>
+              <div className="home-stat">
+                <span className="home-stat-value">
+                  {commuteStats.recentSessions != null ? `${commuteStats.recentSessions}회` : '-'}
+                </span>
+                <span className="home-stat-label">출퇴근</span>
+              </div>
+            </div>
+            {commuteStats.insights && commuteStats.insights.length > 0 && (
+              <p className="home-insight">{commuteStats.insights[0]}</p>
+            )}
+            <Link to="/commute/dashboard" className="home-stats-link">자세히 보기</Link>
+          </>
+        ) : (
+          <div className="home-stats-empty">
+            <p>출퇴근 기록을 시작하면 통계를 볼 수 있어요</p>
+            <Link to="/commute/dashboard" className="home-stats-link">대시보드 보기</Link>
+          </div>
+        )}
+      </section>
+
       {/* Other routes quick switch */}
       {hasRoutes && routes.length > 1 && (
         <section className="other-routes" aria-label="다른 경로">
@@ -463,39 +527,6 @@ export function HomePage(): JSX.Element {
               <span>{route.name}</span>
             </button>
           ))}
-        </section>
-      )}
-
-      {/* Next Alert */}
-      {nextAlert && (
-        <Link to="/alerts" className="next-alert-bar">
-          <span className="next-alert-label">다음 알림</span>
-          <span className="next-alert-time">{nextAlert.time}</span>
-          <span className="next-alert-type">{nextAlert.label}</span>
-        </Link>
-      )}
-
-      {/* Stats Summary */}
-      {commuteStats && (commuteStats.overallAverageDuration > 0 || (commuteStats.recentSessions != null && commuteStats.recentSessions > 0)) && (
-        <section className="home-stats" aria-label="이번 주 통근">
-          <h3 className="home-stats-title">이번 주</h3>
-          <div className="home-stats-row">
-            <div className="home-stat">
-              <span className="home-stat-value">
-                {commuteStats.overallAverageDuration ? `${commuteStats.overallAverageDuration}분` : '-'}
-              </span>
-              <span className="home-stat-label">평균</span>
-            </div>
-            <div className="home-stat">
-              <span className="home-stat-value">
-                {commuteStats.recentSessions != null ? `${commuteStats.recentSessions}회` : '-'}
-              </span>
-              <span className="home-stat-label">출퇴근</span>
-            </div>
-          </div>
-          {commuteStats.insights && commuteStats.insights.length > 0 && (
-            <p className="home-insight">{commuteStats.insights[0]}</p>
-          )}
         </section>
       )}
     </main>

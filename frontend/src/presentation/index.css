@@ -12413,10 +12413,16 @@ kbd {
 
 .bottom-nav-item.active {
   color: var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: var(--radius-full, 100px);
 }
 
 .bottom-nav-item.active .bottom-nav-icon {
   transform: scale(1.1);
+}
+
+.bottom-nav-item.active .bottom-nav-label {
+  font-weight: 700;
 }
 
 .bottom-nav-icon {
@@ -15139,6 +15145,9 @@ button.nav-back-btn {
   font-size: 0.875rem;
   color: var(--ink-secondary);
   line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Transit info inside today card */
@@ -15252,6 +15261,7 @@ button.nav-back-btn {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
+  min-height: 44px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -15291,6 +15301,53 @@ button.nav-back-btn {
 
 .next-alert-bar:hover {
   border-color: var(--primary);
+}
+
+/* Alert CTA (empty state) */
+.home-alert-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  min-height: 44px;
+  margin-top: 12px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--ink-secondary);
+  transition: border-color 200ms ease, background 200ms ease;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.home-alert-cta:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.home-alert-cta-icon {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+}
+
+.home-alert-cta:hover .home-alert-cta-icon {
+  color: var(--primary);
+}
+
+.home-alert-cta-text {
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.home-alert-cta-arrow {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+}
+
+.home-alert-section {
+  margin-top: 0;
 }
 
 .next-alert-label {
@@ -15356,6 +15413,30 @@ button.nav-back-btn {
   border-top: 1px solid var(--border);
 }
 
+.home-stats-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.home-stats-link:hover {
+  text-decoration: underline;
+}
+
+.home-stats-empty {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.home-stats-empty p {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+
 /* AQI Status Colors */
 .aqi-good { color: var(--success); }
 .aqi-moderate { color: var(--warning); }
@@ -15405,7 +15486,7 @@ button.nav-back-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0) !important;
 }
 
 /* Loading */
@@ -15550,6 +15631,7 @@ button.nav-back-btn {
   cursor: pointer;
   transition: opacity 0.15s, transform 0.1s;
   min-height: 60px;
+  touch-action: manipulation;
 }
 
 .commute-v2-arrive-btn:active:not(:disabled) {
@@ -15571,6 +15653,7 @@ button.nav-back-btn {
   border: none;
   cursor: pointer;
   min-height: 44px;
+  touch-action: manipulation;
 }
 
 .commute-v2-cancel-btn:active {
@@ -15583,6 +15666,9 @@ button.nav-back-btn {
   font-size: 0.8125rem;
   text-align: center;
   padding: 8px 24px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-md);
+  margin: 0 24px 8px;
 }
 
 /* Completed State */
@@ -16162,7 +16248,8 @@ button.nav-back-btn {
 
 .route-type-btn {
   flex: 1;
-  padding: 6px 12px;
+  padding: 10px 12px;
+  min-height: 44px;
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
   background: transparent;
@@ -16171,6 +16258,7 @@ button.nav-back-btn {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
+  touch-action: manipulation;
 }
 
 .route-type-btn.active {
@@ -16185,8 +16273,12 @@ button.nav-back-btn {
 .commute-timeline {
   display: flex;
   flex-direction: column;
-  padding: 16px 0;
+  padding: 16px 24px;
   margin: 16px 0;
+  width: 100%;
+  max-height: 35vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .timeline-step {

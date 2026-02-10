@@ -262,7 +262,7 @@ export function CommuteTrackingPage(): JSX.Element {
         <span className="commute-v2-title">
           {route?.routeType === 'morning' ? '출근' : '퇴근'} 중
         </span>
-        <span />
+        <span aria-hidden="true" />
       </header>
 
       {/* Route name */}
@@ -316,6 +316,9 @@ export function CommuteTrackingPage(): JSX.Element {
         </div>
       )}
 
+      {/* Error (above actions so it's always visible) */}
+      {error && <div className="commute-v2-error" role="alert">{error}</div>}
+
       {/* Arrive Button */}
       <div className="commute-v2-actions">
         <button
@@ -335,8 +338,6 @@ export function CommuteTrackingPage(): JSX.Element {
           기록 취소
         </button>
       </div>
-
-      {error && <div className="commute-v2-error">{error}</div>}
 
       <ConfirmModal
         open={showCancelConfirm}
