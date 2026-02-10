@@ -6,6 +6,8 @@ import {
   type CommuteHistoryResponse,
   type CheckpointStats,
   type RouteAnalyticsResponse,
+  type AnalyticsSummaryResponse,
+  type RouteComparisonResponse,
 } from '@infrastructure/api/commute-api.client';
 import { EmptyState } from '../components/EmptyState';
 import { StatCard } from '../components/StatCard';
@@ -45,7 +47,10 @@ export function CommuteDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics'>('overview');
   const [routeAnalytics, setRouteAnalytics] = useState<RouteAnalyticsResponse[]>([]);
-
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummaryResponse | null>(null);
+  const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
+  const [isComparing, setIsComparing] = useState(false);
+  const [compareRouteIds, setCompareRouteIds] = useState<string[]>([]);
 
   // Handle URL tab parameter first (highest priority)
   useEffect(() => {
@@ -83,6 +88,11 @@ export function CommuteDashboardPage() {
         setHistory(historyData);
         setRouteAnalytics(analyticsData);
 
+        // Load analytics summary (non-blocking)
+        commuteApi.getAnalyticsSummary(userId)
+          .then(summary => { if (isMounted) setAnalyticsSummary(summary); })
+          .catch(() => {});
+
         if (statsData.routeStats.length > 0) {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
@@ -103,6 +113,28 @@ export function CommuteDashboardPage() {
   }, [userId, commuteApi]);
 
   const selectedRouteStats = stats?.routeStats.find((r) => r.routeId === selectedRouteId);
+
+  const toggleCompareRoute = (routeId: string): void => {
+    setCompareRouteIds(prev =>
+      prev.includes(routeId)
+        ? prev.filter(id => id !== routeId)
+        : prev.length >= 2 ? [prev[1], routeId] : [...prev, routeId]
+    );
+    setRouteComparison(null);
+  };
+
+  const handleCompare = async (): Promise<void> => {
+    if (compareRouteIds.length < 2 || isComparing) return;
+    setIsComparing(true);
+    try {
+      const result = await commuteApi.compareRoutes(compareRouteIds);
+      setRouteComparison(result);
+    } catch {
+      // comparison failed silently
+    } finally {
+      setIsComparing(false);
+    }
+  };
 
   if (!userId) {
     return (
@@ -208,6 +240,32 @@ export function CommuteDashboardPage() {
           {/* Overview Tab */}
           {activeTab === 'overview' && stats && (
             <div className="tab-content">
+              {/* Analytics Summary Card */}
+              {analyticsSummary && analyticsSummary.totalTrips >= 3 && (
+                <section className="dashboard-summary-card">
+                  <div className="summary-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    <span>{analyticsSummary.totalTrips}회 분석 결과</span>
+                  </div>
+                  {analyticsSummary.insights && analyticsSummary.insights.length > 0 && (
+                    <ul className="summary-insights">
+                      {analyticsSummary.insights.slice(0, 3).map((insight, i) => (
+                        <li key={i}>{insight}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {analyticsSummary.bestRoute && (
+                    <p className="summary-best-route">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                      최적 경로: <strong>{analyticsSummary.bestRoute.routeName}</strong>
+                      {analyticsSummary.bestRoute.duration.average > 0 && ` (평균 ${analyticsSummary.bestRoute.duration.average}분)`}
+                    </p>
+                  )}
+                </section>
+              )}
+
               {/* 핵심 통계 - 간소화 */}
               <section className="stats-section stats-compact">
                 <div className="stats-grid-compact">
@@ -367,6 +425,63 @@ export function CommuteDashboardPage() {
                       </div>
                     );
                   })()}
+                </section>
+              )}
+
+              {/* API-based Route Comparison */}
+              {stats.routeStats.length >= 2 && (
+                <section className="api-compare-section">
+                  <h2>상세 경로 비교</h2>
+                  <p className="section-subtitle">2개 경로를 선택해서 비교하세요</p>
+                  <div className="compare-select-list">
+                    {stats.routeStats.map((route) => (
+                      <label key={route.routeId} className="compare-select-item">
+                        <input
+                          type="checkbox"
+                          checked={compareRouteIds.includes(route.routeId)}
+                          onChange={() => toggleCompareRoute(route.routeId)}
+                        />
+                        <span className={`route-badge ${route.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
+                          {route.routeName.includes('출근') ? '출' : '퇴'}
+                        </span>
+                        <span>{route.routeName}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={handleCompare}
+                    disabled={compareRouteIds.length < 2 || isComparing}
+                  >
+                    {isComparing ? '비교 중...' : '비교하기'}
+                  </button>
+
+                  {routeComparison && (
+                    <div className="compare-result-card">
+                      <div className="compare-result-winners">
+                        {routeComparison.routes.map((r) => {
+                          const isFastest = routeComparison.winner.fastest === r.routeId;
+                          const isReliable = routeComparison.winner.mostReliable === r.routeId;
+                          return (
+                            <div key={r.routeId} className="compare-result-route">
+                              <strong>{r.routeName}</strong>
+                              <span className="compare-stat">평균 {r.duration.average}분</span>
+                              <div className="compare-badges">
+                                {isFastest && <span className="compare-winner-badge fastest">가장 빠름</span>}
+                                {isReliable && <span className="compare-winner-badge reliable">가장 안정</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {routeComparison.analysis.timeDifference > 0 && (
+                        <p className="compare-diff">
+                          시간 차이: <strong>{routeComparison.analysis.timeDifference}분</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </section>
               )}
 

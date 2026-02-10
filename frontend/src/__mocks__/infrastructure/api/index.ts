@@ -129,6 +129,28 @@ export const authApiClient = {
   verify: jest.fn(),
 };
 
+export const notificationApiClient = {
+  getHistory: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+};
+
+export const weatherApiClient = {
+  getCurrentWeather: jest.fn().mockResolvedValue(null),
+};
+
+export const airQualityApiClient = {
+  getByLocation: jest.fn().mockResolvedValue(null),
+};
+
+export interface NotificationLog {
+  id: string;
+  alertId: string;
+  alertName: string;
+  alertTypes: string[];
+  status: string;
+  summary: string;
+  sentAt: string;
+}
+
 export type AlertType = 'weather' | 'airQuality' | 'bus' | 'subway';
 
 export interface Alert {

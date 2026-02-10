@@ -5,6 +5,7 @@ import {
   type RouteResponse,
   type SessionResponse,
 } from '@infrastructure/api/commute-api.client';
+import { behaviorCollector, BehaviorEventType } from '@infrastructure/analytics/behavior-collector';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 export function CommuteTrackingPage(): JSX.Element {
@@ -70,7 +71,14 @@ export function CommuteTrackingPage(): JSX.Element {
               userId,
               routeId: matchingRoute.id,
             });
-            if (isMounted) setSession(newSession);
+            if (isMounted) {
+              setSession(newSession);
+              // Track session start
+              behaviorCollector.trackEvent(BehaviorEventType.DEPARTURE_CONFIRMED, {
+                metadata: { sessionId: newSession.id, routeId: matchingRoute.id },
+                source: 'app',
+              });
+            }
           }
           return;
         }
@@ -168,6 +176,15 @@ export function CommuteTrackingPage(): JSX.Element {
 
       const completed = await commuteApi.completeSession({ sessionId: session.id });
       setSession(completed);
+      // Track session completion
+      behaviorCollector.trackEvent(BehaviorEventType.TRANSIT_INFO_VIEWED, {
+        metadata: {
+          sessionId: session.id,
+          routeId: route?.id,
+          durationMinutes: completed.totalDurationMinutes,
+        },
+        source: 'app',
+      });
     } catch {
       setError('기록 완료에 실패했습니다.');
     } finally {

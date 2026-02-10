@@ -14094,6 +14094,171 @@ button.line-chip.selected {
    경로 분석 (Analytics) 스타일
    ========================================================================== */
 
+/* Dashboard analytics summary card (overview tab top) */
+.dashboard-summary-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.summary-insights {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-insights li {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+
+.summary-insights li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.summary-best-route {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.summary-best-route strong {
+  color: var(--ink);
+}
+
+/* API-based route comparison section */
+.api-compare-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.api-compare-section h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.compare-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.compare-select-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 150ms ease;
+}
+
+.compare-select-item:hover {
+  background: var(--bg-subtle);
+}
+
+.compare-select-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.compare-result-card {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.compare-result-winners {
+  display: flex;
+  gap: 16px;
+}
+
+.compare-result-route {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compare-result-route strong {
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+
+.compare-stat {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+}
+
+.compare-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.compare-winner-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full, 100px);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.compare-winner-badge.fastest {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.compare-winner-badge.reliable {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.compare-diff {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+}
+
 .analytics-summary-section {
   padding: 1rem 0;
 }
@@ -15217,6 +15382,75 @@ button.nav-back-btn {
   cursor: not-allowed;
 }
 
+/* Error recovery banner */
+.home-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--danger-light, #fef2f2);
+  border: 1px solid var(--danger-border, #fecaca);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  color: var(--danger, #dc2626);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.home-error-banner svg {
+  flex-shrink: 0;
+}
+
+.home-error-banner .btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Recommended route badge inside today card */
+.today-recommend-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--warning-light, #fffbeb);
+  border: 1px solid var(--warning-border, #fde68a);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+
+.today-recommend-badge svg {
+  flex-shrink: 0;
+}
+
+.today-recommend-badge strong {
+  color: var(--ink);
+}
+
+.recommend-reason {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+/* Departure time hint */
+.today-departure-hint {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  padding: 0 2px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* Weather inline error */
+.today-weather-error {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+}
+
 /* Empty state in today card */
 .today-empty {
   text-align: center;
@@ -15307,6 +15541,31 @@ button.nav-back-btn {
   margin-left: auto;
   font-size: 0.8125rem;
   color: var(--ink-secondary);
+}
+
+/* Notification history quick link on home */
+.home-history-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 16px;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: background 200ms ease;
+}
+
+.home-history-link:hover {
+  background: var(--bg-subtle);
+}
+
+.home-history-arrow {
+  margin-left: auto;
+  color: var(--ink-muted);
 }
 
 /* Home Stats */

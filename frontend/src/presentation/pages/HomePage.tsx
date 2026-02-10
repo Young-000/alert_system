@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
+import { behaviorCollector, BehaviorEventType } from '@infrastructure/analytics/behavior-collector';
 import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, subwayApiClient } from '@infrastructure/api';
 import type { Alert, WeatherData, AirQualityData, BusArrival, SubwayArrival } from '@infrastructure/api';
-import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
+import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse, type RouteAnalyticsResponse, type AnalyticsSummaryResponse } from '@infrastructure/api/commute-api.client';
 
 function getInitialLoginState(): boolean {
   return !!localStorage.getItem('userId');
@@ -130,8 +130,12 @@ export function HomePage(): JSX.Element {
   const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
   const [transitInfos, setTransitInfos] = useState<TransitArrivalInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [weatherError, setWeatherError] = useState(false);
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
+  const [recommendedRoute, setRecommendedRoute] = useState<RouteAnalyticsResponse | null>(null);
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummaryResponse | null>(null);
 
   const userId = localStorage.getItem('userId') || '';
   const userName = localStorage.getItem('userName') || '';
@@ -143,33 +147,52 @@ export function HomePage(): JSX.Element {
   }, [userId]);
 
   // Load core data
-  useEffect(() => {
-    let isMounted = true;
+  const loadCoreData = useCallback(async (): Promise<void> => {
     if (!userId) { setIsLoading(false); return; }
+    setIsLoading(true);
+    setLoadError(false);
 
-    const loadData = async (): Promise<void> => {
-      setIsLoading(true);
-      try {
-        const commuteApi = getCommuteApiClient();
-        const [alertsData, routesData, statsData] = await Promise.all([
-          alertApiClient.getAlertsByUser(userId).catch(() => []),
-          commuteApi.getUserRoutes(userId).catch(() => []),
-          commuteApi.getStats(userId, 7).catch(() => null),
-        ]);
-        if (!isMounted) return;
-        setAlerts(alertsData);
-        setRoutes(routesData);
-        setCommuteStats(statsData);
-      } catch {
-        // Non-critical
-      } finally {
-        if (isMounted) setIsLoading(false);
+    try {
+      const commuteApi = getCommuteApiClient();
+      const [alertsData, routesData, statsData] = await Promise.all([
+        alertApiClient.getAlertsByUser(userId).catch(() => []),
+        commuteApi.getUserRoutes(userId).catch(() => []),
+        commuteApi.getStats(userId, 7).catch(() => null),
+      ]);
+
+      // If all three failed (empty arrays + null), show error
+      if (alertsData.length === 0 && routesData.length === 0 && statsData === null) {
+        // Check if it's a real error vs genuinely empty data
+        try {
+          await alertApiClient.getAlertsByUser(userId);
+        } catch {
+          setLoadError(true);
+        }
       }
-    };
 
-    loadData();
-    return () => { isMounted = false; };
+      setAlerts(alertsData);
+      setRoutes(routesData);
+      setCommuteStats(statsData);
+
+      // Load analytics data (non-blocking)
+      if (routesData.length >= 2) {
+        commuteApi.getRecommendedRoutes(userId, 1)
+          .then(recs => { if (recs.length > 0) setRecommendedRoute(recs[0]); })
+          .catch(() => {});
+      }
+      commuteApi.getAnalyticsSummary(userId)
+        .then(summary => { if (summary.totalTrips >= 3) setAnalyticsSummary(summary); })
+        .catch(() => {});
+    } catch {
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, [userId]);
+
+  useEffect(() => {
+    loadCoreData();
+  }, [loadCoreData]);
 
   // Load weather + air quality
   useEffect(() => {
@@ -178,10 +201,11 @@ export function HomePage(): JSX.Element {
 
     const lat = 37.5665;
     const lng = 126.978;
+    setWeatherError(false);
 
     weatherApiClient.getCurrentWeather(lat, lng)
       .then(data => { if (isMounted) setWeather(data); })
-      .catch(() => {});
+      .catch(() => { if (isMounted) setWeatherError(true); });
 
     airQualityApiClient.getByLocation(lat, lng)
       .then(data => { if (isMounted) setAirQualityData(data); })
@@ -256,6 +280,8 @@ export function HomePage(): JSX.Element {
     });
 
     await Promise.allSettled(promises);
+    // Track transit info viewed
+    behaviorCollector.trackTransitInfoViewed();
   }, []);
 
   useEffect(() => {
@@ -307,11 +333,19 @@ export function HomePage(): JSX.Element {
   const handleStartCommute = async (): Promise<void> => {
     if (!activeRoute || isCommuteStarting) return;
     setIsCommuteStarting(true);
+
+    // Track behavior event
+    behaviorCollector.trackEvent(
+      BehaviorEventType.DEPARTURE_CONFIRMED,
+      { metadata: { routeId: activeRoute.id, routeName: activeRoute.name }, source: 'app' }
+    );
+
     try {
       const commuteApi = getCommuteApiClient();
       const session = await commuteApi.startSession({
         userId,
         routeId: activeRoute.id,
+        weatherCondition: weather?.condition,
       });
       navigate('/commute', { state: { sessionId: session.id, routeId: activeRoute.id } });
     } catch {
@@ -338,9 +372,31 @@ export function HomePage(): JSX.Element {
 
   const hasRoutes = routes.length > 0;
 
+  // Determine if recommended route differs from active route
+  const showRecommendation = recommendedRoute && activeRoute
+    && recommendedRoute.routeId !== activeRoute.id
+    && routes.length >= 2;
+
+  // Departure time hint from analytics summary
+  const departureHint = analyticsSummary?.insights?.[0] || null;
+
   return (
     <main className="page home-page">
       <a href="#today-card" className="skip-link">본문으로 건너뛰기</a>
+
+      {/* Error Recovery Banner */}
+      {loadError && (
+        <div className="home-error-banner" role="alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span>데이터를 불러오지 못했어요</span>
+          <button type="button" className="btn btn-sm btn-outline" onClick={loadCoreData}>
+            다시 시도
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <header className="home-header">
@@ -427,6 +483,31 @@ export function HomePage(): JSX.Element {
               </div>
             )}
 
+            {/* Recommended Route Badge */}
+            {showRecommendation && (
+              <div className="today-recommend-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <span>
+                  <strong>{recommendedRoute.routeName}</strong>이 더 빠를 수 있어요
+                  <span className="recommend-reason">
+                    (평균 {recommendedRoute.duration.average}분)
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Departure Time Hint */}
+            {departureHint && (
+              <p className="today-departure-hint">{departureHint}</p>
+            )}
+
+            {/* Weather inline error */}
+            {weatherError && !weather && (
+              <p className="today-weather-error">날씨 정보를 불러오지 못했어요</p>
+            )}
+
             {/* Start Button */}
             <button
               type="button"
@@ -472,6 +553,17 @@ export function HomePage(): JSX.Element {
           <span className="next-alert-label">다음 알림</span>
           <span className="next-alert-time">{nextAlert.time}</span>
           <span className="next-alert-type">{nextAlert.label}</span>
+        </Link>
+      )}
+
+      {/* Notification history quick link */}
+      {alerts.length > 0 && (
+        <Link to="/notifications" className="home-history-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span>알림 발송 기록 보기</span>
+          <span className="home-history-arrow">→</span>
         </Link>
       )}
 
