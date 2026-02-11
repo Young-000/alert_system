@@ -92,7 +92,7 @@ export function NotificationHistoryPage(): JSX.Element {
         {total > 0 && <span className="nav-badge">{total}건</span>}
       </header>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && <div className="error-banner" role="alert">{error}</div>}
 
       {!isLoading && logs.length === 0 && (
         <div className="settings-empty">
@@ -148,8 +148,8 @@ export function NotificationHistoryPage(): JSX.Element {
       )}
 
       {isLoading && logs.length === 0 && (
-        <div className="settings-loading">
-          <span className="spinner" />
+        <div className="settings-loading" role="status" aria-live="polite">
+          <span className="spinner" aria-hidden="true" />
           <p>불러오는 중...</p>
         </div>
       )}

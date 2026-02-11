@@ -691,7 +691,7 @@ export function AlertSettingsPage(): JSX.Element {
 
       {!userId && (
         <div className="notice warning">
-          <Link to="/login">로그인</Link> 후 알림을 설정할 수 있어요.
+          <Link to="/login" className="notice-link">로그인</Link> 후 알림을 설정할 수 있어요.
         </div>
       )}
 

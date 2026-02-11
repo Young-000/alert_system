@@ -32,7 +32,8 @@ export class SupabaseAuthService {
         .insert({
           phone_number: phoneNumber,
           password_hash: passwordHash,
-          name: name || null,
+          email: `${phoneNumber}@phone.local`,
+          name: name || phoneNumber,
         })
         .select()
         .single();

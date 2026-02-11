@@ -483,7 +483,7 @@ export function HomePage(): JSX.Element {
                     </span>
                     <span className="today-transit-name">{info.name}</span>
                     {info.isLoading ? (
-                      <span className="spinner spinner-sm" />
+                      <span className="spinner spinner-sm" aria-hidden="true" />
                     ) : info.arrivals.length > 0 ? (
                       <span className="today-transit-time">
                         {(() => {

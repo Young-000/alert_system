@@ -839,7 +839,7 @@ export function RouteSetupPage(): JSX.Element {
 
         {/* 호선 선택 모달 */}
         {lineSelectionModal && (
-          <div className="line-selection-modal" role="dialog" aria-modal="true" aria-label="호선 선택" onClick={() => setLineSelectionModal(null)} onKeyDown={(e) => { if (e.key === 'Escape') setLineSelectionModal(null); }}>
+          <div className="line-selection-modal" role="dialog" aria-modal="true" aria-label="호선 선택" tabIndex={-1} onClick={() => setLineSelectionModal(null)} onKeyDown={(e) => { if (e.key === 'Escape') setLineSelectionModal(null); }}>
             <div className="line-selection-content" onClick={(e) => e.stopPropagation()}>
               <h3>{lineSelectionModal.name}역</h3>
               <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -1039,7 +1039,7 @@ export function RouteSetupPage(): JSX.Element {
                 )}
               </div>
 
-              {error && <div className="route-validation-error"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {error}</div>}
+              {error && <div className="route-validation-error" role="alert"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {error}</div>}
 
               {isSearching && (
                 <div className="apple-searching">검색 중...</div>
@@ -1209,7 +1209,7 @@ export function RouteSetupPage(): JSX.Element {
                   className="apple-choice-card primary"
                   onClick={() => setStep('confirm')}
                 >
-                  <span className="choice-icon">✓</span>
+                  <span className="choice-icon" aria-hidden="true">✓</span>
                   <span className="choice-text">
                     <strong>아니요, 이게 끝이에요</strong>
                     <span>바로 목적지로 가요</span>
