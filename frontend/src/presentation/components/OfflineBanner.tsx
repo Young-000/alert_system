@@ -1,6 +1,6 @@
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
-export function OfflineBanner() {
+export function OfflineBanner(): JSX.Element | null {
   const isOnline = useOnlineStatus();
 
   if (isOnline) return null;

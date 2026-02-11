@@ -44,7 +44,7 @@ function getLineColor(line: string): string {
   return '#666';
 }
 
-export function LineChip({ line, size = 'default', onClick, selected }: LineChipProps) {
+export function LineChip({ line, size = 'default', onClick, selected }: LineChipProps): JSX.Element {
   const bgColor = getLineColor(line);
   const Tag = onClick ? 'button' : 'span';
 

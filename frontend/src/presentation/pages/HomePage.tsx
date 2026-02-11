@@ -20,15 +20,83 @@ function getGreeting(): string {
   return '좋은 밤이에요';
 }
 
-function getWeatherIcon(condition: string): string {
+type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'default';
+
+function getWeatherType(condition: string): WeatherType {
   const c = condition.toLowerCase();
-  if (c.includes('clear') || c.includes('sunny') || c === '맑음') return '☀️';
-  if (c.includes('cloud') || c === '구름많음') return '☁️';
-  if (c.includes('overcast') || c === '흐림') return '🌥️';
-  if (c.includes('rain') || c === '비') return '🌧️';
-  if (c.includes('snow') || c === '눈') return '❄️';
-  if (c.includes('thunder') || c === '뇌우') return '⛈️';
-  return '🌤️';
+  if (c.includes('clear') || c.includes('sunny') || c === '맑음') return 'sunny';
+  if (c.includes('cloud') || c === '구름많음' || c.includes('overcast') || c === '흐림') return 'cloudy';
+  if (c.includes('rain') || c === '비' || c.includes('thunder') || c === '뇌우') return 'rainy';
+  if (c.includes('snow') || c === '눈') return 'snowy';
+  return 'default';
+}
+
+function WeatherIcon({ condition, size = 48 }: { condition: string; size?: number }): JSX.Element {
+  const type = getWeatherType(condition);
+  switch (type) {
+    case 'sunny':
+      return (
+        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <circle cx="24" cy="24" r="10" fill="#FBBF24" />
+          <g stroke="#F59E0B" strokeWidth="3" strokeLinecap="round">
+            <line x1="24" y1="2" x2="24" y2="8" />
+            <line x1="24" y1="40" x2="24" y2="46" />
+            <line x1="2" y1="24" x2="8" y2="24" />
+            <line x1="40" y1="24" x2="46" y2="24" />
+            <line x1="8.3" y1="8.3" x2="12.5" y2="12.5" />
+            <line x1="35.5" y1="35.5" x2="39.7" y2="39.7" />
+            <line x1="8.3" y1="39.7" x2="12.5" y2="35.5" />
+            <line x1="35.5" y1="12.5" x2="39.7" y2="8.3" />
+          </g>
+        </svg>
+      );
+    case 'cloudy':
+      return (
+        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M14 34a8 8 0 0 1-.5-16A10 10 0 0 1 33 20h1a6 6 0 0 1 0 12H14z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="2" />
+        </svg>
+      );
+    case 'rainy':
+      return (
+        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M14 28a8 8 0 0 1-.5-16A10 10 0 0 1 33 14h1a6 6 0 0 1 0 12H14z" fill="#94A3B8" stroke="#64748B" strokeWidth="2" />
+          <g stroke="#60A5FA" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="16" y1="34" x2="14" y2="40" />
+            <line x1="24" y1="34" x2="22" y2="40" />
+            <line x1="32" y1="34" x2="30" y2="40" />
+          </g>
+        </svg>
+      );
+    case 'snowy':
+      return (
+        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M14 28a8 8 0 0 1-.5-16A10 10 0 0 1 33 14h1a6 6 0 0 1 0 12H14z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="2" />
+          <g fill="#93C5FD">
+            <circle cx="16" cy="37" r="2.5" />
+            <circle cx="24" cy="37" r="2.5" />
+            <circle cx="32" cy="37" r="2.5" />
+          </g>
+        </svg>
+      );
+    default:
+      return (
+        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <circle cx="24" cy="18" r="8" fill="#FBBF24" opacity="0.7" />
+          <path d="M18 34a6 6 0 0 1-.4-12A8 8 0 0 1 32 24h.5a5 5 0 0 1 0 10H18z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="2" />
+        </svg>
+      );
+  }
+}
+
+function getWeatherAdvice(weather: WeatherData, airQuality: { label: string; className: string }): string {
+  const type = getWeatherType(weather.condition);
+  if (type === 'rainy') return '우산을 챙기세요';
+  if (type === 'snowy') return '눈길 조심하세요';
+  if (airQuality.className === 'aqi-bad' || airQuality.className === 'aqi-very-bad') return '마스크를 챙기세요';
+  if (weather.temperature < 0) return '방한용품을 챙기세요';
+  if (weather.temperature > 33) return '더위에 주의하세요';
+  if (type === 'sunny') return '쾌적한 날씨에요';
+  return '좋은 하루 보내세요';
 }
 
 function getAqiStatus(pm10: number | undefined): { label: string; className: string } {
@@ -340,52 +408,53 @@ export function HomePage(): JSX.Element {
 
   return (
     <main className="page home-page">
-      <a href="#today-card" className="skip-link">본문으로 건너뛰기</a>
+      <a href="#weather-hero" className="skip-link">본문으로 건너뛰기</a>
 
-      {/* Header */}
+      {/* Header — greeting only */}
       <header className="home-header">
         <div>
           <h1 className="home-greeting">{getGreeting()}</h1>
           {userName && <p className="home-user-name">{userName}님</p>}
         </div>
-        {weather && (
-          <div className="home-weather-badge" aria-label={`현재 날씨 ${weather.conditionKr || weather.condition} ${Math.round(weather.temperature)}도`}>
-            <span aria-hidden="true">{getWeatherIcon(weather.condition)}</span>
-            <span className="home-weather-temp">{Math.round(weather.temperature)}°</span>
-          </div>
-        )}
       </header>
 
-      {/* Route type toggle */}
-      {hasRoutes && routes.length > 1 && (
-        <div className="route-type-toggle">
-          {(['auto', 'morning', 'evening'] as const).map((type) => (
-            <button
-              key={type}
-              type="button"
-              className={`route-type-btn ${forceRouteType === type ? 'active' : ''}`}
-              onClick={() => setForceRouteType(type)}
-            >
-              {type === 'auto' ? '자동' : type === 'morning' ? '출근' : '퇴근'}
-            </button>
-          ))}
-        </div>
+      {/* Weather Hero Card */}
+      {weather && (
+        <section id="weather-hero" className="weather-hero" aria-label={`현재 날씨 ${weather.conditionKr || weather.condition} ${Math.round(weather.temperature)}도`}>
+          <div className="weather-hero-main">
+            <WeatherIcon condition={weather.condition} size={48} />
+            <div className="weather-hero-text">
+              <span className="weather-temp-value">{Math.round(weather.temperature)}°</span>
+              <span className="weather-condition">{weather.conditionKr || weather.condition}</span>
+            </div>
+          </div>
+          <div className="weather-hero-details">
+            <span>습도 {weather.humidity}%</span>
+            {airQuality.label !== '-' && (
+              <span className={`aqi-badge ${airQuality.className}`}>미세먼지 {airQuality.label}</span>
+            )}
+          </div>
+          <p className="weather-advice">{getWeatherAdvice(weather, airQuality)}</p>
+        </section>
       )}
 
-      {/* Today's Commute Card */}
+      {/* Commute Card (route + transit + start button) */}
       <section id="today-card" className="today-card" aria-label="오늘의 출퇴근">
         {hasRoutes && activeRoute ? (
           <>
-            {/* Weather Strip */}
-            {weather && (
-              <div className="today-weather-strip">
-                <span>{getWeatherIcon(weather.condition)} {Math.round(weather.temperature)}° {weather.conditionKr || weather.condition}</span>
-                <span className="today-weather-detail">
-                  습도 {weather.humidity}%
-                  {airQuality.label !== '-' && (
-                    <> · 미세먼지 <span className={airQuality.className}>{airQuality.label}</span></>
-                  )}
-                </span>
+            {/* Route type toggle — inside commute card */}
+            {routes.length > 1 && (
+              <div className="route-type-toggle">
+                {(['auto', 'morning', 'evening'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className={`route-type-btn ${forceRouteType === type ? 'active' : ''}`}
+                    onClick={() => setForceRouteType(type)}
+                  >
+                    {type === 'auto' ? '자동' : type === 'morning' ? '출근' : '퇴근'}
+                  </button>
+                ))}
               </div>
             )}
 
@@ -451,11 +520,11 @@ export function HomePage(): JSX.Element {
         )}
       </section>
 
-      {/* Alert Section - always visible */}
+      {/* Alert Section — renamed label */}
       <section className="home-alert-section" aria-label="알림">
         {nextAlert ? (
           <Link to="/alerts" className="next-alert-bar">
-            <span className="next-alert-label">다음 알림</span>
+            <span className="next-alert-label">예정된 알림</span>
             <span className="next-alert-time">{nextAlert.time}</span>
             <span className="next-alert-type">{nextAlert.label}</span>
           </Link>
@@ -479,7 +548,7 @@ export function HomePage(): JSX.Element {
         )}
       </section>
 
-      {/* Stats Section - always visible */}
+      {/* Stats Section */}
       <section className="home-stats" aria-label="이번 주 통근">
         <h3 className="home-stats-title">이번 주</h3>
         {commuteStats && (commuteStats.overallAverageDuration > 0 || (commuteStats.recentSessions != null && commuteStats.recentSessions > 0)) ? (
@@ -511,20 +580,20 @@ export function HomePage(): JSX.Element {
         )}
       </section>
 
-      {/* Other routes quick switch */}
+      {/* Other routes — navigate to /routes instead of /commute (2-C) */}
       {hasRoutes && routes.length > 1 && (
-        <section className="other-routes" aria-label="다른 경로">
+        <section className="other-routes" aria-label="다른 경로 보기">
           {routes.filter(r => r.id !== activeRoute?.id).slice(0, 2).map(route => (
             <button
               key={route.id}
               type="button"
               className="other-route-chip"
-              onClick={() => navigate('/commute', { state: { routeId: route.id } })}
+              onClick={() => navigate('/routes')}
             >
               <span className="other-route-type">
                 {route.routeType === 'morning' ? '출근' : '퇴근'}
               </span>
-              <span>{route.name}</span>
+              <span>{route.name} 보기</span>
             </button>
           ))}
         </section>

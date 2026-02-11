@@ -20,11 +20,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Types for database tables
 export interface DbUser {
   id: string;
+  email: string;
   phone_number: string;
   name: string | null;
   password_hash: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  location: string | null;
+  google_id: string | null;
   created_at: string;
   updated_at: string;
 }

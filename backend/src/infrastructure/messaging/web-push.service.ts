@@ -53,10 +53,11 @@ export class WebPushService implements IWebPushService {
     let sent = 0;
     for (const sub of subscriptions) {
       try {
+        const parsedKeys = JSON.parse(sub.keys) as { p256dh: string; auth: string };
         await webPush.sendNotification(
           {
             endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
+            keys: { p256dh: parsedKeys.p256dh, auth: parsedKeys.auth },
           },
           payload,
         );

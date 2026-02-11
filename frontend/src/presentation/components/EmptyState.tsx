@@ -17,7 +17,7 @@ export function EmptyState({
   action,
   actionLink,
   actionText,
-}: EmptyStateProps) {
+}: EmptyStateProps): JSX.Element {
   return (
     <div className="empty-state-card">
       <span className="empty-state-icon" aria-hidden="true">{icon}</span>

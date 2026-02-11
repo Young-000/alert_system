@@ -27,7 +27,7 @@ const TRANSPORT_OPTIONS: { value: TransportMode; label: string; description: str
 
 const DURATION_PRESETS = [15, 30, 45, 60, 90];
 
-export function OnboardingPage() {
+export function OnboardingPage(): JSX.Element {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId') || '';
   const userName = localStorage.getItem('userName') || '회원';

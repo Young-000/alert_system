@@ -1,4 +1,5 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Headers, UnauthorizedException, ForbiddenException, Logger } from '@nestjs/common';
+import { timingSafeEqual } from 'crypto';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { Inject } from '@nestjs/common';
@@ -36,13 +37,15 @@ export class SchedulerLegacyController {
       throw new ForbiddenException('Legacy scheduler is disabled. Use EventBridge Scheduler.');
     }
 
-    // 간단한 API 키 검증
+    // API 키 검증 (timing-safe comparison으로 타이밍 공격 방지)
     const expectedKey = process.env.SCHEDULER_API_KEY;
-    if (!expectedKey) {
-      this.logger.error('SCHEDULER_API_KEY environment variable is not set');
+    if (!expectedKey || !schedulerKey) {
+      this.logger.error('SCHEDULER_API_KEY environment variable is not set or key header is missing');
       throw new UnauthorizedException('Scheduler not configured');
     }
-    if (schedulerKey !== expectedKey) {
+    const expected = Buffer.from(expectedKey, 'utf8');
+    const received = Buffer.from(schedulerKey, 'utf8');
+    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
       throw new UnauthorizedException('Invalid scheduler key');
     }
 

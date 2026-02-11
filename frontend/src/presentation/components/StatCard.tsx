@@ -18,7 +18,7 @@ export function StatCard({
   trend,
   trendDirection = 'neutral',
   highlight = false,
-}: StatCardProps) {
+}: StatCardProps): JSX.Element {
   return (
     <div className={`stat-card-enhanced ${highlight ? 'highlight' : ''}`}>
       {icon && <span className="stat-card-icon" aria-hidden="true">{icon}</span>}

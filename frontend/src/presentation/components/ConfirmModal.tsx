@@ -22,7 +22,7 @@ export function ConfirmModal({
   isLoading = false,
   onConfirm,
   onCancel,
-}: ConfirmModalProps) {
+}: ConfirmModalProps): JSX.Element | null {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
@@ -126,7 +126,7 @@ interface SummaryRowProps {
   value: string | ReactNode;
 }
 
-export function ConfirmSummaryRow({ label, value }: SummaryRowProps) {
+export function ConfirmSummaryRow({ label, value }: SummaryRowProps): JSX.Element {
   return (
     <div className="confirm-summary-row">
       <span className="confirm-summary-label">{label}</span>

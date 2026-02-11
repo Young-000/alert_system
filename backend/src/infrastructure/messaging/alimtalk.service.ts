@@ -46,6 +46,8 @@ interface NhnCloudResponse {
   };
 }
 
+const FETCH_TIMEOUT_MS = 10000;
+
 @Injectable()
 export class AlimtalkService implements IAlimtalkService {
   private readonly logger = new Logger(AlimtalkService.name);
@@ -97,7 +99,7 @@ export class AlimtalkService implements IAlimtalkService {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -139,7 +141,7 @@ export class AlimtalkService implements IAlimtalkService {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
       const response = await fetch(url, {
         method: 'POST',

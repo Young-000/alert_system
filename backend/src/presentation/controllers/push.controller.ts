@@ -62,17 +62,17 @@ export class PushController {
       where: { endpoint: dto.endpoint },
     });
 
+    const keysJson = JSON.stringify({ p256dh: dto.keys.p256dh, auth: dto.keys.auth });
+
     if (existing) {
       existing.userId = req.user.userId;
-      existing.p256dh = dto.keys.p256dh;
-      existing.auth = dto.keys.auth;
+      existing.keys = keysJson;
       await this.subscriptionRepo.save(existing);
     } else {
       await this.subscriptionRepo.save({
         userId: req.user.userId,
         endpoint: dto.endpoint,
-        p256dh: dto.keys.p256dh,
-        auth: dto.keys.auth,
+        keys: keysJson,
       });
     }
 

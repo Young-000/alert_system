@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   alertApiClient,
@@ -10,6 +10,11 @@ import type { SubwayStation, BusStop } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
 
 type WizardStep = 'type' | 'transport' | 'station' | 'routine' | 'confirm';
+
+const TOAST_DURATION_MS = 2000;
+const SEARCH_DEBOUNCE_MS = 300;
+const MAX_SEARCH_RESULTS = 15;
+const TRANSPORT_NOTIFY_OFFSET_MIN = 15;
 
 interface TransportItem {
   type: 'subway' | 'bus';
@@ -24,7 +29,10 @@ interface Routine {
   leaveWork: string;
 }
 
-export function AlertSettingsPage() {
+export function AlertSettingsPage(): JSX.Element {
+  // Wizard visibility (collapsed when alerts exist)
+  const [showWizard, setShowWizard] = useState(false);
+
   // Wizard state
   const [step, setStep] = useState<WizardStep>('type');
   const [wantsWeather, setWantsWeather] = useState(false);
@@ -73,7 +81,9 @@ export function AlertSettingsPage() {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null); // 연결된 경로 ID
 
   const userId = localStorage.getItem('userId') || '';
-  const commuteApi = getCommuteApiClient();
+
+  // Stable singleton reference prevents unnecessary useEffect re-runs
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // Load existing alerts
   useEffect(() => {
@@ -90,6 +100,8 @@ export function AlertSettingsPage() {
         const userAlerts = await alertApiClient.getAlertsByUser(userId);
         if (!isMounted) return;
         setAlerts(userAlerts);
+        // Show wizard by default only if no alerts exist
+        if (userAlerts.length === 0) setShowWizard(true);
       } catch {
         if (!isMounted) return;
         setError('알림 목록을 불러오는데 실패했습니다.');
@@ -172,7 +184,7 @@ export function AlertSettingsPage() {
         }
 
         if (!controller.signal.aborted) {
-          setSearchResults(results.slice(0, 15));
+          setSearchResults(results.slice(0, MAX_SEARCH_RESULTS));
 
           // 지하철 역 그룹화 (같은 역 이름을 가진 노선들)
           if (transportTypes.includes('subway') && !transportTypes.includes('bus')) {
@@ -199,7 +211,7 @@ export function AlertSettingsPage() {
           setIsSearching(false);
         }
       }
-    }, 300);
+    }, SEARCH_DEBOUNCE_MS);
 
     return () => {
       clearTimeout(searchTimeout);
@@ -302,10 +314,9 @@ export function AlertSettingsPage() {
     }
 
     if (wantsTransport) {
-      // 15 minutes before leaving
       const [leaveH, leaveM] = routine.leaveHome.split(':').map(Number);
       let notifyH = leaveH;
-      let notifyM = leaveM - 15;
+      let notifyM = leaveM - TRANSPORT_NOTIFY_OFFSET_MIN;
       if (notifyM < 0) {
         notifyM += 60;
         notifyH -= 1;
@@ -319,7 +330,7 @@ export function AlertSettingsPage() {
 
       const [workH, workM] = routine.leaveWork.split(':').map(Number);
       let workNotifyH = workH;
-      let workNotifyM = workM - 15;
+      let workNotifyM = workM - TRANSPORT_NOTIFY_OFFSET_MIN;
       if (workNotifyM < 0) {
         workNotifyM += 60;
         workNotifyH -= 1;
@@ -502,7 +513,7 @@ export function AlertSettingsPage() {
         setSearchQuery('');
         setSelectedRouteId(null); // 경로 연결 초기화
         setSuccess('');
-      }, 2000);
+      }, TOAST_DURATION_MS);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
       if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
@@ -567,7 +578,7 @@ export function AlertSettingsPage() {
       reloadAlerts();
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
-      setTimeout(() => setSuccess(''), 2000);
+      setTimeout(() => setSuccess(''), TOAST_DURATION_MS);
     } catch {
       setError('수정에 실패했습니다.');
     } finally {
@@ -635,7 +646,7 @@ export function AlertSettingsPage() {
 
     if (wantsTransport && selectedTransports.length > 0) {
       const [h, m] = routine.leaveHome.split(':').map(Number);
-      let notifyM = m - 15;
+      let notifyM = m - TRANSPORT_NOTIFY_OFFSET_MIN;
       let notifyH = h;
       if (notifyM < 0) { notifyM += 60; notifyH -= 1; }
       if (notifyH < 0) { notifyH = 0; notifyM = 0; }
@@ -645,7 +656,7 @@ export function AlertSettingsPage() {
       });
 
       const [wh, wm] = routine.leaveWork.split(':').map(Number);
-      let workNotifyM = wm - 15;
+      let workNotifyM = wm - TRANSPORT_NOTIFY_OFFSET_MIN;
       let workNotifyH = wh;
       if (workNotifyM < 0) { workNotifyM += 60; workNotifyH -= 1; }
       if (workNotifyH < 0) { workNotifyH = 0; workNotifyM = 0; }
@@ -693,65 +704,102 @@ export function AlertSettingsPage() {
         </div>
       )}
 
-      {/* 상단 알림 미리보기 - 설정된 알림이 있을 때만 표시 */}
+      {/* Existing Alerts — moved to top (2-F) */}
       {!isLoadingAlerts && alerts.length > 0 && (
-        <section className="alerts-preview-top">
-          <div className="preview-header-row">
-            <h2>내 알림</h2>
-            <span className="preview-count">{alerts.filter(a => a.enabled).length}개 활성</span>
+        <section id="existing-alerts-section" className="existing-alerts">
+          <div className="section-header-row">
+            <h2>설정된 알림</h2>
+            <span className="section-count">{alerts.filter(a => a.enabled).length}/{alerts.length} 활성</span>
           </div>
-          <div className="preview-alerts-list">
-            {alerts.slice(0, 3).map((alert) => {
+          <div className="alert-list-improved">
+            {alerts.map((alert) => {
               const parts = alert.schedule.split(' ');
               const hours = parts.length >= 2
                 ? parts[1].split(',').map(h => `${h.padStart(2, '0')}:00`)
                 : ['--:--'];
               return (
-                <div
+                <article
                   key={alert.id}
-                  className={`preview-alert-chip ${alert.enabled ? 'active' : 'inactive'}`}
+                  className={`alert-item-card ${alert.enabled ? 'enabled' : 'disabled'}`}
                 >
-                  <span className="chip-icon" aria-hidden="true">
-                    {alert.alertTypes.includes('weather') ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
-                    )}
-                  </span>
-                  <span className="chip-name">{alert.name}</span>
-                  <span className="chip-time">{hours[0]}</span>
-                  <label className="toggle-mini">
-                    <input
-                      type="checkbox"
-                      checked={alert.enabled}
-                      onChange={async () => {
-                        setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
-                        try {
-                          await alertApiClient.toggleAlert(alert.id);
-                        } catch {
-                          setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
-                          setError('알림 상태 변경에 실패했습니다.');
+                  <div className="alert-item-header">
+                    <div className="alert-time-badges">
+                      {hours.map((time, i) => (
+                        <span key={i} className="alert-time-badge">{time}</span>
+                      ))}
+                    </div>
+                    <span className="alert-name">{alert.name}</span>
+                  </div>
+                  <div className="alert-item-body">
+                    <div className="alert-meta">
+                      <div className="alert-type-tags">
+                        {alert.alertTypes.map((type) => (
+                          <span key={type} className={`alert-type-tag ${type}`}>
+                            {type === 'weather' ? '날씨' : type === 'airQuality' ? '미세먼지' : type === 'subway' ? '지하철' : '버스'}
+                          </span>
+                        ))}
+                      </div>
+                      {alert.routeId && (() => {
+                        const linkedRoute = savedRoutes.find(r => r.id === alert.routeId);
+                        if (linkedRoute) {
+                          return <span className="alert-route-link-v2">{linkedRoute.name}</span>;
                         }
-                      }}
-                      aria-label={`${alert.name} ${alert.enabled ? '끄기' : '켜기'}`}
-                    />
-                    <span className="toggle-slider-mini" />
-                  </label>
-                </div>
+                        return null;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="alert-item-actions">
+                    <label className="toggle-compact">
+                      <input
+                        type="checkbox"
+                        checked={alert.enabled}
+                        onChange={async () => {
+                          setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
+                          try {
+                            await alertApiClient.toggleAlert(alert.id);
+                          } catch {
+                            setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
+                            setError('알림 상태 변경에 실패했습니다.');
+                          }
+                        }}
+                        aria-label={`${alert.name} ${alert.enabled ? '끄기' : '켜기'}`}
+                      />
+                      <span className="toggle-slider-compact" />
+                    </label>
+                    <button type="button" className="btn-icon" onClick={() => handleEditClick(alert)} aria-label="수정" title="수정">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                    <button type="button" className="btn-icon danger" onClick={() => handleDeleteClick(alert)} aria-label="삭제" title="삭제">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
+                </article>
               );
             })}
-            {alerts.length > 3 && (
-              <a href="#existing-alerts-section" className="preview-more-link">
-                +{alerts.length - 3}개 더보기
-              </a>
-            )}
           </div>
         </section>
       )}
 
-      <div id="wizard-content" className="wizard-container" style={{ display: (isLoadingAlerts && userId) || !userId ? 'none' : undefined }}>
+      {/* "Add new alert" toggle button */}
+      {!isLoadingAlerts && userId && alerts.length > 0 && !showWizard && (
+        <button
+          type="button"
+          className="btn btn-primary add-alert-btn"
+          onClick={() => setShowWizard(true)}
+        >
+          + 새 알림 추가
+        </button>
+      )}
+
+      <div id="wizard-content" className="wizard-container" style={{ display: (isLoadingAlerts && userId) || !userId || !showWizard ? 'none' : undefined }}>
         {/* 개선된 스텝 인디케이터 */}
-        <div className="step-indicator" role="navigation" aria-label="설정 단계">
+        <div className="step-indicator" role="group" aria-label="설정 단계 진행 상황" aria-roledescription="progress">
           <div className={`step-item ${progress.current >= 1 ? 'active' : ''} ${progress.current > 1 ? 'completed' : ''}`}>
             <div className="step-number">{progress.current > 1 ? '✓' : '1'}</div>
             <div className="step-label">유형</div>
@@ -1461,105 +1509,7 @@ export function AlertSettingsPage() {
         </section>
       )}
 
-      {/* Existing Alerts - 개선된 UI */}
-      {alerts.length > 0 && (
-        <section id="existing-alerts-section" className="existing-alerts">
-          <div className="section-header-row">
-            <h2>설정된 알림</h2>
-            <span className="section-count">{alerts.filter(a => a.enabled).length}/{alerts.length} 활성</span>
-          </div>
-          <div className="alert-list-improved">
-            {alerts.map((alert) => {
-              // 시간 파싱
-              const parts = alert.schedule.split(' ');
-              const hours = parts.length >= 2
-                ? parts[1].split(',').map(h => `${h.padStart(2, '0')}:00`)
-                : ['--:--'];
-
-              return (
-                <article
-                  key={alert.id}
-                  className={`alert-item-card ${alert.enabled ? 'enabled' : 'disabled'}`}
-                >
-                  <div className="alert-item-header">
-                    <div className="alert-time-badges">
-                      {hours.map((time, i) => (
-                        <span key={i} className="alert-time-badge">{time}</span>
-                      ))}
-                    </div>
-                    <span className="alert-name">{alert.name}</span>
-                  </div>
-                  <div className="alert-item-body">
-                    <div className="alert-meta">
-                      <div className="alert-type-tags">
-                        {alert.alertTypes.map((type) => (
-                          <span key={type} className={`alert-type-tag ${type}`}>
-                            {type === 'weather' ? '날씨' : type === 'airQuality' ? '미세먼지' : type === 'subway' ? '지하철' : '버스'}
-                          </span>
-                        ))}
-                      </div>
-                      {alert.routeId && (() => {
-                        const linkedRoute = savedRoutes.find(r => r.id === alert.routeId);
-                        if (linkedRoute) {
-                          return (
-                            <span className="alert-route-link-v2">
-                              {linkedRoute.name}
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="alert-item-actions">
-                    <label className="toggle-compact">
-                      <input
-                        type="checkbox"
-                        checked={alert.enabled}
-                        onChange={async () => {
-                          setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
-                          try {
-                            await alertApiClient.toggleAlert(alert.id);
-                          } catch {
-                            setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
-                            setError('알림 상태 변경에 실패했습니다.');
-                          }
-                        }}
-                        aria-label={`${alert.name} ${alert.enabled ? '끄기' : '켜기'}`}
-                      />
-                      <span className="toggle-slider-compact" />
-                    </label>
-                    <button
-                      type="button"
-                      className="btn-icon"
-                      onClick={() => handleEditClick(alert)}
-                      aria-label="수정"
-                      title="수정"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-icon danger"
-                      onClick={() => handleDeleteClick(alert)}
-                      aria-label="삭제"
-                      title="삭제"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {/* (Existing Alerts section moved to top — see above) */}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
@@ -1684,21 +1634,13 @@ export function AlertSettingsPage() {
         </div>
       )}
 
-      <div className="cross-link-section">
-        <Link to="/commute/dashboard" className="cross-link-card">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span>통계 보기</span>
-          <span className="cross-link-arrow">→</span>
-        </Link>
-      </div>
-
       <footer className="footer">
         <p className="footer-text">
           <span>출퇴근 메이트</span>
           <span className="footer-divider">·</span>
           <span>출퇴근 알림 서비스</span>
         </p>
-        <p className="footer-copyright">© 2025 All rights reserved</p>
+        <p className="footer-copyright">© 2026 All rights reserved</p>
       </footer>
     </main>
   );

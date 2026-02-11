@@ -1,10 +1,39 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
 
 declare const self: ServiceWorkerGlobalScope;
 
 // Workbox precaching (injected by VitePWA)
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Runtime caching: Pretendard font (long-lived)
+registerRoute(
+  ({ url }) => url.hostname === 'cdn.jsdelivr.net',
+  new CacheFirst({
+    cacheName: 'font-cache',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }),
+    ],
+  }),
+);
+
+// Runtime caching: API responses (stale-while-revalidate for weather/transit)
+registerRoute(
+  ({ url }) =>
+    url.pathname.startsWith('/api/weather') ||
+    url.pathname.startsWith('/api/air-quality') ||
+    url.pathname.startsWith('/api/subway/stations/search') ||
+    url.pathname.startsWith('/api/bus/stops/search'),
+  new StaleWhileRevalidate({
+    cacheName: 'api-cache',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 5 }),
+    ],
+  }),
+);
 
 // Push notification handler
 self.addEventListener('push', (event) => {

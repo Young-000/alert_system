@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
 
-export function AuthCallbackPage() {
+export function AuthCallbackPage(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');

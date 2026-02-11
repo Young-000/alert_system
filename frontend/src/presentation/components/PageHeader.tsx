@@ -15,7 +15,7 @@ export function PageHeader({
   backTo,
   backLabel = '뒤로',
   actions,
-}: PageHeaderProps) {
+}: PageHeaderProps): JSX.Element {
   return (
     <header className="page-header">
       <div className="page-header-left">

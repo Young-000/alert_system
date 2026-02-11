@@ -12,7 +12,7 @@ export function ToggleSwitch({
   disabled = false,
   size = 'default',
   ariaLabel,
-}: ToggleSwitchProps) {
+}: ToggleSwitchProps): JSX.Element {
   return (
     <label className={`toggle-switch ${size === 'compact' ? 'toggle-compact' : ''}`}>
       <input
