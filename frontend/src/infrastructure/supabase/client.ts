@@ -22,7 +22,7 @@ export interface DbUser {
   id: string;
   email: string;
   phone_number: string;
-  name: string | null;
+  name: string;
   password_hash: string | null;
   location: string | null;
   google_id: string | null;
@@ -34,26 +34,21 @@ export interface DbAlert {
   id: string;
   user_id: string;
   name: string;
-  time: string;
-  days_of_week: number[];
-  is_active: boolean;
-  include_weather: boolean;
-  include_air_quality: boolean;
-  include_bus: boolean;
-  include_subway: boolean;
+  schedule: string;
+  alert_types: string;
+  enabled: boolean;
   bus_stop_id: string | null;
-  bus_route_id: string | null;
   subway_station_id: string | null;
-  subway_line: string | null;
+  route_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface DbSubwayStation {
   id: string;
-  station_id: string;
-  station_name: string;
-  line_name: string;
+  name: string;
+  line: string;
+  code: string | null;
   created_at: string;
 }
 

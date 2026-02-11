@@ -1,21 +1,45 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
+import { clientsClaim } from 'workbox-core';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
+import {
+  StaleWhileRevalidate,
+  CacheFirst,
+  NetworkFirst,
+} from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Activate new SW immediately without waiting for all tabs to close
+self.skipWaiting();
+clientsClaim();
+
+// Remove outdated precache entries from previous versions
+cleanupOutdatedCaches();
+
 // Workbox precaching (injected by VitePWA)
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Runtime caching: Pretendard font (long-lived)
+// SPA navigation: use NetworkFirst so fresh HTML is always served
+const navigationRoute = new NavigationRoute(
+  new NetworkFirst({
+    cacheName: 'navigation-cache',
+    networkTimeoutSeconds: 3,
+  }),
+);
+registerRoute(navigationRoute);
+
+// Runtime caching: Pretendard font (long-lived, immutable)
 registerRoute(
   ({ url }) => url.hostname === 'cdn.jsdelivr.net',
   new CacheFirst({
     cacheName: 'font-cache',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }),
+      new ExpirationPlugin({
+        maxEntries: 10,
+        maxAgeSeconds: 60 * 60 * 24 * 365,
+      }),
     ],
   }),
 );
@@ -34,6 +58,13 @@ registerRoute(
     ],
   }),
 );
+
+// Fallback: accept SKIP_WAITING message from the client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // Push notification handler
 self.addEventListener('push', (event) => {

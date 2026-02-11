@@ -71,33 +71,35 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger API 문서 설정
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Alert System API')
-    .setDescription('출퇴근 알림 시스템 - 날씨, 미세먼지, 교통 정보 통합 제공 및 스마트 알림')
-    .setVersion('2.0')
-    .addTag('users', '사용자 관리')
-    .addTag('alerts', '알림 설정')
-    .addTag('behavior', '행동 추적 및 패턴 분석')
-    .addTag('notifications', '푸시 알림')
-    .addTag('privacy', '개인정보 관리 (GDPR)')
-    .addTag('air-quality', '미세먼지 정보')
-    .addTag('subway', '지하철 정보')
-    .addTag('bus', '버스 정보')
-    .addBearerAuth()
-    .build();
+  // Swagger API 문서 설정 - 개발 환경에서만 활성화
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Alert System API')
+      .setDescription('출퇴근 알림 시스템 - 날씨, 미세먼지, 교통 정보 통합 제공 및 스마트 알림')
+      .setVersion('2.0')
+      .addTag('users', '사용자 관리')
+      .addTag('alerts', '알림 설정')
+      .addTag('behavior', '행동 추적 및 패턴 분석')
+      .addTag('notifications', '푸시 알림')
+      .addTag('privacy', '개인정보 관리 (GDPR)')
+      .addTag('air-quality', '미세먼지 정보')
+      .addTag('subway', '지하철 정보')
+      .addTag('bus', '버스 정보')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api-docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  });
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api-docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    });
+    logger.log('Swagger API Docs enabled (non-production)');
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(`Swagger API Docs: http://localhost:${port}/api-docs`);
 }
 bootstrap();
 

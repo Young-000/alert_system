@@ -123,7 +123,8 @@ a:focus-visible {
   left: 0;
   background: var(--primary);
   color: white;
-  padding: 8px 16px;
+  padding: 10px 16px;
+  min-height: 44px;
   border-radius: var(--radius-md);
   z-index: 1001;
   transition: top 0.2s;
@@ -1862,6 +1863,17 @@ textarea.input:focus {
 
 .notice.success::before {
   background: var(--success);
+}
+
+.notice-link {
+  display: inline-block;
+  padding: 4px 8px;
+  min-height: 32px;
+  line-height: 24px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* Notice icons (auto-inserted) */
@@ -12399,8 +12411,10 @@ kbd {
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 768px;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -15012,6 +15026,8 @@ button.nav-back-btn {
 
 /* --- Guest Landing --- */
 .guest-page {
+  max-width: 720px;
+  margin: 0 auto;
   padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
 
@@ -15045,6 +15061,9 @@ button.nav-back-btn {
 
 .guest-cta {
   width: 100%;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
   padding: 16px 24px;
   font-size: 1.0625rem;
   font-weight: 600;
@@ -15053,9 +15072,15 @@ button.nav-back-btn {
 
 .guest-features {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   padding: 0 20px 40px;
+}
+
+@media (max-width: 600px) {
+  .guest-features {
+    grid-template-columns: 1fr;
+  }
 }
 
 .guest-feature-card {
@@ -15064,8 +15089,19 @@ button.nav-back-btn {
   border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .guest-feature-card {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 16px;
+  }
 }
 
 .guest-feature-num {
@@ -15097,6 +15133,8 @@ button.nav-back-btn {
 
 /* --- Logged-In Home --- */
 .home-page {
+  max-width: 640px;
+  margin: 0 auto;
   padding: 0 16px 100px;
 }
 
