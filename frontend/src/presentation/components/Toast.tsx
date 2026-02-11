@@ -11,7 +11,7 @@ interface ToastProps {
   onDismiss: (id: string) => void;
 }
 
-function Toast({ toast, onDismiss }: ToastProps) {
+function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
   useEffect(() => {
     const timer = setTimeout(() => {
       onDismiss(toast.id);
@@ -52,7 +52,7 @@ interface ToastContainerProps {
   onDismiss: (id: string) => void;
 }
 
-export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
+export function ToastContainer({ toasts, onDismiss }: ToastContainerProps): JSX.Element | null {
   if (toasts.length === 0) return null;
 
   return (

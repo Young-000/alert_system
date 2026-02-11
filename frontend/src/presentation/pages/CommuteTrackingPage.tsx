@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   getCommuteApiClient,
@@ -11,7 +11,7 @@ export function CommuteTrackingPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const userId = localStorage.getItem('userId') || '';
-  const commuteApi = getCommuteApiClient();
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // State from navigation (홈에서 전달)
   const navState = location.state as {
@@ -193,8 +193,8 @@ export function CommuteTrackingPage(): JSX.Element {
   if (isLoading) {
     return (
       <main className="page commute-page-v2">
-        <div className="commute-v2-loading">
-          <span className="spinner spinner-lg" />
+        <div className="commute-v2-loading" role="status" aria-live="polite">
+          <span className="spinner spinner-lg" aria-hidden="true" />
           <p>준비 중...</p>
         </div>
       </main>
@@ -262,7 +262,7 @@ export function CommuteTrackingPage(): JSX.Element {
         <span className="commute-v2-title">
           {route?.routeType === 'morning' ? '출근' : '퇴근'} 중
         </span>
-        <span />
+        <span aria-hidden="true" />
       </header>
 
       {/* Route name */}
@@ -316,6 +316,9 @@ export function CommuteTrackingPage(): JSX.Element {
         </div>
       )}
 
+      {/* Error (above actions so it's always visible) */}
+      {error && <div className="commute-v2-error" role="alert">{error}</div>}
+
       {/* Arrive Button */}
       <div className="commute-v2-actions">
         <button
@@ -335,8 +338,6 @@ export function CommuteTrackingPage(): JSX.Element {
           기록 취소
         </button>
       </div>
-
-      {error && <div className="commute-v2-error">{error}</div>}
 
       <ConfirmModal
         open={showCancelConfirm}

@@ -22,11 +22,8 @@ export class PushSubscriptionEntity {
   @Column({ type: 'text' })
   endpoint: string;
 
-  @Column({ type: 'text', name: 'p256dh' })
-  p256dh: string;
-
   @Column({ type: 'text' })
-  auth: string;
+  keys: string;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

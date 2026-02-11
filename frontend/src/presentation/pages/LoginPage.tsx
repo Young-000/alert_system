@@ -7,7 +7,7 @@ type AuthMode = 'login' | 'register';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-export function LoginPage() {
+export function LoginPage(): JSX.Element {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -301,7 +301,7 @@ export function LoginPage() {
           <span className="footer-divider">·</span>
           <span>출퇴근 알림 서비스</span>
         </p>
-        <p className="footer-copyright">© 2025 All rights reserved</p>
+        <p className="footer-copyright">© 2026 All rights reserved</p>
       </footer>
     </main>
   );

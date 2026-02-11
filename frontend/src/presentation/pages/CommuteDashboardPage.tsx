@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   getCommuteApiClient,
@@ -31,10 +31,10 @@ function getStopwatchRecords(): StopwatchRecord[] {
   }
 }
 
-export function CommuteDashboardPage() {
+export function CommuteDashboardPage(): JSX.Element {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId') || '';
-  const commuteApi = getCommuteApiClient();
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // State
@@ -45,7 +45,6 @@ export function CommuteDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics'>('overview');
   const [routeAnalytics, setRouteAnalytics] = useState<RouteAnalyticsResponse[]>([]);
-
 
   // Handle URL tab parameter first (highest priority)
   useEffect(() => {
@@ -108,7 +107,7 @@ export function CommuteDashboardPage() {
     return (
       <main className="page">
         <nav className="nav">
-          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)}>← 홈</button>
+          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)} aria-label="뒤로 가기">← 홈</button>
         </nav>
         <div className="notice warning">먼저 로그인해주세요.</div>
       </main>
@@ -119,10 +118,10 @@ export function CommuteDashboardPage() {
     return (
       <main className="page">
         <nav className="nav">
-          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)}>← 홈</button>
+          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)} aria-label="뒤로 가기">← 홈</button>
         </nav>
-        <div className="loading-container">
-          <span className="spinner" />
+        <div className="loading-container" role="status" aria-live="polite">
+          <span className="spinner" aria-hidden="true" />
           <p>통계를 불러오는 중...</p>
         </div>
       </main>
@@ -157,11 +156,13 @@ export function CommuteDashboardPage() {
       ) : (
         <div className="dashboard-container">
           {/* Tabs */}
-          <div className="dashboard-tabs">
+          <div className="dashboard-tabs" role="tablist" aria-label="통근 통계 탭">
             {stats && stats.totalSessions > 0 && (
               <>
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'overview'}
                   className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('overview'); setSearchParams({ tab: 'overview' }, { replace: true }); }}
                 >
@@ -169,6 +170,8 @@ export function CommuteDashboardPage() {
                 </button>
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'routes'}
                   className={`tab ${activeTab === 'routes' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('routes'); setSearchParams({ tab: 'routes' }, { replace: true }); }}
                 >
@@ -176,6 +179,8 @@ export function CommuteDashboardPage() {
                 </button>
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'history'}
                   className={`tab ${activeTab === 'history' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('history'); setSearchParams({ tab: 'history' }, { replace: true }); }}
                 >
@@ -186,6 +191,8 @@ export function CommuteDashboardPage() {
             {stopwatchRecords.length > 0 && (
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'stopwatch'}
                 className={`tab ${activeTab === 'stopwatch' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('stopwatch'); setSearchParams({ tab: 'stopwatch' }, { replace: true }); }}
               >
@@ -196,6 +203,8 @@ export function CommuteDashboardPage() {
             {routeAnalytics.length > 0 && (
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'analytics'}
                 className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('analytics'); setSearchParams({ tab: 'analytics' }, { replace: true }); }}
               >

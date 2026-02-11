@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DndContext,
@@ -59,7 +59,8 @@ interface ValidationResult {
 }
 
 // Sortable stop component for drag-and-drop
-function SortableStopItem({
+// Memoized to avoid re-renders of all items during drag-and-drop
+const SortableStopItem = memo(function SortableStopItem({
   stop,
   index,
   onRemove,
@@ -126,13 +127,14 @@ function SortableStopItem({
       </button>
     </div>
   );
-}
+});
 
-export function RouteSetupPage() {
+export function RouteSetupPage(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const userId = localStorage.getItem('userId') || '';
-  const commuteApi = getCommuteApiClient();
+  // Stable singleton reference prevents unnecessary useEffect re-runs
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // Shared route banner
   const [sharedRoute, setSharedRoute] = useState<{
@@ -429,15 +431,35 @@ export function RouteSetupPage() {
     return Array.from(groups.values());
   }, [subwayResults]);
 
-  // 역 선택 - 호선이 여러 개면 모달 표시
+  // 역 선택 - 교집합 알고리즘으로 호선 자동 인식 (Phase 3)
   const handleStationClick = (grouped: GroupedStation) => {
+    // 단일 호선이면 바로 선택
     if (grouped.lines.length === 1) {
-      // 호선이 하나면 바로 선택
       handleSelectStopDirect(grouped.name, grouped.lines[0].line, grouped.lines[0].id);
-    } else {
-      // 호선이 여러 개면 모달 표시
-      setLineSelectionModal(grouped);
+      return;
     }
+
+    // 이미 선택된 지하철 역들의 호선 목록으로 교집합 계산
+    const subwayStops = selectedStops.filter(s => s.transportMode === 'subway');
+    if (subwayStops.length > 0) {
+      const existingLines = new Set(subwayStops.map(s => s.line).filter(Boolean));
+      const commonLines = grouped.lines.filter(l => existingLines.has(l.line));
+
+      if (commonLines.length === 1) {
+        // 교집합 1개: 같은 호선 → 자동 선택 (모달 스킵)
+        handleSelectStopDirect(grouped.name, commonLines[0].line, commonLines[0].id);
+        return;
+      }
+      if (commonLines.length > 1) {
+        // 교집합 여러 개: 교집합만 보여주는 간소화 모달
+        setLineSelectionModal({ ...grouped, lines: commonLines });
+        return;
+      }
+      // 교집합 0개: 환승으로 판단 → 전체 호선 모달 표시
+    }
+
+    // 기본: 전체 호선 모달 표시
+    setLineSelectionModal(grouped);
   };
 
   // 호선 선택 후 정류장 추가
@@ -800,7 +822,7 @@ export function RouteSetupPage() {
           <span className="apple-title">경로</span>
           <span />
         </nav>
-        <div className="apple-loading">불러오는 중...</div>
+        <div className="apple-loading" role="status" aria-live="polite">불러오는 중...</div>
       </main>
     );
   }
@@ -999,6 +1021,7 @@ export function RouteSetupPage() {
                   }}
                   className="apple-search-input"
                   autoFocus
+                  aria-label={currentTransport === 'subway' ? '지하철역 검색' : '버스 정류장 검색'}
                 />
                 {searchQuery && (
                   <button
@@ -1201,7 +1224,7 @@ export function RouteSetupPage() {
         {step === 'confirm' && selectedStops.length > 0 && (
           <section className="apple-step">
             <div className="apple-step-content">
-              <h1 className="apple-question">{editingRoute ? '수정된 경로를<br />확인해주세요' : '이 경로가<br />맞나요?'}</h1>
+              <h1 className="apple-question">{editingRoute ? <>수정된 경로를<br />확인해주세요</> : <>이 경로가<br />맞나요?</>}</h1>
 
               {/* 개선된 경로 미리보기 패널 */}
               <div className="route-preview-panel">
@@ -1340,7 +1363,7 @@ export function RouteSetupPage() {
     const alertCount = getRouteAlertCount(route.id);
     const isMorning = route.routeType === 'morning';
     return (
-      <div key={route.id} className="route-card-v2">
+      <div key={route.id} className="route-card-v2" data-route-type={route.routeType}>
         <button
           type="button"
           className="route-card-v2-body"
@@ -1438,7 +1461,7 @@ export function RouteSetupPage() {
 
       {sortedRoutes.length === 0 ? (
         <div className="route-empty-v2">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="6" cy="19" r="3" />
             <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
             <circle cx="18" cy="5" r="3" />
@@ -1452,9 +1475,11 @@ export function RouteSetupPage() {
       ) : (
         <div className="route-list-v2">
           {/* 출근/퇴근 탭 필터 */}
-          <div className="route-filter-tabs">
+          <div className="route-filter-tabs" role="tablist" aria-label="경로 필터">
             <button
               type="button"
+              role="tab"
+              aria-selected={routeTab === 'all'}
               className={`route-filter-tab ${routeTab === 'all' ? 'active' : ''}`}
               onClick={() => setRouteTab('all')}
             >
@@ -1462,6 +1487,8 @@ export function RouteSetupPage() {
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={routeTab === 'morning'}
               className={`route-filter-tab ${routeTab === 'morning' ? 'active' : ''}`}
               onClick={() => setRouteTab('morning')}
             >
@@ -1469,6 +1496,8 @@ export function RouteSetupPage() {
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={routeTab === 'evening'}
               className={`route-filter-tab ${routeTab === 'evening' ? 'active' : ''}`}
               onClick={() => setRouteTab('evening')}
             >

@@ -24,13 +24,6 @@ describeIntegration('AirQualityApiClient Integration', () => {
     expect(result.pm25).toBeGreaterThanOrEqual(0);
     expect(result.aqi).toBeGreaterThanOrEqual(0);
     expect(result.status).toBeDefined();
-    console.log('Air Quality Data:', {
-      location: result.location,
-      pm10: result.pm10,
-      pm25: result.pm25,
-      aqi: result.aqi,
-      status: result.status,
-    });
   }, 10000); // 10초 타임아웃
 
   it('should fetch air quality data with default location for invalid coordinates', async () => {

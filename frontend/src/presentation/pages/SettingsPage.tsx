@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { alertApiClient, userApiClient } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
@@ -8,7 +8,9 @@ import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush
 
 type SettingsTab = 'profile' | 'routes' | 'alerts' | 'app';
 
-export function SettingsPage() {
+const TOAST_DURATION_MS = 3000;
+
+export function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId') || '';
   const phoneNumber = localStorage.getItem('phoneNumber') || '';
@@ -40,7 +42,8 @@ export function SettingsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [privacyMessage, setPrivacyMessage] = useState('');
 
-  const commuteApi = getCommuteApiClient();
+  // Stable singleton reference prevents unnecessary useEffect re-runs
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // Load data
   useEffect(() => {
@@ -151,7 +154,7 @@ export function SettingsPage() {
       setPrivacyMessage('데이터 내보내기에 실패했습니다.');
     } finally {
       setIsExporting(false);
-      setTimeout(() => setPrivacyMessage(''), 3000);
+      setTimeout(() => setPrivacyMessage(''), TOAST_DURATION_MS);
     }
   };
 
@@ -167,7 +170,7 @@ export function SettingsPage() {
       setPrivacyMessage('데이터 삭제에 실패했습니다.');
     } finally {
       setIsDeletingAllData(false);
-      setTimeout(() => setPrivacyMessage(''), 3000);
+      setTimeout(() => setPrivacyMessage(''), TOAST_DURATION_MS);
     }
   };
 
@@ -219,9 +222,11 @@ export function SettingsPage() {
       </header>
 
       {/* Tabs */}
-      <div className="settings-tabs">
+      <div className="settings-tabs" role="tablist" aria-label="설정 탭">
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'profile'}
           className={`settings-tab ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
@@ -230,6 +235,8 @@ export function SettingsPage() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'routes'}
           className={`settings-tab ${activeTab === 'routes' ? 'active' : ''}`}
           onClick={() => setActiveTab('routes')}
         >
@@ -239,6 +246,8 @@ export function SettingsPage() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'alerts'}
           className={`settings-tab ${activeTab === 'alerts' ? 'active' : ''}`}
           onClick={() => setActiveTab('alerts')}
         >
@@ -250,6 +259,8 @@ export function SettingsPage() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'app'}
           className={`settings-tab ${activeTab === 'app' ? 'active' : ''}`}
           onClick={() => setActiveTab('app')}
         >
@@ -260,8 +271,8 @@ export function SettingsPage() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="settings-loading">
-          <span className="spinner" />
+        <div className="settings-loading" role="status" aria-live="polite">
+          <span className="spinner" aria-hidden="true" />
           <p>불러오는 중...</p>
         </div>
       )}
@@ -292,8 +303,19 @@ export function SettingsPage() {
                   </span>
                   <div className="item-content">
                     <span className="item-label">사용자 ID</span>
-                    <span className="item-value item-value-small">{userId.slice(0, 8)}...</span>
+                    <span className="item-value item-value-small">{userId.slice(0, 4)}...</span>
                   </div>
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(userId).catch(() => {});
+                    }}
+                    aria-label="ID 복사"
+                    title="ID 복사"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
                 </div>
               </div>
 
@@ -559,7 +581,7 @@ export function SettingsPage() {
                   <br />
                   날씨·교통 알림부터 이동 시간 추적까지
                 </p>
-                <p className="muted">© 2025 All rights reserved</p>
+                <p className="muted">© 2026 All rights reserved</p>
               </div>
             </section>
           )}
@@ -594,7 +616,7 @@ export function SettingsPage() {
           localStorage.removeItem('commute_stopwatch_records');
           setShowLocalDataReset(false);
           setResetSuccess(true);
-          setTimeout(() => setResetSuccess(false), 3000);
+          setTimeout(() => setResetSuccess(false), TOAST_DURATION_MS);
         }}
         onCancel={() => setShowLocalDataReset(false)}
       >

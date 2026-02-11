@@ -1,12 +1,12 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { BottomNavigation } from './components/BottomNavigation';
 import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
 
 // Lazy-loaded pages for code splitting
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const AlertSettingsPage = lazy(() => import('./pages/AlertSettingsPage').then(m => ({ default: m.AlertSettingsPage })));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
@@ -19,14 +19,29 @@ const NotificationHistoryPage = lazy(() => import('./pages/NotificationHistoryPa
 
 function PageLoader() {
   return (
-    <div className="loading-container" role="status" aria-live="polite">
-      <span className="spinner spinner-lg" aria-hidden="true" />
-      <p className="muted">페이지 로딩 중...</p>
+    <div className="page-skeleton" role="status" aria-live="polite">
+      <div className="skeleton" style={{ width: '160px', height: '24px', marginBottom: '16px' }} />
+      <div className="skeleton-card" style={{ height: '180px', marginBottom: '12px' }} />
+      <div className="skeleton-card" style={{ height: '100px' }} />
+      <span className="sr-only">페이지 로딩 중...</span>
     </div>
   );
 }
 
+// Idle preload: after mount, preload key pages in background
+function useIdlePreload(): void {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      import('./pages/RouteSetupPage');
+      import('./pages/AlertSettingsPage');
+      import('./pages/SettingsPage');
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+}
+
 function App() {
+  useIdlePreload();
   return (
     <ErrorBoundary>
       <OfflineBanner />

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface NavItem {
@@ -7,9 +8,14 @@ interface NavItem {
   icon: (active: boolean) => JSX.Element;
 }
 
+const STROKE_ACTIVE = 'var(--primary)';
+const STROKE_INACTIVE = 'var(--ink-secondary)';
+const SW = 2.5; // slightly thicker for visibility
+
 function HomeIcon({ active }: { active: boolean }) {
+  const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--color-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'var(--primary-light)' : 'none'} stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
@@ -17,18 +23,20 @@ function HomeIcon({ active }: { active: boolean }) {
 }
 
 function RouteIcon({ active }: { active: boolean }) {
+  const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--color-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="6" cy="19" r="3" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="19" r="3" fill={active ? 'var(--primary-light)' : 'none'} />
       <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
-      <circle cx="18" cy="5" r="3" />
+      <circle cx="18" cy="5" r="3" fill={active ? 'var(--primary-light)' : 'none'} />
     </svg>
   );
 }
 
 function BellIcon({ active }: { active: boolean }) {
+  const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--color-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'var(--primary-light)' : 'none'} stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -36,13 +44,21 @@ function BellIcon({ active }: { active: boolean }) {
 }
 
 function SettingsIcon({ active }: { active: boolean }) {
+  const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--color-primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" fill={active ? 'var(--primary-light)' : 'none'} />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   );
 }
+
+// Prefetch map for lazy-loaded pages
+const PREFETCH_MAP: Record<string, () => Promise<unknown>> = {
+  '/routes': () => import('../pages/RouteSetupPage'),
+  '/alerts': () => import('../pages/AlertSettingsPage'),
+  '/settings': () => import('../pages/SettingsPage'),
+};
 
 const NAV_ITEMS: NavItem[] = [
   {
@@ -84,8 +100,17 @@ export function BottomNavigation(): JSX.Element | null {
     return location.pathname === item.path;
   };
 
+  const handlePrefetch = useCallback((path: string) => {
+    const loader = PREFETCH_MAP[path];
+    if (loader) loader();
+  }, []);
+
   const hiddenPaths = ['/login', '/onboarding', '/auth/callback'];
-  if (hiddenPaths.some(path => location.pathname.startsWith(path))) {
+  const exactHiddenPaths = ['/commute'];
+  if (
+    hiddenPaths.some(path => location.pathname.startsWith(path)) ||
+    exactHiddenPaths.includes(location.pathname)
+  ) {
     return null;
   }
 
@@ -99,6 +124,8 @@ export function BottomNavigation(): JSX.Element | null {
             to={item.path}
             className={`bottom-nav-item ${active ? 'active' : ''}`}
             aria-current={active ? 'page' : undefined}
+            onTouchStart={() => handlePrefetch(item.path)}
+            onMouseEnter={() => handlePrefetch(item.path)}
           >
             <span className="bottom-nav-icon" aria-hidden="true">
               {item.icon(active)}

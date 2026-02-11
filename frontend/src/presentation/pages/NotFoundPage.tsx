@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export function NotFoundPage() {
+export function NotFoundPage(): JSX.Element {
   return (
     <main className="page">
       <section className="error-page">

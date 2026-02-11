@@ -1,15 +1,19 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
+const REQUEST_TIMEOUT_MS = 30000;
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 1000;
+
 export class ApiClient {
   private client: AxiosInstance;
-  private maxRetries = 2;
+  private maxRetries = MAX_RETRIES;
 
   constructor(
     baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
   ) {
     this.client = axios.create({
       baseURL,
-      timeout: 30000, // 30초 타임아웃 (Render cold start 대응)
+      timeout: REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true',
@@ -65,7 +69,7 @@ export class ApiClient {
         }
 
         // 재시도 전 대기 (점진적 증가)
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        await new Promise(resolve => setTimeout(resolve, RETRY_BASE_DELAY_MS * (attempt + 1)));
       }
     }
 

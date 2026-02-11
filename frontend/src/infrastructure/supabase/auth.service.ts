@@ -115,9 +115,11 @@ export class SupabaseAuthService {
     const userId = localStorage.getItem('userId');
     if (!userId) return false;
 
+    const locationJson = JSON.stringify({ address: '', lat: latitude, lng: longitude });
+
     const { error } = await supabase
       .from('users')
-      .update({ latitude, longitude, updated_at: new Date().toISOString() })
+      .update({ location: locationJson, updated_at: new Date().toISOString() })
       .eq('id', userId);
 
     return !error;
