@@ -8,6 +8,7 @@ import { WeatherApiClient } from './weather-api.client';
 import { AirQualityApiClient } from './air-quality-api.client';
 import { NotificationApiClient } from './notification-api.client';
 import { getCommuteApiClient } from './commute-api.client';
+import { getBehaviorApiClient } from './behavior-api.client';
 
 // 싱글톤 인스턴스
 export const apiClient = new ApiClient();
@@ -20,6 +21,7 @@ export const weatherApiClient = new WeatherApiClient(apiClient);
 export const airQualityApiClient = new AirQualityApiClient(apiClient);
 export const notificationApiClient = new NotificationApiClient(apiClient);
 export const commuteApiClient = getCommuteApiClient();
+export const behaviorApiClient = getBehaviorApiClient();
 
 // 클래스 및 타입 재export
 export { ApiClient } from './api-client';
@@ -44,4 +46,7 @@ export type {
   RouteType, CheckpointType, TransportMode, SessionStatus,
   CreateCheckpointDto, CreateRouteDto, UpdateRouteDto,
   CheckpointResponse, RouteResponse, StartSessionDto,
+  RouteRecommendationResponse, RouteScoreResponse,
 } from './commute-api.client';
+export { BehaviorApiClient, getBehaviorApiClient } from './behavior-api.client';
+export type { DeparturePrediction, BehaviorAnalytics, UserPattern } from './behavior-api.client';

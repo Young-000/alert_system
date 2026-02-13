@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { notificationApiClient } from '@infrastructure/api';
 import type { NotificationLog } from '@infrastructure/api';
@@ -8,6 +8,29 @@ const ALERT_TYPE_LABELS: Record<string, string> = {
   airQuality: '미세먼지',
   subway: '지하철',
   bus: '버스',
+};
+
+const TYPE_FILTER_OPTIONS = [
+  { value: '', label: '전체' },
+  { value: 'weather', label: '날씨' },
+  { value: 'airQuality', label: '미세먼지' },
+  { value: 'subway', label: '지하철' },
+  { value: 'bus', label: '버스' },
+] as const;
+
+type PeriodFilter = 'all' | '7d' | '30d';
+
+const PERIOD_FILTER_OPTIONS: { value: PeriodFilter; label: string }[] = [
+  { value: 'all', label: '전체' },
+  { value: '7d', label: '최근 7일' },
+  { value: '30d', label: '최근 30일' },
+];
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const PERIOD_MS: Record<PeriodFilter, number> = {
+  all: 0,
+  '7d': 7 * MS_PER_DAY,
+  '30d': 30 * MS_PER_DAY,
 };
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
@@ -43,6 +66,29 @@ export function NotificationHistoryPage(): JSX.Element {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+
+  const isFilterActive = typeFilter !== '' || periodFilter !== 'all';
+
+  const filteredLogs = useMemo(() => {
+    let result = logs;
+
+    if (typeFilter) {
+      result = result.filter(log =>
+        log.alertTypes.includes(typeFilter)
+      );
+    }
+
+    if (periodFilter !== 'all') {
+      const cutoff = Date.now() - PERIOD_MS[periodFilter];
+      result = result.filter(log =>
+        new Date(log.sentAt).getTime() >= cutoff
+      );
+    }
+
+    return result;
+  }, [logs, typeFilter, periodFilter]);
 
   const loadHistory = useCallback(async (offset = 0) => {
     if (!userId) return;
@@ -89,10 +135,45 @@ export function NotificationHistoryPage(): JSX.Element {
     <main className="page notification-history-page">
       <header className="settings-page-v2-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1>알림 기록</h1>
-        {total > 0 && <span className="nav-badge">{total}건</span>}
+        {total > 0 && (
+          <span className="nav-badge">
+            {isFilterActive ? `${filteredLogs.length}/${total}건` : `${total}건`}
+          </span>
+        )}
       </header>
 
       {error && <div className="error-banner" role="alert">{error}</div>}
+
+      {logs.length > 0 && (
+        <div className="notif-filter-section">
+          <div className="route-type-toggle" role="group" aria-label="알림 유형 필터">
+            {TYPE_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`route-type-btn${typeFilter === opt.value ? ' active' : ''}`}
+                onClick={() => setTypeFilter(opt.value)}
+                aria-pressed={typeFilter === opt.value}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <div className="route-type-toggle" role="group" aria-label="기간 필터">
+            {PERIOD_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`route-type-btn${periodFilter === opt.value ? ' active' : ''}`}
+                onClick={() => setPeriodFilter(opt.value)}
+                aria-pressed={periodFilter === opt.value}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!isLoading && logs.length === 0 && (
         <div className="settings-empty">
@@ -105,8 +186,14 @@ export function NotificationHistoryPage(): JSX.Element {
         </div>
       )}
 
+      {isFilterActive && filteredLogs.length === 0 && logs.length > 0 && (
+        <div className="settings-empty">
+          <p className="muted">필터 조건에 맞는 알림이 없습니다</p>
+        </div>
+      )}
+
       <div className="notif-history-list">
-        {logs.map((log) => {
+        {filteredLogs.map((log) => {
           const statusInfo = STATUS_LABELS[log.status] || STATUS_LABELS.success;
           return (
             <div key={log.id} className="notif-history-item">
@@ -143,7 +230,11 @@ export function NotificationHistoryPage(): JSX.Element {
           disabled={isLoading}
           aria-label="알림 기록 더 보기"
         >
-          {isLoading ? '불러오는 중...' : '더 보기'}
+          {isLoading
+            ? '불러오는 중...'
+            : isFilterActive
+              ? `전체 불러오기 (${logs.length}/${total}건 로드됨)`
+              : '더 보기'}
         </button>
       )}
 

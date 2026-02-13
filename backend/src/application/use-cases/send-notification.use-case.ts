@@ -38,6 +38,9 @@ import {
   AlertTimeType,
 } from '@infrastructure/messaging/solapi.service';
 
+// B-7: Delay detection threshold — if all arrivals exceed this, suspect delay
+const DELAY_THRESHOLD_SECONDS = 600; // 10 minutes
+
 interface NotificationData {
   weather?: Weather;
   airQuality?: AirQuality;
@@ -48,6 +51,11 @@ interface NotificationData {
   recommendations?: Recommendation[];
   linkedRoute?: CommuteRoute;
   routeRecommendation?: RouteScoreDto;
+}
+
+interface DelayInfo {
+  stationName: string;
+  type: 'no_arrivals' | 'long_wait';
 }
 
 @Injectable()
@@ -127,6 +135,16 @@ export class SendNotificationUseCase {
     if (hasSubway && alert.subwayStationId) {
       try {
         data.subwayStations = await this.collectSubwayData(alert.subwayStationId);
+
+        // B-7: Detect subway delays and send urgent Web Push
+        if (data.subwayStations.length > 0 && this.webPushService) {
+          const delayInfo = this.detectSubwayDelay(data.subwayStations);
+          if (delayInfo) {
+            this.sendDelayAlert(alert, delayInfo, data).catch(err =>
+              this.logger.warn(`Delay alert push failed: ${err}`),
+            );
+          }
+        }
       } catch (error) {
         this.logger.warn(`지하철 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`);
       }
@@ -646,5 +664,52 @@ export class SendNotificationUseCase {
       categories.push(RuleCategory.TRANSIT);
     }
     return categories;
+  }
+
+  // B-7: Detect subway delays via heuristic (no arrivals or all arrivals > 10min)
+  private detectSubwayDelay(
+    stations: Array<{ name: string; line: string; arrivals: SubwayArrival[] }>,
+  ): DelayInfo | null {
+    for (const station of stations) {
+      if (station.arrivals.length === 0) {
+        return { stationName: station.name, type: 'no_arrivals' };
+      }
+      const allLongWait = station.arrivals.every(
+        a => a.arrivalTime >= DELAY_THRESHOLD_SECONDS,
+      );
+      if (allLongWait) {
+        return { stationName: station.name, type: 'long_wait' };
+      }
+    }
+    return null;
+  }
+
+  // B-7: Send urgent delay Web Push notification
+  private async sendDelayAlert(
+    alert: Alert,
+    delayInfo: DelayInfo,
+    data: NotificationData,
+  ): Promise<void> {
+    if (!this.webPushService) return;
+
+    const title = '\u26A0\uFE0F 지하철 지연 감지';
+    const timeType = this.determineTimeType(alert);
+    const modeParam = timeType === 'morning' ? 'morning' : 'evening';
+
+    let body: string;
+    if (delayInfo.type === 'no_arrivals') {
+      body = `${delayInfo.stationName}역 도착 예정 열차 없음`;
+    } else {
+      body = `${delayInfo.stationName}역 열차 10분 이상 대기`;
+    }
+
+    // Suggest alternative route if available
+    if (data.routeRecommendation) {
+      body += `. ${data.routeRecommendation.routeName} 경로를 고려해보세요`;
+    }
+
+    const url = `/commute?mode=${modeParam}`;
+    await this.webPushService.sendToUser(alert.userId, title, body, url);
+    this.logger.log(`Delay alert sent for ${delayInfo.stationName}역 (${delayInfo.type})`);
   }
 }

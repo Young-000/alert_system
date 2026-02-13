@@ -8,6 +8,8 @@ import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-al
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { PostgresSubwayStationRepository } from '@infrastructure/persistence/postgres-subway-station.repository';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
+import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
+import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commute-session.entity';
 import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
 import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
@@ -26,7 +28,7 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
 
 @Module({
-  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity]), PushModule],
+  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]), PushModule],
   controllers: [SchedulerTriggerController, SchedulerLegacyController],
   providers: [
     {
@@ -83,6 +85,7 @@ const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
       inject: [ConfigService],
     },
     SendNotificationUseCase,
+    GenerateWeeklyReportUseCase,
     ...(isQueueEnabled ? [NotificationProcessor] : []),
   ],
 })
