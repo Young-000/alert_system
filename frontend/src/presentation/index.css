@@ -14636,6 +14636,18 @@ button.line-chip.selected {
   color: var(--ink-secondary);
 }
 
+.notif-filter-section {
+  padding: 0 16px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notif-filter-section .route-type-toggle {
+  margin-bottom: 0;
+}
+
 .notif-history-list {
   padding: 0 16px;
   display: flex;
@@ -15577,6 +15589,158 @@ button.nav-back-btn {
   font-size: 0.875rem;
   color: var(--ink-muted);
   margin-bottom: 8px;
+}
+
+/* --- B-10: Weather Checklist --- */
+.weather-checklist {
+  padding: 12px 0;
+}
+
+.weather-checklist-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  margin: 0 0 8px;
+  letter-spacing: 0.01em;
+}
+
+.weather-checklist-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checklist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full, 20px);
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  font-size: 0.8125rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.checklist-chip:hover {
+  border-color: var(--primary);
+}
+
+.checklist-chip.checked {
+  background: var(--primary-bg, #EFF6FF);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.checklist-emoji {
+  font-size: 1rem;
+}
+
+.checklist-label {
+  font-weight: 500;
+}
+
+.checklist-check {
+  color: var(--primary);
+  display: flex;
+}
+
+/* --- A-1: Departure Prediction --- */
+.departure-prediction {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 12px 14px;
+}
+
+.departure-prediction-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.departure-prediction-icon {
+  color: var(--primary);
+  display: flex;
+  flex-shrink: 0;
+}
+
+.departure-prediction-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.departure-prediction-time {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.departure-prediction-reason {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.departure-prediction-confidence {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* --- A-3: Route Recommendation Banner --- */
+.route-recommendation-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--primary-bg, #EFF6FF);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: var(--radius-lg, 12px);
+}
+
+.route-rec-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.route-rec-icon {
+  color: var(--primary);
+  display: flex;
+  flex-shrink: 0;
+}
+
+.route-rec-text {
+  font-size: 0.8125rem;
+  color: var(--primary-dark, var(--primary));
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-rec-dismiss {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.route-rec-dismiss:hover {
+  color: var(--ink);
 }
 
 /* AQI Status Colors */
@@ -16526,5 +16690,150 @@ button.nav-back-btn {
   background: rgba(var(--primary-rgb, 59, 130, 246), 0.1);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
+}
+
+/* ========== ROUTE COMPARISON WINNERS (A-4) ========== */
+.detailed-comparison-section {
+  margin-top: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.detailed-comparison-section h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.comparison-winners {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.winner-badge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 8px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.winner-badge-card.recommended {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.winner-badge-icon {
+  font-size: 1.25rem;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.winner-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.winner-badge-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.winner-badge-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comparison-insight {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  padding: 8px 12px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  line-height: 1.5;
+}
+
+/* ========== BEHAVIOR PATTERNS (A-2) ========== */
+.behavior-patterns-section {
+  margin-top: 16px;
+}
+
+.behavior-patterns-section h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.behavior-pattern-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.behavior-pattern-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  gap: 12px;
+}
+
+.behavior-pattern-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.behavior-pattern-type {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.behavior-pattern-detail {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  display: block;
+  line-height: 1.4;
+}
+
+.behavior-pattern-confidence {
+  flex-shrink: 0;
+  width: 80px;
+  text-align: right;
+}
+
+.confidence-bar {
+  height: 6px;
+  background: var(--bg-subtle);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.confidence-text {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
 }
 

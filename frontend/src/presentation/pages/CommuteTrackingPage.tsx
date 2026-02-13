@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   getCommuteApiClient,
   type RouteResponse,
@@ -10,6 +10,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 export function CommuteTrackingPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const userId = localStorage.getItem('userId') || '';
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
@@ -73,6 +74,22 @@ export function CommuteTrackingPage(): JSX.Element {
             if (isMounted) setSession(newSession);
           }
           return;
+        }
+
+        // PWA shortcut: auto-select route by mode (morning/evening)
+        const mode = searchParams.get('mode');
+        if (mode && (mode === 'morning' || mode === 'evening') && isMounted) {
+          const routes = await commuteApi.getUserRoutes(userId);
+          const matchingRoute = routes.find(r => r.routeType === mode);
+          if (matchingRoute) {
+            setRoute(matchingRoute);
+            const newSession = await commuteApi.startSession({
+              userId,
+              routeId: matchingRoute.id,
+            });
+            if (isMounted) setSession(newSession);
+            return;
+          }
         }
 
         // No route provided and no active session

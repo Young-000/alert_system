@@ -66,31 +66,49 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Push notification handler
+// Push notification handler (with B-7 action button support)
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  let data: { title: string; body: string; url?: string };
+  let data: { title: string; body: string; url?: string; actions?: Array<{ action: string; title: string; url: string }> };
   try {
     data = event.data.json();
   } catch {
     data = { title: '출퇴근 메이트', body: event.data.text() };
   }
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
-      data: { url: data.url || '/' },
-    }),
-  );
+  // NotificationOptions.actions is spec-standard but not in TS lib types
+  const options: NotificationOptions & { actions?: Array<{ action: string; title: string }> } = {
+    body: data.body,
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
+    data: { url: data.url || '/' },
+  };
+
+  // Add action buttons if provided (e.g., delay alerts with "대안 경로 보기")
+  if (data.actions?.length) {
+    options.actions = data.actions.map(a => ({
+      action: a.action,
+      title: a.title,
+    }));
+    // Store action URLs in data for click handling
+    options.data.actionUrls = Object.fromEntries(
+      data.actions.map(a => [a.action, a.url]),
+    );
+  }
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
-// Notification click handler
+// Notification click handler (with action button support)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/';
+
+  // Resolve URL: action button URL takes priority over default URL
+  let url = event.notification.data?.url || '/';
+  if (event.action && event.notification.data?.actionUrls?.[event.action]) {
+    url = event.notification.data.actionUrls[event.action];
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

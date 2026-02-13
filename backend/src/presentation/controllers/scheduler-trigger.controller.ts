@@ -11,6 +11,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
+import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { Public } from '@infrastructure/auth/public.decorator';
 
 interface SchedulerTriggerPayload {
@@ -32,6 +33,7 @@ export class SchedulerTriggerController {
 
   constructor(
     private readonly sendNotificationUseCase: SendNotificationUseCase,
+    private readonly generateWeeklyReportUseCase: GenerateWeeklyReportUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -87,6 +89,41 @@ export class SchedulerTriggerController {
       // 에러를 던져서 EventBridge가 재시도하도록 함
       throw error;
     }
+  }
+
+  /**
+   * B-6: 주간 리포트 트리거 (EventBridge Scheduler — 매주 월요일 09:00 KST)
+   *
+   * POST /scheduler/weekly-report
+   * Header: x-scheduler-secret (검증용)
+   */
+  @Post('weekly-report')
+  @HttpCode(HttpStatus.OK)
+  async triggerWeeklyReport(
+    @Headers('x-scheduler-secret') schedulerSecret: string,
+  ): Promise<{ success: boolean; sent: number; skipped: number }> {
+    const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
+    if (!expectedSecret || !schedulerSecret) {
+      throw new UnauthorizedException('Authentication failed');
+    }
+
+    const expected = Buffer.from(expectedSecret, 'utf8');
+    const received = Buffer.from(schedulerSecret, 'utf8');
+    if (expected.length !== received.length ||
+        !timingSafeEqual(expected, received)) {
+      this.logger.warn('Invalid scheduler secret for weekly report');
+      throw new UnauthorizedException('Authentication failed');
+    }
+
+    this.logger.log('Received weekly report trigger from EventBridge');
+
+    const result = await this.generateWeeklyReportUseCase.execute();
+
+    return {
+      success: true,
+      sent: result.sent,
+      skipped: result.skipped,
+    };
   }
 
   /**

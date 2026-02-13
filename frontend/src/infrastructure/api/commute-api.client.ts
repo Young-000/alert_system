@@ -264,6 +264,32 @@ export interface AnalyticsSummaryResponse {
   insights: string[];
 }
 
+// ========== Route Recommendation Types ==========
+
+export interface RouteScoreResponse {
+  routeId: string;
+  routeName: string;
+  totalScore: number;
+  scores: {
+    speed: number;
+    reliability: number;
+    weatherResilience: number;
+  };
+  averageDuration: number;
+  variability: number;
+  sampleCount: number;
+  reasons: string[];
+}
+
+export interface RouteRecommendationResponse {
+  recommendedRouteId: string | null;
+  recommendation: RouteScoreResponse | null;
+  alternatives: RouteScoreResponse[];
+  confidence: number;
+  insights: string[];
+  weatherCondition?: string;
+}
+
 // ========== API Client ==========
 
 export class CommuteApiClient {
@@ -366,6 +392,18 @@ export class CommuteApiClient {
 
   async getAnalyticsSummary(userId: string): Promise<AnalyticsSummaryResponse> {
     return this.apiClient.get<AnalyticsSummaryResponse>(`/analytics/summary/${userId}`);
+  }
+
+  // ========== Route Recommendation APIs ==========
+
+  async getWeatherRouteRecommendation(
+    userId: string,
+    weather?: string,
+  ): Promise<RouteRecommendationResponse> {
+    const query = weather ? `?weather=${encodeURIComponent(weather)}` : '';
+    return this.apiClient.get<RouteRecommendationResponse>(
+      `/routes/user/${userId}/recommend${query}`,
+    );
   }
 }
 

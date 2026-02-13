@@ -40,6 +40,20 @@ export default defineConfig(({ mode }) => {
               type: 'image/png',
               purpose: 'any maskable'
             }
+          ],
+          shortcuts: [
+            {
+              name: '출근 시작',
+              short_name: '출근',
+              url: '/commute?mode=morning',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
+              name: '퇴근 시작',
+              short_name: '퇴근',
+              url: '/commute?mode=evening',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+            },
           ]
         },
         injectManifest: {

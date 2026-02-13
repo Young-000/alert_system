@@ -1,9 +1,85 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
-import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, subwayApiClient } from '@infrastructure/api';
-import type { Alert, WeatherData, AirQualityData, BusArrival, SubwayArrival } from '@infrastructure/api';
-import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
+import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, subwayApiClient, behaviorApiClient } from '@infrastructure/api';
+import type { Alert, WeatherData, AirQualityData, BusArrival, SubwayArrival, DeparturePrediction } from '@infrastructure/api';
+import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse, type RouteRecommendationResponse } from '@infrastructure/api/commute-api.client';
+
+// ─── Weather Checklist Logic (B-10) ────────────────
+const RAIN_PROBABILITY_THRESHOLD = 40;
+const COLD_TEMP_THRESHOLD = 5;
+const HOT_TEMP_THRESHOLD = 28;
+const TEMP_DIFF_THRESHOLD = 10;
+const HIGH_HUMIDITY_THRESHOLD = 80;
+const CHECKLIST_STORAGE_KEY = 'weather_checklist';
+const ROUTE_RECOMMENDATION_CONFIDENCE_THRESHOLD = 0.5;
+const DEPARTURE_PREDICTION_CONFIDENCE_THRESHOLD = 0.3;
+
+interface ChecklistItem {
+  id: string;
+  emoji: string;
+  label: string;
+}
+
+function getWeatherChecklist(
+  weather: WeatherData,
+  airQuality: { label: string; className: string },
+): ChecklistItem[] {
+  const items: ChecklistItem[] = [];
+  const type = getWeatherType(weather.condition);
+
+  // Check rain probability from hourly forecasts
+  const maxRainProb = weather.forecast?.hourlyForecasts
+    ? Math.max(...weather.forecast.hourlyForecasts.map(h => h.rainProbability))
+    : 0;
+  if (type === 'rainy' || type === 'snowy' || maxRainProb >= RAIN_PROBABILITY_THRESHOLD) {
+    items.push({ id: 'umbrella', emoji: '\u2614', label: '\uc6b0\uc0b0' });
+  }
+  const isBadAir = airQuality.className === 'aqi-bad' || airQuality.className === 'aqi-very-bad';
+  if (isBadAir) {
+    items.push({ id: 'mask', emoji: '\uD83D\uDE37', label: '\ub9c8\uc2a4\ud06c' });
+  }
+  if (weather.temperature < COLD_TEMP_THRESHOLD) {
+    items.push({ id: 'coat', emoji: '\uD83E\uDDE5', label: '\ub530\ub73b\ud55c \uc678\ud22c' });
+  }
+  if (weather.temperature > HOT_TEMP_THRESHOLD) {
+    items.push({ id: 'sun', emoji: '\u2600\uFE0F', label: '\uc120\ud06c\ub9bc/\uc591\uc0b0' });
+  }
+  const tempMax = weather.forecast?.maxTemp;
+  const tempMin = weather.forecast?.minTemp;
+  if (tempMax != null && tempMin != null && (tempMax - tempMin) >= TEMP_DIFF_THRESHOLD) {
+    items.push({ id: 'scarf', emoji: '\uD83E\uDDE3', label: '\uac89\uc637 (\uc77c\uad50\ucc28)' });
+  }
+  if (weather.humidity > HIGH_HUMIDITY_THRESHOLD) {
+    items.push({ id: 'spare', emoji: '\uD83D\uDC55', label: '\uc5ec\ubd84\uc758 \uc637' });
+  }
+
+  return items;
+}
+
+function getTodayKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function getCheckedItems(): Set<string> {
+  try {
+    const stored = localStorage.getItem(CHECKLIST_STORAGE_KEY);
+    if (!stored) return new Set();
+    const parsed = JSON.parse(stored);
+    if (parsed.date !== getTodayKey()) return new Set();
+    return new Set(parsed.checked || []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCheckedItems(checked: Set<string>): void {
+  localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify({
+    date: getTodayKey(),
+    checked: Array.from(checked),
+  }));
+}
 
 function getInitialLoginState(): boolean {
   return !!localStorage.getItem('userId');
@@ -200,6 +276,10 @@ export function HomePage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
+  const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
+  const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
+  const [routeRecDismissed, setRouteRecDismissed] = useState(false);
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(getCheckedItems);
 
   const userId = localStorage.getItem('userId') || '';
   const userName = localStorage.getItem('userName') || '';
@@ -257,6 +337,46 @@ export function HomePage(): JSX.Element {
 
     return () => { isMounted = false; };
   }, [userId]);
+
+  // A-1: Load optimal departure prediction
+  useEffect(() => {
+    let isMounted = true;
+    if (!userId || alerts.length === 0 || !weather) return;
+
+    const enabledAlert = alerts.find(a => a.enabled);
+    if (!enabledAlert) return;
+
+    behaviorApiClient.getOptimalDeparture(userId, enabledAlert.id, {
+      weather: weather.condition,
+      temperature: Math.round(weather.temperature),
+      isRaining: getWeatherType(weather.condition) === 'rainy',
+    })
+      .then(prediction => {
+        if (isMounted && prediction && prediction.confidence >= DEPARTURE_PREDICTION_CONFIDENCE_THRESHOLD) {
+          setDeparturePrediction(prediction);
+        }
+      })
+      .catch(() => {});
+
+    return () => { isMounted = false; };
+  }, [userId, alerts, weather]);
+
+  // A-3: Load weather route recommendation
+  useEffect(() => {
+    let isMounted = true;
+    if (!userId || routes.length < 2 || !weather) return;
+
+    const commuteApi = getCommuteApiClient();
+    commuteApi.getWeatherRouteRecommendation(userId, weather.condition)
+      .then(rec => {
+        if (isMounted && rec.confidence > ROUTE_RECOMMENDATION_CONFIDENCE_THRESHOLD && rec.recommendation) {
+          setRouteRecommendation(rec);
+        }
+      })
+      .catch(() => {});
+
+    return () => { isMounted = false; };
+  }, [userId, routes, weather]);
 
   // Load transit arrivals based on active route
   const activeRoute = useMemo(() => getActiveRoute(routes, forceRouteType), [routes, forceRouteType]);
@@ -372,6 +492,22 @@ export function HomePage(): JSX.Element {
 
   const airQuality = useMemo(() => getAqiStatus(airQualityData?.pm10), [airQualityData]);
 
+  // B-10: Weather checklist items
+  const checklistItems = useMemo(() => {
+    if (!weather) return [];
+    return getWeatherChecklist(weather, airQuality);
+  }, [weather, airQuality]);
+
+  const handleChecklistToggle = useCallback((id: string) => {
+    setCheckedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      saveCheckedItems(next);
+      return next;
+    });
+  }, []);
+
   const handleStartCommute = async (): Promise<void> => {
     if (!activeRoute || isCommuteStarting) return;
     setIsCommuteStarting(true);
@@ -435,6 +571,72 @@ export function HomePage(): JSX.Element {
             )}
           </div>
           <p className="weather-advice">{getWeatherAdvice(weather, airQuality)}</p>
+        </section>
+      )}
+
+      {/* B-10: Weather Preparation Checklist */}
+      {checklistItems.length > 0 && (
+        <section className="weather-checklist" aria-label="오늘의 준비물">
+          <h3 className="weather-checklist-title">오늘의 준비물</h3>
+          <div className="weather-checklist-items">
+            {checklistItems.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                className={`checklist-chip ${checkedItems.has(item.id) ? 'checked' : ''}`}
+                onClick={() => handleChecklistToggle(item.id)}
+                aria-pressed={checkedItems.has(item.id)}
+              >
+                <span className="checklist-emoji" aria-hidden="true">{item.emoji}</span>
+                <span className="checklist-label">{item.label}</span>
+                {checkedItems.has(item.id) && (
+                  <span className="checklist-check" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* A-1: Optimal Departure Prediction */}
+      {departurePrediction && (
+        <section className="departure-prediction" aria-label="추천 출발 시간">
+          <div className="departure-prediction-content">
+            <span className="departure-prediction-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            <div className="departure-prediction-text">
+              <span className="departure-prediction-time">추천 출발 {departurePrediction.recommendedTime}</span>
+              <span className="departure-prediction-reason">{departurePrediction.explanation}</span>
+            </div>
+            <span className="departure-prediction-confidence">
+              신뢰도 {Math.round(departurePrediction.confidence * 100)}%
+            </span>
+          </div>
+        </section>
+      )}
+
+      {/* A-3: Weather Route Recommendation */}
+      {routeRecommendation && routeRecommendation.recommendation && !routeRecDismissed && (
+        <section className="route-recommendation-banner" aria-label="경로 추천">
+          <div className="route-rec-content">
+            <span className="route-rec-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+            <p className="route-rec-text">
+              {routeRecommendation.insights[0] || `"${routeRecommendation.recommendation.routeName}"이 현재 날씨에 가장 적합해요`}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="route-rec-dismiss"
+            onClick={() => setRouteRecDismissed(true)}
+            aria-label="추천 닫기"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </section>
       )}
 

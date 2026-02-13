@@ -64,6 +64,16 @@ export interface CombinedAlertVariables {
   tip: string;
 }
 
+// 주간 리포트 변수
+export interface WeeklyReportVariables {
+  userName: string;
+  weekRange: string;      // "1/27~2/2"
+  totalCommutes: string;  // "8"
+  avgDuration: string;    // "42분"
+  bestDay: string;        // "수요일"
+  tip: string;
+}
+
 export type AlertTimeType = 'morning' | 'evening';
 
 export const SOLAPI_SERVICE = Symbol('SOLAPI_SERVICE');
@@ -74,6 +84,7 @@ export interface ISolapiService {
   sendWeatherAlert(to: string, variables: WeatherAlertVariables, timeType: AlertTimeType): Promise<void>;
   sendTransitAlert(to: string, variables: TransitAlertVariables, timeType: AlertTimeType): Promise<void>;
   sendCombinedAlert(to: string, variables: CombinedAlertVariables, timeType: AlertTimeType): Promise<void>;
+  sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void>;
 }
 
 @Injectable()
@@ -194,6 +205,13 @@ export class SolapiService implements ISolapiService {
     await this.sendAlimtalk({ to, templateId, variables: stringVariables });
   }
 
+  // 주간 리포트 (B-6) — Solapi 템플릿 승인 전까지 Web Push로 대체 발송
+  async sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void> {
+    // TODO: Solapi 주간 리포트 템플릿 승인 후 TEMPLATE_IDS.WEEKLY_REPORT 사용
+    // 현재는 로깅만 수행 (Web Push로 대체 발송됨)
+    this.logger.log(`[Weekly Report] to: ${to}, variables: ${JSON.stringify(variables)}`);
+  }
+
   private formatPhoneNumber(phone: string): string {
     return phone.replace(/-/g, '');
   }
@@ -222,5 +240,9 @@ export class NoopSolapiService implements ISolapiService {
 
   async sendCombinedAlert(to: string, variables: CombinedAlertVariables, timeType: AlertTimeType): Promise<void> {
     this.logger.log(`[Noop Combined ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+  }
+
+  async sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void> {
+    this.logger.log(`[Noop Weekly Report] to: ${to}, variables: ${JSON.stringify(variables)}`);
   }
 }

@@ -6,9 +6,13 @@ import {
   type CommuteHistoryResponse,
   type CheckpointStats,
   type RouteAnalyticsResponse,
+  type RouteComparisonResponse,
 } from '@infrastructure/api/commute-api.client';
+import { getBehaviorApiClient, type BehaviorAnalytics, type UserPattern } from '@infrastructure/api/behavior-api.client';
 import { EmptyState } from '../components/EmptyState';
 import { StatCard } from '../components/StatCard';
+
+const MIN_DATA_FOR_BEHAVIOR = 5;
 
 // Stopwatch record type (same as CommuteTrackingPage)
 interface StopwatchRecord {
@@ -43,14 +47,17 @@ export function CommuteDashboardPage(): JSX.Element {
   const [stopwatchRecords, setStopwatchRecords] = useState<StopwatchRecord[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics' | 'behavior'>('overview');
   const [routeAnalytics, setRouteAnalytics] = useState<RouteAnalyticsResponse[]>([]);
+  const [behaviorAnalytics, setBehaviorAnalytics] = useState<BehaviorAnalytics | null>(null);
+  const [behaviorPatterns, setBehaviorPatterns] = useState<UserPattern[]>([]);
+  const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
 
   // Handle URL tab parameter first (highest priority)
   useEffect(() => {
     const urlTab = searchParams.get('tab');
-    if (urlTab && ['overview', 'routes', 'history', 'stopwatch', 'analytics'].includes(urlTab)) {
-      setActiveTab(urlTab as 'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics');
+    if (urlTab && ['overview', 'routes', 'history', 'stopwatch', 'analytics', 'behavior'].includes(urlTab)) {
+      setActiveTab(urlTab as 'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics' | 'behavior');
     }
   }, [searchParams]);
 
@@ -85,6 +92,28 @@ export function CommuteDashboardPage(): JSX.Element {
         if (statsData.routeStats.length > 0) {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
+
+        // A-4: Load route comparison if 2+ routes
+        if (statsData.routeStats.length >= 2) {
+          const routeIds = statsData.routeStats.map(r => r.routeId);
+          commuteApi.compareRoutes(routeIds)
+            .then(comparison => { if (isMounted) setRouteComparison(comparison); })
+            .catch(() => {});
+        }
+
+        // A-2: Load behavior data
+        const behaviorApi = getBehaviorApiClient();
+        behaviorApi.getAnalytics(userId)
+          .then(analytics => {
+            if (!isMounted) return;
+            setBehaviorAnalytics(analytics);
+            if (analytics.hasEnoughData) {
+              behaviorApi.getPatterns(userId)
+                .then(patterns => { if (isMounted) setBehaviorPatterns(patterns); })
+                .catch(() => {});
+            }
+          })
+          .catch(() => {});
       } catch {
         if (!isMounted) return;
       } finally {
@@ -210,6 +239,18 @@ export function CommuteDashboardPage(): JSX.Element {
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 분석
+              </button>
+            )}
+            {behaviorAnalytics?.hasEnoughData && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'behavior'}
+                className={`tab ${activeTab === 'behavior' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('behavior'); setSearchParams({ tab: 'behavior' }, { replace: true }); }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                행동 패턴
               </button>
             )}
           </div>
@@ -452,6 +493,62 @@ export function CommuteDashboardPage(): JSX.Element {
                     )}
                   </section>
                 </>
+              )}
+
+              {/* A-4: Detailed Route Comparison */}
+              {routeComparison && routeComparison.routes.length >= 2 && (
+                <section className="detailed-comparison-section">
+                  <h2>상세 경로 비교</h2>
+                  <div className="comparison-winners">
+                    {routeComparison.winner.fastest && (
+                      <div className="winner-badge-card">
+                        <span className="winner-badge-icon" aria-hidden="true">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        </span>
+                        <div className="winner-badge-text">
+                          <span className="winner-badge-label">가장 빠른</span>
+                          <span className="winner-badge-name">
+                            {routeComparison.routes.find(r => r.routeId === routeComparison.winner.fastest)?.routeName || '-'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {routeComparison.winner.mostReliable && (
+                      <div className="winner-badge-card">
+                        <span className="winner-badge-icon" aria-hidden="true">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </span>
+                        <div className="winner-badge-text">
+                          <span className="winner-badge-label">가장 안정적</span>
+                          <span className="winner-badge-name">
+                            {routeComparison.routes.find(r => r.routeId === routeComparison.winner.mostReliable)?.routeName || '-'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {routeComparison.winner.recommended && (
+                      <div className="winner-badge-card recommended">
+                        <span className="winner-badge-icon" aria-hidden="true">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        </span>
+                        <div className="winner-badge-text">
+                          <span className="winner-badge-label">추천</span>
+                          <span className="winner-badge-name">
+                            {routeComparison.routes.find(r => r.routeId === routeComparison.winner.recommended)?.routeName || '-'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {routeComparison.analysis.timeDifference > 0 && (
+                    <p className="comparison-insight">
+                      시간 차이 평균 <strong>{routeComparison.analysis.timeDifference}분</strong>
+                      {routeComparison.analysis.reliabilityDifference > 0 &&
+                        ` · 안정성 차이 ${routeComparison.analysis.reliabilityDifference}점`
+                      }
+                    </p>
+                  )}
+                </section>
               )}
             </div>
           )}
@@ -745,6 +842,95 @@ export function CommuteDashboardPage(): JSX.Element {
                   </div>
                 </details>
               </section>
+            </div>
+          )}
+
+          {/* A-2: Behavior Tab */}
+          {activeTab === 'behavior' && (
+            <div className="tab-content">
+              {behaviorAnalytics?.hasEnoughData ? (
+                <>
+                  <section className="stats-section stats-compact">
+                    <h2>행동 패턴 분석</h2>
+                    <div className="stats-grid-compact">
+                      <StatCard
+                        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>}
+                        title="학습된 패턴"
+                        value={`${behaviorAnalytics.totalPatterns}개`}
+                      />
+                      <StatCard
+                        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h20"/><path d="M10 16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6"/><path d="M12 12H4"/></svg>}
+                        title="출퇴근 기록"
+                        value={`${behaviorAnalytics.totalCommuteRecords}회`}
+                      />
+                    </div>
+                    {behaviorAnalytics.averageConfidence > 0 && (
+                      <div className="insight-inline" style={{ marginTop: '12px' }}>
+                        <span className="insight-icon">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+                        </span>
+                        <span className="insight-text">
+                          평균 신뢰도 {Math.round(behaviorAnalytics.averageConfidence * 100)}%
+                        </span>
+                      </div>
+                    )}
+                  </section>
+
+                  {behaviorPatterns.length > 0 && (
+                    <section className="behavior-patterns-section">
+                      <h2>발견된 패턴</h2>
+                      <div className="behavior-pattern-list">
+                        {behaviorPatterns.map(pattern => (
+                          <div key={pattern.id} className="behavior-pattern-item">
+                            <div className="behavior-pattern-info">
+                              <span className="behavior-pattern-type">
+                                {pattern.patternType === 'departure_time' ? '출발 시간' :
+                                 pattern.patternType === 'day_preference' ? '요일별' :
+                                 pattern.patternType === 'weather_impact' ? '날씨 영향' :
+                                 pattern.patternType}
+                              </span>
+                              {pattern.dayOfWeek != null && (
+                                <span className="behavior-pattern-detail">
+                                  {['일', '월', '화', '수', '목', '금', '토'][pattern.dayOfWeek]}요일
+                                </span>
+                              )}
+                              {pattern.weatherCondition && (
+                                <span className="behavior-pattern-detail">
+                                  {pattern.weatherCondition}
+                                </span>
+                              )}
+                              {pattern.averageDepartureTime && (
+                                <span className="behavior-pattern-detail">
+                                  평균 {pattern.averageDepartureTime}
+                                </span>
+                              )}
+                            </div>
+                            <div className="behavior-pattern-confidence">
+                              <div className="confidence-bar">
+                                <div
+                                  className="confidence-fill"
+                                  style={{ width: `${Math.round(pattern.confidence * 100)}%` }}
+                                />
+                              </div>
+                              <span className="confidence-text">
+                                {Math.round(pattern.confidence * 100)}%
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
+              ) : (
+                <EmptyState
+                  icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>}
+                  title="데이터가 부족해요"
+                  description={`${MIN_DATA_FOR_BEHAVIOR}회 이상 출퇴근 기록 후 분석이 시작돼요`}
+                  actionLink="/commute"
+                  actionText="트래킹 시작하기"
+                />
+              )}
             </div>
           )}
         </div>
