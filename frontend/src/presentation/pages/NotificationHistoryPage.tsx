@@ -10,6 +10,8 @@ const ALERT_TYPE_LABELS: Record<string, string> = {
   bus: '버스',
 };
 
+const PAGE_SIZE = 20;
+
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   success: { label: '발송 완료', className: 'status-success' },
   fallback: { label: '대체 발송', className: 'status-warning' },
@@ -49,7 +51,7 @@ export function NotificationHistoryPage(): JSX.Element {
     setIsLoading(true);
     setError('');
     try {
-      const res = await notificationApiClient.getHistory(20, offset);
+      const res = await notificationApiClient.getHistory(PAGE_SIZE, offset);
       if (offset === 0) {
         setLogs(res.items);
       } else {
