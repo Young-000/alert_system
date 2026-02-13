@@ -797,7 +797,7 @@ export function AlertSettingsPage(): JSX.Element {
         </button>
       )}
 
-      <div id="wizard-content" className="wizard-container" style={{ display: (isLoadingAlerts && userId) || !userId || !showWizard ? 'none' : undefined }}>
+      <div id="wizard-content" className="wizard-container" style={{ display: (isLoadingAlerts && userId) || !userId || !showWizard ? 'none' : undefined }} aria-hidden={(isLoadingAlerts && !!userId) || !userId || !showWizard ? true : undefined}>
         {/* 개선된 스텝 인디케이터 */}
         <div className="step-indicator" role="group" aria-label="설정 단계 진행 상황" aria-roledescription="progress">
           <div className={`step-item ${progress.current >= 1 ? 'active' : ''} ${progress.current > 1 ? 'completed' : ''}`}>

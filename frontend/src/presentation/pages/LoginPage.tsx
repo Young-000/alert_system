@@ -6,6 +6,7 @@ import { safeSetItem } from '@infrastructure/storage/safe-storage';
 type AuthMode = 'login' | 'register';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const HEALTH_CHECK_TIMEOUT_MS = 45000;
 
 export function LoginPage(): JSX.Element {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -28,7 +29,7 @@ export function LoginPage(): JSX.Element {
       try {
         const response = await fetch(`${API_BASE_URL}/health`, {
           method: 'GET',
-          signal: AbortSignal.timeout(45000), // 45초 타임아웃
+          signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
         });
         if (!isMounted) return;
         if (response.ok) {

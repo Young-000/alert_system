@@ -1335,7 +1335,7 @@ export function RouteSetupPage(): JSX.Element {
                 <p>소요시간은 실제 출퇴근을 기록하면서 자동으로 측정됩니다</p>
               </div>
 
-              {error && <div className="apple-error">{error}</div>}
+              {error && <div className="apple-error" role="alert">{error}</div>}
             </div>
 
             <div className="apple-step-footer">

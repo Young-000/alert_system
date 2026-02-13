@@ -5,6 +5,10 @@ import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, su
 import type { Alert, WeatherData, AirQualityData, BusArrival, SubwayArrival } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
 
+// Seoul City Hall coordinates (default fallback)
+const DEFAULT_LATITUDE = 37.5665;
+const DEFAULT_LONGITUDE = 126.978;
+
 function getInitialLoginState(): boolean {
   return !!localStorage.getItem('userId');
 }
@@ -244,8 +248,8 @@ export function HomePage(): JSX.Element {
     let isMounted = true;
     if (!userId) return;
 
-    const lat = 37.5665;
-    const lng = 126.978;
+    const lat = DEFAULT_LATITUDE;
+    const lng = DEFAULT_LONGITUDE;
 
     weatherApiClient.getCurrentWeather(lat, lng)
       .then(data => { if (isMounted) setWeather(data); })
