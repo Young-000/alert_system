@@ -104,6 +104,7 @@ export class SchedulerTriggerController {
   ): Promise<{ success: boolean; sent: number; skipped: number }> {
     const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
     if (!expectedSecret || !schedulerSecret) {
+      this.logger.error('SCHEDULER_SECRET is not configured or secret header is missing for weekly report');
       throw new UnauthorizedException('Authentication failed');
     }
 
@@ -117,13 +118,20 @@ export class SchedulerTriggerController {
 
     this.logger.log('Received weekly report trigger from EventBridge');
 
-    const result = await this.generateWeeklyReportUseCase.execute();
+    try {
+      const result = await this.generateWeeklyReportUseCase.execute();
 
-    return {
-      success: true,
-      sent: result.sent,
-      skipped: result.skipped,
-    };
+      this.logger.log(`Weekly report complete: ${result.sent} sent, ${result.skipped} skipped`);
+
+      return {
+        success: true,
+        sent: result.sent,
+        skipped: result.skipped,
+      };
+    } catch (error) {
+      this.logger.error('Failed to generate weekly report', error);
+      throw error;
+    }
   }
 
   /**

@@ -110,8 +110,28 @@ export function NotificationHistoryPage(): JSX.Element {
   }, [userId]);
 
   useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+    let isMounted = true;
+
+    const load = async (): Promise<void> => {
+      if (!userId) return;
+      setIsLoading(true);
+      setError('');
+      try {
+        const res = await notificationApiClient.getHistory(20, 0);
+        if (isMounted) {
+          setLogs(res.items);
+          setTotal(res.total);
+        }
+      } catch {
+        if (isMounted) setError('알림 기록을 불러올 수 없습니다.');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    load();
+    return () => { isMounted = false; };
+  }, [userId]);
 
   if (!userId) {
     return (
@@ -142,7 +162,14 @@ export function NotificationHistoryPage(): JSX.Element {
         )}
       </header>
 
-      {error && <div className="error-banner" role="alert">{error}</div>}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+          <button type="button" className="error-dismiss" onClick={() => setError('')} aria-label="오류 닫기">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      )}
 
       {logs.length > 0 && (
         <div className="notif-filter-section">

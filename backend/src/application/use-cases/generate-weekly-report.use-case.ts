@@ -88,7 +88,10 @@ export class GenerateWeeklyReportUseCase {
       ? await this.sessionRepository.findByUserIdInDateRange(userId, weekStart, weekEnd)
       : [];
 
-    const completedSessions = sessions.filter(s => s.status.toString() === 'completed');
+    const completedSessions = sessions.filter(s => {
+      const status = s.status.toString();
+      return status === 'completed' || status === 'COMPLETED';
+    });
     if (completedSessions.length === 0) return false;
 
     // Calculate stats

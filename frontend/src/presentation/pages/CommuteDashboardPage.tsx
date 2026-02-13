@@ -53,13 +53,19 @@ export function CommuteDashboardPage(): JSX.Element {
   const [behaviorPatterns, setBehaviorPatterns] = useState<UserPattern[]>([]);
   const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
 
-  // Handle URL tab parameter first (highest priority)
+  // Handle URL tab parameter first (highest priority) — validate tab is actually visible
   useEffect(() => {
     const urlTab = searchParams.get('tab');
-    if (urlTab && ['overview', 'routes', 'history', 'stopwatch', 'analytics', 'behavior'].includes(urlTab)) {
-      setActiveTab(urlTab as 'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics' | 'behavior');
+    if (!urlTab) return;
+    const validTabs = ['overview', 'routes', 'history', 'stopwatch', 'analytics', 'behavior'];
+    if (!validTabs.includes(urlTab)) return;
+    // 'behavior' tab requires hasEnoughData — if not available yet, fall back to overview
+    if (urlTab === 'behavior' && !behaviorAnalytics?.hasEnoughData) {
+      setActiveTab('overview');
+      return;
     }
-  }, [searchParams]);
+    setActiveTab(urlTab as typeof activeTab);
+  }, [searchParams, behaviorAnalytics]);
 
   // Load stopwatch records from localStorage (no auto tab switch)
   useEffect(() => {
@@ -191,7 +197,9 @@ export function CommuteDashboardPage(): JSX.Element {
                 <button
                   type="button"
                   role="tab"
+                  id="tab-overview"
                   aria-selected={activeTab === 'overview'}
+                  aria-controls="tabpanel-overview"
                   className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('overview'); setSearchParams({ tab: 'overview' }, { replace: true }); }}
                 >
@@ -200,7 +208,9 @@ export function CommuteDashboardPage(): JSX.Element {
                 <button
                   type="button"
                   role="tab"
+                  id="tab-routes"
                   aria-selected={activeTab === 'routes'}
+                  aria-controls="tabpanel-routes"
                   className={`tab ${activeTab === 'routes' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('routes'); setSearchParams({ tab: 'routes' }, { replace: true }); }}
                 >
@@ -209,7 +219,9 @@ export function CommuteDashboardPage(): JSX.Element {
                 <button
                   type="button"
                   role="tab"
+                  id="tab-history"
                   aria-selected={activeTab === 'history'}
+                  aria-controls="tabpanel-history"
                   className={`tab ${activeTab === 'history' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('history'); setSearchParams({ tab: 'history' }, { replace: true }); }}
                 >
@@ -221,7 +233,9 @@ export function CommuteDashboardPage(): JSX.Element {
               <button
                 type="button"
                 role="tab"
+                id="tab-stopwatch"
                 aria-selected={activeTab === 'stopwatch'}
+                aria-controls="tabpanel-stopwatch"
                 className={`tab ${activeTab === 'stopwatch' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('stopwatch'); setSearchParams({ tab: 'stopwatch' }, { replace: true }); }}
               >
@@ -233,7 +247,9 @@ export function CommuteDashboardPage(): JSX.Element {
               <button
                 type="button"
                 role="tab"
+                id="tab-analytics"
                 aria-selected={activeTab === 'analytics'}
+                aria-controls="tabpanel-analytics"
                 className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('analytics'); setSearchParams({ tab: 'analytics' }, { replace: true }); }}
               >
@@ -245,7 +261,9 @@ export function CommuteDashboardPage(): JSX.Element {
               <button
                 type="button"
                 role="tab"
+                id="tab-behavior"
                 aria-selected={activeTab === 'behavior'}
+                aria-controls="tabpanel-behavior"
                 className={`tab ${activeTab === 'behavior' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('behavior'); setSearchParams({ tab: 'behavior' }, { replace: true }); }}
               >
@@ -257,7 +275,7 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {/* Overview Tab */}
           {activeTab === 'overview' && stats && (
-            <div className="tab-content">
+            <div className="tab-content" role="tabpanel" id="tabpanel-overview" aria-labelledby="tab-overview">
               {/* 핵심 통계 - 간소화 */}
               <section className="stats-section stats-compact">
                 <div className="stats-grid-compact">
@@ -359,7 +377,7 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {/* Routes Tab */}
           {activeTab === 'routes' && stats && (
-            <div className="tab-content">
+            <div className="tab-content" role="tabpanel" id="tabpanel-routes" aria-labelledby="tab-routes">
               {/* Route Comparison Section - 경로별 비교 */}
               {stats.routeStats.length > 1 && (
                 <section className="route-comparison-section">
@@ -391,6 +409,8 @@ export function CommuteDashboardPage(): JSX.Element {
                             <div
                               className="route-comparison-bar"
                               style={{ width: `${barWidth}%` }}
+                              role="img"
+                              aria-label={`${route.routeName}: 평균 ${route.averageTotalDuration}분`}
                             >
                               <span className="route-comparison-value">{route.averageTotalDuration}분</span>
                             </div>
@@ -499,9 +519,9 @@ export function CommuteDashboardPage(): JSX.Element {
               {routeComparison && routeComparison.routes.length >= 2 && (
                 <section className="detailed-comparison-section">
                   <h2>상세 경로 비교</h2>
-                  <div className="comparison-winners">
+                  <div className="comparison-winners" role="group" aria-label="경로별 수상 카드">
                     {routeComparison.winner.fastest && (
-                      <div className="winner-badge-card">
+                      <div className="winner-badge-card" aria-label={`가장 빠른: ${routeComparison.routes.find(r => r.routeId === routeComparison.winner.fastest)?.routeName || '-'}`}>
                         <span className="winner-badge-icon" aria-hidden="true">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                         </span>
@@ -514,7 +534,7 @@ export function CommuteDashboardPage(): JSX.Element {
                       </div>
                     )}
                     {routeComparison.winner.mostReliable && (
-                      <div className="winner-badge-card">
+                      <div className="winner-badge-card" aria-label={`가장 안정적: ${routeComparison.routes.find(r => r.routeId === routeComparison.winner.mostReliable)?.routeName || '-'}`}>
                         <span className="winner-badge-icon" aria-hidden="true">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         </span>
@@ -527,7 +547,7 @@ export function CommuteDashboardPage(): JSX.Element {
                       </div>
                     )}
                     {routeComparison.winner.recommended && (
-                      <div className="winner-badge-card recommended">
+                      <div className="winner-badge-card recommended" aria-label={`추천: ${routeComparison.routes.find(r => r.routeId === routeComparison.winner.recommended)?.routeName || '-'}`}>
                         <span className="winner-badge-icon" aria-hidden="true">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                         </span>
@@ -555,7 +575,7 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {/* History Tab */}
           {activeTab === 'history' && history && (
-            <div className="tab-content">
+            <div className="tab-content" role="tabpanel" id="tabpanel-history" aria-labelledby="tab-history">
               <section className="history-section">
                 <h2>최근 기록</h2>
 
@@ -604,7 +624,7 @@ export function CommuteDashboardPage(): JSX.Element {
                               {endTime && (
                                 <span className="history-end-time">{endTime} 도착</span>
                               )}
-                              {session.totalDurationMinutes && (
+                              {session.totalDurationMinutes != null && session.totalDurationMinutes > 0 && (
                                 <span className="history-duration-badge">({session.totalDurationMinutes}분)</span>
                               )}
                             </div>
@@ -621,25 +641,19 @@ export function CommuteDashboardPage(): JSX.Element {
                 )}
 
                 {history.hasMore && (
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-load-more"
-                    onClick={async () => {
-                      try {
-                        const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
-                        setHistory(prev => {
-                          if (!prev) return moreHistory;
-                          return {
-                            ...prev,
-                            sessions: [...prev.sessions, ...moreHistory.sessions],
-                            hasMore: moreHistory.hasMore,
-                          };
-                        });
-                      } catch { /* ignore */ }
+                  <LoadMoreButton
+                    onLoad={async () => {
+                      const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
+                      setHistory(prev => {
+                        if (!prev) return moreHistory;
+                        return {
+                          ...prev,
+                          sessions: [...prev.sessions, ...moreHistory.sessions],
+                          hasMore: moreHistory.hasMore,
+                        };
+                      });
                     }}
-                  >
-                    더 보기
-                  </button>
+                  />
                 )}
               </section>
             </div>
@@ -647,7 +661,7 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {/* Stopwatch Tab */}
           {activeTab === 'stopwatch' && stopwatchRecords.length > 0 && (
-            <div className="tab-content">
+            <div className="tab-content" role="tabpanel" id="tabpanel-stopwatch" aria-labelledby="tab-stopwatch">
               {/* Stopwatch Stats Summary */}
               <section className="stats-section">
                 <h2>스톱워치 기록 요약</h2>
@@ -727,7 +741,7 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {/* Analytics Tab */}
           {activeTab === 'analytics' && routeAnalytics.length > 0 && (
-            <div className="tab-content">
+            <div className="tab-content" role="tabpanel" id="tabpanel-analytics" aria-labelledby="tab-analytics">
               {/* Analytics Summary */}
               <section className="analytics-summary-section">
                 <h2>경로 분석 점수</h2>
@@ -847,7 +861,7 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {/* A-2: Behavior Tab */}
           {activeTab === 'behavior' && (
-            <div className="tab-content">
+            <div className="tab-content" role="tabpanel" id="tabpanel-behavior" aria-labelledby="tab-behavior">
               {behaviorAnalytics?.hasEnoughData ? (
                 <>
                   <section className="stats-section stats-compact">
@@ -876,7 +890,7 @@ export function CommuteDashboardPage(): JSX.Element {
                     )}
                   </section>
 
-                  {behaviorPatterns.length > 0 && (
+                  {behaviorPatterns.length > 0 ? (
                     <section className="behavior-patterns-section">
                       <h2>발견된 패턴</h2>
                       <div className="behavior-pattern-list">
@@ -906,7 +920,14 @@ export function CommuteDashboardPage(): JSX.Element {
                               )}
                             </div>
                             <div className="behavior-pattern-confidence">
-                              <div className="confidence-bar">
+                              <div
+                                className="confidence-bar"
+                                role="progressbar"
+                                aria-valuenow={Math.round(pattern.confidence * 100)}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                aria-label={`신뢰도 ${Math.round(pattern.confidence * 100)}%`}
+                              >
                                 <div
                                   className="confidence-fill"
                                   style={{ width: `${Math.round(pattern.confidence * 100)}%` }}
@@ -920,6 +941,10 @@ export function CommuteDashboardPage(): JSX.Element {
                         ))}
                       </div>
                     </section>
+                  ) : (
+                    <div className="settings-empty" style={{ marginTop: '16px' }}>
+                      <p className="muted">패턴 데이터를 분석 중입니다. 기록이 더 쌓이면 구체적인 패턴이 표시됩니다.</p>
+                    </div>
                   )}
                 </>
               ) : (
@@ -948,6 +973,31 @@ export function CommuteDashboardPage(): JSX.Element {
         <p className="footer-text">출퇴근 메이트 · 출퇴근 통계</p>
       </footer>
     </main>
+  );
+}
+
+// Sub-component for load more button with loading state
+function LoadMoreButton({ onLoad }: { onLoad: () => Promise<void> }): JSX.Element {
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn btn-outline btn-load-more"
+      disabled={isLoadingMore}
+      onClick={async () => {
+        if (isLoadingMore) return;
+        setIsLoadingMore(true);
+        try {
+          await onLoad();
+        } catch {
+          // ignore load error
+        } finally {
+          setIsLoadingMore(false);
+        }
+      }}
+    >
+      {isLoadingMore ? '불러오는 중...' : '더 보기'}
+    </button>
   );
 }
 
