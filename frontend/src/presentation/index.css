@@ -14739,6 +14739,29 @@ button.line-chip.selected {
   border-radius: 8px;
   font-size: 0.85rem;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.error-dismiss:hover {
+  opacity: 1;
 }
 
 /* ========== 공유 경로 배너 ========== */
@@ -15614,7 +15637,8 @@ button.nav-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
   border-radius: var(--radius-full, 20px);
   border: 1.5px solid var(--border);
   background: var(--bg-card);
@@ -15735,7 +15759,11 @@ button.nav-back-btn {
   color: var(--ink-muted);
   cursor: pointer;
   padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
@@ -16710,6 +16738,12 @@ button.nav-back-btn {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .comparison-winners {
+    grid-template-columns: 1fr;
+  }
 }
 
 .winner-badge-card {

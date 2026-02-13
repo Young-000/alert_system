@@ -278,7 +278,7 @@ export function HomePage(): JSX.Element {
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
   const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
-  const [routeRecDismissed, setRouteRecDismissed] = useState(false);
+  const [routeRecDismissed, setRouteRecDismissed] = useState(() => sessionStorage.getItem('routeRecDismissed') === 'true');
   const [checkedItems, setCheckedItems] = useState<Set<string>>(getCheckedItems);
 
   const userId = localStorage.getItem('userId') || '';
@@ -356,7 +356,7 @@ export function HomePage(): JSX.Element {
           setDeparturePrediction(prediction);
         }
       })
-      .catch(() => {});
+      .catch(err => console.warn('Failed to load departure prediction:', err));
 
     return () => { isMounted = false; };
   }, [userId, alerts, weather]);
@@ -373,7 +373,7 @@ export function HomePage(): JSX.Element {
           setRouteRecommendation(rec);
         }
       })
-      .catch(() => {});
+      .catch(err => console.warn('Failed to load route recommendation:', err));
 
     return () => { isMounted = false; };
   }, [userId, routes, weather]);
@@ -632,7 +632,7 @@ export function HomePage(): JSX.Element {
           <button
             type="button"
             className="route-rec-dismiss"
-            onClick={() => setRouteRecDismissed(true)}
+            onClick={() => { setRouteRecDismissed(true); sessionStorage.setItem('routeRecDismissed', 'true'); }}
             aria-label="추천 닫기"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -646,13 +646,14 @@ export function HomePage(): JSX.Element {
           <>
             {/* Route type toggle — inside commute card */}
             {routes.length > 1 && (
-              <div className="route-type-toggle">
+              <div className="route-type-toggle" role="group" aria-label="경로 유형 선택">
                 {(['auto', 'morning', 'evening'] as const).map((type) => (
                   <button
                     key={type}
                     type="button"
                     className={`route-type-btn ${forceRouteType === type ? 'active' : ''}`}
                     onClick={() => setForceRouteType(type)}
+                    aria-pressed={forceRouteType === type}
                   >
                     {type === 'auto' ? '자동' : type === 'morning' ? '출근' : '퇴근'}
                   </button>
