@@ -78,7 +78,7 @@ export function StationSearchStep({
                   aria-label={`${item.name} 제거`}
                   onClick={() => onToggleTransport(item)}
                 >
-                  x
+                  &times;
                 </button>
               </span>
             ))}

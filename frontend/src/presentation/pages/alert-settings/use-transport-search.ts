@@ -35,16 +35,18 @@ export function useTransportSearch(
 
   // Unified search for subway + bus (with grouping for 2-step selection)
   useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSearchResults([]);
-      setGroupedStations([]);
-      return;
-    }
+    const shouldSearch = searchQuery.trim().length >= 2;
 
     const controller = new AbortController();
-    setIsSearching(true);
 
     const searchTimeout = setTimeout(async () => {
+      if (!shouldSearch) {
+        setSearchResults([]);
+        setGroupedStations([]);
+        return;
+      }
+
+      setIsSearching(true);
       try {
         const results: TransportItem[] = [];
 

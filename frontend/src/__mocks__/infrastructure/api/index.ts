@@ -32,6 +32,8 @@ export const userApiClient = {
   createUser: jest.fn(),
   getUser: jest.fn(),
   updateLocation: jest.fn(),
+  exportData: jest.fn().mockResolvedValue({}),
+  deleteAllData: jest.fn().mockResolvedValue({ success: true }),
 };
 
 export const subwayApiClient = {
@@ -120,6 +122,20 @@ export interface RouteResponse {
     transportMode: TransportMode;
     sequence: number;
   }[];
+}
+
+export const notificationApiClient = {
+  getHistory: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+};
+
+export interface NotificationLog {
+  id: string;
+  alertId: string;
+  alertName: string;
+  alertTypes: string[];
+  status: string;
+  summary: string;
+  sentAt: string;
 }
 
 export const authApiClient = {

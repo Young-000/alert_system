@@ -58,7 +58,7 @@ export function TransportTypeStep({
               onClick={onHideRouteImport}
               aria-label="닫기"
             >
-              x
+              &times;
             </button>
           </div>
           {savedRoutes.map(route => {
@@ -84,7 +84,7 @@ export function TransportTypeStep({
                     {busStops.map(s => s.name).join(', ')}
                   </span>
                 </div>
-                <span className="route-action">사용 -&gt;</span>
+                <span className="route-action">사용 &rarr;</span>
               </button>
             );
           })}

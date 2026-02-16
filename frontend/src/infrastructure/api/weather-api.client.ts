@@ -1,4 +1,4 @@
-import { ApiClient } from './api-client';
+import type { ApiClient } from './api-client';
 
 export interface HourlyForecast {
   time: string;
