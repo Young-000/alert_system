@@ -85,7 +85,7 @@ export function TypeSelectionStep({
               onClick={onClearError}
               aria-label="닫기"
             >
-              x
+              &times;
             </button>
           </div>
         )}
