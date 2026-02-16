@@ -41,8 +41,8 @@ async function bootstrap() {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        // Vercel 프리뷰 URL은 특정 패턴만 허용
-        const vercelPattern = /^https:\/\/frontend-[a-z0-9-]+\.vercel\.app$/;
+        // Vercel 프리뷰 URL은 정확한 프로젝트 패턴만 허용
+        const vercelPattern = /^https:\/\/frontend-xi-two-52(-[a-z0-9]+)?\.vercel\.app$/;
         if (vercelPattern.test(origin)) {
           callback(null, true);
         } else {
@@ -53,7 +53,7 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'ngrok-skip-browser-warning'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
 
   // 전역 예외 필터 적용 (스택 트레이스 노출 방지)

@@ -75,7 +75,7 @@ export class AuthController {
       const user = await this.googleOAuthUseCase.execute(googleProfile);
       const authResponse = this.authService.generateToken(user);
 
-      // 프론트엔드로 토큰과 함께 리다이렉트
+      // 프론트엔드로 토큰과 함께 리다이렉트 (fragment 사용 — URL query는 서버 로그/referrer에 노출됨)
       const params = new URLSearchParams({
         token: authResponse.accessToken,
         userId: authResponse.user.id,
@@ -83,7 +83,7 @@ export class AuthController {
         name: authResponse.user.name,
       });
 
-      return res.redirect(`${this.frontendUrl}/auth/callback?${params.toString()}`);
+      return res.redirect(`${this.frontendUrl}/auth/callback#${params.toString()}`);
     } catch (error) {
       this.logger.error(`Google OAuth callback error: ${error}`);
       return res.redirect(`${this.frontendUrl}/login?error=google_auth_failed`);

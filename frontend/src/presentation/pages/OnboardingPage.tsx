@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
 import {
@@ -31,7 +31,7 @@ export function OnboardingPage(): JSX.Element {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId') || '';
   const userName = localStorage.getItem('userName') || '회원';
-  const commuteApi = getCommuteApiClient();
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   useEffect(() => {
     if (!userId) {
