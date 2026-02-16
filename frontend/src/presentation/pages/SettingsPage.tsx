@@ -5,6 +5,7 @@ import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/com
 import type { Alert } from '@infrastructure/api';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
+import { notifyAuthChange } from '@presentation/hooks/useAuth';
 
 type SettingsTab = 'profile' | 'routes' | 'alerts' | 'app';
 
@@ -181,6 +182,7 @@ export function SettingsPage(): JSX.Element {
     localStorage.removeItem('phoneNumber');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
+    notifyAuthChange();
     navigate('/');
     window.location.reload();
   };

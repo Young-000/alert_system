@@ -9,10 +9,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotificationLogEntity } from '../../infrastructure/persistence/typeorm/notification-log.entity';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('notifications')
 @UseGuards(AuthGuard('jwt'))

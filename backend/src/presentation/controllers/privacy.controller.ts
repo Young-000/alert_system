@@ -12,10 +12,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ExportUserDataUseCase, ExportedUserData } from '../../application/use-cases/export-user-data.use-case';
 import { DataRetentionService } from '../../application/services/data-retention.service';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 /**
  * Privacy Controller

@@ -2,10 +2,7 @@ import { Controller, Get, Param, Query, Request, ForbiddenException } from '@nes
 import { GetAirQualityUseCase } from '@application/use-cases/get-air-quality.use-case';
 import { LocationQueryDto } from '@application/dto/location-query.dto';
 import { AirQuality } from '@domain/entities/air-quality.entity';
-
-interface AuthenticatedRequest {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('air-quality')
 export class AirQualityController {

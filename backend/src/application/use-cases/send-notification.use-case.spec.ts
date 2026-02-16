@@ -15,6 +15,7 @@ import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
 import { SubwayStation } from '@domain/entities/subway-station.entity';
 import { ISolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
 import { NotFoundException } from '@nestjs/common';
+import { NotificationMessageBuilderService } from '@application/services/notification-message-builder.service';
 
 describe('SendNotificationUseCase', () => {
   let useCase: SendNotificationUseCase;
@@ -67,6 +68,8 @@ describe('SendNotificationUseCase', () => {
       sendLegacyWeatherAlert: jest.fn(),
     } as unknown as jest.Mocked<ISolapiService>;
 
+    const messageBuilder = new NotificationMessageBuilderService();
+
     useCase = new SendNotificationUseCase(
       alertRepository,
       userRepository,
@@ -75,6 +78,7 @@ describe('SendNotificationUseCase', () => {
       busApiClient,
       subwayApiClient,
       subwayStationRepository,
+      messageBuilder,
       undefined, // routeRepository
       undefined, // recommendBestRouteUseCase
       undefined, // ruleEngine

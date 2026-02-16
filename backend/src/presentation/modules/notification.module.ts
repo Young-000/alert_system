@@ -1,6 +1,5 @@
 import { Module, OnModuleInit, Inject, Optional, Logger } from '@nestjs/common';
 import { SchedulerTriggerController } from '../controllers/scheduler-trigger.controller';
-import { SchedulerLegacyController } from '../controllers/scheduler-legacy.controller';
 import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 import { SmartNotificationModule } from './smart-notification.module';
 import { CommuteModule } from './commute.module';
@@ -8,6 +7,7 @@ import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-al
 import { PostgresUserRepository } from '@infrastructure/persistence/postgres-user.repository';
 import { PostgresSubwayStationRepository } from '@infrastructure/persistence/postgres-subway-station.repository';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
+import { NotificationMessageBuilderService } from '@application/services/notification-message-builder.service';
 import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commute-session.entity';
 import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
@@ -29,7 +29,7 @@ const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
 
 @Module({
   imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]), PushModule],
-  controllers: [SchedulerTriggerController, SchedulerLegacyController],
+  controllers: [SchedulerTriggerController],
   providers: [
     {
       provide: 'IAlertRepository',
@@ -84,6 +84,7 @@ const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
       },
       inject: [ConfigService],
     },
+    NotificationMessageBuilderService,
     SendNotificationUseCase,
     GenerateWeeklyReportUseCase,
     ...(isQueueEnabled ? [NotificationProcessor] : []),

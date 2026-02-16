@@ -27,10 +27,7 @@ import {
   RouteRecommendationQueryDto,
 } from '@application/dto/route-recommendation.dto';
 import { RouteType } from '@domain/entities/commute-route.entity';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('routes')
 @UseGuards(AuthGuard('jwt'))

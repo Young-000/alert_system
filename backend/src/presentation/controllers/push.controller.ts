@@ -13,10 +13,7 @@ import { Repository } from 'typeorm';
 import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PushSubscriptionEntity } from '../../infrastructure/persistence/typeorm/push-subscription.entity';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 class PushKeysDto {
   @IsString()

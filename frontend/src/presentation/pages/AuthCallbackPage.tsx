@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
+import { notifyAuthChange } from '@presentation/hooks/useAuth';
+
+function getCallbackParams(): URLSearchParams {
+  // fragment hash 우선 (보안: query string은 서버 로그/referrer에 노출됨)
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    return new URLSearchParams(hash);
+  }
+  // fallback: query string (에러 리다이렉트는 여전히 query 사용)
+  return new URLSearchParams(window.location.search);
+}
 
 export function AuthCallbackPage(): JSX.Element {
   const [searchParams] = useSearchParams();
@@ -11,10 +22,11 @@ export function AuthCallbackPage(): JSX.Element {
   useEffect(() => {
     let timerId: ReturnType<typeof setTimeout>;
 
-    const processCallback = () => {
-      const token = searchParams.get('token');
-      const userId = searchParams.get('userId');
-      const error = searchParams.get('error');
+    const processCallback = (): void => {
+      const params = getCallbackParams();
+      const token = params.get('token');
+      const userId = params.get('userId');
+      const error = params.get('error') || searchParams.get('error');
 
       if (error) {
         setStatus('error');
@@ -36,11 +48,14 @@ export function AuthCallbackPage(): JSX.Element {
         safeSetItem('accessToken', token);
         safeSetItem('userId', userId);
 
-        // 이메일과 이름도 저장 (선택적)
-        const email = searchParams.get('email');
-        const name = searchParams.get('name');
+        const email = params.get('email');
+        const name = params.get('name');
         if (email) safeSetItem('userEmail', email);
         if (name) safeSetItem('userName', name);
+
+        // fragment에서 토큰 정보 제거 (브라우저 히스토리 보호)
+        window.history.replaceState(null, '', window.location.pathname);
+        notifyAuthChange();
 
         setStatus('success');
         timerId = setTimeout(() => navigate('/alerts'), 500);

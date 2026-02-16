@@ -23,10 +23,7 @@ import {
   CommuteHistoryResponseDto,
   CommuteStatsResponseDto,
 } from '@application/dto/commute.dto';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('commute')
 @UseGuards(AuthGuard('jwt'))

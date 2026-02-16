@@ -14,10 +14,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { CalculateRouteAnalyticsUseCase } from '@application/use-cases/calculate-route-analytics.use-case';
 import { RouteAnalytics } from '@domain/entities/route-analytics.entity';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 // DTO types
 interface RouteAnalyticsResponseDto {

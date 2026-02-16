@@ -32,9 +32,9 @@ function PageLoader() {
 function useIdlePreload(): void {
   useEffect(() => {
     const timer = setTimeout(() => {
-      import('./pages/RouteSetupPage');
-      import('./pages/AlertSettingsPage');
-      import('./pages/SettingsPage');
+      import('./pages/RouteSetupPage').catch(() => {});
+      import('./pages/AlertSettingsPage').catch(() => {});
+      import('./pages/SettingsPage').catch(() => {});
     }, 2000);
     return () => clearTimeout(timer);
   }, []);

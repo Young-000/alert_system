@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApiClient } from '@infrastructure/api';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
+import { notifyAuthChange } from '@presentation/hooks/useAuth';
 
 type AuthMode = 'login' | 'register';
 
@@ -94,6 +95,7 @@ export function LoginPage(): JSX.Element {
           safeSetItem('userName', name);
           if (phoneNumber) safeSetItem('phoneNumber', phoneNumber);
           // 신규 회원은 온보딩으로 이동
+          notifyAuthChange();
           navigate('/onboarding');
           return;
         } else {
@@ -103,6 +105,7 @@ export function LoginPage(): JSX.Element {
           if (response.user.name) safeSetItem('userName', response.user.name);
           if (response.user.phoneNumber) safeSetItem('phoneNumber', response.user.phoneNumber);
         }
+        notifyAuthChange();
         navigate('/');
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '오류가 발생했습니다.';

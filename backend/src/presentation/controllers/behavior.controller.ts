@@ -29,10 +29,7 @@ import { IUserPatternRepository } from '@domain/repositories/user-pattern.reposi
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string };
-}
+import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 interface TrackEventDto {
   userId: string;
