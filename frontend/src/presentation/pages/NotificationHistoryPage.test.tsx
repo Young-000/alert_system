@@ -2,8 +2,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { NotificationHistoryPage } from './NotificationHistoryPage';
 import { notificationApiClient } from '@infrastructure/api';
+import type { Mocked } from 'vitest';
 
-const mockNotificationApiClient = notificationApiClient as jest.Mocked<typeof notificationApiClient>;
+const mockNotificationApiClient = notificationApiClient as Mocked<typeof notificationApiClient>;
 
 function renderPage(): ReturnType<typeof render> {
   return render(
@@ -15,7 +16,7 @@ function renderPage(): ReturnType<typeof render> {
 
 describe('NotificationHistoryPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('userId', 'user-1');
     mockNotificationApiClient.getHistory.mockResolvedValue({ items: [], total: 0 });
   });

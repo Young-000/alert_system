@@ -3,12 +3,13 @@ import { MemoryRouter } from 'react-router-dom';
 import { AlertSettingsPage } from './AlertSettingsPage';
 import { alertApiClient } from '@infrastructure/api';
 import type { AlertType } from '@infrastructure/api';
+import type { Mocked } from 'vitest';
 
-const mockAlertApiClient = alertApiClient as jest.Mocked<typeof alertApiClient>;
+const mockAlertApiClient = alertApiClient as Mocked<typeof alertApiClient>;
 
 describe('AlertSettingsPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('userId', 'user-1');
   });
 

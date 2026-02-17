@@ -1,10 +1,10 @@
-// Mock API clients for Jest
+// Mock API clients for Vitest
 export const apiClient = {
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn(),
-  patch: jest.fn(),
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  patch: vi.fn(),
 };
 
 // ApiClient class mock
@@ -12,36 +12,36 @@ export class ApiClient {
   constructor(_baseUrl: string) {
     // Mock - baseUrl not used
   }
-  get = jest.fn();
-  post = jest.fn();
-  put = jest.fn();
-  delete = jest.fn();
-  patch = jest.fn();
+  get = vi.fn();
+  post = vi.fn();
+  put = vi.fn();
+  delete = vi.fn();
+  patch = vi.fn();
 }
 
 export const alertApiClient = {
-  createAlert: jest.fn().mockResolvedValue({}),
-  getAlertsByUser: jest.fn().mockResolvedValue([]),
-  getAlert: jest.fn().mockResolvedValue(null),
-  deleteAlert: jest.fn().mockResolvedValue(undefined),
-  toggleAlert: jest.fn().mockResolvedValue(undefined),
-  updateAlert: jest.fn().mockResolvedValue({}),
+  createAlert: vi.fn().mockResolvedValue({}),
+  getAlertsByUser: vi.fn().mockResolvedValue([]),
+  getAlert: vi.fn().mockResolvedValue(null),
+  deleteAlert: vi.fn().mockResolvedValue(undefined),
+  toggleAlert: vi.fn().mockResolvedValue(undefined),
+  updateAlert: vi.fn().mockResolvedValue({}),
 };
 
 export const userApiClient = {
-  createUser: jest.fn(),
-  getUser: jest.fn(),
-  updateLocation: jest.fn(),
-  exportData: jest.fn().mockResolvedValue({}),
-  deleteAllData: jest.fn().mockResolvedValue({ success: true }),
+  createUser: vi.fn(),
+  getUser: vi.fn(),
+  updateLocation: vi.fn(),
+  exportData: vi.fn().mockResolvedValue({}),
+  deleteAllData: vi.fn().mockResolvedValue({ success: true }),
 };
 
 export const subwayApiClient = {
-  searchStations: jest.fn(),
+  searchStations: vi.fn(),
 };
 
 export const busApiClient = {
-  searchStops: jest.fn(),
+  searchStops: vi.fn(),
 };
 
 export interface SubwayStation {
@@ -57,16 +57,16 @@ export interface BusStop {
 }
 
 export const commuteApiClient = {
-  getUserRoutes: jest.fn().mockResolvedValue([]),
-  createRoute: jest.fn().mockResolvedValue({}),
-  updateRoute: jest.fn().mockResolvedValue({}),
-  deleteRoute: jest.fn().mockResolvedValue(undefined),
-  getInProgressSession: jest.fn().mockResolvedValue(null),
-  startSession: jest.fn().mockResolvedValue({}),
-  recordCheckpoint: jest.fn().mockResolvedValue({}),
-  completeSession: jest.fn().mockResolvedValue({}),
-  cancelSession: jest.fn().mockResolvedValue(undefined),
-  getStats: jest.fn().mockResolvedValue({
+  getUserRoutes: vi.fn().mockResolvedValue([]),
+  createRoute: vi.fn().mockResolvedValue({}),
+  updateRoute: vi.fn().mockResolvedValue({}),
+  deleteRoute: vi.fn().mockResolvedValue(undefined),
+  getInProgressSession: vi.fn().mockResolvedValue(null),
+  startSession: vi.fn().mockResolvedValue({}),
+  recordCheckpoint: vi.fn().mockResolvedValue({}),
+  completeSession: vi.fn().mockResolvedValue({}),
+  cancelSession: vi.fn().mockResolvedValue(undefined),
+  getStats: vi.fn().mockResolvedValue({
     userId: 'test-user-id',
     totalSessions: 0,
     recentSessions: 0,
@@ -79,12 +79,12 @@ export const commuteApiClient = {
     weatherImpact: [],
     insights: [],
   }),
-  getHistory: jest.fn().mockResolvedValue([]),
-  getUserAnalytics: jest.fn().mockResolvedValue([]),
+  getHistory: vi.fn().mockResolvedValue([]),
+  getUserAnalytics: vi.fn().mockResolvedValue([]),
 };
 
 // Factory function for CommuteApiClient
-export const getCommuteApiClient = jest.fn(() => commuteApiClient);
+export const getCommuteApiClient = vi.fn(() => commuteApiClient);
 
 // Type exports
 export type RouteType = 'commute_to_work' | 'commute_to_home' | 'other';
@@ -125,7 +125,7 @@ export interface RouteResponse {
 }
 
 export const notificationApiClient = {
-  getHistory: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+  getHistory: vi.fn().mockResolvedValue({ items: [], total: 0 }),
 };
 
 export interface NotificationLog {
@@ -139,10 +139,10 @@ export interface NotificationLog {
 }
 
 export const authApiClient = {
-  login: jest.fn(),
-  register: jest.fn(),
-  logout: jest.fn(),
-  verify: jest.fn(),
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
+  verify: vi.fn(),
 };
 
 export type AlertType = 'weather' | 'airQuality' | 'bus' | 'subway';

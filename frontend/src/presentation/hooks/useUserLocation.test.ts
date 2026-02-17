@@ -6,12 +6,12 @@ const SEOUL_DEFAULT = { latitude: 37.5665, longitude: 126.978 };
 
 describe('useUserLocation', () => {
   let originalGeolocation: Geolocation;
-  let mockGetCurrentPosition: jest.Mock;
+  let mockGetCurrentPosition: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     localStorage.clear();
     originalGeolocation = navigator.geolocation;
-    mockGetCurrentPosition = jest.fn();
+    mockGetCurrentPosition = vi.fn();
     Object.defineProperty(navigator, 'geolocation', {
       value: { getCurrentPosition: mockGetCurrentPosition },
       writable: true,

@@ -3,17 +3,18 @@ import { MemoryRouter } from 'react-router-dom';
 import { SettingsPage } from './SettingsPage';
 import { alertApiClient, commuteApiClient, getCommuteApiClient } from '@infrastructure/api';
 import type { Alert, AlertType } from '@infrastructure/api';
+import type { Mocked, MockedFunction } from 'vitest';
 
-jest.mock('@infrastructure/api');
+vi.mock('@infrastructure/api');
 
-jest.mock('@infrastructure/push/push-manager', () => ({
-  isPushSupported: jest.fn().mockResolvedValue(false),
-  isPushSubscribed: jest.fn().mockResolvedValue(false),
-  subscribeToPush: jest.fn(),
-  unsubscribeFromPush: jest.fn(),
+vi.mock('@infrastructure/push/push-manager', () => ({
+  isPushSupported: vi.fn().mockResolvedValue(false),
+  isPushSubscribed: vi.fn().mockResolvedValue(false),
+  subscribeToPush: vi.fn(),
+  unsubscribeFromPush: vi.fn(),
 }));
 
-jest.mock('@presentation/hooks/useAuth', () => ({
+vi.mock('@presentation/hooks/useAuth', () => ({
   useAuth: () => {
     const userId = localStorage.getItem('userId') || '';
     const phoneNumber = localStorage.getItem('phoneNumber') || '';
@@ -21,12 +22,12 @@ jest.mock('@presentation/hooks/useAuth', () => ({
     const userEmail = localStorage.getItem('userEmail') || '';
     return { userId, phoneNumber, userName, userEmail, isLoggedIn: !!userId };
   },
-  notifyAuthChange: jest.fn(),
+  notifyAuthChange: vi.fn(),
 }));
 
-const mockAlertApiClient = alertApiClient as jest.Mocked<typeof alertApiClient>;
-const mockCommuteApiClient = commuteApiClient as jest.Mocked<typeof commuteApiClient>;
-const mockGetCommuteApiClient = getCommuteApiClient as jest.MockedFunction<typeof getCommuteApiClient>;
+const mockAlertApiClient = alertApiClient as Mocked<typeof alertApiClient>;
+const mockCommuteApiClient = commuteApiClient as Mocked<typeof commuteApiClient>;
+const mockGetCommuteApiClient = getCommuteApiClient as MockedFunction<typeof getCommuteApiClient>;
 
 function renderSettingsPage(): ReturnType<typeof render> {
   return render(
@@ -38,7 +39,7 @@ function renderSettingsPage(): ReturnType<typeof render> {
 
 describe('SettingsPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
     mockGetCommuteApiClient.mockReturnValue(mockCommuteApiClient);
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);

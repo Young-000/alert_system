@@ -234,45 +234,45 @@ describe('getAqiStatus', () => {
 
 describe('getGreeting', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('returns 새벽이에요 for hour 3', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 3, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 3, 0));
     expect(getGreeting()).toBe('새벽이에요');
   });
 
   it('returns 좋은 아침이에요 for hour 7', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 7, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 7, 0));
     expect(getGreeting()).toBe('좋은 아침이에요');
   });
 
   it('returns 좋은 오전이에요 for hour 10', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 10, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 10, 0));
     expect(getGreeting()).toBe('좋은 오전이에요');
   });
 
   it('returns 점심 시간이에요 for hour 13', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 13, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 13, 0));
     expect(getGreeting()).toBe('점심 시간이에요');
   });
 
   it('returns 좋은 오후에요 for hour 15', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 15, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 15, 0));
     expect(getGreeting()).toBe('좋은 오후에요');
   });
 
   it('returns 좋은 저녁이에요 for hour 19', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 19, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 19, 0));
     expect(getGreeting()).toBe('좋은 저녁이에요');
   });
 
   it('returns 좋은 밤이에요 for hour 22', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 22, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 22, 0));
     expect(getGreeting()).toBe('좋은 밤이에요');
   });
 });
@@ -320,15 +320,15 @@ describe('getWeatherAdvice', () => {
 
 describe('getTodayKey', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('returns YYYY-M-D format', () => {
-    jest.setSystemTime(new Date(2026, 1, 17));
+    vi.setSystemTime(new Date(2026, 1, 17));
     expect(getTodayKey()).toBe('2026-2-17');
   });
 });

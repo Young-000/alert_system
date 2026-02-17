@@ -2,31 +2,13 @@ import { Link } from 'react-router-dom';
 import type { CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { useCollapsible } from '@presentation/hooks/useCollapsible';
+import { ChevronIcon } from '@presentation/components/icons';
 
 interface StatsSectionProps {
   commuteStats: CommuteStatsResponse | null;
   routes: RouteResponse[];
   activeRouteId: string | undefined;
   onNavigateToRoutes: () => void;
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }): JSX.Element {
-  return (
-    <svg
-      className={`collapsible-chevron ${expanded ? 'collapsible-chevron--expanded' : ''}`}
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
 }
 
 function buildSummaryText(
@@ -79,7 +61,10 @@ export function StatsSection({
         >
           <h3 className="home-stats-title home-stats-title--inline">이번 주</h3>
           <span className="home-stats-summary-text">{summaryText}</span>
-          <ChevronIcon expanded={isExpanded} />
+          <ChevronIcon
+            size={16}
+            className={`collapsible-chevron ${isExpanded ? 'collapsible-chevron--expanded' : ''}`}
+          />
         </div>
 
         {/* Detail content (only visible when expanded) */}

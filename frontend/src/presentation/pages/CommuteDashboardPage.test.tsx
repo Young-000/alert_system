@@ -3,16 +3,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { CommuteDashboardPage } from './CommuteDashboardPage';
 
 // Mock navigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
 describe('CommuteDashboardPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    Storage.prototype.getItem = jest.fn(() => 'test-user-id');
+    vi.clearAllMocks();
+    Storage.prototype.getItem = vi.fn(() => 'test-user-id');
   });
 
   it('should render dashboard page', async () => {
@@ -27,7 +27,7 @@ describe('CommuteDashboardPage', () => {
   });
 
   it('should show login message if not authenticated', () => {
-    Storage.prototype.getItem = jest.fn(() => null);
+    Storage.prototype.getItem = vi.fn(() => null);
     render(
       <MemoryRouter>
         <CommuteDashboardPage />

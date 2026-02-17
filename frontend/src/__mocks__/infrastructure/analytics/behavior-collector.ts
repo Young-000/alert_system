@@ -1,4 +1,4 @@
-// Mock behavior collector for Jest
+// Mock behavior collector for Vitest
 export enum BehaviorEventType {
   NOTIFICATION_RECEIVED = 'notification_received',
   NOTIFICATION_OPENED = 'notification_opened',
@@ -14,7 +14,7 @@ export enum BehaviorEventType {
 }
 
 export const behaviorCollector = {
-  track: jest.fn(),
-  flush: jest.fn(),
-  setUserId: jest.fn(),
+  track: vi.fn(),
+  flush: vi.fn(),
+  setUserId: vi.fn(),
 };

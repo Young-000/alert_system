@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import { renderHook } from '@testing-library/react';
 import { useFocusTrap } from './useFocusTrap';
 
@@ -58,7 +55,7 @@ describe('useFocusTrap', () => {
   });
 
   it('활성 상태에서 Escape 키를 누르면 onEscape를 호출한다', () => {
-    const onEscape = jest.fn();
+    const onEscape = vi.fn();
     const { result } = renderHook(() =>
       useFocusTrap({ active: true, onEscape }),
     );
@@ -75,7 +72,7 @@ describe('useFocusTrap', () => {
   });
 
   it('활성화되면 첫 번째 포커스 가능 요소에 포커스한다', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const { result } = renderHook(() =>
       useFocusTrap({ active: true }),
     );
@@ -85,12 +82,12 @@ describe('useFocusTrap', () => {
       writable: true,
     });
 
-    jest.advanceTimersByTime(20);
+    vi.advanceTimersByTime(20);
 
     // The hook attempts to focus the first focusable element
     // In test environment, focus behavior is limited, but the hook logic is exercised
     expect(result.current.current).toBe(container);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('비활성화 시 이전 포커스를 복원한다', () => {

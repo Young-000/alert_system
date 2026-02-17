@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import { renderHook, act } from '@testing-library/react';
 import { useCollapsible } from './useCollapsible';
 
@@ -116,7 +113,7 @@ describe('useCollapsible', () => {
 
     const event = {
       key: 'Enter',
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     } as unknown as React.KeyboardEvent;
 
     act(() => {
@@ -134,7 +131,7 @@ describe('useCollapsible', () => {
 
     const event = {
       key: ' ',
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     } as unknown as React.KeyboardEvent;
 
     act(() => {
@@ -152,7 +149,7 @@ describe('useCollapsible', () => {
 
     const event = {
       key: 'Tab',
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     } as unknown as React.KeyboardEvent;
 
     act(() => {
@@ -176,7 +173,7 @@ describe('useCollapsible', () => {
   });
 
   it('localStorage 오류 시 기본값으로 fallback한다', () => {
-    const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('Storage error');
     });
 
@@ -189,7 +186,7 @@ describe('useCollapsible', () => {
   });
 
   it('localStorage 쓰기 오류 시에도 상태 변경은 동작한다', () => {
-    const setItemSpy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('Storage full');
     });
 

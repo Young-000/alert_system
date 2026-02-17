@@ -2,25 +2,26 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginPage } from './LoginPage';
 import { authApiClient } from '@infrastructure/api';
 import { MemoryRouter } from 'react-router-dom';
+import type { Mocked } from 'vitest';
 
-jest.mock('@infrastructure/api', () => ({
+vi.mock('@infrastructure/api', () => ({
   authApiClient: {
-    login: jest.fn(),
-    register: jest.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
   },
 }));
 
-const mockAuthApiClient = authApiClient as jest.Mocked<typeof authApiClient>;
+const mockAuthApiClient = authApiClient as Mocked<typeof authApiClient>;
 
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
 describe('LoginPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 

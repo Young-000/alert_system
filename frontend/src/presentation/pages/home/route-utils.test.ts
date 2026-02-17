@@ -20,11 +20,11 @@ function buildRoute(overrides: Partial<RouteResponse> = {}): RouteResponse {
 
 describe('getActiveRoute', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('returns null for empty array', () => {
@@ -37,56 +37,56 @@ describe('getActiveRoute', () => {
   });
 
   it('returns preferred morning route in the morning', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 8, 0)); // 8 AM
+    vi.setSystemTime(new Date(2026, 1, 17, 8, 0)); // 8 AM
     const morning = buildRoute({ id: 'morning', routeType: 'morning', isPreferred: true });
     const evening = buildRoute({ id: 'evening', routeType: 'evening', isPreferred: true });
     expect(getActiveRoute([evening, morning])).toBe(morning);
   });
 
   it('returns preferred evening route in the evening', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 18, 0)); // 6 PM
+    vi.setSystemTime(new Date(2026, 1, 17, 18, 0)); // 6 PM
     const morning = buildRoute({ id: 'morning', routeType: 'morning', isPreferred: true });
     const evening = buildRoute({ id: 'evening', routeType: 'evening', isPreferred: true });
     expect(getActiveRoute([morning, evening])).toBe(evening);
   });
 
   it('returns morning type when forceType is "morning"', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 18, 0)); // evening time
+    vi.setSystemTime(new Date(2026, 1, 17, 18, 0)); // evening time
     const morning = buildRoute({ id: 'morning', routeType: 'morning' });
     const evening = buildRoute({ id: 'evening', routeType: 'evening' });
     expect(getActiveRoute([morning, evening], 'morning')).toBe(morning);
   });
 
   it('returns evening type when forceType is "evening"', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 8, 0)); // morning time
+    vi.setSystemTime(new Date(2026, 1, 17, 8, 0)); // morning time
     const morning = buildRoute({ id: 'morning', routeType: 'morning' });
     const evening = buildRoute({ id: 'evening', routeType: 'evening' });
     expect(getActiveRoute([morning, evening], 'evening')).toBe(evening);
   });
 
   it('auto mode selects morning route when hour < 14', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 10, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 10, 0));
     const morning = buildRoute({ id: 'morning', routeType: 'morning' });
     const evening = buildRoute({ id: 'evening', routeType: 'evening' });
     expect(getActiveRoute([morning, evening], 'auto')).toBe(morning);
   });
 
   it('auto mode selects evening route when hour >= 14', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 14, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 14, 0));
     const morning = buildRoute({ id: 'morning', routeType: 'morning' });
     const evening = buildRoute({ id: 'evening', routeType: 'evening' });
     expect(getActiveRoute([morning, evening], 'auto')).toBe(evening);
   });
 
   it('falls back to type match when no preferred route exists', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 8, 0));
+    vi.setSystemTime(new Date(2026, 1, 17, 8, 0));
     const morning = buildRoute({ id: 'morning', routeType: 'morning', isPreferred: false });
     const evening = buildRoute({ id: 'evening', routeType: 'evening', isPreferred: false });
     expect(getActiveRoute([evening, morning])).toBe(morning);
   });
 
   it('falls back to first route when no type matches', () => {
-    jest.setSystemTime(new Date(2026, 1, 17, 8, 0)); // morning
+    vi.setSystemTime(new Date(2026, 1, 17, 8, 0)); // morning
     const evening1 = buildRoute({ id: 'evening1', routeType: 'evening' });
     const evening2 = buildRoute({ id: 'evening2', routeType: 'evening' });
     expect(getActiveRoute([evening1, evening2])).toBe(evening1);

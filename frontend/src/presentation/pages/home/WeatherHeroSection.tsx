@@ -3,6 +3,7 @@ import type { WeatherData } from '@infrastructure/api';
 import { WeatherIcon, getWeatherAdvice } from './weather-utils';
 import type { ChecklistItem } from './weather-utils';
 import { useCollapsible } from '@presentation/hooks/useCollapsible';
+import { ChevronIcon } from '@presentation/components/icons';
 
 interface WeatherHeroSectionProps {
   weather: WeatherData;
@@ -12,25 +13,6 @@ interface WeatherHeroSectionProps {
   checklistItems: ChecklistItem[];
   checkedItems: Set<string>;
   onChecklistToggle: (id: string) => void;
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }): JSX.Element {
-  return (
-    <svg
-      className={`collapsible-chevron ${expanded ? 'collapsible-chevron--expanded' : ''}`}
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
 }
 
 export function WeatherHeroSection({
@@ -75,7 +57,10 @@ export function WeatherHeroSection({
           {isDefaultLocation && (
             <span className="weather-hero-summary-location">서울</span>
           )}
-          <ChevronIcon expanded={isExpanded} />
+          <ChevronIcon
+            size={16}
+            className={`collapsible-chevron ${isExpanded ? 'collapsible-chevron--expanded' : ''}`}
+          />
         </div>
 
         {/* Detail content (only visible when expanded) */}

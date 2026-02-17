@@ -17,12 +17,10 @@
 
 모든 Important 항목이 Cycle 3~5에서 완료됨.
 
-## Nice-to-have (Cycle 8+)
+## Nice-to-have (Cycle 9+)
 
 | ID | 항목 | 노력 | RICE | 출처 |
 |----|------|------|------|------|
-| N-1 | Jest -> Vitest 마이그레이션 | M | 40 | PM |
-| N-2 | SVG 아이콘 시스템 구축 (공유 Icon 컴포넌트) | M | 40 | PM |
 | N-9 | 커스텀 도메인 (Route 53 + ACM) | M | 40 | PM |
 | N-8 | Solapi 주간 리포트 템플릿 | M | 25 | PM |
 | N-10 | 알림 발송 모니터링 대시보드 | L | 25 | PM |
@@ -59,6 +57,7 @@
 - [x] **Cycle 5: Important 완료 + UX 개선** (2026-02-17) — CSS 모듈화, useUserLocation 훅, eslint-disable 제거, 경로 저장 토스트, 설정 중복 해소
 - [x] **Cycle 6: UX Polish** (2026-02-17) — 포커스 트랩 통일, Cron 한국어 표현, 알림 기록 접근성, QuickPresets 중복 제거, PD P1 해결 2건
 - [x] **Cycle 7: 홈 인지 부하 감소** (2026-02-17) — 날씨/통계 접기 모드, useCollapsible 훅, CTA 뷰포트 내 표시
+- [x] **Cycle 8: DX 개선** (2026-02-17) — Jest→Vitest 마이그레이션, SVG 아이콘 시스템 7개, 테스트 488개
 
 ---
-*마지막 업데이트: 2026-02-17 (Cycle 7 완료 — Nice-to-have 8건 완료)*
+*마지막 업데이트: 2026-02-17 (Cycle 8 완료 — Nice-to-have 10건 완료)*
