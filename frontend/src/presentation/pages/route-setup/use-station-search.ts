@@ -94,6 +94,7 @@ export function useStationSearch(
   const handleStationClick = useCallback((grouped: GroupedStation) => {
     if (grouped.lines.length === 1) {
       onStopSelected(grouped.name, grouped.lines[0].line, grouped.lines[0].id);
+      clearSearch();
       return;
     }
 
@@ -104,6 +105,7 @@ export function useStationSearch(
 
       if (commonLines.length === 1) {
         onStopSelected(grouped.name, commonLines[0].line, commonLines[0].id);
+        clearSearch();
         return;
       }
       if (commonLines.length > 1) {
@@ -113,16 +115,18 @@ export function useStationSearch(
     }
 
     setLineSelectionModal(grouped);
-  }, [selectedStops, onStopSelected]);
+  }, [selectedStops, onStopSelected, clearSearch]);
 
   const handleLineSelect = useCallback((stationName: string, line: string, stationId: string) => {
     onStopSelected(stationName, line, stationId);
     setLineSelectionModal(null);
-  }, [onStopSelected]);
+    clearSearch();
+  }, [onStopSelected, clearSearch]);
 
   const handleSelectBusStop = useCallback((stop: BusStop) => {
     onStopSelected(stop.name, '', stop.nodeId);
-  }, [onStopSelected]);
+    clearSearch();
+  }, [onStopSelected, clearSearch]);
 
   return {
     searchQuery,

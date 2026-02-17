@@ -15,7 +15,6 @@ import { PrivacyModule } from './modules/privacy.module';
 import { CommuteModule } from './modules/commute.module';
 import { NotificationHistoryModule } from './modules/notification-history.module';
 import { PushModule } from './modules/push.module';
-import { QueueModule } from '@infrastructure/queue/queue.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
 import { DevController } from './controllers/dev.controller';
@@ -27,7 +26,6 @@ const isDev = process.env.NODE_ENV !== 'production';
   controllers: isDev ? [HealthController, DevController] : [HealthController],
   imports: [
     DatabaseModule,
-    QueueModule,
     // Rate Limiting: 1분에 60회 요청 제한
     ThrottlerModule.forRoot([{
       ttl: 60000,

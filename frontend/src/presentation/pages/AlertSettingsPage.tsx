@@ -229,20 +229,33 @@ export function AlertSettingsPage(): JSX.Element {
 
   const progress = wizard.getProgress();
 
+  // 비로그인 시 빈 상태 UI
+  if (!userId) {
+    return (
+      <main className="page alert-page-v2">
+        <header className="alert-page-v2-header">
+          <h1>알림</h1>
+        </header>
+        <div className="settings-empty">
+          <span className="empty-icon-svg" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </span>
+          <h2>로그인이 필요해요</h2>
+          <p>알림을 설정하려면 먼저 로그인하세요</p>
+          <Link to="/login" className="btn btn-primary">로그인</Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="page alert-page-v2">
       <header className="alert-page-v2-header">
         <h1>알림</h1>
       </header>
 
-      {!userId && (
-        <div className="notice warning">
-          <Link to="/login" className="notice-link">로그인</Link> 후 알림을 설정할 수 있어요.
-        </div>
-      )}
-
       {/* 초기 로딩 상태 표시 */}
-      {alertCrud.isLoadingAlerts && userId && (
+      {alertCrud.isLoadingAlerts && (
         <div className="loading-container" role="status" aria-live="polite">
           <span className="spinner" aria-hidden="true" />
           <p>서버에 연결 중입니다...</p>
@@ -262,7 +275,7 @@ export function AlertSettingsPage(): JSX.Element {
       )}
 
       {/* "Add new alert" toggle button */}
-      {!alertCrud.isLoadingAlerts && userId && alertCrud.alerts.length > 0 && !wizard.showWizard && (
+      {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && !wizard.showWizard && (
         <button
           type="button"
           className="btn btn-primary add-alert-btn"
@@ -272,7 +285,8 @@ export function AlertSettingsPage(): JSX.Element {
         </button>
       )}
 
-      <div id="wizard-content" className="wizard-container" style={{ display: (alertCrud.isLoadingAlerts && userId) || !userId || !wizard.showWizard ? 'none' : undefined }}>
+      {!alertCrud.isLoadingAlerts && wizard.showWizard && (
+      <div id="wizard-content" className="wizard-container">
         <WizardStepIndicator
           progress={progress}
           wantsTransport={wantsTransport}
@@ -361,15 +375,14 @@ export function AlertSettingsPage(): JSX.Element {
           onSubmit={handleSubmit}
         />
       </div>
+      )}
 
       {/* 빠른 알림 프리셋 */}
-      {userId && (
-        <QuickPresets
-          alerts={alertCrud.alerts}
-          isSubmitting={alertCrud.isSubmitting}
-          onQuickWeather={alertCrud.handleQuickWeatherAlert}
-        />
-      )}
+      <QuickPresets
+        alerts={alertCrud.alerts}
+        isSubmitting={alertCrud.isSubmitting}
+        onQuickWeather={alertCrud.handleQuickWeatherAlert}
+      />
 
       {/* Delete Confirmation Modal */}
       {alertCrud.deleteTarget && (

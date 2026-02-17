@@ -22,6 +22,7 @@ export function CommuteDashboardPage(): JSX.Element {
     selectedRouteId,
     setSelectedRouteId,
     isLoading,
+    loadError,
     activeTab,
     setActiveTab,
     routeAnalytics,
@@ -73,6 +74,12 @@ export function CommuteDashboardPage(): JSX.Element {
           </Link>
         </div>
       </nav>
+
+      {loadError && (
+        <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
+          {loadError}
+        </div>
+      )}
 
       {(!stats || stats.totalSessions === 0) && stopwatchRecords.length === 0 ? (
         <EmptyState

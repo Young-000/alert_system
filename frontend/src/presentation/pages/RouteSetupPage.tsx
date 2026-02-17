@@ -93,12 +93,11 @@ export function RouteSetupPage(): JSX.Element {
     }
 
     setSelectedStops(testStops);
-    search.clearSearch();
     setError('');
     setStep('ask-more');
   }, [currentTransport, selectedStops, validateRoute]);
 
-  // 검색 훅
+  // 검색 훅 (clearSearch는 onStopSelected 콜백 후 훅 내부에서 자동 호출)
   const search = useStationSearch(currentTransport, selectedStops, handleSelectStopDirect);
 
   // 기존 경로 로드

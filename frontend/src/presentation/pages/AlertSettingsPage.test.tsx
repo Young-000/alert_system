@@ -85,7 +85,7 @@ describe('AlertSettingsPage', () => {
     });
   });
 
-  it('should show login warning when userId is not set', async () => {
+  it('should show login empty state when userId is not set', async () => {
     localStorage.clear();
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
@@ -96,8 +96,10 @@ describe('AlertSettingsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/후 알림을 설정할 수 있어요/)).toBeInTheDocument();
+      expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
     });
+    expect(screen.getByText('알림을 설정하려면 먼저 로그인하세요')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login');
   });
 
   it('should delete an alert', async () => {

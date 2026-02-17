@@ -37,6 +37,9 @@ export function SettingsPage(): JSX.Element {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
 
+  // Error feedback
+  const [actionError, setActionError] = useState('');
+
   // Privacy
   const [showDeleteAllData, setShowDeleteAllData] = useState(false);
   const [isDeletingAllData, setIsDeletingAllData] = useState(false);
@@ -57,6 +60,7 @@ export function SettingsPage(): JSX.Element {
 
     const loadData = async () => {
       setIsLoading(true);
+      setActionError('');
       try {
         const [alertsData, routesData] = await Promise.all([
           alertApiClient.getAlertsByUser(userId).catch(() => []),
@@ -65,8 +69,12 @@ export function SettingsPage(): JSX.Element {
         if (!isMounted) return;
         setAlerts(alertsData);
         setRoutes(routesData);
+        // 모든 API가 빈 배열을 반환한 경우 (개별 .catch 실행) 전체 실패 가능성
+        if (alertsData.length === 0 && routesData.length === 0) {
+          // 데이터가 진짜 없는 것과 실패를 구분하기 어려우므로 에러 표시하지 않음
+        }
       } catch {
-        // Non-critical: individual API calls already have .catch fallbacks
+        if (isMounted) setActionError('데이터를 불러오는 데 실패했습니다.');
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -79,13 +87,15 @@ export function SettingsPage(): JSX.Element {
 
   // Toggle alert
   const handleToggleAlert = async (alertId: string) => {
+    setActionError('');
     try {
       await alertApiClient.toggleAlert(alertId);
       setAlerts(prev => prev.map(a =>
         a.id === alertId ? { ...a, enabled: !a.enabled } : a
       ));
     } catch {
-      // Silent: toggle is optimistic, UI already updated
+      setActionError('알림 상태 변경에 실패했습니다.');
+      setTimeout(() => setActionError(''), TOAST_DURATION_MS);
     }
   };
 
@@ -103,7 +113,8 @@ export function SettingsPage(): JSX.Element {
       }
       setDeleteModal(null);
     } catch {
-      // Error handling delegated to UI state
+      setActionError('삭제에 실패했습니다. 다시 시도해주세요.');
+      setTimeout(() => setActionError(''), TOAST_DURATION_MS);
     } finally {
       setIsDeleting(false);
     }
@@ -128,7 +139,8 @@ export function SettingsPage(): JSX.Element {
         setPushEnabled(ok);
       }
     } catch {
-      // Permission denied or error
+      setActionError('푸시 알림 설정에 실패했습니다.');
+      setTimeout(() => setActionError(''), TOAST_DURATION_MS);
     } finally {
       setPushLoading(false);
     }
@@ -276,6 +288,13 @@ export function SettingsPage(): JSX.Element {
         <div className="settings-loading" role="status" aria-live="polite">
           <span className="spinner" aria-hidden="true" />
           <p>불러오는 중...</p>
+        </div>
+      )}
+
+      {/* Action Error */}
+      {actionError && (
+        <div className="notice error" role="alert" aria-live="assertive" style={{ margin: '0 1rem 0.75rem' }}>
+          {actionError}
         </div>
       )}
 

@@ -6,12 +6,12 @@ Supabase PostgreSQL 연결 상태를 검증하고 스키마 상태를 확인합�
 
 ### 1. Production API Health Check
 ```bash
-curl -s https://alert-system-kdg9.onrender.com/health | jq .
+curl -s https://d1qgl3ij2xig8k.cloudfront.net/health | jq .
 ```
 
 ### 2. Database Connection Test (via API)
 ```bash
-curl -s -X POST https://alert-system-kdg9.onrender.com/auth/register \
+curl -s -X POST https://d1qgl3ij2xig8k.cloudfront.net/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test-validator-'$(date +%s)'@test.com","password":"Test123!","name":"Validator"}'
 ```
@@ -52,8 +52,8 @@ mcp__supabase__execute_sql:
 ## 문제 해결 가이드
 
 ### "column does not exist" 에러
-1. Render에서 `DB_SYNCHRONIZE=true` 설정
-2. "Clear build cache & deploy" 실행
+1. ECS 태스크 정의에서 환경변수 확인 (SSM Parameter Store)
+2. ECS 서비스 재배포: `aws ecs update-service --cluster alert-system-prod-cluster --service alert-system-prod-service --force-new-deployment`
 3. 테이블 재생성 확인
 
 ### Connection Timeout

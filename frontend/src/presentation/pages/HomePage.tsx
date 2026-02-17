@@ -274,6 +274,7 @@ export function HomePage(): JSX.Element {
   const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
   const [transitInfos, setTransitInfos] = useState<TransitArrivalInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
@@ -297,6 +298,7 @@ export function HomePage(): JSX.Element {
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
+      setLoadError('');
       try {
         const commuteApi = getCommuteApiClient();
         const [alertsData, routesData, statsData] = await Promise.all([
@@ -309,7 +311,7 @@ export function HomePage(): JSX.Element {
         setRoutes(routesData);
         setCommuteStats(statsData);
       } catch {
-        // Non-critical
+        if (isMounted) setLoadError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -545,6 +547,13 @@ export function HomePage(): JSX.Element {
   return (
     <main className="page home-page">
       <a href="#weather-hero" className="skip-link">본문으로 건너뛰기</a>
+
+      {/* Load Error */}
+      {loadError && (
+        <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
+          {loadError}
+        </div>
+      )}
 
       {/* Header — greeting only */}
       <header className="home-header">
