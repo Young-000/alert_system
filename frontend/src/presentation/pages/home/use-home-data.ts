@@ -56,6 +56,7 @@ export interface UseHomeDataReturn {
   isDefaultLocation: boolean;
   isCommuteStarting: boolean;
   handleStartCommute: () => Promise<void>;
+  retryLoad: () => void;
   navigate: ReturnType<typeof useNavigate>;
 }
 
@@ -94,7 +95,7 @@ export function useHomeData(): UseHomeDataReturn {
   const loadError = [alertsQuery.error, routesQuery.error, statsQuery.error]
     .filter(Boolean)
     .map(() => '데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
-    .at(0) ?? '';
+    [0] ?? '';
 
   // Weather/air quality errors (independent, non-blocking)
   const weatherError = weatherQuery.error ? '날씨 정보를 불러올 수 없습니다' : '';
@@ -232,6 +233,11 @@ export function useHomeData(): UseHomeDataReturn {
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,
+    retryLoad: () => {
+      alertsQuery.refetch();
+      routesQuery.refetch();
+      statsQuery.refetch();
+    },
     navigate,
   };
 }

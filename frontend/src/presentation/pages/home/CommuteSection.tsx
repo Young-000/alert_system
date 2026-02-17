@@ -45,11 +45,12 @@ export function CommuteSection({
 
   // Refresh timestamp display every 10 seconds
   const [, setTick] = useState(0);
+  const hasUpdate = lastTransitUpdate !== null;
   useEffect(() => {
-    if (!lastTransitUpdate) return;
+    if (!hasUpdate) return;
     const interval = setInterval(() => setTick(t => t + 1), 10_000);
     return () => clearInterval(interval);
-  }, [lastTransitUpdate]);
+  }, [hasUpdate]);
 
   return (
     <section id="today-card" className="today-card" aria-label="오늘의 출퇴근">
@@ -93,7 +94,7 @@ export function CommuteSection({
               {/* Header with last update timestamp */}
               <div className="today-transit-header">
                 <span className="today-transit-title">실시간 교통</span>
-                <span className="today-transit-update" aria-label="마지막 갱신 시간">
+                <span className="today-transit-update" role="status" aria-label="마지막 갱신 시간">
                   {isTransitRefreshing
                     ? '갱신 중...'
                     : lastTransitUpdate
@@ -121,7 +122,11 @@ export function CommuteSection({
                     ) : info.error ? (
                       <span className="today-transit-time muted" role="alert">{info.error}</span>
                     ) : info.arrivals.length > 0 ? (
-                      <span className={`today-transit-time${arrivingSoon ? ' arriving-soon-text' : ''}`}>
+                      <span
+                        className={`today-transit-time${arrivingSoon ? ' arriving-soon-text' : ''}`}
+                        role={arrivingSoon ? 'alert' : undefined}
+                      >
+                        {arrivingSoon && <span className="arriving-soon-icon" aria-hidden="true">⚡</span>}
                         {(() => {
                           const a = info.arrivals[0];
                           if ('routeName' in a) {
