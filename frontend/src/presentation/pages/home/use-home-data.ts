@@ -3,9 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { useUserLocation } from '@presentation/hooks/useUserLocation';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
-import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, subwayApiClient, behaviorApiClient } from '@infrastructure/api';
-import type { Alert, WeatherData, AirQualityData, DeparturePrediction } from '@infrastructure/api';
+import { busApiClient, subwayApiClient, behaviorApiClient } from '@infrastructure/api';
+import type { Alert, WeatherData, DeparturePrediction } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse, type RouteRecommendationResponse } from '@infrastructure/api/commute-api.client';
+import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
+import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
+import { useWeatherQuery } from '@infrastructure/query/use-weather-query';
+import { useAirQualityQuery } from '@infrastructure/query/use-air-quality-query';
+import { useCommuteStatsQuery } from '@infrastructure/query/use-commute-stats-query';
 import {
   getAqiStatus,
   getWeatherChecklist,
@@ -55,21 +60,50 @@ export function useHomeData(): UseHomeDataReturn {
   const navigate = useNavigate();
   const { userId, userName, isLoggedIn } = useAuth();
 
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [routes, setRoutes] = useState<RouteResponse[]>([]);
-  const [commuteStats, setCommuteStats] = useState<CommuteStatsResponse | null>(null);
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
+  // User location (geolocation + localStorage cache + Seoul fallback)
+  const userLocation = useUserLocation();
+
+  // Server state via react-query
+  const alertsQuery = useAlertsQuery(userId);
+  const routesQuery = useRoutesQuery(userId);
+  const statsQuery = useCommuteStatsQuery(userId, 7);
+
+  const locationReady = !!userId && !userLocation.isLoading;
+  const weatherQuery = useWeatherQuery(
+    userLocation.latitude, userLocation.longitude, locationReady,
+  );
+  const airQualityQuery = useAirQualityQuery(
+    userLocation.latitude, userLocation.longitude, locationReady,
+  );
+
+  // Derive values from query results (maintains existing interface)
+  // useMemo prevents new array/null references on every render when data is undefined
+  const alerts = useMemo(() => alertsQuery.data ?? [], [alertsQuery.data]);
+  const routes = useMemo(() => routesQuery.data ?? [], [routesQuery.data]);
+  const commuteStats = statsQuery.data ?? null;
+  const weather = weatherQuery.data ?? null;
+  const airQualityData = airQualityQuery.data ?? null;
+
+  // Core data loading state — matches existing isLoading semantics
+  const isLoading = !userId
+    ? false
+    : alertsQuery.isLoading || routesQuery.isLoading || statsQuery.isLoading;
+  const loadError = [alertsQuery.error, routesQuery.error, statsQuery.error]
+    .filter(Boolean)
+    .map(() => '데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
+    .at(0) ?? '';
+
+  // Weather/air quality errors (independent, non-blocking)
+  const weatherError = weatherQuery.error ? '날씨 정보를 불러올 수 없습니다' : '';
+  const airQualityError = airQualityQuery.error ? '미세먼지 정보 없음' : '';
+
+  // Local UI state (not server state)
   const [transitInfos, setTransitInfos] = useState<TransitArrivalInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
   const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
   const [routeRecDismissed, setRouteRecDismissed] = useState(() => sessionStorage.getItem('routeRecDismissed') === 'true');
-  const [weatherError, setWeatherError] = useState('');
-  const [airQualityError, setAirQualityError] = useState('');
   const [checkedItems, setCheckedItems] = useState<Set<string>>(getCheckedItems);
 
   // Initialize behavior collector
@@ -78,58 +112,6 @@ export function useHomeData(): UseHomeDataReturn {
       behaviorCollector.initialize(userId);
     }
   }, [userId]);
-
-  // Load core data
-  useEffect(() => {
-    let isMounted = true;
-    if (!userId) { setIsLoading(false); return; }
-
-    const loadData = async (): Promise<void> => {
-      setIsLoading(true);
-      setLoadError('');
-      try {
-        const commuteApi = getCommuteApiClient();
-        const [alertsData, routesData, statsData] = await Promise.all([
-          alertApiClient.getAlertsByUser(userId).catch((err) => { console.warn('Failed to load alerts:', err); return []; }),
-          commuteApi.getUserRoutes(userId).catch((err) => { console.warn('Failed to load routes:', err); return []; }),
-          commuteApi.getStats(userId, 7).catch((err) => { console.warn('Failed to load stats:', err); return null; }),
-        ]);
-        if (!isMounted) return;
-        setAlerts(alertsData);
-        setRoutes(routesData);
-        setCommuteStats(statsData);
-      } catch {
-        if (isMounted) setLoadError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    loadData();
-    return () => { isMounted = false; };
-  }, [userId]);
-
-  // User location (geolocation + localStorage cache + Seoul fallback)
-  const userLocation = useUserLocation();
-
-  // Load weather + air quality
-  useEffect(() => {
-    let isMounted = true;
-    if (!userId || userLocation.isLoading) return;
-
-    const lat = userLocation.latitude;
-    const lng = userLocation.longitude;
-
-    weatherApiClient.getCurrentWeather(lat, lng)
-      .then(data => { if (isMounted) setWeather(data); })
-      .catch(() => { if (isMounted) setWeatherError('날씨 정보를 불러올 수 없습니다'); });
-
-    airQualityApiClient.getByLocation(lat, lng)
-      .then(data => { if (isMounted) setAirQualityData(data); })
-      .catch(() => { if (isMounted) setAirQualityError('미세먼지 정보 없음'); });
-
-    return () => { isMounted = false; };
-  }, [userId, userLocation.latitude, userLocation.longitude, userLocation.isLoading]);
 
   // A-1: Load optimal departure prediction
   useEffect(() => {

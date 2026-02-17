@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { alertApiClient, userApiClient } from '@infrastructure/api';
-import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
+import { userApiClient } from '@infrastructure/api';
 import type { Alert } from '@infrastructure/api';
+import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
 import { useAuth, notifyAuthChange } from '@presentation/hooks/useAuth';
+import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
+import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 
 export type SettingsTab = 'profile' | 'routes' | 'alerts' | 'app';
 
@@ -61,10 +63,13 @@ export function useSettings(): UseSettingsReturn {
   // Tab state
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
-  // Data states
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [routes, setRoutes] = useState<RouteResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Server state via react-query
+  const alertsQuery = useAlertsQuery(userId);
+  const routesQuery = useRoutesQuery(userId);
+
+  const alerts = alertsQuery.data ?? [];
+  const routes = routesQuery.data ?? [];
+  const isLoading = alertsQuery.isLoading || routesQuery.isLoading;
 
   // Local data reset
   const [showLocalDataReset, setShowLocalDataReset] = useState(false);
@@ -83,41 +88,6 @@ export function useSettings(): UseSettingsReturn {
   const [isDeletingAllData, setIsDeletingAllData] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [privacyMessage, setPrivacyMessage] = useState('');
-
-  // Stable singleton reference prevents unnecessary useEffect re-runs
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
-
-  // Load data
-  useEffect(() => {
-    if (!userId) {
-      setIsLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-
-    const loadData = async (): Promise<void> => {
-      setIsLoading(true);
-      setActionError('');
-      try {
-        const [alertsData, routesData] = await Promise.all([
-          alertApiClient.getAlertsByUser(userId).catch(() => []),
-          commuteApi.getUserRoutes(userId).catch(() => []),
-        ]);
-        if (!isMounted) return;
-        setAlerts(alertsData);
-        setRoutes(routesData);
-      } catch {
-        if (isMounted) setActionError('데이터를 불러오는 데 실패했습니다.');
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    loadData();
-
-    return () => { isMounted = false; };
-  }, [userId, commuteApi]);
 
   // Check push notification status
   useEffect(() => {

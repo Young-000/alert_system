@@ -1,9 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { AlertSettingsPage } from './AlertSettingsPage';
 import { alertApiClient } from '@infrastructure/api';
 import type { AlertType } from '@infrastructure/api';
 import type { Mocked } from 'vitest';
+import { TestProviders } from '../../test-utils';
 
 const mockAlertApiClient = alertApiClient as Mocked<typeof alertApiClient>;
 
@@ -21,9 +21,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -48,9 +48,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue(mockAlerts);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -63,9 +63,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -91,9 +91,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -118,9 +118,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.deleteAlert.mockResolvedValue(undefined);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {

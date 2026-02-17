@@ -1,9 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { SettingsPage } from './SettingsPage';
 import { alertApiClient, commuteApiClient, getCommuteApiClient } from '@infrastructure/api';
 import type { Alert, AlertType } from '@infrastructure/api';
 import type { Mocked, MockedFunction } from 'vitest';
+import { TestProviders } from '../../test-utils';
 
 vi.mock('@infrastructure/api');
 
@@ -31,9 +31,9 @@ const mockGetCommuteApiClient = getCommuteApiClient as MockedFunction<typeof get
 
 function renderSettingsPage(): ReturnType<typeof render> {
   return render(
-    <MemoryRouter>
+    <TestProviders>
       <SettingsPage />
-    </MemoryRouter>
+    </TestProviders>
   );
 }
 
