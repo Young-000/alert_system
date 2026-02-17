@@ -72,6 +72,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const [editForm, setEditForm] = useState({ name: '', schedule: '' });
   const [isEditing, setIsEditing] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState<Alert | null>(null);
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
 
   const reloadAlerts = useCallback(async (): Promise<void> => {
     if (!userId) return;
@@ -163,12 +164,20 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   }, []);
 
   const handleToggleAlert = async (alert: Alert): Promise<void> => {
+    if (togglingIds.has(alert.id)) return;
+    setTogglingIds(prev => new Set(prev).add(alert.id));
     setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
     try {
       await alertApiClient.toggleAlert(alert.id);
     } catch {
       setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
       setError('알림 상태 변경에 실패했습니다.');
+    } finally {
+      setTogglingIds(prev => {
+        const next = new Set(prev);
+        next.delete(alert.id);
+        return next;
+      });
     }
   };
 

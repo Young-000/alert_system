@@ -164,7 +164,7 @@ export function CommuteTrackingPage(): JSX.Element {
 
   // Complete session (도착 버튼)
   const handleComplete = async (): Promise<void> => {
-    if (!session || isCompleting) return;
+    if (!session || isCompleting || session.status !== 'in_progress') return;
     setIsCompleting(true);
     setError('');
 
