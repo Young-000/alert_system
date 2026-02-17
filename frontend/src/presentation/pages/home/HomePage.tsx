@@ -9,6 +9,7 @@ import { CommuteSection } from './CommuteSection';
 import { AlertSection } from './AlertSection';
 import { StatsSection } from './StatsSection';
 import { StreakBadge } from './StreakBadge';
+import { WeeklyReportCard } from './WeeklyReportCard';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -55,6 +56,14 @@ export function HomePage(): JSX.Element {
       {data.streak && (
         <StreakBadge streak={data.streak} />
       )}
+
+      <WeeklyReportCard
+        report={data.weeklyReport}
+        isLoading={data.weeklyReportLoading}
+        error={data.weeklyReportError}
+        weekOffset={data.weekOffset}
+        onWeekChange={data.setWeekOffset}
+      />
 
       {data.activeRoute && (
         <MorningBriefing

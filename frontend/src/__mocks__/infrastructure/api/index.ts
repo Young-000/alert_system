@@ -114,6 +114,26 @@ export const commuteApiClient = {
   getHistory: vi.fn().mockResolvedValue([]),
   getUserAnalytics: vi.fn().mockResolvedValue([]),
   getWeatherRouteRecommendation: vi.fn().mockResolvedValue({ confidence: 0, recommendation: null }),
+  getWeeklyReport: vi.fn().mockResolvedValue({
+    weekStartDate: '2026-02-17',
+    weekEndDate: '2026-02-23',
+    weekLabel: '2월 4주차',
+    totalSessions: 0,
+    totalRecordedDays: 0,
+    averageDuration: 0,
+    minDuration: 0,
+    maxDuration: 0,
+    dailyStats: [],
+    bestDay: null,
+    worstDay: null,
+    previousWeekAverage: null,
+    changeFromPrevious: null,
+    changePercentage: null,
+    trend: null,
+    insights: [],
+    streakWeeklyCount: 0,
+    streakWeeklyGoal: 5,
+  }),
 };
 
 // Factory function for CommuteApiClient
@@ -184,6 +204,42 @@ export interface NotificationStatsDto {
   fallback: number;
   failed: number;
   successRate: number;
+}
+
+// Weekly Report types (re-exported for tests)
+export type TrendDirection = 'improving' | 'stable' | 'worsening';
+
+export interface DailyStatsResponse {
+  date: string;
+  dayOfWeek: number;
+  dayName: string;
+  sessionCount: number;
+  averageDuration: number;
+  totalDuration: number;
+  averageDelay: number;
+  averageWaitTime: number;
+  weatherCondition: string | null;
+}
+
+export interface WeeklyReportResponse {
+  weekStartDate: string;
+  weekEndDate: string;
+  weekLabel: string;
+  totalSessions: number;
+  totalRecordedDays: number;
+  averageDuration: number;
+  minDuration: number;
+  maxDuration: number;
+  dailyStats: DailyStatsResponse[];
+  bestDay: DailyStatsResponse | null;
+  worstDay: DailyStatsResponse | null;
+  previousWeekAverage: number | null;
+  changeFromPrevious: number | null;
+  changePercentage: number | null;
+  trend: TrendDirection | null;
+  insights: string[];
+  streakWeeklyCount: number;
+  streakWeeklyGoal: number;
 }
 
 export const authApiClient = {
