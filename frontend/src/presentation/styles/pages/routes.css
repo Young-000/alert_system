@@ -1,0 +1,3786 @@
+/* pages/routes.css — auto-split from index.css */
+
+/* ============================================
+   ROUTE SETUP PAGE - NEW TEMPLATE-BASED UI
+   ============================================ */
+
+/* 1.2.1 Hero Section */
+.route-hero {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-xl);
+  padding: 2rem 1.5rem;
+  margin: 0 1rem 1.5rem;
+  text-align: center;
+  color: white;
+}
+
+.route-hero-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.route-hero-content p {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* 1.2.2 Quick Start Button */
+.route-quick-start {
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.quick-start-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-start-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.quick-start-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+}
+
+.quick-start-text {
+  flex: 1;
+  text-align: left;
+}
+
+.quick-start-text strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+}
+
+.quick-start-text span {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.quick-start-arrow {
+  font-size: 1.25rem;
+  color: var(--ink-muted);
+  transition: transform 0.2s ease;
+}
+
+.quick-start-btn:hover .quick-start-arrow {
+  transform: translateX(4px);
+  color: var(--primary);
+}
+
+/* 1.2.3 Template Cards */
+.route-templates {
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.route-templates h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.section-desc {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-bottom: 1rem;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.template-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.template-card:hover {
+  border-color: var(--template-color, var(--primary));
+  box-shadow: var(--shadow-md);
+}
+
+.template-card.selected {
+  border-color: var(--template-color, var(--primary));
+  background: linear-gradient(to bottom, var(--bg-card), rgba(99, 102, 241, 0.05));
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
+}
+
+.template-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.template-icon {
+  font-size: 1.25rem;
+}
+
+.template-name {
+  font-weight: 600;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.template-check {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--template-color, var(--primary));
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+}
+
+/* 1.2.4 Template Timeline */
+.template-timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  position: relative;
+}
+
+.timeline-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-subtle);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  z-index: 1;
+}
+
+.template-card.selected .timeline-dot {
+  background: var(--primary-light);
+}
+
+.timeline-label {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.timeline-connector {
+  position: absolute;
+  top: 16px;
+  left: calc(50% + 16px);
+  width: calc(100% - 32px);
+  height: 2px;
+  background: var(--border);
+}
+
+.template-card.selected .timeline-connector {
+  background: var(--template-color, var(--primary));
+  opacity: 0.4;
+}
+
+/* ========== ROUTE SETUP V2 (간소화된 버전) ========== */
+
+/* 저장된 경로 섹션 */
+.route-saved {
+  padding: 0 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.route-saved h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.saved-routes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.saved-route-item {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.saved-route-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  transition: background 0.2s ease;
+}
+
+.saved-route-link:hover {
+  background: var(--bg-subtle);
+}
+
+.saved-route-icon {
+  font-size: 1.5rem;
+}
+
+.saved-route-info {
+  flex: 1;
+}
+
+.saved-route-info strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.1rem;
+}
+
+.saved-route-info span {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.badge-primary {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.saved-route-arrow {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.saved-route-actions {
+  display: flex;
+  border-left: 1px solid var(--border);
+}
+
+.btn-icon {
+  padding: 0.75rem;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 1rem;
+  border: none;
+}
+
+.btn-icon:hover {
+  background: var(--bg-subtle);
+}
+
+.btn-icon-danger:hover {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+/* 템플릿 그리드 V2 - 원클릭 저장 */
+.template-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.template-card-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0.75rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.template-card-v2:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.template-card-v2:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.template-icon-v2 {
+  font-size: 2rem;
+}
+
+.template-name-v2 {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.template-preview {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.template-saving {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-lg);
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* ========================================
+   템플릿 미리보기 섹션
+   ======================================== */
+.route-preview-section {
+  padding: 1rem;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.preview-header {
+  padding: 1.5rem;
+  color: white;
+  text-align: center;
+}
+
+.preview-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.preview-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.preview-body {
+  padding: 1.5rem;
+}
+
+.preview-description {
+  text-align: center;
+  color: var(--ink-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.preview-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.preview-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 0.5rem;
+}
+
+.preview-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  transition: border-color 0.2s;
+}
+
+.preview-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* 경로 시각화 */
+.preview-route-visual {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.route-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.route-flow-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-checkpoint {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.flow-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+.flow-name {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 20px;
+  margin-left: 0;
+  border-left: 2px dashed var(--border);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.flow-transport {
+  font-size: 1rem;
+}
+
+.flow-duration {
+  color: var(--ink-muted);
+}
+
+/* 예상 시간 표시 */
+.preview-time {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.preview-time span {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.preview-time strong {
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+/* 액션 버튼 */
+.preview-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.preview-actions .btn {
+  flex: 1;
+}
+
+.preview-actions .btn-ghost {
+  flex: 0.8;
+}
+
+.preview-edit-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}
+
+/* ========================================
+   체크포인트 카드 (역/정류장 검색 UI)
+   ======================================== */
+.preview-checkpoints {
+  margin-bottom: 1.5rem;
+}
+
+.preview-checkpoints-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.preview-checkpoints-hint {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-bottom: 1rem;
+}
+
+.checkpoint-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkpoint-card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+
+.checkpoint-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.checkpoint-card .checkpoint-number {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.checkpoint-card .checkpoint-icon {
+  font-size: 1.25rem;
+}
+
+.checkpoint-label {
+  font-size: 0.7rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+/* 역 선택된 상태 */
+.selected-station {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.selected-station .station-name {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.btn-change-station {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.btn-change-station:hover {
+  text-decoration: underline;
+}
+
+/* 역 선택 버튼 */
+.btn-select-station {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-select-station:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* 역 검색 입력 */
+.station-search-input {
+  position: relative;
+}
+
+.station-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.station-search-input .searching {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+/* 검색 결과 */
+.station-results {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.station-results li {
+  border-bottom: 1px solid var(--border);
+}
+
+.station-results li:last-child {
+  border-bottom: none;
+}
+
+.station-result-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.station-result-btn:hover {
+  background: var(--bg-elevated);
+}
+
+.station-result-btn strong {
+  color: var(--ink);
+}
+
+.station-line {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  background: var(--bg-elevated);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-cancel-search {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.btn-cancel-search:hover {
+  color: var(--ink);
+}
+
+/* 장소 이름 입력 */
+.checkpoint-name-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  background: white;
+}
+
+.checkpoint-name-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* 이동 수단 표시 */
+.checkpoint-transport-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.transport-icon {
+  font-size: 1rem;
+}
+
+/* 안내 박스 */
+.preview-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.preview-info-box .info-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.preview-info-box p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0369a1;
+  line-height: 1.4;
+}
+
+.preview-edit-link:hover {
+  color: var(--primary);
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+  .template-grid-v2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .template-icon-v2 {
+    font-size: 1.5rem;
+  }
+
+  .saved-route-link {
+    padding: 0.75rem;
+  }
+}
+
+/* 1.2.5 Config Card */
+.route-config {
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.config-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border-radius: var(--radius-md);
+  color: white;
+}
+
+.config-title h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.config-title p {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.config-form {
+  margin-bottom: 1.5rem;
+}
+
+.config-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.config-form label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--ink-secondary);
+}
+
+.route-name-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.route-name-input:focus {
+  background: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* 1.2.6 Preview Timeline */
+.config-preview {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.preview-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  margin-bottom: 1rem;
+}
+
+.preview-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.preview-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.preview-node {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border-radius: 50%;
+  color: white;
+  margin-bottom: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.preview-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.preview-line {
+  position: absolute;
+  top: 20px;
+  left: calc(50% + 20px);
+  width: calc(100% - 40px);
+  height: 3px;
+  border-radius: 2px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* 1.2.7 Fancy Checkbox */
+.checkbox-fancy {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+
+.checkbox-fancy input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-box {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: var(--bg-card);
+}
+
+.checkbox-box svg {
+  width: 12px;
+  height: 10px;
+  fill: none;
+  stroke: white;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s ease;
+}
+
+.checkbox-fancy input:checked + .checkbox-box {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox-fancy input:checked + .checkbox-box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checkbox-fancy:hover .checkbox-box {
+  border-color: var(--primary);
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.config-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.config-actions .btn {
+  white-space: nowrap;
+  padding: 0.75rem 1rem;
+}
+
+.config-actions .btn-ghost {
+  flex: 0 0 auto; /* Don't grow, don't shrink, use auto width */
+}
+
+.config-actions .btn-primary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem; /* Slightly smaller on narrow screens */
+}
+
+@media (min-width: 400px) {
+  .config-actions .btn-primary {
+    font-size: 1rem;
+  }
+}
+
+.btn-arrow {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.btn:hover .btn-arrow {
+  transform: translateX(3px);
+}
+
+.btn-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 1.2.8 Existing Routes Card */
+.route-existing {
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.route-existing h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.existing-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.existing-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.existing-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+.existing-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.existing-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.existing-info {
+  flex: 1;
+}
+
+.existing-info strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.1rem;
+}
+
+.existing-info span {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.existing-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.existing-arrow {
+  color: var(--primary);
+  font-weight: 600;
+  transition: transform 0.2s ease;
+}
+
+.existing-card:hover .existing-arrow {
+  transform: translateX(3px);
+}
+
+/* Existing Card Wrapper with Delete Button */
+.existing-card-wrapper {
+  position: relative;
+}
+
+.btn-delete-route {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--ink-muted);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.existing-card-wrapper:hover .btn-delete-route:not(.existing-actions .btn-delete-route) {
+  opacity: 1;
+}
+
+.btn-delete-route:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+
+.btn-delete-route:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.existing-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.existing-card-wrapper:hover .existing-actions {
+  opacity: 1;
+}
+
+.btn-edit-route {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-route:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+/* Advanced Section */
+.route-advanced {
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.advanced-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-subtle);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+  transition: all 0.2s ease;
+}
+
+.advanced-toggle:hover {
+  background: var(--border);
+}
+
+.toggle-icon {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.advanced-hint {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.advanced-hint p {
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+
+.advanced-hint .muted {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: 0.25rem;
+}
+
+/* Route Advanced Toggle */
+.route-advanced-toggle {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Route Custom Builder Section */
+.route-custom-builder {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Custom Route Form */
+.custom-route-form {
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.custom-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+}
+
+.custom-form-header h3 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.btn-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1.5rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: -0.5rem -0.5rem 0 0;
+}
+
+.btn-close:hover {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
+}
+
+.custom-route-form h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.custom-route-form > .muted {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-bottom: 1rem;
+}
+
+.custom-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.custom-form-row .form-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  margin-bottom: 0.375rem;
+}
+
+.route-name-input,
+.route-type-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.route-name-input:focus,
+.route-type-select:focus {
+  border-color: var(--primary);
+  background: var(--bg-card);
+}
+
+/* Checkpoint List */
+.checkpoint-list {
+  margin-bottom: 1rem;
+}
+
+.checkpoint-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
+.checkpoint-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.checkpoint-number {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.checkpoint-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkpoint-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.icon-select {
+  width: 44px;
+  padding: 0.375rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.checkpoint-name-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.checkpoint-name-input:focus {
+  border-color: var(--primary);
+}
+
+.btn-remove-checkpoint {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--ink-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-checkpoint:hover {
+  background: var(--error-light);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.checkpoint-transport {
+  padding-left: 2rem;
+  flex-wrap: wrap;
+}
+
+.transport-select {
+  padding: 0.375rem 0.625rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.time-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
+.time-input-group label {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.time-input {
+  width: 50px;
+  padding: 0.375rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.time-input:focus {
+  border-color: var(--primary);
+}
+
+/* Custom Route Preview */
+.custom-route-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--primary-light);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.custom-route-preview strong {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.custom-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Login Prompt */
+.route-login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  min-height: 50vh;
+}
+
+.prompt-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.route-login-prompt h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.route-login-prompt p {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+}
+
+/* Notice Messages */
+.notice {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.notice.error {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.notice.success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+/* ========================================
+   Apple Style Route Page
+   ======================================== */
+.apple-route-page {
+  min-height: 100vh;
+  background: #f5f5f7;
+}
+
+.apple-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.apple-back {
+  font-size: 1.5rem;
+  color: #007aff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  width: 40px;
+}
+
+.apple-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-nav-link {
+  font-size: 1rem;
+  color: #007aff;
+  text-decoration: none;
+  width: 60px;
+  text-align: right;
+}
+
+/* Empty State */
+.apple-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.apple-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.apple-empty h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+}
+
+.apple-empty p {
+  font-size: 1rem;
+  color: #86868b;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.apple-btn-primary {
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.apple-btn-primary:hover {
+  background: #0066d6;
+}
+
+.apple-btn-primary:disabled {
+  background: #86868b;
+  cursor: not-allowed;
+}
+
+.apple-btn-full {
+  width: 100%;
+}
+
+.apple-btn-secondary {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.apple-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: #86868b;
+  font-size: 1rem;
+}
+
+/* Route List */
+.apple-route-list {
+  padding: 1.5rem 1rem;
+}
+
+.route-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #86868b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.apple-route-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.route-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.apple-route-card .route-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.apple-route-card .route-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.apple-route-card .route-info strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apple-route-card .route-info span {
+  font-size: 0.85rem;
+  color: #86868b;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apple-route-card .route-arrow {
+  color: #c7c7cc;
+  font-size: 0.8rem;
+}
+
+.route-delete {
+  padding: 1rem;
+  background: none;
+  border: none;
+  color: #ff3b30;
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.route-delete:hover {
+  opacity: 1;
+}
+
+.apple-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem;
+  background: white;
+  border: 2px dashed #c7c7cc;
+  border-radius: 12px;
+  color: #007aff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apple-add-btn:hover {
+  border-color: #007aff;
+  background: #f0f8ff;
+}
+
+.apple-add-btn.secondary {
+  background: var(--bg-secondary);
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--border);
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+  padding: 0.75rem;
+}
+
+.apple-add-btn.secondary:hover {
+  background: var(--bg-hover);
+  color: var(--ink-primary);
+}
+
+.add-icon {
+  font-size: 1.25rem;
+}
+
+/* Step Flow */
+.apple-step {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 56px);
+}
+
+.apple-step-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 1.5rem;
+}
+
+.apple-question {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+}
+
+.apple-step-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding: 1rem 1.5rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Type Cards */
+.apple-type-cards {
+  display: flex;
+  gap: 1rem;
+}
+
+.apple-type-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  background: white;
+  border: 2px solid #e5e5ea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apple-type-card:hover {
+  border-color: #007aff;
+}
+
+.apple-type-card.selected {
+  border-color: #007aff;
+  background: #f0f8ff;
+}
+
+.apple-type-card .type-icon {
+  font-size: 3rem;
+}
+
+.apple-type-card .type-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-type-card .type-desc {
+  font-size: 0.9rem;
+  color: #86868b;
+}
+
+/* Search Box */
+.apple-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e5e5ea;
+  margin-bottom: 1rem;
+}
+
+.apple-search-box:focus-within {
+  border-color: #007aff;
+}
+
+.apple-search-box .search-icon {
+  font-size: 1.25rem;
+  color: #86868b;
+}
+
+.apple-search-input {
+  flex: 1;
+  border: none;
+  font-size: 1.1rem;
+  color: #1d1d1f;
+  outline: none;
+  background: transparent;
+}
+
+.apple-search-input::placeholder {
+  color: #c7c7cc;
+}
+
+.search-clear {
+  background: #e5e5ea;
+  border: none;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+  color: #86868b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-searching {
+  text-align: center;
+  padding: 2rem;
+  color: #86868b;
+}
+
+.apple-no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #86868b;
+}
+
+.apple-search-hint {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #86868b;
+}
+
+.apple-search-hint p {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.apple-search-hint .hint-example {
+  font-size: 0.9rem;
+  color: #c7c7cc;
+}
+
+/* Station List */
+.apple-station-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.apple-station-list li {
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.apple-station-list li:last-child {
+  border-bottom: none;
+}
+
+.apple-station-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.apple-station-item:hover {
+  background: #f5f5f7;
+}
+
+.apple-station-item:active {
+  background: #e5e5ea;
+}
+
+.apple-station-item .station-icon {
+  font-size: 1.5rem;
+}
+
+.apple-station-item .station-info {
+  flex: 1;
+}
+
+.apple-station-item .station-info strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #1d1d1f;
+  margin-bottom: 0.15rem;
+}
+
+.apple-station-item .station-info span {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.apple-station-item .station-arrow {
+  color: #007aff;
+  font-size: 1.25rem;
+}
+
+/* Route Preview */
+.apple-route-preview {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.route-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.route-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.point-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.point-icon.start {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+}
+
+.point-icon.station {
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+}
+
+.point-icon.end {
+  background: linear-gradient(135deg, #ff9500 0%, #ffcc00 100%);
+}
+
+.point-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.point-sub {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.route-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  color: #86868b;
+  font-size: 0.85rem;
+}
+
+.route-line::before,
+.route-line::after {
+  content: '';
+  width: 2px;
+  height: 12px;
+  background: #e5e5ea;
+}
+
+.route-line span {
+  padding: 0 0.75rem;
+}
+
+.change-station-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  color: #007aff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.change-station-btn:hover {
+  text-decoration: underline;
+}
+
+/* Info Card */
+.apple-info-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #f0f8ff;
+  border-radius: 12px;
+}
+
+.apple-info-card .info-icon {
+  font-size: 1.25rem;
+}
+
+.apple-info-card p {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #007aff;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.apple-error {
+  padding: 1rem;
+  background: #fff2f2;
+  border-radius: 12px;
+  color: #ff3b30;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Choice Cards - "네, 더 있어요" / "아니요" */
+.apple-choice-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.apple-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border: 2px solid #e5e5ea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.apple-choice-card:hover {
+  border-color: #007aff;
+  background: #f5f9ff;
+}
+
+.apple-choice-card.primary {
+  border-color: #007aff;
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+  color: white;
+}
+
+.apple-choice-card.primary:hover {
+  opacity: 0.9;
+}
+
+.apple-choice-card .choice-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+.apple-choice-card.primary .choice-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.apple-choice-card .choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.apple-choice-card .choice-text strong {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.apple-choice-card .choice-text span {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* Route Progress - 지금까지 경로 */
+.apple-route-progress {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.progress-title {
+  font-size: 0.85rem;
+  color: #86868b;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.progress-route {
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-point {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+}
+
+.progress-point.start {
+  color: #34c759;
+}
+
+.progress-point.end {
+  color: #ff9500;
+}
+
+.progress-segment {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.progress-line {
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e5e5ea;
+}
+
+.progress-line.dashed {
+  background: repeating-linear-gradient(
+    to bottom,
+    #e5e5ea 0,
+    #e5e5ea 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.progress-stop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f5f5f7;
+  border-radius: 12px;
+  margin: 0.5rem 0;
+}
+
+.progress-stop .stop-icon {
+  font-size: 1.25rem;
+}
+
+.progress-stop .stop-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.progress-stop .stop-line {
+  font-size: 0.85rem;
+  color: #86868b;
+}
+
+.progress-stop .stop-remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff3b30;
+  color: white;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+}
+
+.progress-stop .stop-remove:hover {
+  background: #d63030;
+}
+
+/* Route So Far - 미니 경로 미리보기 */
+.route-so-far {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: #f5f5f7;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.route-point-mini {
+  padding: 0.25rem 0.5rem;
+  background: white;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.route-point-mini.stop {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.route-arrow-mini {
+  color: #86868b;
+  font-size: 0.85rem;
+}
+
+/* Transport mode icons for confirm */
+.point-icon.subway {
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+}
+
+.point-icon.bus {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+}
+
+.route-segment-full {
+  display: contents;
+}
+
+/* Mobile Optimization */
+@media (max-width: 390px) {
+  .apple-question {
+    font-size: 1.75rem;
+  }
+
+  .apple-type-card {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .apple-type-card .type-icon {
+    font-size: 2.5rem;
+  }
+
+  .point-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+
+  .apple-choice-card {
+    padding: 1rem;
+  }
+
+  .apple-choice-card .choice-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}
+
+/* ========== NAV BADGE BUTTONS ========== */
+.btn.nav-badge-btn {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+}
+
+/* Mobile: hide nav badges on small screens */
+@media (max-width: 480px) {
+  .nav-badge-btn {
+    display: none;
+  }
+}
+
+/* ========== DRAG AND DROP ROUTE STOPS ========== */
+.sortable-stop-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.sortable-stop-item.dragging {
+  box-shadow: var(--shadow-lg);
+  opacity: 0.9;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--ink-muted);
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.sortable-stop-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sortable-stop-content .stop-icon {
+  font-size: 1.25rem;
+}
+
+.sortable-stop-content .stop-info {
+  flex: 1;
+}
+
+.sortable-stop-content .stop-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sortable-stop-content .stop-line {
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+.sortable-stop-remove {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 1.25rem;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.sortable-stop-remove:hover {
+  color: var(--error);
+}
+
+/* ========== TRANSFER BADGE ========== */
+.transfer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--warning-light);
+  color: var(--warning);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+/* ========== ROUTE VALIDATION ========== */
+.route-validation-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--warning);
+}
+
+.route-validation-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--error-light);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--error);
+}
+
+/* ========== REVERSE ROUTE OPTION ========== */
+.reverse-route-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 0.875rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.reverse-route-option:hover {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.reverse-route-option input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--primary);
+}
+
+.reverse-route-option span {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+/* ========== LINE SELECTION MODAL ========== */
+.line-selection-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.line-selection-content {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  max-width: 320px;
+  width: 100%;
+}
+
+.line-selection-content h3 {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.line-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.line-selection-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.line-selection-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.line-selection-cancel {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+/* ========== ROUTE COMPARISON CHART ========== */
+.route-comparison-section {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+}
+
+.route-comparison-section h2 {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.route-comparison-section .section-subtitle {
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.route-comparison-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.route-comparison-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.route-comparison-row:hover {
+  background: var(--bg-card-hover);
+}
+
+.route-comparison-row.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.route-comparison-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.route-comparison-icon {
+  font-size: 1.1rem;
+}
+
+.route-comparison-name {
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.route-comparison-count {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.route-comparison-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.route-comparison-bar {
+  height: 24px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  min-width: 60px;
+  transition: width 0.3s ease;
+}
+
+.route-comparison-value {
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.route-comparison-wait {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.best-route-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--success-light);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-md);
+  color: var(--success);
+  font-size: 0.85rem;
+}
+
+.best-icon {
+  font-size: 1.25rem;
+}
+
+/* ========== 1. 드래그 핸들 - 터치 영역 확대 ========== */
+.drag-handle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  background: transparent;
+  border: none;
+  cursor: grab;
+  touch-action: none;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s ease;
+}
+
+.drag-handle-btn:hover {
+  background: var(--bg-subtle);
+}
+
+.drag-handle-btn:active {
+  cursor: grabbing;
+  background: var(--primary-light);
+}
+
+.drag-handle-icon {
+  font-size: 1.25rem;
+  color: var(--ink-muted);
+  transition: color 0.2s ease;
+}
+
+.drag-handle-btn:hover .drag-handle-icon {
+  color: var(--ink-secondary);
+}
+
+/* ========== 2. 교통수단 선택기 ========== */
+.transport-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.transport-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 72px;
+}
+
+.transport-option:hover {
+  border-color: var(--primary);
+  background: var(--bg-card-hover);
+}
+
+.transport-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.transport-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.transport-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.transport-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.transport-desc {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.transport-check {
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* ========== 3. 검색 결과 리스트 ========== */
+.search-results-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.search-results-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results-list::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+  border-radius: 3px;
+}
+
+.search-results-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  min-height: 56px;
+}
+
+.search-result-item:hover {
+  border-color: var(--primary);
+  background: var(--bg-card-hover);
+  transform: translateX(4px);
+}
+
+.search-result-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.result-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.result-info strong {
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.result-detail {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.result-action {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* ========== 15. 경로 미리보기 패널 ========== */
+.route-preview-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.preview-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.preview-type-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+}
+
+.preview-stop-count {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.route-visual-enhanced {
+  position: relative;
+  padding-left: 20px;
+}
+
+.preview-stop {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.stop-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+}
+
+.marker-icon {
+  font-size: 1.5rem;
+  z-index: 1;
+  background: var(--bg-card);
+  padding: 4px;
+}
+
+.marker-line {
+  width: 2px;
+  flex: 1;
+  background: var(--border);
+  margin-top: 4px;
+}
+
+.preview-stop.end .marker-line {
+  display: none;
+}
+
+.stop-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.stop-name-main {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stop-line-info {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
+.stop-transfer-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--warning);
+  background: var(--warning-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.stop-transport {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.stop-complete {
+  font-size: 0.9rem;
+  color: var(--success);
+  font-weight: 500;
+}
+
+.preview-edit-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preview-edit-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ========== 경로 임포트 ========== */
+.route-import-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+}
+
+.route-import-banner .import-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.route-import-banner .import-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.route-import-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.route-import-list .import-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.route-import-list .import-list-header h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.route-import-list .btn-close {
+  font-size: 1.25rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-muted);
+}
+
+.route-import-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.route-import-item:last-child {
+  border-bottom: none;
+}
+
+.route-import-item:hover {
+  background: var(--bg-subtle);
+}
+
+.route-import-item .route-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.route-import-item .route-import-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.route-import-item .route-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.route-import-item .route-stops {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-import-item .route-action {
+  font-size: 0.85rem;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* ========== 빠른 선택 (내 경로에서) ========== */
+.quick-select-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-secondary) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--primary);
+  border-opacity: 0.3;
+}
+
+.quick-select-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.quick-select-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-select-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.quick-select-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.quick-select-btn:active {
+  transform: scale(0.98);
+}
+
+.quick-select-btn .qs-icon {
+  font-size: 1.1rem;
+}
+
+.quick-select-btn .qs-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.quick-select-btn .qs-route {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  padding: 2px 6px;
+  background: var(--bg-subtle);
+  border-radius: 4px;
+}
+
+/* ========== 경로 목록 개선 ========== */
+.route-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-add-btn {
+  white-space: nowrap;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.sort-select {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.apple-route-card-improved {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 10px;
+}
+
+.apple-route-card-improved .route-card-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  /* 버튼으로 변경 시 스타일 리셋 */
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.apple-route-card-improved .route-card-content:hover {
+  opacity: 0.8;
+}
+
+.apple-route-card-improved .route-card-content:active {
+  opacity: 0.6;
+}
+
+.apple-route-card-improved .route-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.apple-route-card-improved .route-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.apple-route-card-improved .route-info strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.apple-route-card-improved .route-path {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.apple-route-card-improved .route-meta {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apple-route-card-improved .route-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.route-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.route-action-btn:hover {
+  background: var(--bg-subtle);
+}
+
+.route-action-btn.primary:hover {
+  background: var(--primary-light);
+}
+
+.route-action-btn.danger:hover {
+  background: var(--error-light);
+}
+
+/* ========== 경로 이름 입력 ========== */
+.route-name-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.route-name-input label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+
+.route-name-field {
+  padding: 14px 16px;
+  font-size: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease;
+}
+
+.route-name-field:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.route-name-input .char-count {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+/* ========== 공유 경로 배너 ========== */
+.shared-route-banner {
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-subtle) 100%);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+}
+
+.shared-route-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.shared-route-info strong {
+  font-size: 0.9rem;
+}
+
+.shared-route-info span {
+  font-size: 0.82rem;
+}
+
+.shared-route-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* =============================================
+   REDESIGN v2: Route Page
+   경로 목록 카드 + 연결 알림 배지
+   ============================================= */
+
+.route-page-v2 {
+  padding: 0 20px 100px;
+}
+
+/* route-page-v2-header removed -- replaced by .page-header */
+
+/* Empty */
+.route-empty-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px;
+  gap: 8px;
+}
+
+.route-empty-v2 h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 12px;
+}
+
+.route-empty-v2 p {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.route-empty-v2 .btn {
+  margin-top: 16px;
+}
+
+/* Section */
+.route-list-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Route filter tabs — segmented control style */
+.route-filter-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+}
+
+.route-filter-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.route-filter-tab.active {
+  background: var(--bg-card);
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.route-filter-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.route-section-v2-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Route card */
+.route-card-v2 {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.route-card-v2[data-route-type="morning"] {
+  border-left-color: #f59e0b;
+}
+
+.route-card-v2[data-route-type="evening"] {
+  border-left-color: #6366f1;
+}
+
+.route-card-v2:hover {
+  border-color: var(--border-hover);
+}
+
+.route-card-v2-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.route-card-v2-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.route-type-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.route-type-badge.morning {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.route-type-badge.evening {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.route-preferred-badge {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.route-alert-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+
+.route-card-v2-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-card-v2-path {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-card-v2-meta {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.route-card-v2-actions {
+  display: flex;
+  border-top: 1px solid var(--border);
+}
+
+.route-card-v2-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--ink-secondary);
+  min-height: 44px;
+  transition: background 0.1s;
+}
+
+.route-card-v2-action:last-child {
+  border-right: none;
+}
+
+.route-card-v2-action:active {
+  background: var(--bg-subtle);
+}
+
+.route-card-v2-action.danger:active {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.route-card-v2 + .route-card-v2 {
+  margin-top: 8px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .route-page-v2 {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
+/* ========== ROUTE COMPARISON WINNERS (A-4) ========== */
+.detailed-comparison-section {
+  margin-top: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.detailed-comparison-section h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.comparison-winners {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .comparison-winners {
+    grid-template-columns: 1fr;
+  }
+}
+
+.winner-badge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 8px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.winner-badge-card.recommended {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.winner-badge-icon {
+  font-size: 1.25rem;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.winner-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.winner-badge-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.winner-badge-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comparison-insight {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  padding: 8px 12px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  line-height: 1.5;
+}
+

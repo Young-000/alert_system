@@ -13,6 +13,7 @@ import {
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
 import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from '@infrastructure/api';
+import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
 import { useRouteValidation } from './route-setup/use-route-validation';
@@ -30,6 +31,7 @@ export function RouteSetupPage(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const toast = useToast();
 
   // Shared route banner
   const [sharedRoute, setSharedRoute] = useState<SharedRouteData | null>(null);
@@ -337,6 +339,7 @@ export function RouteSetupPage(): JSX.Element {
         await commuteApi.updateRoute(editingRoute.id, dto);
         const updatedRoutes = await commuteApi.getUserRoutes(userId);
         setExistingRoutes(updatedRoutes);
+        toast.success('경로가 수정되었습니다');
       } else {
         const saved = await commuteApi.createRoute(dto);
         await autoCreateAlerts(saved);
@@ -357,10 +360,13 @@ export function RouteSetupPage(): JSX.Element {
 
           const savedReverse = await commuteApi.createRoute(reverseDto);
           await autoCreateAlerts(savedReverse);
+          toast.success('출근/퇴근 경로가 저장되었습니다');
+        } else {
+          toast.success('경로가 저장되었습니다');
         }
       }
 
-      navigate('/');
+      setTimeout(() => navigate('/'), 1500);
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -562,6 +568,8 @@ export function RouteSetupPage(): JSX.Element {
             getTransferInfo={getTransferInfo}
           />
         )}
+
+        <ToastContainer toasts={toast.toasts} onDismiss={toast.dismissToast} />
       </main>
     );
   }

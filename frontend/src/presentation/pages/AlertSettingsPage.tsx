@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
 import { AuthRequired } from '../components/AuthRequired';
@@ -44,11 +44,28 @@ export function AlertSettingsPage(): JSX.Element {
 
   const { userId } = useAuth();
 
+  // Ref to break circular dependency: handleSubmit needs wizard.setStep,
+  // but wizard needs handleSubmit as onSubmit prop.
+  const wizardSetStepRef = useRef<(step: 'type' | 'transport' | 'station' | 'routine' | 'confirm') => void>(() => {});
+
   // Alert CRUD operations
   const alertCrud = useAlertCrud(userId);
+  const {
+    setError: setCrudError,
+    setDuplicateAlert,
+    setIsSubmitting,
+    setSuccess: setCrudSuccess,
+    reloadAlerts,
+    checkDuplicateAlert,
+  } = alertCrud;
 
   // Transport search
   const transportSearch = useTransportSearch(transportTypes);
+  const {
+    selectedTransports,
+    setSelectedTransports,
+    setSearchQuery: setTransportSearchQuery,
+  } = transportSearch;
 
   // Derived values via utility functions (no circular dependency)
   const schedule = useMemo(
@@ -68,11 +85,11 @@ export function AlertSettingsPage(): JSX.Element {
 
   // Submit handler
   const handleSubmit = useCallback(async (): Promise<void> => {
-    alertCrud.setError('');
-    alertCrud.setDuplicateAlert(null);
+    setCrudError('');
+    setDuplicateAlert(null);
 
     if (!userId) {
-      alertCrud.setError('로그인이 필요합니다.');
+      setCrudError('로그인이 필요합니다.');
       return;
     }
 
@@ -81,22 +98,22 @@ export function AlertSettingsPage(): JSX.Element {
       alertTypes.push('weather', 'airQuality');
     }
 
-    const subwayStation = transportSearch.selectedTransports.find((t) => t.type === 'subway');
-    const busStop = transportSearch.selectedTransports.find((t) => t.type === 'bus');
+    const subwayStation = selectedTransports.find((t) => t.type === 'subway');
+    const busStop = selectedTransports.find((t) => t.type === 'bus');
 
     if (subwayStation) alertTypes.push('subway');
     if (busStop) alertTypes.push('bus');
 
-    const duplicate = alertCrud.checkDuplicateAlert(schedule, alertTypes);
+    const duplicate = checkDuplicateAlert(schedule, alertTypes);
     if (duplicate) {
-      alertCrud.setDuplicateAlert(duplicate);
+      setDuplicateAlert(duplicate);
       const parts = duplicate.schedule.split(' ');
       const hours = parts[1]?.split(',').map(h => `${h.padStart(2, '0')}:00`).join(', ') || '';
-      alertCrud.setError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
+      setCrudError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
       return;
     }
 
-    alertCrud.setIsSubmitting(true);
+    setIsSubmitting(true);
 
     try {
       const dto: CreateAlertDto = {
@@ -110,33 +127,47 @@ export function AlertSettingsPage(): JSX.Element {
       };
 
       await alertApiClient.createAlert(dto);
-      alertCrud.setSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
-      alertCrud.reloadAlerts();
+      setCrudSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
+      reloadAlerts();
 
       setTimeout(() => {
-        wizard.setStep('type');
+        wizardSetStepRef.current('type');
         setWantsWeather(false);
         setWantsTransport(false);
         setTransportTypes([]);
-        transportSearch.setSelectedTransports([]);
-        transportSearch.setSearchQuery('');
+        setSelectedTransports([]);
+        setTransportSearchQuery('');
         setSelectedRouteId(null);
-        alertCrud.setSuccess('');
+        setCrudSuccess('');
       }, TOAST_DURATION_MS);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
       if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-        alertCrud.setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        setCrudError('로그인이 만료되었습니다. 다시 로그인해주세요.');
       } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-        alertCrud.setError('권한이 없습니다. 다시 로그인해주세요.');
+        setCrudError('권한이 없습니다. 다시 로그인해주세요.');
       } else {
-        alertCrud.setError(`알림 생성에 실패했습니다: ${errorMessage}`);
+        setCrudError(`알림 생성에 실패했습니다: ${errorMessage}`);
       }
     } finally {
-      alertCrud.setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, wantsWeather, transportSearch.selectedTransports, selectedRouteId, schedule, alertName, alertCrud.checkDuplicateAlert]);
+  }, [
+    userId,
+    wantsWeather,
+    selectedTransports,
+    selectedRouteId,
+    schedule,
+    alertName,
+    checkDuplicateAlert,
+    setCrudError,
+    setDuplicateAlert,
+    setIsSubmitting,
+    setCrudSuccess,
+    reloadAlerts,
+    setSelectedTransports,
+    setTransportSearchQuery,
+  ]);
 
   // Wizard navigation
   const wizard = useWizardNavigation({
@@ -149,6 +180,9 @@ export function AlertSettingsPage(): JSX.Element {
     success: alertCrud.success,
     onSubmit: handleSubmit,
   });
+
+  // Keep ref in sync so handleSubmit can call wizard.setStep without circular deps
+  wizardSetStepRef.current = wizard.setStep;
 
   // Show wizard by default if no alerts
   if (!alertCrud.isLoadingAlerts && alertCrud.alerts.length === 0 && !wizard.showWizard) {

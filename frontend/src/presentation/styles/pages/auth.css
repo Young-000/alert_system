@@ -1,0 +1,376 @@
+/* pages/auth.css — auto-split from index.css */
+
+/* ============================================
+   ONBOARDING PAGE STYLES
+   ============================================ */
+
+.onboarding-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.onboarding-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.onboarding-step {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Welcome Step */
+.welcome-step .welcome-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.welcome-step h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-desc {
+  font-size: 0.95rem;
+  color: var(--ink-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.welcome-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.feature-icon {
+  font-size: 1.25rem;
+}
+
+/* Step Indicator */
+.step-indicator {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.step-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.step-total {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.onboarding-step h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.step-desc {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* Question Options */
+.question-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.option-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-card:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.option-icon {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.option-label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.option-desc {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+/* Transport Options */
+.transport-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.transport-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transport-card:hover {
+  border-color: var(--primary);
+}
+
+.transport-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.transport-icon {
+  font-size: 2rem;
+}
+
+.transport-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Duration Step */
+.duration-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.duration-value {
+  font-size: 4rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.duration-unit {
+  font-size: 1.25rem;
+  color: var(--ink-secondary);
+}
+
+.duration-presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.preset-btn {
+  padding: 0.5rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  border-color: var(--primary);
+}
+
+.preset-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.duration-slider-container {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.duration-slider {
+  width: 100%;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 4px;
+  outline: none;
+}
+
+.duration-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.duration-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.step-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.step-actions .btn {
+  flex: 1;
+}
+
+.btn-back {
+  margin-top: 1rem;
+}
+
+/* Complete Step */
+.complete-step .complete-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.complete-step h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.complete-step .complete-desc {
+  font-size: 0.95rem;
+  color: var(--ink-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.complete-step .complete-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 알림 추천 배너 */
+.alert-recommend-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+}
+
+.recommend-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recommend-icon {
+  font-size: 1.5rem;
+}
+
+.recommend-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recommend-text strong {
+  font-size: 0.95rem;
+}
+
+.recommend-text span {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 480px) {
+  .alert-recommend-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .recommend-content {
+    flex-direction: column;
+  }
+}
+
+/* Onboarding Progress Bar */
+.onboarding-progress {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--border);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  transition: width 0.3s ease;
+}
+

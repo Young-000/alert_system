@@ -25,11 +25,6 @@ export interface UseSettingsReturn {
   routes: RouteResponse[];
   isLoading: boolean;
 
-  // Delete modal
-  deleteModal: { type: 'alert' | 'route'; id: string; name: string } | null;
-  setDeleteModal: (modal: { type: 'alert' | 'route'; id: string; name: string } | null) => void;
-  isDeleting: boolean;
-
   // Local data reset
   showLocalDataReset: boolean;
   setShowLocalDataReset: (show: boolean) => void;
@@ -52,16 +47,11 @@ export interface UseSettingsReturn {
   privacyMessage: string;
 
   // Handlers
-  handleToggleAlert: (alertId: string) => Promise<void>;
-  handleDeleteConfirm: () => Promise<void>;
   handleTogglePush: () => Promise<void>;
   handleExportData: () => Promise<void>;
   handleDeleteAllData: () => Promise<void>;
   handleLogout: () => void;
   handleCopyUserId: () => void;
-
-  // Utilities
-  formatScheduleTime: (schedule: string) => string;
 }
 
 export function useSettings(): UseSettingsReturn {
@@ -75,10 +65,6 @@ export function useSettings(): UseSettingsReturn {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [routes, setRoutes] = useState<RouteResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Delete modal
-  const [deleteModal, setDeleteModal] = useState<{ type: 'alert' | 'route'; id: string; name: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Local data reset
   const [showLocalDataReset, setShowLocalDataReset] = useState(false);
@@ -138,41 +124,6 @@ export function useSettings(): UseSettingsReturn {
     isPushSupported().then(setPushSupported);
     isPushSubscribed().then(setPushEnabled);
   }, []);
-
-  // Toggle alert
-  const handleToggleAlert = async (alertId: string): Promise<void> => {
-    setActionError('');
-    try {
-      await alertApiClient.toggleAlert(alertId);
-      setAlerts(prev => prev.map(a =>
-        a.id === alertId ? { ...a, enabled: !a.enabled } : a
-      ));
-    } catch {
-      setActionError('알림 상태 변경에 실패했습니다.');
-      setTimeout(() => setActionError(''), TOAST_DURATION_MS);
-    }
-  };
-
-  // Delete handlers
-  const handleDeleteConfirm = async (): Promise<void> => {
-    if (!deleteModal) return;
-    setIsDeleting(true);
-    try {
-      if (deleteModal.type === 'alert') {
-        await alertApiClient.deleteAlert(deleteModal.id);
-        setAlerts(prev => prev.filter(a => a.id !== deleteModal.id));
-      } else {
-        await commuteApi.deleteRoute(deleteModal.id);
-        setRoutes(prev => prev.filter(r => r.id !== deleteModal.id));
-      }
-      setDeleteModal(null);
-    } catch {
-      setActionError('삭제에 실패했습니다. 다시 시도해주세요.');
-      setTimeout(() => setActionError(''), TOAST_DURATION_MS);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   // Toggle push notifications
   const handleTogglePush = async (): Promise<void> => {
@@ -263,16 +214,6 @@ export function useSettings(): UseSettingsReturn {
     setTimeout(() => setResetSuccess(false), TOAST_DURATION_MS);
   };
 
-  // Format schedule time
-  const formatScheduleTime = (schedule: string): string => {
-    const parts = schedule.split(' ');
-    if (parts.length >= 2) {
-      const hours = parts[1].split(',').map(h => `${h.padStart(2, '0')}:00`);
-      return hours.join(', ');
-    }
-    return schedule;
-  };
-
   return {
     userId,
     phoneNumber,
@@ -282,9 +223,6 @@ export function useSettings(): UseSettingsReturn {
     alerts,
     routes,
     isLoading,
-    deleteModal,
-    setDeleteModal,
-    isDeleting,
     showLocalDataReset,
     setShowLocalDataReset,
     resetSuccess,
@@ -298,13 +236,10 @@ export function useSettings(): UseSettingsReturn {
     isDeletingAllData,
     isExporting,
     privacyMessage,
-    handleToggleAlert,
-    handleDeleteConfirm,
     handleTogglePush,
     handleExportData,
     handleDeleteAllData,
     handleLogout,
     handleCopyUserId,
-    formatScheduleTime,
   };
 }

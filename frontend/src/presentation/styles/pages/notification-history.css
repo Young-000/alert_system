@@ -1,0 +1,136 @@
+/* pages/notification-history.css — auto-split from index.css */
+
+/* ========== 알림 기록 페이지 ========== */
+.notification-history-page .nav-badge {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+}
+
+.notif-filter-section {
+  padding: 0 16px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notif-filter-section .route-type-toggle {
+  margin-bottom: 0;
+}
+
+.notif-history-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-history-item {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.notif-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.notif-history-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.notif-history-status {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.status-success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.status-warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.status-error {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.notif-history-types {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.notif-type-badge {
+  font-size: 0.72rem;
+  background: var(--bg-subtle);
+  padding: 2px 8px;
+  border-radius: 8px;
+  color: var(--ink-secondary);
+}
+
+.notif-history-summary {
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
+  margin: 4px 0 8px;
+  line-height: 1.4;
+}
+
+.notif-history-time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.notif-load-more {
+  display: block;
+  margin: 16px auto;
+  padding: 10px 24px;
+}
+
+.error-banner {
+  background: var(--error-light);
+  color: var(--error);
+  padding: 10px 16px;
+  margin: 0 16px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.error-dismiss:hover {
+  opacity: 1;
+}
+

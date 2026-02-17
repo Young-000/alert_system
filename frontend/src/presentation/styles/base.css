@@ -1,0 +1,221 @@
+/* base.css — auto-split from index.css */
+
+/* Pretendard font loaded via <link> in index.html for non-blocking rendering */
+
+/* z-index hierarchy:
+   100  - sticky headers, apple-nav
+   1000 - bottom-nav
+   1001 - wizard-nav (above bottom-nav)
+   1002 - offline-banner
+   1003 - toast-container
+   1100 - modal-overlay, confirm-modal-overlay, tooltip
+   10000 - toast-success (top-level notifications)
+*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overscroll-behavior: none;
+}
+
+:root {
+  /* Light Theme - 밝고 깔끔한 톤 */
+  --bg: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-subtle: #f1f5f9;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+
+  /* Text Colors - 높은 가독성 */
+  --ink: #1e293b;
+  --ink-secondary: #475569;
+  --ink-muted: #64748b;
+
+  /* Brand Colors */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: #eef2ff;
+  --primary-glow: rgba(99, 102, 241, 0.15);
+
+  /* Status Colors */
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --error: #ef4444;
+  --error-light: #fef2f2;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-warm: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  --gradient-cool: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+
+  /* Surface Colors */
+  --surface: #ffffff;
+  --surface-tinted: #f1f5f9;
+
+  /* Spacing & Radius */
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-primary: 0 4px 14px rgba(99, 102, 241, 0.25);
+
+  /* Font */
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+}
+
+/* ========== FOCUS STYLES ========== */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: white;
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  z-index: 1001;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Keep essential opacity transitions for feedback */
+  .btn,
+  .choice-card,
+  .search-result-item {
+    transition: opacity 0.15s ease, background-color 0.15s ease !important;
+  }
+
+  /* Disable decorative animations but keep functional ones */
+  .shimmer,
+  .pulse,
+  .hero-panel::before {
+    animation: none !important;
+  }
+
+  /* Keep spinner visible with minimal animation */
+  .spinner {
+    animation: spin 1.5s linear infinite !important;
+  }
+
+  /* Skeleton shows static shimmer */
+  .skeleton {
+    animation: none !important;
+    background: var(--bg-subtle);
+  }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .btn-primary,
+  .btn-danger,
+  .btn-success {
+    border: 2px solid currentColor;
+  }
+
+  .card,
+  .modal-content,
+  .choice-card {
+    border: 2px solid CanvasText;
+  }
+
+  .choice-card.selected {
+    border: 3px solid Highlight;
+  }
+
+  .input,
+  .select {
+    border: 2px solid CanvasText;
+  }
+
+  .input:focus,
+  .select:focus {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .progress-fill {
+    background: Highlight;
+  }
+
+  .toggle-track {
+    border: 2px solid CanvasText;
+  }
+
+  .toggle input:checked + .toggle-track {
+    background: Highlight;
+  }
+
+  .badge {
+    border: 1px solid currentColor;
+  }
+}
+

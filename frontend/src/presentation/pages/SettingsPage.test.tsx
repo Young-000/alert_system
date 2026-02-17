@@ -107,11 +107,11 @@ describe('SettingsPage', () => {
 
     // Switch to routes tab
     fireEvent.click(screen.getByText('경로'));
-    expect(screen.getByText('내 경로')).toBeInTheDocument();
+    expect(screen.getByText('경로 관리')).toBeInTheDocument();
 
     // Switch to alerts tab
     fireEvent.click(screen.getByText('알림'));
-    expect(screen.getByText('내 알림')).toBeInTheDocument();
+    expect(screen.getByText('알림 관리')).toBeInTheDocument();
 
     // Switch to app tab
     fireEvent.click(screen.getByText('앱'));
@@ -170,8 +170,8 @@ describe('SettingsPage', () => {
     expect(screen.getByText('불러오는 중...')).toBeInTheDocument();
   });
 
-  // Additional: shows routes list when routes exist
-  it('should display routes list when routes are loaded', async () => {
+  // Additional: shows route count shortcut card when routes exist
+  it('should display route count and shortcut link when routes are loaded', async () => {
     localStorage.setItem('userId', 'test-user-123');
 
     mockCommuteApiClient.getUserRoutes.mockResolvedValue([
@@ -184,26 +184,7 @@ describe('SettingsPage', () => {
         totalExpectedDuration: 60,
         totalTransferTime: 10,
         pureMovementTime: 50,
-        checkpoints: [
-          {
-            id: 'cp-1',
-            sequenceOrder: 1,
-            name: '집',
-            checkpointType: 'home' as const,
-            expectedWaitTime: 0,
-            totalExpectedTime: 0,
-            isTransferRelated: false,
-          },
-          {
-            id: 'cp-2',
-            sequenceOrder: 2,
-            name: '강남역',
-            checkpointType: 'subway' as const,
-            expectedWaitTime: 5,
-            totalExpectedTime: 30,
-            isTransferRelated: false,
-          },
-        ],
+        checkpoints: [],
         createdAt: '2026-01-01T00:00:00Z',
         updatedAt: '2026-01-01T00:00:00Z',
       },
@@ -217,13 +198,13 @@ describe('SettingsPage', () => {
 
     fireEvent.click(screen.getByText('경로'));
 
-    expect(screen.getByText('강남 출근길')).toBeInTheDocument();
-    expect(screen.getByText('출근')).toBeInTheDocument();
-    expect(screen.getByText('집 → 강남역')).toBeInTheDocument();
+    expect(screen.getByText('1개')).toBeInTheDocument();
+    expect(screen.getByText('등록된 경로')).toBeInTheDocument();
+    expect(screen.getByText('경로 관리 바로가기')).toBeInTheDocument();
   });
 
-  // Additional: shows alerts list with toggle switches
-  it('should display alerts list with toggle switches when alerts are loaded', async () => {
+  // Additional: shows alert count shortcut card when alerts exist
+  it('should display alert count and shortcut link when alerts are loaded', async () => {
     localStorage.setItem('userId', 'test-user-123');
 
     const mockAlerts: Alert[] = [
@@ -254,17 +235,9 @@ describe('SettingsPage', () => {
 
     fireEvent.click(screen.getByText('알림'));
 
-    expect(screen.getByText('출근 날씨 알림')).toBeInTheDocument();
-    expect(screen.getByText('퇴근 교통 알림')).toBeInTheDocument();
-    expect(screen.getByText('날씨')).toBeInTheDocument();
-    expect(screen.getByText('미세먼지')).toBeInTheDocument();
-    expect(screen.getByText('지하철')).toBeInTheDocument();
-
-    // Check toggle switches exist
-    const toggles = screen.getAllByRole('checkbox');
-    expect(toggles).toHaveLength(2);
-    expect(toggles[0]).toBeChecked();
-    expect(toggles[1]).not.toBeChecked();
+    expect(screen.getByText('2개')).toBeInTheDocument();
+    expect(screen.getByText('등록된 알림')).toBeInTheDocument();
+    expect(screen.getByText('알림 관리 바로가기')).toBeInTheDocument();
   });
 
   // Additional: app tab shows version and local data reset

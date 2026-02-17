@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
+import { useUserLocation } from '@presentation/hooks/useUserLocation';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
 import { alertApiClient, weatherApiClient, airQualityApiClient, busApiClient, subwayApiClient, behaviorApiClient } from '@infrastructure/api';
 import type { Alert, WeatherData, AirQualityData, DeparturePrediction } from '@infrastructure/api';
@@ -107,13 +108,16 @@ export function useHomeData(): UseHomeDataReturn {
     return () => { isMounted = false; };
   }, [userId]);
 
+  // User location (geolocation + localStorage cache + Seoul fallback)
+  const userLocation = useUserLocation();
+
   // Load weather + air quality
   useEffect(() => {
     let isMounted = true;
-    if (!userId) return;
+    if (!userId || userLocation.isLoading) return;
 
-    const lat = 37.5665;
-    const lng = 126.978;
+    const lat = userLocation.latitude;
+    const lng = userLocation.longitude;
 
     weatherApiClient.getCurrentWeather(lat, lng)
       .then(data => { if (isMounted) setWeather(data); })
@@ -124,7 +128,7 @@ export function useHomeData(): UseHomeDataReturn {
       .catch(() => { if (isMounted) setAirQualityError('미세먼지 정보 없음'); });
 
     return () => { isMounted = false; };
-  }, [userId]);
+  }, [userId, userLocation.latitude, userLocation.longitude, userLocation.isLoading]);
 
   // A-1: Load optimal departure prediction
   useEffect(() => {

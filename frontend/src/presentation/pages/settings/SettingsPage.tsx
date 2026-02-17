@@ -77,15 +77,10 @@ export function SettingsPage(): JSX.Element {
             />
           )}
           {settings.activeTab === 'routes' && (
-            <RoutesTab routes={settings.routes} onDeleteRoute={settings.setDeleteModal} />
+            <RoutesTab routeCount={settings.routes.length} />
           )}
           {settings.activeTab === 'alerts' && (
-            <AlertsTab
-              alerts={settings.alerts}
-              onToggleAlert={settings.handleToggleAlert}
-              onDeleteAlert={settings.setDeleteModal}
-              formatScheduleTime={settings.formatScheduleTime}
-            />
+            <AlertsTab alertCount={settings.alerts.length} />
           )}
           {settings.activeTab === 'app' && (
             <AppTab
@@ -101,23 +96,6 @@ export function SettingsPage(): JSX.Element {
             />
           )}
         </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {settings.deleteModal && (
-        <ConfirmModal
-          open={true}
-          title={settings.deleteModal.type === 'alert' ? '알림 삭제' : '경로 삭제'}
-          confirmText="삭제"
-          cancelText="취소"
-          confirmVariant="danger"
-          isLoading={settings.isDeleting}
-          onConfirm={settings.handleDeleteConfirm}
-          onCancel={() => settings.setDeleteModal(null)}
-        >
-          <p>&ldquo;{settings.deleteModal.name}&rdquo;을(를) 삭제하시겠습니까?</p>
-          <p className="muted">삭제 후에는 복구할 수 없습니다.</p>
-        </ConfirmModal>
       )}
 
       {/* 로컬 데이터 초기화 모달 */}
