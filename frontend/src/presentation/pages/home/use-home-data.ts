@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { useUserLocation } from '@presentation/hooks/useUserLocation';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
-import { busApiClient, subwayApiClient, behaviorApiClient } from '@infrastructure/api';
+import { behaviorApiClient } from '@infrastructure/api';
 import type { Alert, WeatherData, DeparturePrediction } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse, type RouteRecommendationResponse } from '@infrastructure/api/commute-api.client';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
@@ -11,6 +11,7 @@ import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 import { useWeatherQuery } from '@infrastructure/query/use-weather-query';
 import { useAirQualityQuery } from '@infrastructure/query/use-air-quality-query';
 import { useCommuteStatsQuery } from '@infrastructure/query/use-commute-stats-query';
+import { useTransitQuery } from '@infrastructure/query/use-transit-query';
 import {
   getAqiStatus,
   getWeatherChecklist,
@@ -47,6 +48,8 @@ export interface UseHomeDataReturn {
   forceRouteType: 'auto' | 'morning' | 'evening';
   setForceRouteType: (v: 'auto' | 'morning' | 'evening') => void;
   transitInfos: TransitArrivalInfo[];
+  isTransitRefreshing: boolean;
+  lastTransitUpdate: number | null;
   alerts: Alert[];
   nextAlert: { time: string; label: string } | null;
   commuteStats: CommuteStatsResponse | null;
@@ -98,7 +101,6 @@ export function useHomeData(): UseHomeDataReturn {
   const airQualityError = airQualityQuery.error ? '미세먼지 정보 없음' : '';
 
   // Local UI state (not server state)
-  const [transitInfos, setTransitInfos] = useState<TransitArrivalInfo[]>([]);
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
@@ -156,77 +158,11 @@ export function useHomeData(): UseHomeDataReturn {
   // Active route
   const activeRoute = useMemo(() => getActiveRoute(routes, forceRouteType), [routes, forceRouteType]);
 
-  // Load transit arrivals
-  const loadTransitArrivals = useCallback(async (route: RouteResponse): Promise<void> => {
-    const subwayStations = new Set<string>();
-    const busStopIds = new Set<string>();
-
-    for (const cp of route.checkpoints) {
-      if (cp.transportMode === 'subway' && cp.name) {
-        const stationName = cp.name.replace(/역$/, '').replace(/\s*\d+호선.*$/, '');
-        subwayStations.add(stationName);
-      }
-      if (cp.transportMode === 'bus' && cp.linkedBusStopId) {
-        busStopIds.add(cp.linkedBusStopId);
-      }
-    }
-
-    const infos: TransitArrivalInfo[] = [];
-    const stationNames = Array.from(subwayStations).slice(0, 2);
-    const stopIds = Array.from(busStopIds).slice(0, 2);
-
-    for (const name of stationNames) {
-      infos.push({ type: 'subway', name: `${name}역`, arrivals: [], isLoading: true });
-    }
-    for (const id of stopIds) {
-      infos.push({ type: 'bus', name: `정류장 ${id}`, arrivals: [], isLoading: true });
-    }
-    setTransitInfos([...infos]);
-
-    const promises: Promise<void>[] = [];
-    stationNames.forEach((name, idx) => {
-      promises.push(
-        subwayApiClient.getArrival(name)
-          .then(arrivals => {
-            setTransitInfos(prev => prev.map((info, i) =>
-              i === idx ? { ...info, arrivals: arrivals.slice(0, 3), isLoading: false } : info
-            ));
-          })
-          .catch(() => {
-            setTransitInfos(prev => prev.map((info, i) =>
-              i === idx ? { ...info, isLoading: false, error: '조회 실패' } : info
-            ));
-          })
-      );
-    });
-
-    const subwayCount = stationNames.length;
-    stopIds.forEach((id, idx) => {
-      promises.push(
-        busApiClient.getArrival(id)
-          .then(arrivals => {
-            setTransitInfos(prev => prev.map((info, i) =>
-              i === subwayCount + idx
-                ? { ...info, arrivals: arrivals.slice(0, 3), isLoading: false }
-                : info
-            ));
-          })
-          .catch(() => {
-            setTransitInfos(prev => prev.map((info, i) =>
-              i === subwayCount + idx ? { ...info, isLoading: false, error: '조회 실패' } : info
-            ));
-          })
-      );
-    });
-
-    await Promise.allSettled(promises);
-  }, []);
-
-  useEffect(() => {
-    if (activeRoute) {
-      loadTransitArrivals(activeRoute);
-    }
-  }, [activeRoute, loadTransitArrivals]);
+  // Transit arrivals via react-query (auto-refreshes every 30 seconds)
+  const transitQuery = useTransitQuery(activeRoute);
+  const transitInfos = useMemo(() => transitQuery.data ?? [], [transitQuery.data]);
+  const isTransitRefreshing = transitQuery.isFetching && !transitQuery.isLoading;
+  const lastTransitUpdate = transitQuery.dataUpdatedAt || null;
 
   // Next alert time (delegated to pure function for testability)
   const nextAlert = useMemo(() => computeNextAlert(alerts), [alerts]);
@@ -288,6 +224,8 @@ export function useHomeData(): UseHomeDataReturn {
     forceRouteType,
     setForceRouteType,
     transitInfos,
+    isTransitRefreshing,
+    lastTransitUpdate,
     alerts,
     nextAlert,
     commuteStats,
