@@ -72,6 +72,12 @@ export const behaviorApiClient = {
   getOptimalDeparture: vi.fn().mockResolvedValue(null),
   getPatterns: vi.fn().mockResolvedValue([]),
   recordEvent: vi.fn().mockResolvedValue(undefined),
+  getAnalytics: vi.fn().mockResolvedValue({
+    totalPatterns: 0,
+    totalCommuteRecords: 0,
+    averageConfidence: 0,
+    hasEnoughData: false,
+  }),
 };
 
 export const getBehaviorApiClient = vi.fn(() => behaviorApiClient);
@@ -113,6 +119,7 @@ export const commuteApiClient = {
   }),
   getHistory: vi.fn().mockResolvedValue([]),
   getUserAnalytics: vi.fn().mockResolvedValue([]),
+  compareRoutes: vi.fn().mockResolvedValue(null),
   getWeatherRouteRecommendation: vi.fn().mockResolvedValue({ confidence: 0, recommendation: null }),
   getWeeklyReport: vi.fn().mockResolvedValue({
     weekStartDate: '2026-02-17',
@@ -139,43 +146,7 @@ export const commuteApiClient = {
 // Factory function for CommuteApiClient
 export const getCommuteApiClient = vi.fn(() => commuteApiClient);
 
-// Type exports
-export type RouteType = 'commute_to_work' | 'commute_to_home' | 'other';
-export type TransportMode = 'walk' | 'subway' | 'bus' | 'taxi';
-export type CheckpointType = 'home' | 'subway' | 'bus' | 'transfer' | 'company' | 'other';
-
-export interface CreateRouteDto {
-  userId: string;
-  name: string;
-  type: RouteType;
-  isDefault: boolean;
-  checkpoints: {
-    name: string;
-    type: CheckpointType;
-    travelTime: number;
-    waitTime: number;
-    transportMode: TransportMode;
-    stationId?: string;
-    stationName?: string;
-  }[];
-}
-
-export interface RouteResponse {
-  id: string;
-  userId: string;
-  name: string;
-  type: RouteType;
-  isDefault: boolean;
-  checkpoints: {
-    id: string;
-    name: string;
-    type: CheckpointType;
-    travelTime: number;
-    waitTime: number;
-    transportMode: TransportMode;
-    sequence: number;
-  }[];
-}
+export type CheckpointType = 'home' | 'subway' | 'bus_stop' | 'transfer_point' | 'work' | 'custom';
 
 export const notificationApiClient = {
   getHistory: vi.fn().mockResolvedValue({ items: [], total: 0 }),
@@ -295,4 +266,166 @@ export interface DeparturePrediction {
   suggestedDepartureTime: string;
   confidence: number;
   reason: string;
+}
+
+// Types needed by commute-dashboard hook — must match commute-api.client.ts exactly
+export interface CheckpointStats {
+  checkpointId: string;
+  checkpointName: string;
+  checkpointType: CheckpointType;
+  expectedDuration: number;
+  expectedWaitTime: number;
+  averageActualDuration: number;
+  averageActualWaitTime: number;
+  averageDelay: number;
+  sampleCount: number;
+  variability: number;
+  isBottleneck: boolean;
+}
+
+export interface RouteStats {
+  routeId: string;
+  routeName: string;
+  totalSessions: number;
+  averageTotalDuration: number;
+  averageTotalWaitTime: number;
+  averageDelay: number;
+  waitTimePercentage: number;
+  checkpointStats: CheckpointStats[];
+  bottleneckCheckpoint?: string;
+  mostVariableCheckpoint?: string;
+}
+
+export interface DayOfWeekStats {
+  dayOfWeek: number;
+  dayName: string;
+  averageDuration: number;
+  averageWaitTime: number;
+  averageDelay: number;
+  sampleCount: number;
+}
+
+export interface WeatherImpact {
+  condition: string;
+  averageDuration: number;
+  sampleCount: number;
+}
+
+export interface CommuteStatsResponse {
+  userId: string;
+  totalSessions: number;
+  recentSessions: number;
+  overallAverageDuration: number;
+  overallAverageWaitTime: number;
+  overallAverageDelay: number;
+  waitTimePercentage: number;
+  routeStats: RouteStats[];
+  dayOfWeekStats: DayOfWeekStats[];
+  weatherImpact: WeatherImpact[];
+  insights: string[];
+}
+
+// Keep deprecated aliases for backward compat
+export type RouteStatResponse = RouteStats;
+export type DayOfWeekStatResponse = DayOfWeekStats;
+export type WeatherImpactResponse = WeatherImpact;
+
+export interface CommuteHistoryResponse {
+  userId: string;
+  sessions: SessionSummary[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export interface SessionSummary {
+  id: string;
+  routeId: string;
+  routeName?: string;
+  startedAt: string;
+  completedAt?: string;
+  totalDurationMinutes?: number;
+  totalWaitMinutes: number;
+  totalDelayMinutes: number;
+  status: SessionStatus;
+  weatherCondition?: string;
+  delayStatus: string;
+}
+
+export type SessionStatus = 'in_progress' | 'completed' | 'cancelled';
+
+export interface CheckpointRecordResponse {
+  id: string;
+  checkpointId: string;
+  checkpointName?: string;
+  arrivedAt: string;
+  arrivalTimeString: string;
+  durationFromPrevious?: number;
+  actualWaitTime: number;
+  isDelayed: boolean;
+  delayMinutes: number;
+  waitDelayMinutes: number;
+  delayStatus: string;
+  waitDelayStatus: string;
+  totalDuration: number;
+  notes?: string;
+}
+
+export interface SessionResponse {
+  id: string;
+  userId: string;
+  routeId: string;
+  startedAt: string;
+  completedAt?: string;
+  totalDurationMinutes?: number;
+  totalWaitMinutes: number;
+  totalDelayMinutes: number;
+  status: SessionStatus;
+  weatherCondition?: string;
+  notes?: string;
+  progress: number;
+  delayStatus: string;
+  pureMovementTime: number;
+  waitTimePercentage: number;
+  checkpointRecords: CheckpointRecordResponse[];
+}
+
+export interface RouteAnalyticsResponse {
+  routeId: string;
+  routeName: string;
+  routeType: string;
+  totalSessions: number;
+  averageDuration: number;
+  trends: unknown[];
+}
+
+export interface RouteComparisonResponse {
+  routes: unknown[];
+  recommendation: string | null;
+}
+
+// Types needed by behavior-api.client
+export interface BehaviorAnalytics {
+  totalPatterns: number;
+  totalCommuteRecords: number;
+  averageConfidence: number;
+  hasEnoughData: boolean;
+}
+
+export interface UserPattern {
+  id: string;
+  userId: string;
+  patternType: string;
+  confidence: number;
+  description: string;
+}
+
+// Types needed by commute-api.client
+export interface CreateCheckpointDto {
+  sequenceOrder: number;
+  name: string;
+  checkpointType: CheckpointType;
+  linkedStationId?: string;
+  linkedBusStopId?: string;
+  lineInfo?: string;
+  transportMode?: string;
 }
