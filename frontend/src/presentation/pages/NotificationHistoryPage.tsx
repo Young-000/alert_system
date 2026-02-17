@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
 import { AuthRequired } from '../components/AuthRequired';
+import { NotificationStats } from './NotificationStats';
 import { notificationApiClient } from '@infrastructure/api';
-import type { NotificationLog } from '@infrastructure/api';
+import type { NotificationLog, NotificationStatsDto } from '@infrastructure/api';
 
 const ALERT_TYPE_LABELS: Record<string, string> = {
   weather: '날씨',
@@ -34,6 +35,12 @@ const PERIOD_MS: Record<PeriodFilter, number> = {
   all: 0,
   '7d': 7 * MS_PER_DAY,
   '30d': 30 * MS_PER_DAY,
+};
+
+const PERIOD_DAYS: Record<PeriodFilter, number> = {
+  all: 0,
+  '7d': 7,
+  '30d': 30,
 };
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
@@ -71,6 +78,8 @@ export function NotificationHistoryPage(): JSX.Element {
   const [error, setError] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+  const [stats, setStats] = useState<NotificationStatsDto | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
 
   const isFilterActive = typeFilter !== '' || periodFilter !== 'all';
 
@@ -118,23 +127,54 @@ export function NotificationHistoryPage(): JSX.Element {
     const load = async (): Promise<void> => {
       if (!userId) return;
       setIsLoading(true);
+      setIsStatsLoading(true);
       setError('');
-      try {
-        const res = await notificationApiClient.getHistory(20, 0);
-        if (isMounted) {
-          setLogs(res.items);
-          setTotal(res.total);
-        }
-      } catch {
-        if (isMounted) setError('알림 기록을 불러올 수 없습니다.');
-      } finally {
-        if (isMounted) setIsLoading(false);
+
+      const [historyResult, statsResult] = await Promise.allSettled([
+        notificationApiClient.getHistory(20, 0),
+        notificationApiClient.getStats(PERIOD_DAYS[periodFilter]),
+      ]);
+
+      if (!isMounted) return;
+
+      if (historyResult.status === 'fulfilled') {
+        setLogs(historyResult.value.items);
+        setTotal(historyResult.value.total);
+      } else {
+        setError('알림 기록을 불러올 수 없습니다.');
       }
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value);
+      }
+
+      setIsLoading(false);
+      setIsStatsLoading(false);
     };
 
     load();
     return () => { isMounted = false; };
-  }, [userId]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!userId) return;
+    let isMounted = true;
+
+    const loadStats = async (): Promise<void> => {
+      setIsStatsLoading(true);
+      try {
+        const result = await notificationApiClient.getStats(PERIOD_DAYS[periodFilter]);
+        if (isMounted) setStats(result);
+      } catch {
+        // stats fetch failure is non-critical; keep existing stats
+      } finally {
+        if (isMounted) setIsStatsLoading(false);
+      }
+    };
+
+    loadStats();
+    return () => { isMounted = false; };
+  }, [userId, periodFilter]);
 
   if (!userId) {
     return (
@@ -165,6 +205,8 @@ export function NotificationHistoryPage(): JSX.Element {
           </button>
         </div>
       )}
+
+      <NotificationStats stats={stats} isLoading={isStatsLoading} />
 
       {logs.length > 0 && (
         <div className="notif-filter-section">

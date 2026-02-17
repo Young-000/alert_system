@@ -134,3 +134,110 @@
   opacity: 1;
 }
 
+/* ========== 알림 통계 카드 ========== */
+.notif-stats-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 0 16px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.notif-stats-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.notif-stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.notif-stats-label {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.notif-stats-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.notif-stats-rate--green {
+  color: var(--success);
+}
+
+.notif-stats-rate--yellow {
+  color: var(--warning);
+}
+
+.notif-stats-rate--red {
+  color: var(--error);
+}
+
+.notif-stats-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-subtle);
+}
+
+.notif-stats-bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.notif-stats-bar--success {
+  background: var(--success);
+}
+
+.notif-stats-bar--fallback {
+  background: var(--warning);
+}
+
+.notif-stats-bar--failed {
+  background: var(--error);
+}
+
+.notif-stats-legend {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: var(--ink-secondary);
+}
+
+.notif-stats-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notif-stats-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.notif-stats-skeleton-label {
+  width: 40px;
+}
+
+.notif-stats-skeleton-value {
+  width: 60px;
+}
+
+.notif-stats-skeleton-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+}
+

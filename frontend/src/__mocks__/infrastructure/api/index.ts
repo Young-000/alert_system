@@ -126,6 +126,13 @@ export interface RouteResponse {
 
 export const notificationApiClient = {
   getHistory: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+  getStats: vi.fn().mockResolvedValue({
+    total: 0,
+    success: 0,
+    fallback: 0,
+    failed: 0,
+    successRate: 100,
+  }),
 };
 
 export interface NotificationLog {
@@ -136,6 +143,14 @@ export interface NotificationLog {
   status: string;
   summary: string;
   sentAt: string;
+}
+
+export interface NotificationStatsDto {
+  total: number;
+  success: number;
+  fallback: number;
+  failed: number;
+  successRate: number;
 }
 
 export const authApiClient = {

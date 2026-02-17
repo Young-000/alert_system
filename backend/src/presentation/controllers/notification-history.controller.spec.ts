@@ -4,6 +4,18 @@ import { Repository } from 'typeorm';
 import { NotificationHistoryController } from './notification-history.controller';
 import { NotificationLogEntity } from '../../infrastructure/persistence/typeorm/notification-log.entity';
 
+function createMockQueryBuilder(getRawManyResult: { status: string; count: number }[] = []) {
+  const qb = {
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    getRawMany: jest.fn().mockResolvedValue(getRawManyResult),
+  };
+  return qb;
+}
+
 describe('NotificationHistoryController', () => {
   let controller: NotificationHistoryController;
   let logRepo: jest.Mocked<Repository<NotificationLogEntity>>;
@@ -28,6 +40,7 @@ describe('NotificationHistoryController', () => {
   beforeEach(async () => {
     logRepo = {
       findAndCount: jest.fn(),
+      createQueryBuilder: jest.fn(),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -41,6 +54,119 @@ describe('NotificationHistoryController', () => {
     }).compile();
 
     controller = module.get<NotificationHistoryController>(NotificationHistoryController);
+  });
+
+  describe('getStats', () => {
+    it('모든 알림이 성공인 경우 successRate 100 반환', async () => {
+      const qb = createMockQueryBuilder([{ status: 'success', count: 10 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      const result = await controller.getStats(mockRequest(OWNER_ID));
+
+      expect(result).toEqual({
+        total: 10,
+        success: 10,
+        fallback: 0,
+        failed: 0,
+        successRate: 100,
+      });
+      expect(qb.where).toHaveBeenCalledWith(
+        'log.userId = :userId',
+        { userId: OWNER_ID },
+      );
+    });
+
+    it('혼합 상태 로그에서 올바른 비율 계산 (10 성공, 2 대체, 1 실패)', async () => {
+      const qb = createMockQueryBuilder([
+        { status: 'success', count: 10 },
+        { status: 'fallback', count: 2 },
+        { status: 'failed', count: 1 },
+      ]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      const result = await controller.getStats(mockRequest(OWNER_ID));
+
+      expect(result).toEqual({
+        total: 13,
+        success: 10,
+        fallback: 2,
+        failed: 1,
+        successRate: 76.9,
+      });
+    });
+
+    it('모든 알림이 실패인 경우 successRate 0 반환', async () => {
+      const qb = createMockQueryBuilder([{ status: 'failed', count: 5 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      const result = await controller.getStats(mockRequest(OWNER_ID));
+
+      expect(result).toEqual({
+        total: 5,
+        success: 0,
+        fallback: 0,
+        failed: 5,
+        successRate: 0,
+      });
+    });
+
+    it('알림 기록이 없으면 total 0, successRate 100 반환', async () => {
+      const qb = createMockQueryBuilder([]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      const result = await controller.getStats(mockRequest(OWNER_ID));
+
+      expect(result).toEqual({
+        total: 0,
+        success: 0,
+        fallback: 0,
+        failed: 0,
+        successRate: 100,
+      });
+    });
+
+    it('days 파라미터가 전달되면 날짜 필터 적용', async () => {
+      const qb = createMockQueryBuilder([{ status: 'success', count: 3 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      const result = await controller.getStats(mockRequest(OWNER_ID), '7');
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        "log.sentAt >= NOW() - INTERVAL '1 day' * :days",
+        { days: 7 },
+      );
+      expect(result.total).toBe(3);
+    });
+
+    it('days 파라미터가 0이면 날짜 필터 미적용', async () => {
+      const qb = createMockQueryBuilder([{ status: 'success', count: 5 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      await controller.getStats(mockRequest(OWNER_ID), '0');
+
+      expect(qb.andWhere).not.toHaveBeenCalled();
+    });
+
+    it('잘못된 days 파라미터는 무시 (전체 조회)', async () => {
+      const qb = createMockQueryBuilder([{ status: 'success', count: 5 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      await controller.getStats(mockRequest(OWNER_ID), 'abc');
+
+      expect(qb.andWhere).not.toHaveBeenCalled();
+    });
+
+    it('userId로 필터링하여 조회', async () => {
+      const qb = createMockQueryBuilder([]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      await controller.getStats(mockRequest('other-user'));
+
+      expect(qb.where).toHaveBeenCalledWith(
+        'log.userId = :userId',
+        { userId: 'other-user' },
+      );
+    });
   });
 
   describe('getHistory', () => {

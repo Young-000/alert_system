@@ -17,15 +17,14 @@
 
 모든 Important 항목이 Cycle 3~5에서 완료됨.
 
-## Nice-to-have (Cycle 10+)
+## Nice-to-have (잔여 — 인프라/외부 의존성)
 
-| ID | 항목 | 노력 | RICE | 출처 |
+| ID | 항목 | 노력 | RICE | 비고 |
 |----|------|------|------|------|
-| N-9 | 커스텀 도메인 (Route 53 + ACM) | M | 40 | PM |
-| N-8 | Solapi 주간 리포트 템플릿 | M | 25 | PM |
-| N-10 | 알림 발송 모니터링 대시보드 | L | 25 | PM |
-| N-6 | Tailwind CSS 점진적 도입 (새 컴포넌트부터) | L | 17 | PM |
-| N-7 | ElastiCache Redis 활성화 (BullMQ 큐) | L | 12.5 | PM |
+| N-9 | 커스텀 도메인 (Route 53 + ACM) | M | 40 | 인프라 전용 |
+| N-8 | Solapi 주간 리포트 템플릿 | M | 25 | 카카오 승인 대기 |
+| N-6 | Tailwind CSS 점진적 도입 (새 컴포넌트부터) | L | 17 | 광범위 마이그레이션 |
+| N-7 | ElastiCache Redis 활성화 (BullMQ 큐) | L | 12.5 | 인프라 전용 |
 
 ## Later (사용자 기반 확보 후)
 
@@ -58,6 +57,7 @@
 - [x] **Cycle 7: 홈 인지 부하 감소** (2026-02-17) — 날씨/통계 접기 모드, useCollapsible 훅, CTA 뷰포트 내 표시
 - [x] **Cycle 8: DX 개선** (2026-02-17) — Jest→Vitest 마이그레이션, SVG 아이콘 시스템 7개, 테스트 488개
 - [x] **Cycle 9: Backend Controller 테스트** (2026-02-17) — 16개 컨트롤러 테스트 파일, 160개 신규 테스트, 총 648개
+- [x] **Cycle 10: 알림 모니터링 대시보드** (2026-02-17) — 통계 API + 프론트엔드 컴포넌트, WCAG 접근성, 총 668개 테스트
 
 ---
-*마지막 업데이트: 2026-02-17 (Cycle 9 완료 — Nice-to-have 11건 완료)*
+*마지막 업데이트: 2026-02-17 (Cycle 10 완료 — 팀 루프 종료, Nice-to-have 12건 완료, 잔여 4건 인프라/외부)*
