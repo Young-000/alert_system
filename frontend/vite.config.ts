@@ -5,6 +5,7 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isAnalyze = env.ANALYZE === 'true';
 
   return {
     define: {
@@ -59,8 +60,49 @@ export default defineConfig(({ mode }) => {
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         },
-      })
+      }),
+      // Bundle analyzer: enabled via ANALYZE=true
+      ...(isAnalyze
+        ? [
+            (async () => {
+              const { visualizer } = await import('rollup-plugin-visualizer');
+              return visualizer({
+                open: false,
+                filename: 'bundle-stats.html',
+                gzipSize: true,
+                brotliSize: false,
+              });
+            })(),
+          ]
+        : []),
     ],
+    build: {
+      target: 'es2020',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+            // React core (react + react-dom + scheduler) — cached long-term
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/scheduler/')
+            ) {
+              return 'vendor-react';
+            }
+            // React Router
+            if (id.includes('/react-router')) {
+              return 'vendor-router';
+            }
+            // TanStack React Query
+            if (id.includes('/@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            return undefined;
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@domain': path.resolve(__dirname, './src/domain'),

@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { BottomNavigation } from './components/BottomNavigation';
-import { HomePage } from './pages/home';
 
-// Lazy-loaded pages for code splitting
+// All pages are lazy-loaded for optimal code splitting
+const HomePage = lazy(() => import('./pages/home/HomePage').then(m => ({ default: m.HomePage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const AlertSettingsPage = lazy(() => import('./pages/AlertSettingsPage').then(m => ({ default: m.AlertSettingsPage })));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
@@ -35,7 +35,7 @@ function useIdlePreload(): void {
       import('./pages/RouteSetupPage').catch(() => {});
       import('./pages/AlertSettingsPage').catch(() => {});
       import('./pages/SettingsPage').catch(() => {});
-    }, 2000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 }
