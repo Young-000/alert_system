@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
 import {
   getCommuteApiClient,
@@ -29,8 +30,7 @@ const DURATION_PRESETS = [15, 30, 45, 60, 90];
 
 export function OnboardingPage(): JSX.Element {
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId') || '';
-  const userName = localStorage.getItem('userName') || '회원';
+  const { userId, userName } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   useEffect(() => {

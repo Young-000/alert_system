@@ -10,7 +10,7 @@
 - **Current Status**: 🟢 Complete (AWS CloudFront + ECS Fargate 배포 완료)
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-02-02 01:31:58
+- **Last Updated**: 2026-02-17 03:40:30
 
 ## Infrastructure
 
@@ -50,11 +50,11 @@
 | CI/CD | 🟢 | Vercel 자동 배포 |
 
 ## Git Statistics
-- **Total Commits**: 66
-- **Last Commit**: 2026-02-02 01:31:58
-- **Last Commit Message**: feat: 경로 설정 UX 개선 - 미리보기 단계 추가
+- **Total Commits**: 100
+- **Last Commit**: 2026-02-17 03:40:29
+- **Last Commit Message**: fix: ESLint rules + test coverage + HTML entity fixes (#29)
 - **Current Branch**: main
-- **Uncommitted Changes**: 1 files
+- **Uncommitted Changes**: 11 files
 
 ## Implementation Status
 
@@ -202,7 +202,7 @@ cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3
    - `https://frontend-xi-two-52.vercel.app` (프로덕션)
 5. **승인된 리디렉션 URI** 추가:
    - `http://localhost:3001/auth/google/callback` (개발용)
-   - `https://alert-system-kdg9.onrender.com/auth/google/callback` (프로덕션)
+   - `https://d1qgl3ij2xig8k.cloudfront.net/auth/google/callback` (프로덕션)
 6. **만들기** 클릭 → Client ID, Client Secret 복사
 
 ### 3. 동의 화면 구성
@@ -216,11 +216,11 @@ cd frontend && E2E_BASE_URL=http://localhost:5173 E2E_API_URL=http://localhost:3
 
 ### 4. 환경변수 설정
 
-#### Backend (Render)
+#### Backend (AWS)
 ```env
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_CALLBACK_URL=https://alert-system-kdg9.onrender.com/auth/google/callback
+GOOGLE_CALLBACK_URL=https://d1qgl3ij2xig8k.cloudfront.net/auth/google/callback
 FRONTEND_URL=https://frontend-xi-two-52.vercel.app
 ```
 
@@ -236,7 +236,7 @@ FRONTEND_URL=http://localhost:5173
 
 ```bash
 # Backend API로 Google OAuth 상태 확인
-curl https://alert-system-kdg9.onrender.com/auth/google/status
+curl https://d1qgl3ij2xig8k.cloudfront.net/auth/google/status
 
 # 응답 예시 (설정됨)
 {"enabled":true,"message":"Google OAuth is configured"}

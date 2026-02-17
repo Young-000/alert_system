@@ -1,4 +1,4 @@
-import { Module, OnModuleInit, Inject, Optional, Logger } from '@nestjs/common';
+import { Module, OnModuleInit, Inject, Logger } from '@nestjs/common';
 import { SchedulerTriggerController } from '../controllers/scheduler-trigger.controller';
 import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 import { SmartNotificationModule } from './smart-notification.module';
@@ -15,17 +15,13 @@ import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-a
 import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
 import { NotificationProcessor } from '@infrastructure/queue/notification.processor';
-import { InMemoryNotificationSchedulerService } from '@infrastructure/queue/in-memory-notification-scheduler.service';
 import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { IAlertRepository } from '@domain/repositories/alert.repository';
-import { INotificationScheduler } from '@application/ports/notification-scheduler';
 import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
 import { PushModule } from './push.module';
 
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
-const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
 
 @Module({
   imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]), PushModule],
@@ -46,7 +42,6 @@ const isAWSSchedulerEnabled = process.env.AWS_SCHEDULER_ENABLED === 'true';
     {
       provide: 'IWeatherApiClient',
       useFactory: () => {
-        // 기상청 API는 공공데이터포털 키 사용 (미세먼지 API와 동일)
         const apiKey = process.env.AIR_QUALITY_API_KEY || '';
         return new WeatherApiClient(apiKey);
       },
@@ -94,53 +89,13 @@ export class NotificationModule implements OnModuleInit {
   private readonly logger = new Logger(NotificationModule.name);
 
   constructor(
-    private readonly sendNotificationUseCase: SendNotificationUseCase,
-    @Inject('IAlertRepository')
-    private readonly alertRepository: IAlertRepository,
     @Inject('INotificationScheduler')
-    private readonly scheduler: INotificationScheduler,
-    @Optional()
-    @Inject(InMemoryNotificationSchedulerService)
-    private readonly inMemoryScheduler?: InMemoryNotificationSchedulerService,
+    private readonly scheduler: unknown,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    // Wire up the notification handler for the in-memory scheduler only
-    // EventBridge scheduler calls /scheduler/trigger endpoint directly
-    if (!isAWSSchedulerEnabled && this.inMemoryScheduler) {
-      this.inMemoryScheduler.setNotificationHandler(async (alertId: string) => {
-        await this.sendNotificationUseCase.execute(alertId);
-      });
-
-      // Load existing enabled alerts from DB and schedule them
-      await this.loadAndScheduleExistingAlerts();
-    }
-    // EventBridge doesn't need to load alerts on startup - schedules are persistent in AWS
-    else if (isAWSSchedulerEnabled) {
-      this.logger.log('EventBridge Scheduler enabled - schedules are persisted in AWS');
-    }
-  }
-
-  private async loadAndScheduleExistingAlerts(): Promise<void> {
-    if (!this.inMemoryScheduler) return;
-
-    try {
-      const alerts = await this.alertRepository.findAll();
-      const enabledAlerts = alerts.filter((alert) => alert.enabled);
-
-      this.logger.log(
-        `Loading ${enabledAlerts.length} enabled alerts from database...`,
-      );
-
-      for (const alert of enabledAlerts) {
-        await this.inMemoryScheduler.scheduleNotification(alert);
-      }
-
-      this.logger.log(
-        `Successfully scheduled ${enabledAlerts.length} alerts on startup`,
-      );
-    } catch (error) {
-      this.logger.error('Failed to load and schedule existing alerts', error);
-    }
+    // EventBridge Scheduler는 AWS에서 영구적으로 스케줄을 관리합니다.
+    // 서버 시작 시 별도의 스케줄 로딩이 필요하지 않습니다.
+    this.logger.log('EventBridge Scheduler enabled - schedules are persisted in AWS');
   }
 }

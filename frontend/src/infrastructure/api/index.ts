@@ -40,7 +40,7 @@ export type { BusStop, BusArrival } from './bus-api.client';
 export type { WeatherData, HourlyForecast, DailyForecast } from './weather-api.client';
 export type { AuthResponse, RegisterDto, LoginDto } from './auth-api.client';
 export { NotificationApiClient } from './notification-api.client';
-export type { NotificationLog, NotificationHistoryResponse } from './notification-api.client';
+export type { NotificationLog, NotificationHistoryResponse, NotificationStatsDto } from './notification-api.client';
 export { CommuteApiClient, getCommuteApiClient } from './commute-api.client';
 export type {
   RouteType, CheckpointType, TransportMode, SessionStatus,

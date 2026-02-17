@@ -4,10 +4,11 @@ interface AuthState {
   userId: string;
   userName: string;
   userEmail: string;
+  phoneNumber: string;
   isLoggedIn: boolean;
 }
 
-const AUTH_KEYS = ['userId', 'userName', 'userEmail', 'accessToken'] as const;
+const AUTH_KEYS = ['userId', 'userName', 'userEmail', 'accessToken', 'phoneNumber'] as const;
 
 let listeners: Array<() => void> = [];
 
@@ -29,7 +30,7 @@ function getSnapshot(): string {
 }
 
 function getServerSnapshot(): string {
-  return '|||';
+  return '||||';
 }
 
 // storage 이벤트로 다른 탭의 변경도 감지
@@ -47,12 +48,18 @@ if (typeof window !== 'undefined') {
  */
 export function useAuth(): AuthState {
   const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const [userId, userName, userEmail] = raw.split('|');
+  const parts = raw.split('|');
+  const userId = parts[0] || '';
+  const userName = parts[1] || '회원';
+  const userEmail = parts[2] || '';
+  // parts[3] is accessToken -- skip (not exposed to components)
+  const phoneNumber = parts[4] || '';
 
   return {
-    userId: userId || '',
-    userName: userName || '회원',
-    userEmail: userEmail || '',
+    userId,
+    userName,
+    userEmail,
+    phoneNumber,
     isLoggedIn: !!userId,
   };
 }

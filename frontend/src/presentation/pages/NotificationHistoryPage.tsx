@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
+import { PageHeader } from '../components/PageHeader';
+import { AuthRequired } from '../components/AuthRequired';
+import { NotificationStats } from './NotificationStats';
 import { notificationApiClient } from '@infrastructure/api';
-import type { NotificationLog } from '@infrastructure/api';
+import type { NotificationLog, NotificationStatsDto } from '@infrastructure/api';
 
 const ALERT_TYPE_LABELS: Record<string, string> = {
   weather: '날씨',
@@ -33,6 +37,12 @@ const PERIOD_MS: Record<PeriodFilter, number> = {
   '30d': 30 * MS_PER_DAY,
 };
 
+const PERIOD_DAYS: Record<PeriodFilter, number> = {
+  all: 0,
+  '7d': 7,
+  '30d': 30,
+};
+
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   success: { label: '발송 완료', className: 'status-success' },
   fallback: { label: '대체 발송', className: 'status-warning' },
@@ -61,13 +71,15 @@ function formatTime(dateStr: string): string {
 }
 
 export function NotificationHistoryPage(): JSX.Element {
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+  const [stats, setStats] = useState<NotificationStatsDto | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
 
   const isFilterActive = typeFilter !== '' || periodFilter !== 'all';
 
@@ -115,52 +127,75 @@ export function NotificationHistoryPage(): JSX.Element {
     const load = async (): Promise<void> => {
       if (!userId) return;
       setIsLoading(true);
+      setIsStatsLoading(true);
       setError('');
-      try {
-        const res = await notificationApiClient.getHistory(20, 0);
-        if (isMounted) {
-          setLogs(res.items);
-          setTotal(res.total);
-        }
-      } catch {
-        if (isMounted) setError('알림 기록을 불러올 수 없습니다.');
-      } finally {
-        if (isMounted) setIsLoading(false);
+
+      const [historyResult, statsResult] = await Promise.allSettled([
+        notificationApiClient.getHistory(20, 0),
+        notificationApiClient.getStats(PERIOD_DAYS[periodFilter]),
+      ]);
+
+      if (!isMounted) return;
+
+      if (historyResult.status === 'fulfilled') {
+        setLogs(historyResult.value.items);
+        setTotal(historyResult.value.total);
+      } else {
+        setError('알림 기록을 불러올 수 없습니다.');
       }
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value);
+      }
+
+      setIsLoading(false);
+      setIsStatsLoading(false);
     };
 
     load();
     return () => { isMounted = false; };
-  }, [userId]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!userId) return;
+    let isMounted = true;
+
+    const loadStats = async (): Promise<void> => {
+      setIsStatsLoading(true);
+      try {
+        const result = await notificationApiClient.getStats(PERIOD_DAYS[periodFilter]);
+        if (isMounted) setStats(result);
+      } catch {
+        // stats fetch failure is non-critical; keep existing stats
+      } finally {
+        if (isMounted) setIsStatsLoading(false);
+      }
+    };
+
+    loadStats();
+    return () => { isMounted = false; };
+  }, [userId, periodFilter]);
 
   if (!userId) {
     return (
-      <main className="page notification-history-page">
-        <header className="settings-page-v2-header">
-          <h1>알림 기록</h1>
-        </header>
-        <div className="settings-empty">
-          <span className="empty-icon-svg" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </span>
-          <h2>로그인이 필요해요</h2>
-          <p>알림 기록을 보려면 로그인하세요</p>
-          <Link to="/login" className="btn btn-primary" aria-label="로그인 페이지로 이동">로그인</Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="알림 기록"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+        description="알림 기록을 보려면 로그인하세요"
+      />
     );
   }
 
   return (
     <main className="page notification-history-page">
-      <header className="settings-page-v2-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1>알림 기록</h1>
-        {total > 0 && (
+      <PageHeader
+        title="알림 기록"
+        action={total > 0 ? (
           <span className="nav-badge">
             {isFilterActive ? `${filteredLogs.length}/${total}건` : `${total}건`}
           </span>
-        )}
-      </header>
+        ) : undefined}
+      />
 
       {error && (
         <div className="error-banner" role="alert">
@@ -170,6 +205,8 @@ export function NotificationHistoryPage(): JSX.Element {
           </button>
         </div>
       )}
+
+      <NotificationStats stats={stats} isLoading={isStatsLoading} />
 
       {logs.length > 0 && (
         <div className="notif-filter-section">

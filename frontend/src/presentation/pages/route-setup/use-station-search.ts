@@ -8,6 +8,7 @@ interface UseStationSearchReturn {
   subwayResults: SubwayStation[];
   busResults: BusStop[];
   isSearching: boolean;
+  searchError: string;
   groupedSubwayResults: GroupedStation[];
   lineSelectionModal: GroupedStation | null;
   setLineSelectionModal: React.Dispatch<React.SetStateAction<GroupedStation | null>>;
@@ -29,6 +30,7 @@ export function useStationSearch(
   const [subwayResults, setSubwayResults] = useState<SubwayStation[]>([]);
   const [busResults, setBusResults] = useState<BusStop[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [lineSelectionModal, setLineSelectionModal] = useState<GroupedStation | null>(null);
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -41,6 +43,7 @@ export function useStationSearch(
     }
 
     setIsSearching(true);
+    setSearchError('');
     try {
       if (currentTransport === 'subway') {
         const results = await subwayApiClient.searchStations(query);
@@ -54,6 +57,7 @@ export function useStationSearch(
     } catch {
       setSubwayResults([]);
       setBusResults([]);
+      setSearchError('검색에 실패했습니다');
     } finally {
       setIsSearching(false);
     }
@@ -94,6 +98,7 @@ export function useStationSearch(
   const handleStationClick = useCallback((grouped: GroupedStation) => {
     if (grouped.lines.length === 1) {
       onStopSelected(grouped.name, grouped.lines[0].line, grouped.lines[0].id);
+      clearSearch();
       return;
     }
 
@@ -104,6 +109,7 @@ export function useStationSearch(
 
       if (commonLines.length === 1) {
         onStopSelected(grouped.name, commonLines[0].line, commonLines[0].id);
+        clearSearch();
         return;
       }
       if (commonLines.length > 1) {
@@ -113,16 +119,18 @@ export function useStationSearch(
     }
 
     setLineSelectionModal(grouped);
-  }, [selectedStops, onStopSelected]);
+  }, [selectedStops, onStopSelected, clearSearch]);
 
   const handleLineSelect = useCallback((stationName: string, line: string, stationId: string) => {
     onStopSelected(stationName, line, stationId);
     setLineSelectionModal(null);
-  }, [onStopSelected]);
+    clearSearch();
+  }, [onStopSelected, clearSearch]);
 
   const handleSelectBusStop = useCallback((stop: BusStop) => {
     onStopSelected(stop.name, '', stop.nodeId);
-  }, [onStopSelected]);
+    clearSearch();
+  }, [onStopSelected, clearSearch]);
 
   return {
     searchQuery,
@@ -130,6 +138,7 @@ export function useStationSearch(
     subwayResults,
     busResults,
     isSearching,
+    searchError,
     groupedSubwayResults,
     lineSelectionModal,
     setLineSelectionModal,

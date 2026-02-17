@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
+import { AuthRequired } from '../components/AuthRequired';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
@@ -11,6 +13,7 @@ import {
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
 import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from '@infrastructure/api';
+import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
 import { useRouteValidation } from './route-setup/use-route-validation';
@@ -26,8 +29,9 @@ import { RouteListView } from './route-setup/RouteListView';
 export function RouteSetupPage(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const toast = useToast();
 
   // Shared route banner
   const [sharedRoute, setSharedRoute] = useState<SharedRouteData | null>(null);
@@ -65,6 +69,9 @@ export function RouteSetupPage(): JSX.Element {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // 저장 후 네비게이션 타이머 ref (토스트 dismiss 시 즉시 이동용)
+  const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // 경로 검증 훅
   const { validation, validateRoute } = useRouteValidation(selectedStops);
 
@@ -93,12 +100,11 @@ export function RouteSetupPage(): JSX.Element {
     }
 
     setSelectedStops(testStops);
-    search.clearSearch();
     setError('');
     setStep('ask-more');
   }, [currentTransport, selectedStops, validateRoute]);
 
-  // 검색 훅
+  // 검색 훅 (clearSearch는 onStopSelected 콜백 후 훅 내부에서 자동 호출)
   const search = useStationSearch(currentTransport, selectedStops, handleSelectStopDirect);
 
   // 기존 경로 로드
@@ -111,7 +117,10 @@ export function RouteSetupPage(): JSX.Element {
     let isMounted = true;
     Promise.all([
       commuteApi.getUserRoutes(userId),
-      alertApiClient.getAlertsByUser(userId).catch(() => [] as Alert[]),
+      alertApiClient.getAlertsByUser(userId).catch(() => {
+        console.warn('Failed to load alerts for route setup');
+        return [] as Alert[];
+      }),
     ]).then(([routes, alerts]) => {
       if (isMounted) {
         setExistingRoutes(routes);
@@ -119,7 +128,10 @@ export function RouteSetupPage(): JSX.Element {
         setIsLoading(false);
       }
     }).catch(() => {
-      if (isMounted) setIsLoading(false);
+      if (isMounted) {
+        setError('경로 목록을 불러올 수 없습니다');
+        setIsLoading(false);
+      }
     });
 
     return () => { isMounted = false; };
@@ -298,6 +310,7 @@ export function RouteSetupPage(): JSX.Element {
       await alertApiClient.createAlert(alertDto);
     } catch {
       // 알림 생성 실패해도 경로 저장은 성공으로 처리
+      setWarning('경로는 저장되었지만 알림 생성에 실패했습니다');
     }
   };
 
@@ -329,6 +342,7 @@ export function RouteSetupPage(): JSX.Element {
         await commuteApi.updateRoute(editingRoute.id, dto);
         const updatedRoutes = await commuteApi.getUserRoutes(userId);
         setExistingRoutes(updatedRoutes);
+        toast.success('경로가 수정되었습니다');
       } else {
         const saved = await commuteApi.createRoute(dto);
         await autoCreateAlerts(saved);
@@ -349,16 +363,29 @@ export function RouteSetupPage(): JSX.Element {
 
           const savedReverse = await commuteApi.createRoute(reverseDto);
           await autoCreateAlerts(savedReverse);
+          toast.success('출근/퇴근 경로가 저장되었습니다');
+        } else {
+          toast.success('경로가 저장되었습니다');
         }
       }
 
-      navigate('/');
+      navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSaving(false);
     }
   };
+
+  // Toast dismiss 시 즉시 네비게이션
+  const handleToastDismiss = useCallback((id: string) => {
+    toast.dismissToast(id);
+    if (navigateTimerRef.current) {
+      clearTimeout(navigateTimerRef.current);
+      navigateTimerRef.current = null;
+      navigate('/');
+    }
+  }, [toast, navigate]);
 
   // 경로 이름 자동 생성
   const generateRouteName = useCallback((type: RouteType, stops: SelectedStop[]): string => {
@@ -447,19 +474,11 @@ export function RouteSetupPage(): JSX.Element {
   // 로그인 필요
   if (!userId) {
     return (
-      <main className="page apple-route-page">
-        <nav className="apple-nav">
-          <button type="button" className="apple-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
-          <span className="apple-title">경로</span>
-          <span />
-        </nav>
-        <div className="apple-empty">
-          <div className="apple-empty-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></div>
-          <h2>로그인이 필요해요</h2>
-          <p>출퇴근 경로를 저장하려면<br />먼저 로그인해주세요</p>
-          <Link to="/login" className="apple-btn-primary">로그인</Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="경로"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>}
+        description="출퇴근 경로를 저장하려면 먼저 로그인하세요"
+      />
     );
   }
 
@@ -521,7 +540,7 @@ export function RouteSetupPage(): JSX.Element {
             routeType={routeType}
             searchQuery={search.searchQuery}
             isSearching={search.isSearching}
-            error={error}
+            error={search.searchError || error}
             groupedSubwayResults={search.groupedSubwayResults}
             busResults={search.busResults}
             onSearchChange={search.handleSearchChange}
@@ -562,6 +581,8 @@ export function RouteSetupPage(): JSX.Element {
             getTransferInfo={getTransferInfo}
           />
         )}
+
+        <ToastContainer toasts={toast.toasts} onDismiss={handleToastDismiss} />
       </main>
     );
   }

@@ -3,16 +3,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { RouteSetupPage } from './RouteSetupPage';
 
 // Mock navigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
 describe('RouteSetupPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    Storage.prototype.getItem = jest.fn(() => 'test-user-id');
+    vi.clearAllMocks();
+    Storage.prototype.getItem = vi.fn(() => 'test-user-id');
   });
 
   it('should render route setup page', () => {
@@ -25,7 +25,7 @@ describe('RouteSetupPage', () => {
   });
 
   it('should show login message if not authenticated', () => {
-    Storage.prototype.getItem = jest.fn(() => null);
+    Storage.prototype.getItem = vi.fn(() => null);
     render(
       <MemoryRouter>
         <RouteSetupPage />

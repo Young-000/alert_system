@@ -1,5 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
+import { PageHeader } from '../components/PageHeader';
+import { AuthRequired } from '../components/AuthRequired';
 import {
   alertApiClient,
 } from '@infrastructure/api';
@@ -40,13 +43,30 @@ export function AlertSettingsPage(): JSX.Element {
   const [showRouteImport, setShowRouteImport] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
+
+  // Ref to break circular dependency: handleSubmit needs wizard.setStep,
+  // but wizard needs handleSubmit as onSubmit prop.
+  const wizardSetStepRef = useRef<(step: 'type' | 'transport' | 'station' | 'routine' | 'confirm') => void>(() => {});
 
   // Alert CRUD operations
   const alertCrud = useAlertCrud(userId);
+  const {
+    setError: setCrudError,
+    setDuplicateAlert,
+    setIsSubmitting,
+    setSuccess: setCrudSuccess,
+    reloadAlerts,
+    checkDuplicateAlert,
+  } = alertCrud;
 
   // Transport search
   const transportSearch = useTransportSearch(transportTypes);
+  const {
+    selectedTransports,
+    setSelectedTransports,
+    setSearchQuery: setTransportSearchQuery,
+  } = transportSearch;
 
   // Derived values via utility functions (no circular dependency)
   const schedule = useMemo(
@@ -66,11 +86,11 @@ export function AlertSettingsPage(): JSX.Element {
 
   // Submit handler
   const handleSubmit = useCallback(async (): Promise<void> => {
-    alertCrud.setError('');
-    alertCrud.setDuplicateAlert(null);
+    setCrudError('');
+    setDuplicateAlert(null);
 
     if (!userId) {
-      alertCrud.setError('로그인이 필요합니다.');
+      setCrudError('로그인이 필요합니다.');
       return;
     }
 
@@ -79,22 +99,22 @@ export function AlertSettingsPage(): JSX.Element {
       alertTypes.push('weather', 'airQuality');
     }
 
-    const subwayStation = transportSearch.selectedTransports.find((t) => t.type === 'subway');
-    const busStop = transportSearch.selectedTransports.find((t) => t.type === 'bus');
+    const subwayStation = selectedTransports.find((t) => t.type === 'subway');
+    const busStop = selectedTransports.find((t) => t.type === 'bus');
 
     if (subwayStation) alertTypes.push('subway');
     if (busStop) alertTypes.push('bus');
 
-    const duplicate = alertCrud.checkDuplicateAlert(schedule, alertTypes);
+    const duplicate = checkDuplicateAlert(schedule, alertTypes);
     if (duplicate) {
-      alertCrud.setDuplicateAlert(duplicate);
+      setDuplicateAlert(duplicate);
       const parts = duplicate.schedule.split(' ');
       const hours = parts[1]?.split(',').map(h => `${h.padStart(2, '0')}:00`).join(', ') || '';
-      alertCrud.setError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
+      setCrudError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
       return;
     }
 
-    alertCrud.setIsSubmitting(true);
+    setIsSubmitting(true);
 
     try {
       const dto: CreateAlertDto = {
@@ -108,33 +128,47 @@ export function AlertSettingsPage(): JSX.Element {
       };
 
       await alertApiClient.createAlert(dto);
-      alertCrud.setSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
-      alertCrud.reloadAlerts();
+      setCrudSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
+      reloadAlerts();
 
       setTimeout(() => {
-        wizard.setStep('type');
+        wizardSetStepRef.current('type');
         setWantsWeather(false);
         setWantsTransport(false);
         setTransportTypes([]);
-        transportSearch.setSelectedTransports([]);
-        transportSearch.setSearchQuery('');
+        setSelectedTransports([]);
+        setTransportSearchQuery('');
         setSelectedRouteId(null);
-        alertCrud.setSuccess('');
+        setCrudSuccess('');
       }, TOAST_DURATION_MS);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
       if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-        alertCrud.setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        setCrudError('로그인이 만료되었습니다. 다시 로그인해주세요.');
       } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-        alertCrud.setError('권한이 없습니다. 다시 로그인해주세요.');
+        setCrudError('권한이 없습니다. 다시 로그인해주세요.');
       } else {
-        alertCrud.setError(`알림 생성에 실패했습니다: ${errorMessage}`);
+        setCrudError(`알림 생성에 실패했습니다: ${errorMessage}`);
       }
     } finally {
-      alertCrud.setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, wantsWeather, transportSearch.selectedTransports, selectedRouteId, schedule, alertName, alertCrud.checkDuplicateAlert]);
+  }, [
+    userId,
+    wantsWeather,
+    selectedTransports,
+    selectedRouteId,
+    schedule,
+    alertName,
+    checkDuplicateAlert,
+    setCrudError,
+    setDuplicateAlert,
+    setIsSubmitting,
+    setCrudSuccess,
+    reloadAlerts,
+    setSelectedTransports,
+    setTransportSearchQuery,
+  ]);
 
   // Wizard navigation
   const wizard = useWizardNavigation({
@@ -147,6 +181,9 @@ export function AlertSettingsPage(): JSX.Element {
     success: alertCrud.success,
     onSubmit: handleSubmit,
   });
+
+  // Keep ref in sync so handleSubmit can call wizard.setStep without circular deps
+  wizardSetStepRef.current = wizard.setStep;
 
   // Show wizard by default if no alerts
   if (!alertCrud.isLoadingAlerts && alertCrud.alerts.length === 0 && !wizard.showWizard) {
@@ -229,20 +266,38 @@ export function AlertSettingsPage(): JSX.Element {
 
   const progress = wizard.getProgress();
 
+  // 비로그인 시 빈 상태 UI
+  if (!userId) {
+    return (
+      <AuthRequired
+        pageTitle="알림"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+        description="알림을 설정하려면 먼저 로그인하세요"
+      />
+    );
+  }
+
   return (
     <main className="page alert-page-v2">
-      <header className="alert-page-v2-header">
-        <h1>알림</h1>
-      </header>
-
-      {!userId && (
-        <div className="notice warning">
-          <Link to="/login" className="notice-link">로그인</Link> 후 알림을 설정할 수 있어요.
-        </div>
-      )}
+      <PageHeader
+        title="알림"
+        action={
+          <Link
+            to="/notifications"
+            className="notification-history-link"
+            aria-label="알림 발송 기록 보기"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="10" />
+            </svg>
+            <span>알림 기록</span>
+          </Link>
+        }
+      />
 
       {/* 초기 로딩 상태 표시 */}
-      {alertCrud.isLoadingAlerts && userId && (
+      {alertCrud.isLoadingAlerts && (
         <div className="loading-container" role="status" aria-live="polite">
           <span className="spinner" aria-hidden="true" />
           <p>서버에 연결 중입니다...</p>
@@ -262,7 +317,7 @@ export function AlertSettingsPage(): JSX.Element {
       )}
 
       {/* "Add new alert" toggle button */}
-      {!alertCrud.isLoadingAlerts && userId && alertCrud.alerts.length > 0 && !wizard.showWizard && (
+      {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && !wizard.showWizard && (
         <button
           type="button"
           className="btn btn-primary add-alert-btn"
@@ -272,7 +327,8 @@ export function AlertSettingsPage(): JSX.Element {
         </button>
       )}
 
-      <div id="wizard-content" className="wizard-container" style={{ display: (alertCrud.isLoadingAlerts && userId) || !userId || !wizard.showWizard ? 'none' : undefined }}>
+      {!alertCrud.isLoadingAlerts && wizard.showWizard && (
+      <div id="wizard-content" className="wizard-container">
         <WizardStepIndicator
           progress={progress}
           wantsTransport={wantsTransport}
@@ -361,9 +417,10 @@ export function AlertSettingsPage(): JSX.Element {
           onSubmit={handleSubmit}
         />
       </div>
+      )}
 
-      {/* 빠른 알림 프리셋 */}
-      {userId && (
+      {/* 빠른 알림 프리셋 - 위저드가 활성화되지 않은 경우에만 표시 */}
+      {!wizard.showWizard && (
         <QuickPresets
           alerts={alertCrud.alerts}
           isSubmitting={alertCrud.isSubmitting}

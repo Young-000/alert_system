@@ -1,14 +1,15 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { AlertSettingsPage } from './AlertSettingsPage';
 import { alertApiClient } from '@infrastructure/api';
 import type { AlertType } from '@infrastructure/api';
+import type { Mocked } from 'vitest';
+import { TestProviders } from '../../test-utils';
 
-const mockAlertApiClient = alertApiClient as jest.Mocked<typeof alertApiClient>;
+const mockAlertApiClient = alertApiClient as Mocked<typeof alertApiClient>;
 
 describe('AlertSettingsPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('userId', 'user-1');
   });
 
@@ -20,9 +21,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -47,9 +48,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue(mockAlerts);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -62,9 +63,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
@@ -85,19 +86,21 @@ describe('AlertSettingsPage', () => {
     });
   });
 
-  it('should show login warning when userId is not set', async () => {
+  it('should show login empty state when userId is not set', async () => {
     localStorage.clear();
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/후 알림을 설정할 수 있어요/)).toBeInTheDocument();
+      expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
     });
+    expect(screen.getByText('알림을 설정하려면 먼저 로그인하세요')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login');
   });
 
   it('should delete an alert', async () => {
@@ -115,9 +118,9 @@ describe('AlertSettingsPage', () => {
     mockAlertApiClient.deleteAlert.mockResolvedValue(undefined);
 
     render(
-      <MemoryRouter>
+      <TestProviders>
         <AlertSettingsPage />
-      </MemoryRouter>
+      </TestProviders>
     );
 
     await waitFor(() => {

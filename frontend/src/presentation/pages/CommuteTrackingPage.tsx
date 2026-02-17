@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
 import {
   getCommuteApiClient,
   type RouteResponse,
@@ -11,7 +12,7 @@ export function CommuteTrackingPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // State from navigation (홈에서 전달)
@@ -19,6 +20,10 @@ export function CommuteTrackingPage(): JSX.Element {
     sessionId?: string;
     routeId?: string;
   } | null;
+
+  // Extract primitive values for stable useEffect dependencies
+  const navRouteId = navState?.routeId;
+  const searchMode = searchParams.get('mode');
 
   const [route, setRoute] = useState<RouteResponse | null>(null);
   const [session, setSession] = useState<SessionResponse | null>(null);
@@ -48,7 +53,7 @@ export function CommuteTrackingPage(): JSX.Element {
       setIsLoading(true);
       try {
         // Check for in-progress session first
-        const inProgress = await commuteApi.getInProgressSession(userId).catch(() => null);
+        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; });
 
         if (inProgress && isMounted) {
           setSession(inProgress);
@@ -60,10 +65,9 @@ export function CommuteTrackingPage(): JSX.Element {
         }
 
         // No in-progress session: check if we have a routeId to start
-        const routeId = navState?.routeId;
-        if (routeId && isMounted) {
+        if (navRouteId && isMounted) {
           const routes = await commuteApi.getUserRoutes(userId);
-          const matchingRoute = routes.find(r => r.id === routeId);
+          const matchingRoute = routes.find(r => r.id === navRouteId);
           if (matchingRoute) {
             setRoute(matchingRoute);
             // Auto-start session
@@ -77,10 +81,9 @@ export function CommuteTrackingPage(): JSX.Element {
         }
 
         // PWA shortcut: auto-select route by mode (morning/evening)
-        const mode = searchParams.get('mode');
-        if (mode && (mode === 'morning' || mode === 'evening') && isMounted) {
+        if (searchMode && (searchMode === 'morning' || searchMode === 'evening') && isMounted) {
           const routes = await commuteApi.getUserRoutes(userId);
-          const matchingRoute = routes.find(r => r.routeType === mode);
+          const matchingRoute = routes.find(r => r.routeType === searchMode);
           if (matchingRoute) {
             setRoute(matchingRoute);
             const newSession = await commuteApi.startSession({
@@ -105,8 +108,7 @@ export function CommuteTrackingPage(): JSX.Element {
 
     loadData();
     return () => { isMounted = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, navigate, commuteApi, navRouteId, searchMode]);
 
   // Timer effect
   useEffect(() => {

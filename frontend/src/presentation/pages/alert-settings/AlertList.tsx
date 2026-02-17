@@ -1,5 +1,6 @@
 import type { Alert } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
+import { cronToHuman } from './cron-utils';
 
 interface AlertListProps {
   readonly alerts: Alert[];
@@ -24,10 +25,7 @@ export function AlertList({
       </div>
       <div className="alert-list-improved">
         {alerts.map((alert) => {
-          const parts = alert.schedule.split(' ');
-          const hours = parts.length >= 2
-            ? parts[1].split(',').map(h => `${h.padStart(2, '0')}:00`)
-            : ['--:--'];
+          const scheduleLabel = cronToHuman(alert.schedule);
           return (
             <article
               key={alert.id}
@@ -35,9 +33,7 @@ export function AlertList({
             >
               <div className="alert-item-header">
                 <div className="alert-time-badges">
-                  {hours.map((time, i) => (
-                    <span key={i} className="alert-time-badge">{time}</span>
-                  ))}
+                  <span className="alert-time-badge">{scheduleLabel}</span>
                 </div>
                 <span className="alert-name">{alert.name}</span>
               </div>

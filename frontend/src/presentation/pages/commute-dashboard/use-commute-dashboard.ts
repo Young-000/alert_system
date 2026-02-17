@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
 import {
   getCommuteApiClient,
   type CommuteStatsResponse,
@@ -25,9 +26,13 @@ interface UseCommuteDashboardReturn {
   selectedRouteId: string | null;
   setSelectedRouteId: React.Dispatch<React.SetStateAction<string | null>>;
   isLoading: boolean;
+  loadError: string;
   activeTab: TabId;
   setActiveTab: React.Dispatch<React.SetStateAction<TabId>>;
   routeAnalytics: RouteAnalyticsResponse[];
+  analyticsError: string;
+  comparisonError: string;
+  behaviorError: string;
   behaviorAnalytics: BehaviorAnalytics | null;
   behaviorPatterns: UserPattern[];
   routeComparison: RouteComparisonResponse | null;
@@ -37,7 +42,7 @@ interface UseCommuteDashboardReturn {
 }
 
 export function useCommuteDashboard(): UseCommuteDashboardReturn {
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -47,11 +52,15 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
   const [stopwatchRecords, setStopwatchRecords] = useState<StopwatchRecord[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [routeAnalytics, setRouteAnalytics] = useState<RouteAnalyticsResponse[]>([]);
   const [behaviorAnalytics, setBehaviorAnalytics] = useState<BehaviorAnalytics | null>(null);
   const [behaviorPatterns, setBehaviorPatterns] = useState<UserPattern[]>([]);
   const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
+  const [analyticsError, setAnalyticsError] = useState('');
+  const [comparisonError, setComparisonError] = useState('');
+  const [behaviorError, setBehaviorError] = useState('');
 
   // Handle URL tab parameter first (highest priority) -- validate tab is actually visible
   useEffect(() => {
@@ -88,7 +97,10 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
         const [statsData, historyData, analyticsData] = await Promise.all([
           commuteApi.getStats(userId, 30),
           commuteApi.getHistory(userId, 10),
-          commuteApi.getUserAnalytics(userId).catch(() => [] as RouteAnalyticsResponse[]),
+          commuteApi.getUserAnalytics(userId).catch(() => {
+            setAnalyticsError('분석 데이터를 불러올 수 없습니다');
+            return [] as RouteAnalyticsResponse[];
+          }),
         ]);
         if (!isMounted) return;
         setStats(statsData);
@@ -104,7 +116,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
           const routeIds = statsData.routeStats.map(r => r.routeId);
           commuteApi.compareRoutes(routeIds)
             .then(comparison => { if (isMounted) setRouteComparison(comparison); })
-            .catch(() => {});
+            .catch(() => { if (isMounted) setComparisonError('비교 데이터를 불러올 수 없습니다'); });
         }
 
         // A-2: Load behavior data
@@ -116,12 +128,12 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
             if (analytics.hasEnoughData) {
               behaviorApi.getPatterns(userId)
                 .then(patterns => { if (isMounted) setBehaviorPatterns(patterns); })
-                .catch(() => {});
+                .catch(() => { if (isMounted) setBehaviorError('패턴 분석에 실패했습니다'); });
             }
           })
-          .catch(() => {});
+          .catch(() => { if (isMounted) setBehaviorError('패턴 분석에 실패했습니다'); });
       } catch {
-        if (!isMounted) return;
+        if (isMounted) setLoadError('대시보드 데이터를 불러올 수 없습니다.');
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -145,9 +157,13 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     selectedRouteId,
     setSelectedRouteId,
     isLoading,
+    loadError,
     activeTab,
     setActiveTab,
     routeAnalytics,
+    analyticsError,
+    comparisonError,
+    behaviorError,
     behaviorAnalytics,
     behaviorPatterns,
     routeComparison,

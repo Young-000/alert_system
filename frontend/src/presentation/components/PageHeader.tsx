@@ -1,35 +1,18 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
-  backTo?: string;
-  backLabel?: string;
-  actions?: ReactNode;
+  /** Right-side action (button, link, etc.) */
+  action?: ReactNode;
+  /** If true, header sticks to top on scroll. Default: true */
+  sticky?: boolean;
 }
 
-export function PageHeader({
-  title,
-  subtitle,
-  backTo,
-  backLabel = '뒤로',
-  actions,
-}: PageHeaderProps): JSX.Element {
+export function PageHeader({ title, action, sticky = true }: PageHeaderProps): JSX.Element {
   return (
-    <header className="page-header">
-      <div className="page-header-left">
-        {backTo && (
-          <Link to={backTo} className="page-header-back" aria-label={backLabel}>
-            ← {backLabel}
-          </Link>
-        )}
-        <div className="page-header-title-group">
-          <h1 className="page-header-title">{title}</h1>
-          {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
-        </div>
-      </div>
-      {actions && <div className="page-header-actions">{actions}</div>}
+    <header className={`page-header${sticky ? ' page-header-sticky' : ''}`}>
+      <h1>{title}</h1>
+      {action && <div className="page-header-action">{action}</div>}
     </header>
   );
 }

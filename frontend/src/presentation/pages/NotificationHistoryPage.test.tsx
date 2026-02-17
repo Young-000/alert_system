@@ -2,8 +2,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { NotificationHistoryPage } from './NotificationHistoryPage';
 import { notificationApiClient } from '@infrastructure/api';
+import type { Mocked } from 'vitest';
 
-const mockNotificationApiClient = notificationApiClient as jest.Mocked<typeof notificationApiClient>;
+const mockNotificationApiClient = notificationApiClient as Mocked<typeof notificationApiClient>;
 
 function renderPage(): ReturnType<typeof render> {
   return render(
@@ -15,7 +16,7 @@ function renderPage(): ReturnType<typeof render> {
 
 describe('NotificationHistoryPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('userId', 'user-1');
     mockNotificationApiClient.getHistory.mockResolvedValue({ items: [], total: 0 });
   });
@@ -31,7 +32,7 @@ describe('NotificationHistoryPage', () => {
 
     expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
     expect(screen.getByText('알림 기록을 보려면 로그인하세요')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '로그인 페이지로 이동' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login');
   });
 
   it('should show loading state initially', () => {

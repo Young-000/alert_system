@@ -18,42 +18,10 @@ export function LoginPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleEnabled, setIsGoogleEnabled] = useState(false);
-  const [serverStatus, setServerStatus] = useState<'warming' | 'ready' | 'error'>('warming');
   const navigate = useNavigate();
-
-  // 서버 예열 (Cold Start 대응)
-  useEffect(() => {
-    let isMounted = true;
-
-    const warmUpServer = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/health`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(45000), // 45초 타임아웃
-        });
-        if (!isMounted) return;
-        if (response.ok) {
-          setServerStatus('ready');
-          // Server warm-up timing tracked silently
-        }
-      } catch {
-        // 실패해도 사용자가 시도할 수 있도록 ready로 설정
-        if (isMounted) {
-          setServerStatus('ready');
-        }
-      }
-    };
-    warmUpServer();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Google OAuth 상태 확인
   useEffect(() => {
-    if (serverStatus !== 'ready') return;
-
     let isMounted = true;
 
     const checkGoogleStatus = async () => {
@@ -74,7 +42,7 @@ export function LoginPage(): JSX.Element {
     return () => {
       isMounted = false;
     };
-  }, [serverStatus]);
+  }, []);
 
   const handleGoogleLogin = () => {
     // 백엔드 Google OAuth 엔드포인트로 리다이렉트
@@ -246,14 +214,9 @@ export function LoginPage(): JSX.Element {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isLoading || serverStatus === 'warming'}
+              disabled={isLoading}
             >
-              {serverStatus === 'warming' ? (
-                <>
-                  <span className="spinner spinner-sm" aria-hidden="true" />
-                  서버 연결 중...
-                </>
-              ) : isLoading ? (
+              {isLoading ? (
                 <>
                   <span className="spinner spinner-sm" aria-hidden="true" />
                   처리 중...

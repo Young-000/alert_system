@@ -1,3 +1,5 @@
+import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
+
 interface EditAlertModalProps {
   readonly editForm: { name: string; schedule: string };
   readonly isEditing: boolean;
@@ -13,6 +15,11 @@ export function EditAlertModal({
   onConfirm,
   onCancel,
 }: EditAlertModalProps): JSX.Element {
+  const trapRef = useFocusTrap({
+    active: true,
+    onEscape: isEditing ? undefined : onCancel,
+  });
+
   return (
     <div
       className="modal-overlay"
@@ -21,7 +28,7 @@ export function EditAlertModal({
       aria-modal="true"
       aria-labelledby="edit-modal-title"
     >
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div ref={trapRef} className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-icon" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
