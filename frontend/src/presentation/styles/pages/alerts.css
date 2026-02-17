@@ -2193,3 +2193,28 @@ kbd {
   border-radius: var(--radius-sm);
 }
 
+/* --- N-3: Notification History Link --- */
+.notification-history-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  transition: background 0.15s;
+}
+
+.notification-history-link:hover {
+  background: var(--primary-light);
+}
+
+/* --- N-15: Human-readable schedule label --- */
+.alert-schedule-label {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  font-weight: 400;
+}
+

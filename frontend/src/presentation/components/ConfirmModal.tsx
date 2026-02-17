@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
 
 interface ConfirmModalProps {
   open: boolean;
@@ -23,53 +24,10 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps): JSX.Element | null {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previousActiveElement = useRef<HTMLElement | null>(null);
-
-  // ESC 키로 닫기 + 포커스 트랩
-  useEffect(() => {
-    if (!open) return;
-
-    // 이전 포커스 저장
-    previousActiveElement.current = document.activeElement as HTMLElement;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isLoading) {
-        onCancel();
-      }
-
-      // 포커스 트랩
-      if (e.key === 'Tab' && modalRef.current) {
-        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement?.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement?.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    // 모달 열릴 때 첫 번째 버튼에 포커스
-    const timer = setTimeout(() => {
-      modalRef.current?.querySelector<HTMLElement>('button')?.focus();
-    }, 10);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      clearTimeout(timer);
-      // 이전 포커스 복원
-      previousActiveElement.current?.focus();
-    };
-  }, [open, isLoading, onCancel]);
+  const trapRef = useFocusTrap({
+    active: open,
+    onEscape: isLoading ? undefined : onCancel,
+  });
 
   if (!open) return null;
 
@@ -82,7 +40,7 @@ export function ConfirmModal({
       aria-labelledby="confirm-modal-title"
     >
       <div
-        ref={modalRef}
+        ref={trapRef}
         className="confirm-modal"
         onClick={(e) => e.stopPropagation()}
       >

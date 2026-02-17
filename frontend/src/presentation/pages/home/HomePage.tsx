@@ -47,6 +47,7 @@ export function HomePage(): JSX.Element {
           weather={data.weather}
           airQuality={data.airQuality}
           airQualityError={data.airQualityError}
+          isDefaultLocation={data.isDefaultLocation}
           checklistItems={data.checklistItems}
           checkedItems={data.checkedItems}
           onChecklistToggle={data.handleChecklistToggle}

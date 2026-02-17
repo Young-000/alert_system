@@ -1,3 +1,4 @@
+import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
 import type { GroupedStation } from './types';
 
 interface LineSelectionModalProps {
@@ -11,17 +12,24 @@ export function LineSelectionModal({
   onSelect,
   onClose,
 }: LineSelectionModalProps): JSX.Element {
+  const trapRef = useFocusTrap({
+    active: true,
+    onEscape: onClose,
+  });
+
   return (
     <div
       className="line-selection-modal"
       role="dialog"
       aria-modal="true"
       aria-label="호선 선택"
-      tabIndex={-1}
       onClick={onClose}
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
     >
-      <div className="line-selection-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={trapRef}
+        className="line-selection-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3>{station.name}역</h3>
         <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
           어떤 호선을 이용하세요?

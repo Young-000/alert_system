@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
 import { AuthRequired } from '../components/AuthRequired';
@@ -278,7 +279,22 @@ export function AlertSettingsPage(): JSX.Element {
 
   return (
     <main className="page alert-page-v2">
-      <PageHeader title="알림" />
+      <PageHeader
+        title="알림"
+        action={
+          <Link
+            to="/notifications"
+            className="notification-history-link"
+            aria-label="알림 발송 기록 보기"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="10" />
+            </svg>
+            <span>알림 기록</span>
+          </Link>
+        }
+      />
 
       {/* 초기 로딩 상태 표시 */}
       {alertCrud.isLoadingAlerts && (
@@ -403,12 +419,14 @@ export function AlertSettingsPage(): JSX.Element {
       </div>
       )}
 
-      {/* 빠른 알림 프리셋 */}
-      <QuickPresets
-        alerts={alertCrud.alerts}
-        isSubmitting={alertCrud.isSubmitting}
-        onQuickWeather={alertCrud.handleQuickWeatherAlert}
-      />
+      {/* 빠른 알림 프리셋 - 위저드가 활성화되지 않은 경우에만 표시 */}
+      {!wizard.showWizard && (
+        <QuickPresets
+          alerts={alertCrud.alerts}
+          isSubmitting={alertCrud.isSubmitting}
+          onQuickWeather={alertCrud.handleQuickWeatherAlert}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {alertCrud.deleteTarget && (

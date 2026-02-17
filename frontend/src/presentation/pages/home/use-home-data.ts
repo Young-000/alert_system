@@ -45,6 +45,7 @@ export interface UseHomeDataReturn {
   alerts: Alert[];
   nextAlert: { time: string; label: string } | null;
   commuteStats: CommuteStatsResponse | null;
+  isDefaultLocation: boolean;
   isCommuteStarting: boolean;
   handleStartCommute: () => Promise<void>;
   navigate: ReturnType<typeof useNavigate>;
@@ -308,6 +309,7 @@ export function useHomeData(): UseHomeDataReturn {
     alerts,
     nextAlert,
     commuteStats,
+    isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,
     navigate,

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { WeatherData } from '@infrastructure/api';
 import { WeatherIcon, getWeatherAdvice } from './weather-utils';
 import type { ChecklistItem } from './weather-utils';
@@ -6,6 +7,7 @@ interface WeatherHeroSectionProps {
   weather: WeatherData;
   airQuality: { label: string; className: string };
   airQualityError?: string;
+  isDefaultLocation?: boolean;
   checklistItems: ChecklistItem[];
   checkedItems: Set<string>;
   onChecklistToggle: (id: string) => void;
@@ -15,20 +17,44 @@ export function WeatherHeroSection({
   weather,
   airQuality,
   airQualityError,
+  isDefaultLocation = false,
   checklistItems,
   checkedItems,
   onChecklistToggle,
 }: WeatherHeroSectionProps): JSX.Element {
+  const [showLocationTip, setShowLocationTip] = useState(false);
+
   return (
     <>
       <section id="weather-hero" className="weather-hero" aria-label={`현재 날씨 ${weather.conditionKr || weather.condition} ${Math.round(weather.temperature)}도`}>
         <div className="weather-hero-main">
           <WeatherIcon condition={weather.condition} size={48} />
           <div className="weather-hero-text">
-            <span className="weather-temp-value">{Math.round(weather.temperature)}°</span>
+            <span className="weather-temp-value">{Math.round(weather.temperature)}&deg;</span>
             <span className="weather-condition">{weather.conditionKr || weather.condition}</span>
           </div>
+          {isDefaultLocation && (
+            <button
+              type="button"
+              className="location-default-badge"
+              onClick={() => setShowLocationTip(prev => !prev)}
+              aria-label="위치 권한이 없어 서울 기준 날씨를 표시합니다"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>서울 기준</span>
+            </button>
+          )}
         </div>
+
+        {isDefaultLocation && showLocationTip && (
+          <p className="location-tip" role="status">
+            브라우저 설정에서 위치 권한을 허용하면 현재 위치의 날씨를 볼 수 있습니다.
+          </p>
+        )}
+
         <div className="weather-hero-details">
           <span>습도 {weather.humidity}%</span>
           {airQuality.label !== '-' ? (

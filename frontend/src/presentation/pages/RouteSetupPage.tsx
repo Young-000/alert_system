@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { AuthRequired } from '../components/AuthRequired';
@@ -68,6 +68,9 @@ export function RouteSetupPage(): JSX.Element {
   // 삭제 확인 모달
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 저장 후 네비게이션 타이머 ref (토스트 dismiss 시 즉시 이동용)
+  const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 경로 검증 훅
   const { validation, validateRoute } = useRouteValidation(selectedStops);
@@ -366,13 +369,23 @@ export function RouteSetupPage(): JSX.Element {
         }
       }
 
-      setTimeout(() => navigate('/'), 1500);
+      navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSaving(false);
     }
   };
+
+  // Toast dismiss 시 즉시 네비게이션
+  const handleToastDismiss = useCallback((id: string) => {
+    toast.dismissToast(id);
+    if (navigateTimerRef.current) {
+      clearTimeout(navigateTimerRef.current);
+      navigateTimerRef.current = null;
+      navigate('/');
+    }
+  }, [toast, navigate]);
 
   // 경로 이름 자동 생성
   const generateRouteName = useCallback((type: RouteType, stops: SelectedStop[]): string => {
@@ -569,7 +582,7 @@ export function RouteSetupPage(): JSX.Element {
           />
         )}
 
-        <ToastContainer toasts={toast.toasts} onDismiss={toast.dismissToast} />
+        <ToastContainer toasts={toast.toasts} onDismiss={handleToastDismiss} />
       </main>
     );
   }

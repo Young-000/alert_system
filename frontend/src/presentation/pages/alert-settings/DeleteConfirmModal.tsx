@@ -1,3 +1,5 @@
+import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
+
 interface DeleteConfirmModalProps {
   readonly targetName: string;
   readonly isDeleting: boolean;
@@ -11,6 +13,11 @@ export function DeleteConfirmModal({
   onConfirm,
   onCancel,
 }: DeleteConfirmModalProps): JSX.Element {
+  const trapRef = useFocusTrap({
+    active: true,
+    onEscape: isDeleting ? undefined : onCancel,
+  });
+
   return (
     <div
       className="modal-overlay"
@@ -19,7 +26,7 @@ export function DeleteConfirmModal({
       aria-modal="true"
       aria-labelledby="delete-modal-title"
     >
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div ref={trapRef} className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-icon danger" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--error)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
