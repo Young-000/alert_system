@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Query,
@@ -15,6 +16,8 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commute-session.use-case';
 import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats.use-case';
+import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
+import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
 import {
   StartSessionDto,
   RecordCheckpointDto,
@@ -23,6 +26,11 @@ import {
   CommuteHistoryResponseDto,
   CommuteStatsResponseDto,
 } from '@application/dto/commute.dto';
+import {
+  UpdateStreakSettingsDto,
+  StreakResponseDto,
+  MilestonesResponseDto,
+} from '@application/dto/streak.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('commute')
@@ -33,6 +41,8 @@ export class CommuteController {
   constructor(
     private readonly manageSessionUseCase: ManageCommuteSessionUseCase,
     private readonly getStatsUseCase: GetCommuteStatsUseCase,
+    private readonly getStreakUseCase: GetStreakUseCase,
+    private readonly updateStreakUseCase: UpdateStreakUseCase,
   ) {}
 
   /**
@@ -78,14 +88,27 @@ export class CommuteController {
   async completeSession(
     @Body() dto: CompleteSessionDto,
     @Request() req: AuthenticatedRequest,
-  ): Promise<SessionResponseDto> {
+  ): Promise<SessionResponseDto & { streakUpdate?: import('@application/dto/streak.dto').StreakUpdateResultDto | null }> {
     // 권한 검사: 해당 세션이 본인의 것인지 확인
     const session = await this.manageSessionUseCase.getSessionById(dto.sessionId);
     if (session.userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 세션을 완료할 수 없습니다.');
     }
     this.logger.log(`Completing session ${dto.sessionId}`);
-    return this.manageSessionUseCase.completeSession(dto);
+    const result = await this.manageSessionUseCase.completeSession(dto);
+
+    // 스트릭 갱신 (실패해도 세션 완료는 성공으로 처리)
+    let streakUpdate = null;
+    try {
+      streakUpdate = await this.updateStreakUseCase.recordCompletion(
+        req.user.userId,
+        dto.sessionId,
+      );
+    } catch (err) {
+      this.logger.warn(`Failed to update streak for user ${req.user.userId}: ${err}`);
+    }
+
+    return { ...result, streakUpdate };
   }
 
   /**
@@ -176,5 +199,53 @@ export class CommuteController {
     }
     const daysNum = days ? parseInt(days, 10) : 30;
     return this.getStatsUseCase.execute(userId, daysNum);
+  }
+
+  // ========== Streak Endpoints ==========
+
+  /**
+   * 스트릭 정보 조회
+   */
+  @Get('streak/:userId')
+  async getStreak(
+    @Param('userId') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<StreakResponseDto> {
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 스트릭 정보에 접근할 수 없습니다.');
+    }
+    this.logger.log(`Getting streak for user ${userId}`);
+    return this.getStreakUseCase.execute(userId);
+  }
+
+  /**
+   * 스트릭 설정 변경
+   */
+  @Patch('streak/:userId/settings')
+  @HttpCode(HttpStatus.OK)
+  async updateStreakSettings(
+    @Param('userId') userId: string,
+    @Body() dto: UpdateStreakSettingsDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ success: boolean; weeklyGoal: number; excludeWeekends: boolean; reminderEnabled: boolean }> {
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 스트릭 설정을 변경할 수 없습니다.');
+    }
+    this.logger.log(`Updating streak settings for user ${userId}`);
+    return this.updateStreakUseCase.updateSettings(userId, dto);
+  }
+
+  /**
+   * 마일스톤 목록 조회
+   */
+  @Get('streak/:userId/milestones')
+  async getMilestones(
+    @Param('userId') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<MilestonesResponseDto> {
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 마일스톤 정보에 접근할 수 없습니다.');
+    }
+    return this.getStreakUseCase.getMilestones(userId);
   }
 }

@@ -12,6 +12,8 @@ import { useWeatherQuery } from '@infrastructure/query/use-weather-query';
 import { useAirQualityQuery } from '@infrastructure/query/use-air-quality-query';
 import { useCommuteStatsQuery } from '@infrastructure/query/use-commute-stats-query';
 import { useTransitQuery } from '@infrastructure/query/use-transit-query';
+import { useStreakQuery } from '@infrastructure/query/use-streak-query';
+import type { StreakResponse } from '@infrastructure/api/commute-api.client';
 import {
   getAqiStatus,
   getWeatherChecklist,
@@ -53,6 +55,7 @@ export interface UseHomeDataReturn {
   alerts: Alert[];
   nextAlert: { time: string; label: string } | null;
   commuteStats: CommuteStatsResponse | null;
+  streak: StreakResponse | null;
   isDefaultLocation: boolean;
   isCommuteStarting: boolean;
   handleStartCommute: () => Promise<void>;
@@ -71,6 +74,7 @@ export function useHomeData(): UseHomeDataReturn {
   const alertsQuery = useAlertsQuery(userId);
   const routesQuery = useRoutesQuery(userId);
   const statsQuery = useCommuteStatsQuery(userId, 7);
+  const streakQuery = useStreakQuery(userId);
 
   const locationReady = !!userId && !userLocation.isLoading;
   const weatherQuery = useWeatherQuery(
@@ -85,6 +89,7 @@ export function useHomeData(): UseHomeDataReturn {
   const alerts = useMemo(() => alertsQuery.data ?? [], [alertsQuery.data]);
   const routes = useMemo(() => routesQuery.data ?? [], [routesQuery.data]);
   const commuteStats = statsQuery.data ?? null;
+  const streak = streakQuery.data ?? null;
   const weather = weatherQuery.data ?? null;
   const airQualityData = airQualityQuery.data ?? null;
 
@@ -230,6 +235,7 @@ export function useHomeData(): UseHomeDataReturn {
     alerts,
     nextAlert,
     commuteStats,
+    streak,
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,

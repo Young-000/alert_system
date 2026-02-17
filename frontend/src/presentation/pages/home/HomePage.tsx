@@ -8,6 +8,7 @@ import { RouteRecommendation } from './RouteRecommendation';
 import { CommuteSection } from './CommuteSection';
 import { AlertSection } from './AlertSection';
 import { StatsSection } from './StatsSection';
+import { StreakBadge } from './StreakBadge';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -50,6 +51,10 @@ export function HomePage(): JSX.Element {
           {data.userName && <p className="home-user-name">{data.userName}님</p>}
         </div>
       </header>
+
+      {data.streak && (
+        <StreakBadge streak={data.streak} />
+      )}
 
       {data.activeRoute && (
         <MorningBriefing

@@ -23,4 +23,9 @@ export const queryKeys = {
     all: ['transit'] as const,
     byRoute: (routeId: string) => ['transit', 'route', routeId] as const,
   },
+  streak: {
+    all: ['streak'] as const,
+    byUser: (userId: string) => ['streak', 'user', userId] as const,
+    milestones: (userId: string) => ['streak', 'milestones', userId] as const,
+  },
 } as const;
