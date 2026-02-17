@@ -33,6 +33,14 @@ export function HomePage(): JSX.Element {
       {data.loadError && (
         <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
           {data.loadError}
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={data.retryLoad}
+            style={{ marginLeft: '8px' }}
+          >
+            다시 시도
+          </button>
         </div>
       )}
 
