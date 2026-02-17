@@ -1,6 +1,7 @@
 import { useHomeData } from './use-home-data';
 import { getGreeting } from './weather-utils';
 import { GuestLanding } from './GuestLanding';
+import { MorningBriefing } from './MorningBriefing';
 import { WeatherHeroSection } from './WeatherHeroSection';
 import { DeparturePrediction } from './DeparturePrediction';
 import { RouteRecommendation } from './RouteRecommendation';
@@ -41,6 +42,16 @@ export function HomePage(): JSX.Element {
           {data.userName && <p className="home-user-name">{data.userName}님</p>}
         </div>
       </header>
+
+      {data.activeRoute && (
+        <MorningBriefing
+          weather={data.weather}
+          airQuality={data.airQuality}
+          commuteStats={data.commuteStats}
+          transitInfos={data.transitInfos}
+          routeName={data.activeRoute.name}
+        />
+      )}
 
       {data.weather ? (
         <WeatherHeroSection
