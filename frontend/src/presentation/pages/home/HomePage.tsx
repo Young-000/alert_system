@@ -78,6 +78,8 @@ export function HomePage(): JSX.Element {
         forceRouteType={data.forceRouteType}
         onForceRouteTypeChange={data.setForceRouteType}
         transitInfos={data.transitInfos}
+        isTransitRefreshing={data.isTransitRefreshing}
+        lastTransitUpdate={data.lastTransitUpdate}
         isCommuteStarting={data.isCommuteStarting}
         onStartCommute={data.handleStartCommute}
       />
