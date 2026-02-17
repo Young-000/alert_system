@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
+import { PageHeader } from '../components/PageHeader';
+import { AuthRequired } from '../components/AuthRequired';
 import { notificationApiClient } from '@infrastructure/api';
 import type { NotificationLog } from '@infrastructure/api';
 
@@ -61,7 +64,7 @@ function formatTime(dateStr: string): string {
 }
 
 export function NotificationHistoryPage(): JSX.Element {
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,32 +138,24 @@ export function NotificationHistoryPage(): JSX.Element {
 
   if (!userId) {
     return (
-      <main className="page notification-history-page">
-        <header className="settings-page-v2-header">
-          <h1>알림 기록</h1>
-        </header>
-        <div className="settings-empty">
-          <span className="empty-icon-svg" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </span>
-          <h2>로그인이 필요해요</h2>
-          <p>알림 기록을 보려면 로그인하세요</p>
-          <Link to="/login" className="btn btn-primary" aria-label="로그인 페이지로 이동">로그인</Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="알림 기록"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+        description="알림 기록을 보려면 로그인하세요"
+      />
     );
   }
 
   return (
     <main className="page notification-history-page">
-      <header className="settings-page-v2-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1>알림 기록</h1>
-        {total > 0 && (
+      <PageHeader
+        title="알림 기록"
+        action={total > 0 ? (
           <span className="nav-badge">
             {isFilterActive ? `${filteredLogs.length}/${total}건` : `${total}건`}
           </span>
-        )}
-      </header>
+        ) : undefined}
+      />
 
       {error && (
         <div className="error-banner" role="alert">

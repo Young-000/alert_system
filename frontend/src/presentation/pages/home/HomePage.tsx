@@ -1,0 +1,89 @@
+import { useHomeData } from './use-home-data';
+import { getGreeting } from './weather-utils';
+import { GuestLanding } from './GuestLanding';
+import { WeatherHeroSection } from './WeatherHeroSection';
+import { DeparturePrediction } from './DeparturePrediction';
+import { RouteRecommendation } from './RouteRecommendation';
+import { CommuteSection } from './CommuteSection';
+import { AlertSection } from './AlertSection';
+import { StatsSection } from './StatsSection';
+
+export function HomePage(): JSX.Element {
+  const data = useHomeData();
+
+  if (!data.isLoggedIn) return <GuestLanding />;
+
+  if (data.isLoading) {
+    return (
+      <main className="page home-page">
+        <div className="home-header">
+          <span className="home-greeting-skeleton skeleton" style={{ width: '160px', height: '24px' }} />
+        </div>
+        <div className="today-card skeleton-card" style={{ height: '200px' }} />
+        <div className="today-card skeleton-card" style={{ height: '120px', marginTop: '12px' }} />
+      </main>
+    );
+  }
+
+  return (
+    <main className="page home-page">
+      <a href="#weather-hero" className="skip-link">본문으로 건너뛰기</a>
+
+      {data.loadError && (
+        <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
+          {data.loadError}
+        </div>
+      )}
+
+      <header className="home-header">
+        <div>
+          <h1 className="home-greeting">{getGreeting()}</h1>
+          {data.userName && <p className="home-user-name">{data.userName}님</p>}
+        </div>
+      </header>
+
+      {data.weather && (
+        <WeatherHeroSection
+          weather={data.weather}
+          airQuality={data.airQuality}
+          checklistItems={data.checklistItems}
+          checkedItems={data.checkedItems}
+          onChecklistToggle={data.handleChecklistToggle}
+        />
+      )}
+
+      {data.departurePrediction && (
+        <DeparturePrediction prediction={data.departurePrediction} />
+      )}
+
+      {data.routeRecommendation && data.routeRecommendation.recommendation && !data.routeRecDismissed && (
+        <RouteRecommendation
+          recommendation={data.routeRecommendation}
+          onDismiss={() => {
+            data.setRouteRecDismissed(true);
+            sessionStorage.setItem('routeRecDismissed', 'true');
+          }}
+        />
+      )}
+
+      <CommuteSection
+        routes={data.routes}
+        activeRoute={data.activeRoute}
+        forceRouteType={data.forceRouteType}
+        onForceRouteTypeChange={data.setForceRouteType}
+        transitInfos={data.transitInfos}
+        isCommuteStarting={data.isCommuteStarting}
+        onStartCommute={data.handleStartCommute}
+      />
+
+      <AlertSection nextAlert={data.nextAlert} />
+
+      <StatsSection
+        commuteStats={data.commuteStats}
+        routes={data.routes}
+        activeRouteId={data.activeRoute?.id}
+        onNavigateToRoutes={() => data.navigate('/routes')}
+      />
+    </main>
+  );
+}

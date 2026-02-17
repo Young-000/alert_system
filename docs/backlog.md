@@ -17,19 +17,11 @@
 
 | ID | 항목 | 노력 | RICE | 출처 |
 |----|------|------|------|------|
-| I-1 | HomePage.tsx God Component 분리 (날씨/교통/유틸 추출, 806줄) | L | 80 | PM |
 | I-2 | CSS 모듈화 1단계 (페이지별 파일 분리, 16,873줄 해체) | L | 53 | PM |
-| I-3 | 에러 피드백 사일런트 처리 수정 (**30+곳**, catch 블록 전수 조사) | M | 400 | PM+QA+PD |
-| I-4 | useAuth 훅 전면 적용 (localStorage 직접 호출 9곳 제거) | M | 100 | PM |
+| I-3 | 에러 피드백 사일런트 처리 수정 (**23곳 잔존**, catch 블록 전수 조사) | M | 400 | PM+QA+PD |
 | I-5 | 핵심 비즈니스 로직 테스트 추가 (날씨 체크리스트, AQI, 경로 추천) | M | 107 | PM+QA |
 | I-6 | 하드코딩 좌표 제거 (서울 고정 -> 사용자 위치/설정) | M | 128 | PM |
 | I-7 | SettingsPage.tsx 탭별 컴포넌트 분리 (652줄) | M | 100 | PM |
-| I-8 | better-sqlite3를 devDependencies로 이동 (로컬개발용, 프로덕션 무영향) | S | 200 | PM+Dev |
-| I-9 | **비로그인 처리 패턴 통일** (4페이지: 홈/경로/알림/설정, 공유 AuthRequired 컴포넌트) | M | 350 | PD |
-| I-10 | **페이지 헤더 스타일 통일** (3가지 패턴 → 공유 PageHeader) | S | 200 | PD |
-| I-11 | **--ink-muted 색상 대비 WCAG AA 미달** (#94a3b8 → #64748b) | S | 300 | PD |
-| I-12 | **탭 패널 ARIA 속성 추가** (role="tabpanel" + aria-labelledby) | S | 100 | PD |
-| I-13 | **ESLint --max-warnings=0 준수** (RouteSetupPage.tsx:99 useCallback 의존성) | S | 150 | QA |
 
 ## Nice-to-have (Cycle 5+)
 
@@ -76,6 +68,7 @@
 - [x] 품질 체크리스트 Round 5 - 20건 수정 (PR #25)
 - [x] **Cycle 1: 종합 프로젝트 감사** (2026-02-17)
 - [x] **Cycle 2: 품질 기반 구축** (2026-02-17) — CI/CD, Dead Config, 문서정리, P0, npm audit, 에러피드백 7건, WCAG, ESLint
+- [x] **Cycle 3: 코드 구조 & 인증 통일** (2026-02-17) — HomePage 분리, useAuth 통일, AuthRequired, PageHeader, ARIA 탭
 
 ---
-*마지막 업데이트: 2026-02-17 (Cycle 2 완료)*
+*마지막 업데이트: 2026-02-17 (Cycle 3 완료)*

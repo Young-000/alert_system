@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
 import {
   getCommuteApiClient,
   type RouteResponse,
@@ -11,7 +12,7 @@ export function CommuteTrackingPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // State from navigation (홈에서 전달)

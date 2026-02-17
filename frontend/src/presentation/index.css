@@ -12748,16 +12748,7 @@ section.page {
   gap: 20px;
 }
 
-.settings-page-v2-header {
-  padding: 20px 20px 0;
-}
-
-.settings-page-v2-header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin: 0;
-}
+/* settings-page-v2-header removed -- replaced by .page-header */
 
 .empty-icon-svg {
   display: flex;
@@ -14040,49 +14031,53 @@ section.page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 20px 0 16px;
+}
+
+.page-header-sticky {
+  position: sticky;
+  top: 0;
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  z-index: 10;
 }
 
-.page-header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.page-header-back {
-  font-size: 0.9rem;
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.page-header-back:hover {
-  text-decoration: underline;
-}
-
-.page-header-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.page-header-title {
-  font-size: 1.25rem;
+.page-header h1 {
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--ink);
   margin: 0;
 }
 
-.page-header-subtitle {
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-  margin: 0;
+.page-header-action {
+  display: flex;
+  align-items: center;
 }
 
-.page-header-actions {
+/* AuthRequired */
+.auth-required {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
   gap: 0.5rem;
+}
+
+.auth-required-icon svg {
+  color: var(--ink-muted);
+}
+
+.auth-required h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0.5rem 0 0;
+}
+
+.auth-required p {
+  color: var(--ink-secondary);
+  margin: 0 0 1rem;
+  line-height: 1.5;
 }
 
 /* LineChip 컴포넌트 */
@@ -16075,22 +16070,7 @@ button.nav-back-btn {
   padding: 0 20px 100px;
 }
 
-.route-page-v2-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 0 16px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 10;
-}
-
-.route-page-v2-header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ink);
-}
+/* route-page-v2-header removed -- replaced by .page-header */
 
 /* Empty */
 .route-empty-v2 {
@@ -16325,22 +16305,7 @@ button.nav-back-btn {
   padding-bottom: 100px;
 }
 
-.alert-page-v2-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 0 16px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 10;
-}
-
-.alert-page-v2-header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ink);
-}
+/* alert-page-v2-header removed -- replaced by .page-header */
 
 /* "Add new alert" button between sections */
 .add-alert-btn {

@@ -4,8 +4,10 @@ import { alertApiClient, userApiClient } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
 import type { Alert } from '@infrastructure/api';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { PageHeader } from '../components/PageHeader';
+import { AuthRequired } from '../components/AuthRequired';
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
-import { notifyAuthChange } from '@presentation/hooks/useAuth';
+import { useAuth, notifyAuthChange } from '@presentation/hooks/useAuth';
 
 type SettingsTab = 'profile' | 'routes' | 'alerts' | 'app';
 
@@ -13,8 +15,7 @@ const TOAST_DURATION_MS = 3000;
 
 export function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId') || '';
-  const phoneNumber = localStorage.getItem('phoneNumber') || '';
+  const { userId, phoneNumber } = useAuth();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -212,35 +213,27 @@ export function SettingsPage(): JSX.Element {
   // Not logged in
   if (!userId) {
     return (
-      <main className="page settings-page">
-        <header className="settings-page-v2-header">
-          <h1>설정</h1>
-        </header>
-        <div className="settings-empty">
-          <span className="empty-icon-svg" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </span>
-          <h2>로그인이 필요해요</h2>
-          <p>설정을 관리하려면 먼저 로그인하세요</p>
-          <Link to="/login" className="btn btn-primary">로그인</Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="설정"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+        description="설정을 관리하려면 먼저 로그인하세요"
+      />
     );
   }
 
   return (
     <main className="page settings-page">
       {/* Header */}
-      <header className="settings-page-v2-header">
-        <h1>내 설정</h1>
-      </header>
+      <PageHeader title="내 설정" />
 
       {/* Tabs */}
       <div className="settings-tabs" role="tablist" aria-label="설정 탭">
         <button
           type="button"
           role="tab"
+          id="tab-profile"
           aria-selected={activeTab === 'profile'}
+          aria-controls="tabpanel-profile"
           className={`settings-tab ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
@@ -250,7 +243,9 @@ export function SettingsPage(): JSX.Element {
         <button
           type="button"
           role="tab"
+          id="tab-routes"
           aria-selected={activeTab === 'routes'}
+          aria-controls="tabpanel-routes"
           className={`settings-tab ${activeTab === 'routes' ? 'active' : ''}`}
           onClick={() => setActiveTab('routes')}
         >
@@ -261,7 +256,9 @@ export function SettingsPage(): JSX.Element {
         <button
           type="button"
           role="tab"
+          id="tab-alerts"
           aria-selected={activeTab === 'alerts'}
+          aria-controls="tabpanel-alerts"
           className={`settings-tab ${activeTab === 'alerts' ? 'active' : ''}`}
           onClick={() => setActiveTab('alerts')}
         >
@@ -274,7 +271,9 @@ export function SettingsPage(): JSX.Element {
         <button
           type="button"
           role="tab"
+          id="tab-app"
           aria-selected={activeTab === 'app'}
+          aria-controls="tabpanel-app"
           className={`settings-tab ${activeTab === 'app' ? 'active' : ''}`}
           onClick={() => setActiveTab('app')}
         >
@@ -303,6 +302,7 @@ export function SettingsPage(): JSX.Element {
         <div className="settings-content">
           {/* Profile Tab */}
           {activeTab === 'profile' && (
+            <div role="tabpanel" id="tabpanel-profile" aria-labelledby="tab-profile">
             <section className="settings-section">
               <h2 className="section-title">내 정보</h2>
 
@@ -348,10 +348,12 @@ export function SettingsPage(): JSX.Element {
                 로그아웃
               </button>
             </section>
+            </div>
           )}
 
           {/* Routes Tab */}
           {activeTab === 'routes' && (
+            <div role="tabpanel" id="tabpanel-routes" aria-labelledby="tab-routes">
             <section className="settings-section">
               <div className="section-header">
                 <h2 className="section-title">내 경로</h2>
@@ -404,10 +406,12 @@ export function SettingsPage(): JSX.Element {
                 </div>
               )}
             </section>
+            </div>
           )}
 
           {/* Alerts Tab */}
           {activeTab === 'alerts' && (
+            <div role="tabpanel" id="tabpanel-alerts" aria-labelledby="tab-alerts">
             <section className="settings-section">
               <div className="section-header">
                 <h2 className="section-title">내 알림</h2>
@@ -470,10 +474,12 @@ export function SettingsPage(): JSX.Element {
                 </div>
               )}
             </section>
+            </div>
           )}
 
           {/* App Settings Tab */}
           {activeTab === 'app' && (
+            <div role="tabpanel" id="tabpanel-app" aria-labelledby="tab-app">
             <section className="settings-section">
               <h2 className="section-title">앱 설정</h2>
 
@@ -605,6 +611,7 @@ export function SettingsPage(): JSX.Element {
                 <p className="muted">© 2026 All rights reserved</p>
               </div>
             </section>
+            </div>
           )}
         </div>
       )}

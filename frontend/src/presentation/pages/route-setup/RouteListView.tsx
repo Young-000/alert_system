@@ -4,6 +4,7 @@ import type { SharedRouteData } from './types';
 import { RouteCard } from './RouteCard';
 import { SharedRouteBanner } from './SharedRouteBanner';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { PageHeader } from '../../components/PageHeader';
 
 interface RouteListViewProps {
   sortedRoutes: RouteResponse[];
@@ -49,12 +50,7 @@ export function RouteListView({
 
   return (
     <main className="page route-page-v2">
-      <header className="route-page-v2-header">
-        <h1>경로</h1>
-        <button type="button" className="btn btn-primary btn-sm" onClick={onStartCreating}>
-          + 새 경로
-        </button>
-      </header>
+      <PageHeader title="경로" action={<button type="button" className="btn btn-primary btn-sm" onClick={onStartCreating}>+ 새 경로</button>} />
 
       {/* Shared route banner */}
       {sharedRoute && userId && (
@@ -86,7 +82,9 @@ export function RouteListView({
             <button
               type="button"
               role="tab"
+              id="tab-route-all"
               aria-selected={routeTab === 'all'}
+              aria-controls="tabpanel-route-list"
               className={`route-filter-tab ${routeTab === 'all' ? 'active' : ''}`}
               onClick={() => onTabChange('all')}
             >
@@ -95,7 +93,9 @@ export function RouteListView({
             <button
               type="button"
               role="tab"
+              id="tab-route-morning"
               aria-selected={routeTab === 'morning'}
+              aria-controls="tabpanel-route-list"
               className={`route-filter-tab ${routeTab === 'morning' ? 'active' : ''}`}
               onClick={() => onTabChange('morning')}
             >
@@ -104,7 +104,9 @@ export function RouteListView({
             <button
               type="button"
               role="tab"
+              id="tab-route-evening"
               aria-selected={routeTab === 'evening'}
+              aria-controls="tabpanel-route-list"
               className={`route-filter-tab ${routeTab === 'evening' ? 'active' : ''}`}
               onClick={() => onTabChange('evening')}
             >
@@ -112,6 +114,7 @@ export function RouteListView({
             </button>
           </div>
 
+          <div role="tabpanel" id="tabpanel-route-list" aria-labelledby={`tab-route-${routeTab}`}>
           {filteredRoutes.length === 0 ? (
             <div className="route-filter-empty">
               <p>{routeTab === 'morning' ? '출근' : '퇴근'} 경로가 없어요</p>
@@ -127,6 +130,7 @@ export function RouteListView({
               />
             ))
           )}
+          </div>
         </div>
       )}
 

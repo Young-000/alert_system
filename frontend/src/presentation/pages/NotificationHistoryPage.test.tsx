@@ -31,7 +31,7 @@ describe('NotificationHistoryPage', () => {
 
     expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
     expect(screen.getByText('알림 기록을 보려면 로그인하세요')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '로그인 페이지로 이동' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login');
   });
 
   it('should show loading state initially', () => {

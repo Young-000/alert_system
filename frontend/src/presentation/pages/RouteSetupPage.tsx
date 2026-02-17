@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
+import { AuthRequired } from '../components/AuthRequired';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
@@ -26,7 +28,7 @@ import { RouteListView } from './route-setup/RouteListView';
 export function RouteSetupPage(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // Shared route banner
@@ -446,19 +448,11 @@ export function RouteSetupPage(): JSX.Element {
   // 로그인 필요
   if (!userId) {
     return (
-      <main className="page apple-route-page">
-        <nav className="apple-nav">
-          <button type="button" className="apple-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
-          <span className="apple-title">경로</span>
-          <span />
-        </nav>
-        <div className="apple-empty">
-          <div className="apple-empty-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></div>
-          <h2>로그인이 필요해요</h2>
-          <p>출퇴근 경로를 저장하려면<br />먼저 로그인해주세요</p>
-          <Link to="/login" className="apple-btn-primary">로그인</Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="경로"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>}
+        description="출퇴근 경로를 저장하려면 먼저 로그인하세요"
+      />
     );
   }
 

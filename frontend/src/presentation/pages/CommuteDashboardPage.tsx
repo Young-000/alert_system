@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/EmptyState';
+import { AuthRequired } from '../components/AuthRequired';
 import {
   useCommuteDashboard,
   DashboardTabs,
@@ -35,12 +36,11 @@ export function CommuteDashboardPage(): JSX.Element {
 
   if (!userId) {
     return (
-      <main className="page">
-        <nav className="nav">
-          <button type="button" className="brand nav-back-btn" onClick={() => navigate(-1)} aria-label="뒤로 가기">← 홈</button>
-        </nav>
-        <div className="notice warning">먼저 로그인해주세요.</div>
-      </main>
+      <AuthRequired
+        pageTitle="통근 통계"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>}
+        description="통근 통계를 보려면 먼저 로그인하세요"
+      />
     );
   }
 

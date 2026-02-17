@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { BottomNavigation } from './components/BottomNavigation';
-import { HomePage } from './pages/HomePage';
+import { HomePage } from './pages/home';
 
 // Lazy-loaded pages for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));

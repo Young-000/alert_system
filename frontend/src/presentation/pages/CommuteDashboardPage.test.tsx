@@ -33,6 +33,8 @@ describe('CommuteDashboardPage', () => {
         <CommuteDashboardPage />
       </MemoryRouter>
     );
-    expect(screen.getByText('먼저 로그인해주세요.')).toBeInTheDocument();
+    expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
+    expect(screen.getByText('통근 통계를 보려면 먼저 로그인하세요')).toBeInTheDocument();
+    expect(screen.getByText('로그인')).toBeInTheDocument();
   });
 });

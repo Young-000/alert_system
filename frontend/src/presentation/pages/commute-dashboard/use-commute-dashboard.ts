@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
 import {
   getCommuteApiClient,
   type CommuteStatsResponse,
@@ -38,7 +39,7 @@ interface UseCommuteDashboardReturn {
 }
 
 export function useCommuteDashboard(): UseCommuteDashboardReturn {
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
   const commuteApi = useMemo(() => getCommuteApiClient(), []);
   const [searchParams, setSearchParams] = useSearchParams();
 

@@ -14,6 +14,13 @@ jest.mock('@infrastructure/push/push-manager', () => ({
 }));
 
 jest.mock('@presentation/hooks/useAuth', () => ({
+  useAuth: () => {
+    const userId = localStorage.getItem('userId') || '';
+    const phoneNumber = localStorage.getItem('phoneNumber') || '';
+    const userName = localStorage.getItem('userName') || '회원';
+    const userEmail = localStorage.getItem('userEmail') || '';
+    return { userId, phoneNumber, userName, userEmail, isLoggedIn: !!userId };
+  },
   notifyAuthChange: jest.fn(),
 }));
 

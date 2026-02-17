@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useAuth } from '@presentation/hooks/useAuth';
+import { PageHeader } from '../components/PageHeader';
+import { AuthRequired } from '../components/AuthRequired';
 import {
   alertApiClient,
 } from '@infrastructure/api';
@@ -40,7 +42,7 @@ export function AlertSettingsPage(): JSX.Element {
   const [showRouteImport, setShowRouteImport] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
-  const userId = localStorage.getItem('userId') || '';
+  const { userId } = useAuth();
 
   // Alert CRUD operations
   const alertCrud = useAlertCrud(userId);
@@ -232,27 +234,17 @@ export function AlertSettingsPage(): JSX.Element {
   // 비로그인 시 빈 상태 UI
   if (!userId) {
     return (
-      <main className="page alert-page-v2">
-        <header className="alert-page-v2-header">
-          <h1>알림</h1>
-        </header>
-        <div className="settings-empty">
-          <span className="empty-icon-svg" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </span>
-          <h2>로그인이 필요해요</h2>
-          <p>알림을 설정하려면 먼저 로그인하세요</p>
-          <Link to="/login" className="btn btn-primary">로그인</Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="알림"
+        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+        description="알림을 설정하려면 먼저 로그인하세요"
+      />
     );
   }
 
   return (
     <main className="page alert-page-v2">
-      <header className="alert-page-v2-header">
-        <h1>알림</h1>
-      </header>
+      <PageHeader title="알림" />
 
       {/* 초기 로딩 상태 표시 */}
       {alertCrud.isLoadingAlerts && (
