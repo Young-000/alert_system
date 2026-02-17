@@ -1,9 +1,13 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   alertApiClient,
 } from '@infrastructure/api';
 import type { Alert, AlertType, CreateAlertDto } from '@infrastructure/api';
-import { getCommuteApiClient, type RouteResponse } from '@infrastructure/api/commute-api.client';
+import type { RouteResponse } from '@infrastructure/api/commute-api.client';
+import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
+import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
+import { queryKeys } from '@infrastructure/query/query-keys';
 import { TOAST_DURATION_MS } from './types';
 
 interface AlertCrudState {
@@ -41,8 +45,24 @@ interface AlertCrudActions {
 }
 
 export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions {
+  const queryClient = useQueryClient();
+
+  // Server state via react-query
+  const alertsQuery = useAlertsQuery(userId);
+  const routesQuery = useRoutesQuery(userId);
+
+  // Local alerts state for optimistic mutations (synced from query)
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
+  const isLoadingAlerts = alertsQuery.isLoading;
+  const savedRoutes = routesQuery.data ?? [];
+
+  // Sync query data to local state when query data changes
+  useEffect(() => {
+    if (alertsQuery.data) {
+      setAlerts(alertsQuery.data);
+    }
+  }, [alertsQuery.data]);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -51,67 +71,12 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const [editTarget, setEditTarget] = useState<Alert | null>(null);
   const [editForm, setEditForm] = useState({ name: '', schedule: '' });
   const [isEditing, setIsEditing] = useState(false);
-  const [savedRoutes, setSavedRoutes] = useState<RouteResponse[]>([]);
   const [duplicateAlert, setDuplicateAlert] = useState<Alert | null>(null);
-
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
-
-  // Load existing alerts
-  useEffect(() => {
-    if (!userId) {
-      setIsLoadingAlerts(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingAlerts(true);
-
-    const fetchAlerts = async (): Promise<void> => {
-      try {
-        const userAlerts = await alertApiClient.getAlertsByUser(userId);
-        if (!isMounted) return;
-        setAlerts(userAlerts);
-      } catch {
-        if (!isMounted) return;
-        setError('알림 목록을 불러오는데 실패했습니다.');
-      } finally {
-        if (isMounted) {
-          setIsLoadingAlerts(false);
-        }
-      }
-    };
-
-    fetchAlerts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [userId]);
-
-  // Load saved routes
-  useEffect(() => {
-    if (!userId) return;
-
-    let isMounted = true;
-    commuteApi.getUserRoutes(userId).then((routes) => {
-      if (isMounted) setSavedRoutes(routes);
-    }).catch(() => {
-      if (isMounted) setError('저장된 경로를 불러올 수 없습니다');
-    });
-
-    return () => { isMounted = false; };
-  }, [userId, commuteApi]);
 
   const reloadAlerts = useCallback(async (): Promise<void> => {
     if (!userId) return;
-    try {
-      const userAlerts = await alertApiClient.getAlertsByUser(userId);
-      setAlerts(userAlerts);
-    } catch {
-      // Reload failure is non-critical; log for observability
-      console.warn('Failed to reload alerts after operation');
-    }
-  }, [userId]);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.alerts.byUser(userId) });
+  }, [userId, queryClient]);
 
   const normalizeSchedule = useCallback((schedule: string): string => {
     const parts = schedule.split(' ');

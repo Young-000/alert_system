@@ -36,13 +36,45 @@ export const userApiClient = {
   deleteAllData: vi.fn().mockResolvedValue({ success: true }),
 };
 
+export const weatherApiClient = {
+  getCurrentWeather: vi.fn().mockResolvedValue({
+    location: 'Seoul',
+    temperature: 20,
+    condition: 'Clear',
+    humidity: 50,
+    windSpeed: 3,
+    conditionKr: '맑음',
+    conditionEmoji: '',
+  }),
+};
+
+export const airQualityApiClient = {
+  getByLocation: vi.fn().mockResolvedValue({
+    location: 'Seoul',
+    pm10: 30,
+    pm25: 15,
+    aqi: 50,
+    status: 'good',
+  }),
+};
+
 export const subwayApiClient = {
   searchStations: vi.fn(),
+  getArrival: vi.fn().mockResolvedValue([]),
 };
 
 export const busApiClient = {
   searchStops: vi.fn(),
+  getArrival: vi.fn().mockResolvedValue([]),
 };
+
+export const behaviorApiClient = {
+  getOptimalDeparture: vi.fn().mockResolvedValue(null),
+  getPatterns: vi.fn().mockResolvedValue([]),
+  recordEvent: vi.fn().mockResolvedValue(undefined),
+};
+
+export const getBehaviorApiClient = vi.fn(() => behaviorApiClient);
 
 export interface SubwayStation {
   id: string;
@@ -81,6 +113,7 @@ export const commuteApiClient = {
   }),
   getHistory: vi.fn().mockResolvedValue([]),
   getUserAnalytics: vi.fn().mockResolvedValue([]),
+  getWeatherRouteRecommendation: vi.fn().mockResolvedValue({ confidence: 0, recommendation: null }),
 };
 
 // Factory function for CommuteApiClient
@@ -181,4 +214,29 @@ export interface CreateAlertDto {
   alertTypes: AlertType[];
   busStopId?: string;
   subwayStationId?: string;
+}
+
+export interface WeatherData {
+  location: string;
+  temperature: number;
+  condition: string;
+  humidity: number;
+  windSpeed: number;
+  feelsLike?: number;
+  conditionKr: string;
+  conditionEmoji: string;
+}
+
+export interface AirQualityData {
+  location: string;
+  pm10: number;
+  pm25: number;
+  aqi: number;
+  status: string;
+}
+
+export interface DeparturePrediction {
+  suggestedDepartureTime: string;
+  confidence: number;
+  reason: string;
 }
