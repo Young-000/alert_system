@@ -42,15 +42,20 @@ export function HomePage(): JSX.Element {
         </div>
       </header>
 
-      {data.weather && (
+      {data.weather ? (
         <WeatherHeroSection
           weather={data.weather}
           airQuality={data.airQuality}
+          airQualityError={data.airQualityError}
           checklistItems={data.checklistItems}
           checkedItems={data.checkedItems}
           onChecklistToggle={data.handleChecklistToggle}
         />
-      )}
+      ) : data.weatherError ? (
+        <section className="weather-hero" aria-label="날씨 오류">
+          <p className="muted" role="alert">{data.weatherError}</p>
+        </section>
+      ) : null}
 
       {data.departurePrediction && (
         <DeparturePrediction prediction={data.departurePrediction} />

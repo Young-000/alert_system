@@ -112,7 +112,10 @@ export function RouteSetupPage(): JSX.Element {
     let isMounted = true;
     Promise.all([
       commuteApi.getUserRoutes(userId),
-      alertApiClient.getAlertsByUser(userId).catch(() => [] as Alert[]),
+      alertApiClient.getAlertsByUser(userId).catch(() => {
+        console.warn('Failed to load alerts for route setup');
+        return [] as Alert[];
+      }),
     ]).then(([routes, alerts]) => {
       if (isMounted) {
         setExistingRoutes(routes);
@@ -120,7 +123,10 @@ export function RouteSetupPage(): JSX.Element {
         setIsLoading(false);
       }
     }).catch(() => {
-      if (isMounted) setIsLoading(false);
+      if (isMounted) {
+        setError('경로 목록을 불러올 수 없습니다');
+        setIsLoading(false);
+      }
     });
 
     return () => { isMounted = false; };
@@ -299,6 +305,7 @@ export function RouteSetupPage(): JSX.Element {
       await alertApiClient.createAlert(alertDto);
     } catch {
       // 알림 생성 실패해도 경로 저장은 성공으로 처리
+      setWarning('경로는 저장되었지만 알림 생성에 실패했습니다');
     }
   };
 
@@ -514,7 +521,7 @@ export function RouteSetupPage(): JSX.Element {
             routeType={routeType}
             searchQuery={search.searchQuery}
             isSearching={search.isSearching}
-            error={error}
+            error={search.searchError || error}
             groupedSubwayResults={search.groupedSubwayResults}
             busResults={search.busResults}
             onSearchChange={search.handleSearchChange}

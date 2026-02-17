@@ -70,6 +70,8 @@ export function CommuteSection({
                   <span className="today-transit-name">{info.name}</span>
                   {info.isLoading ? (
                     <span className="spinner spinner-sm" aria-hidden="true" />
+                  ) : info.error ? (
+                    <span className="today-transit-time muted" role="alert">{info.error}</span>
                   ) : info.arrivals.length > 0 ? (
                     <span className="today-transit-time">
                       {(() => {

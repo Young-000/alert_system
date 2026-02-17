@@ -17,6 +17,7 @@ import {
 import type { ChecklistItem } from './weather-utils';
 import { getActiveRoute } from './route-utils';
 import type { TransitArrivalInfo } from './route-utils';
+import { computeNextAlert } from './alert-schedule-utils';
 
 export interface UseHomeDataReturn {
   isLoggedIn: boolean;
@@ -25,6 +26,8 @@ export interface UseHomeDataReturn {
   isLoading: boolean;
   loadError: string;
   weather: WeatherData | null;
+  weatherError: string;
+  airQualityError: string;
   airQuality: { label: string; className: string };
   checklistItems: ChecklistItem[];
   checkedItems: Set<string>;
@@ -63,6 +66,8 @@ export function useHomeData(): UseHomeDataReturn {
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
   const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
   const [routeRecDismissed, setRouteRecDismissed] = useState(() => sessionStorage.getItem('routeRecDismissed') === 'true');
+  const [weatherError, setWeatherError] = useState('');
+  const [airQualityError, setAirQualityError] = useState('');
   const [checkedItems, setCheckedItems] = useState<Set<string>>(getCheckedItems);
 
   // Initialize behavior collector
@@ -83,9 +88,9 @@ export function useHomeData(): UseHomeDataReturn {
       try {
         const commuteApi = getCommuteApiClient();
         const [alertsData, routesData, statsData] = await Promise.all([
-          alertApiClient.getAlertsByUser(userId).catch(() => []),
-          commuteApi.getUserRoutes(userId).catch(() => []),
-          commuteApi.getStats(userId, 7).catch(() => null),
+          alertApiClient.getAlertsByUser(userId).catch((err) => { console.warn('Failed to load alerts:', err); return []; }),
+          commuteApi.getUserRoutes(userId).catch((err) => { console.warn('Failed to load routes:', err); return []; }),
+          commuteApi.getStats(userId, 7).catch((err) => { console.warn('Failed to load stats:', err); return null; }),
         ]);
         if (!isMounted) return;
         setAlerts(alertsData);
@@ -112,11 +117,11 @@ export function useHomeData(): UseHomeDataReturn {
 
     weatherApiClient.getCurrentWeather(lat, lng)
       .then(data => { if (isMounted) setWeather(data); })
-      .catch(() => {});
+      .catch(() => { if (isMounted) setWeatherError('날씨 정보를 불러올 수 없습니다'); });
 
     airQualityApiClient.getByLocation(lat, lng)
       .then(data => { if (isMounted) setAirQualityData(data); })
-      .catch(() => {});
+      .catch(() => { if (isMounted) setAirQualityError('미세먼지 정보 없음'); });
 
     return () => { isMounted = false; };
   }, [userId]);
@@ -202,7 +207,7 @@ export function useHomeData(): UseHomeDataReturn {
           })
           .catch(() => {
             setTransitInfos(prev => prev.map((info, i) =>
-              i === idx ? { ...info, isLoading: false } : info
+              i === idx ? { ...info, isLoading: false, error: '조회 실패' } : info
             ));
           })
       );
@@ -221,7 +226,7 @@ export function useHomeData(): UseHomeDataReturn {
           })
           .catch(() => {
             setTransitInfos(prev => prev.map((info, i) =>
-              i === subwayCount + idx ? { ...info, isLoading: false } : info
+              i === subwayCount + idx ? { ...info, isLoading: false, error: '조회 실패' } : info
             ));
           })
       );
@@ -236,43 +241,8 @@ export function useHomeData(): UseHomeDataReturn {
     }
   }, [activeRoute, loadTransitArrivals]);
 
-  // Next alert time
-  const nextAlert = useMemo((): { time: string; label: string } | null => {
-    const enabled = alerts.filter(a => a.enabled);
-    if (enabled.length === 0) return null;
-
-    const now = new Date();
-    const curH = now.getHours();
-    const curM = now.getMinutes();
-
-    let best: { h: number; m: number; label: string; isToday: boolean } | null = null;
-
-    for (const alert of enabled) {
-      const parts = alert.schedule.split(' ');
-      if (parts.length < 2) continue;
-      const cronMin = isNaN(Number(parts[0])) ? 0 : Number(parts[0]);
-      const hours = parts[1].includes(',')
-        ? parts[1].split(',').map(Number).filter(h => !isNaN(h))
-        : [Number(parts[1])].filter(h => !isNaN(h));
-
-      const label = alert.alertTypes.includes('weather') ? '날씨' : '교통';
-
-      for (const h of hours) {
-        const isToday = h > curH || (h === curH && cronMin > curM);
-        if (!best || (isToday && !best.isToday) ||
-            (isToday === best.isToday && (h < best.h || (h === best.h && cronMin < best.m)))) {
-          best = { h, m: cronMin, label, isToday };
-        }
-      }
-    }
-
-    if (!best) return null;
-    const timeStr = `${String(best.h).padStart(2, '0')}:${String(best.m).padStart(2, '0')}`;
-    return {
-      time: best.isToday ? timeStr : `내일 ${timeStr}`,
-      label: best.label,
-    };
-  }, [alerts]);
+  // Next alert time (delegated to pure function for testability)
+  const nextAlert = useMemo(() => computeNextAlert(alerts), [alerts]);
 
   const airQuality = useMemo(() => getAqiStatus(airQualityData?.pm10), [airQualityData]);
 
@@ -316,6 +286,8 @@ export function useHomeData(): UseHomeDataReturn {
     isLoading,
     loadError,
     weather,
+    weatherError,
+    airQualityError,
     airQuality,
     checklistItems,
     checkedItems,

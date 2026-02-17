@@ -27,6 +27,9 @@ export function CommuteDashboardPage(): JSX.Element {
     activeTab,
     setActiveTab,
     routeAnalytics,
+    analyticsError,
+    comparisonError,
+    behaviorError,
     behaviorAnalytics,
     behaviorPatterns,
     routeComparison,
@@ -113,6 +116,7 @@ export function CommuteDashboardPage(): JSX.Element {
               selectedRouteId={selectedRouteId}
               onSelectRoute={setSelectedRouteId}
               routeComparison={routeComparison}
+              comparisonError={comparisonError}
             />
           )}
 
@@ -138,13 +142,14 @@ export function CommuteDashboardPage(): JSX.Element {
           )}
 
           {activeTab === 'analytics' && routeAnalytics.length > 0 && (
-            <AnalyticsTab routeAnalytics={routeAnalytics} />
+            <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} />
           )}
 
           {activeTab === 'behavior' && (
             <BehaviorTab
               behaviorAnalytics={behaviorAnalytics}
               behaviorPatterns={behaviorPatterns}
+              behaviorError={behaviorError}
             />
           )}
         </div>

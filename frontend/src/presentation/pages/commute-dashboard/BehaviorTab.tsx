@@ -6,14 +6,19 @@ import { MIN_DATA_FOR_BEHAVIOR } from './types';
 interface BehaviorTabProps {
   behaviorAnalytics: BehaviorAnalytics | null;
   behaviorPatterns: UserPattern[];
+  behaviorError?: string;
 }
 
 export function BehaviorTab({
   behaviorAnalytics,
   behaviorPatterns,
+  behaviorError,
 }: BehaviorTabProps): JSX.Element {
   return (
     <div className="tab-content" role="tabpanel" id="tabpanel-behavior" aria-labelledby="tab-behavior">
+      {behaviorError && (
+        <p className="muted" role="alert" style={{ margin: '0 0 0.75rem' }}>{behaviorError}</p>
+      )}
       {behaviorAnalytics?.hasEnoughData ? (
         <>
           <section className="stats-section stats-compact">

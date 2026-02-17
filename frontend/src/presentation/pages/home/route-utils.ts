@@ -6,6 +6,7 @@ export interface TransitArrivalInfo {
   name: string;
   arrivals: (BusArrival | SubwayArrival)[];
   isLoading: boolean;
+  error?: string;
 }
 
 export function getActiveRoute(

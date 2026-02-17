@@ -5,6 +5,7 @@ import type { ChecklistItem } from './weather-utils';
 interface WeatherHeroSectionProps {
   weather: WeatherData;
   airQuality: { label: string; className: string };
+  airQualityError?: string;
   checklistItems: ChecklistItem[];
   checkedItems: Set<string>;
   onChecklistToggle: (id: string) => void;
@@ -13,6 +14,7 @@ interface WeatherHeroSectionProps {
 export function WeatherHeroSection({
   weather,
   airQuality,
+  airQualityError,
   checklistItems,
   checkedItems,
   onChecklistToggle,
@@ -29,9 +31,11 @@ export function WeatherHeroSection({
         </div>
         <div className="weather-hero-details">
           <span>습도 {weather.humidity}%</span>
-          {airQuality.label !== '-' && (
+          {airQuality.label !== '-' ? (
             <span className={`aqi-badge ${airQuality.className}`}>미세먼지 {airQuality.label}</span>
-          )}
+          ) : airQualityError ? (
+            <span className="muted" role="alert">{airQualityError}</span>
+          ) : null}
         </div>
         <p className="weather-advice">{getWeatherAdvice(weather, airQuality)}</p>
       </section>

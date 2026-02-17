@@ -95,7 +95,9 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     let isMounted = true;
     commuteApi.getUserRoutes(userId).then((routes) => {
       if (isMounted) setSavedRoutes(routes);
-    }).catch(() => {});
+    }).catch(() => {
+      if (isMounted) setError('저장된 경로를 불러올 수 없습니다');
+    });
 
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
@@ -106,7 +108,8 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       const userAlerts = await alertApiClient.getAlertsByUser(userId);
       setAlerts(userAlerts);
     } catch {
-      // Silent: reload failure is non-critical
+      // Reload failure is non-critical; log for observability
+      console.warn('Failed to reload alerts after operation');
     }
   }, [userId]);
 

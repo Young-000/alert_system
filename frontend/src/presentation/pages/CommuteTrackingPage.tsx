@@ -49,7 +49,7 @@ export function CommuteTrackingPage(): JSX.Element {
       setIsLoading(true);
       try {
         // Check for in-progress session first
-        const inProgress = await commuteApi.getInProgressSession(userId).catch(() => null);
+        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; });
 
         if (inProgress && isMounted) {
           setSession(inProgress);
