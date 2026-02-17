@@ -3,6 +3,8 @@ import { ForbiddenException } from '@nestjs/common';
 import { CommuteController } from './commute.controller';
 import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commute-session.use-case';
 import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats.use-case';
+import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
+import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
 
 describe('CommuteController', () => {
   let controller: CommuteController;
@@ -54,6 +56,8 @@ describe('CommuteController', () => {
       providers: [
         { provide: ManageCommuteSessionUseCase, useValue: manageSessionUseCase },
         { provide: GetCommuteStatsUseCase, useValue: getStatsUseCase },
+        { provide: GetStreakUseCase, useValue: { execute: jest.fn(), getMilestones: jest.fn() } },
+        { provide: UpdateStreakUseCase, useValue: { recordCompletion: jest.fn().mockResolvedValue(null), updateSettings: jest.fn() } },
       ],
     }).compile();
 

@@ -290,6 +290,59 @@ export interface RouteRecommendationResponse {
   weatherCondition?: string;
 }
 
+// ========== Streak Types ==========
+
+export type StreakStatus = 'active' | 'at_risk' | 'broken' | 'new';
+export type MilestoneType = '7d' | '30d' | '100d';
+
+export interface NextMilestone {
+  type: MilestoneType;
+  label: string;
+  daysRemaining: number;
+  progress: number;
+}
+
+export interface StreakResponse {
+  userId: string;
+  currentStreak: number;
+  bestStreak: number;
+  lastRecordDate: string | null;
+  streakStartDate: string | null;
+  weeklyGoal: number;
+  weeklyCount: number;
+  weekStartDate: string;
+  milestonesAchieved: MilestoneType[];
+  latestMilestone: MilestoneType | null;
+  nextMilestone: NextMilestone | null;
+  streakStatus: StreakStatus;
+  excludeWeekends: boolean;
+  reminderEnabled: boolean;
+  todayRecorded: boolean;
+}
+
+export interface StreakUpdateResult {
+  currentStreak: number;
+  isNewRecord: boolean;
+  milestoneAchieved: MilestoneType | null;
+  todayFirstCompletion: boolean;
+  weeklyCount: number;
+  weeklyGoal: number;
+}
+
+export interface MilestoneInfo {
+  type: MilestoneType;
+  label: string;
+  achieved: boolean;
+  achievedAt?: string;
+  progress?: number;
+  daysRemaining?: number;
+}
+
+export interface MilestonesResponse {
+  milestones: MilestoneInfo[];
+  currentStreak: number;
+}
+
 // ========== API Client ==========
 
 export class CommuteApiClient {
@@ -403,6 +456,28 @@ export class CommuteApiClient {
     const query = weather ? `?weather=${encodeURIComponent(weather)}` : '';
     return this.apiClient.get<RouteRecommendationResponse>(
       `/routes/user/${userId}/recommend${query}`,
+    );
+  }
+
+  // ========== Streak APIs ==========
+
+  async getStreak(userId: string): Promise<StreakResponse> {
+    return this.apiClient.get<StreakResponse>(`/commute/streak/${userId}`);
+  }
+
+  async updateStreakSettings(
+    userId: string,
+    dto: { weeklyGoal?: number; excludeWeekends?: boolean; reminderEnabled?: boolean },
+  ): Promise<{ success: boolean }> {
+    return this.apiClient.patch<{ success: boolean }>(
+      `/commute/streak/${userId}/settings`,
+      dto,
+    );
+  }
+
+  async getMilestones(userId: string): Promise<MilestonesResponse> {
+    return this.apiClient.get<MilestonesResponse>(
+      `/commute/streak/${userId}/milestones`,
     );
   }
 }
