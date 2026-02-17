@@ -1,21 +1,20 @@
-# Backlog
+# Backlog — Phase 4: 품질/테스트 강화
 
-> RICE 기반 우선순위. 감사 결과: `docs/specs/cycle-1-project-audit.md`
-> QA 검증: `docs/qa/cycle-1-qa-validation.md` | UX 리뷰: `docs/design/cycle-1-ux-review.md`
+> 목표: E2E 테스트, 프론트엔드 테스트 커버리지, 성능 최적화, 번들 사이즈 감소, 보안 강화
+> 현재 테스트: Frontend 283, Backend 539 (총 822)
 
-## Critical (Cycle 2 대상)
+## Next (품질/테스트 강화)
 
-| ID | 항목 | 노력 | RICE | 출처 |
-|----|------|------|------|------|
-| C-1 | CI/CD 파이프라인 구축 (GitHub Actions: lint + typecheck + test + build) | M | 300 | PM |
-| C-2 | Dead Config 정리 (Render URL, .aws-ready, InMemory Scheduler, Cold Start 코드) — 12개 파일 | M | 400 | PM+Dev |
-| C-3 | 프로젝트 루트 레거시 문서 정리 (17개 MD 파일 아카이브/삭제) | S | 200 | PM |
-| C-4 | **알림 페이지 비로그인 시 깨진 위저드 UI 수정** (P0) | S | 500 | PD |
-| C-5 | **Backend npm audit fix (12취약점, 6 high)** | S | 450 | QA |
-
-## Important — 전체 완료 ✅
-
-모든 Important 항목이 Cycle 3~5에서 완료됨.
+| ID | 항목 | 노력 | 우선순위 | 설명 |
+|----|------|------|----------|------|
+| Q-1 | **E2E 테스트 기반 구축 (Playwright)** | L | P0 | 핵심 사용자 플로우 E2E 테스트: 로그인→홈→경로설정→출퇴근트래킹→알림설정. CI 연동 |
+| Q-2 | **프론트엔드 컴포넌트 테스트 확대** | L | P0 | 커버리지 목표 80%+. 미테스트 페이지: RouteSetupPage, CommuteTrackingPage, AlertSettingsPage, WeeklyReportCard, MorningBriefing |
+| Q-3 | **번들 사이즈 최적화** | M | P1 | 코드 스플리팅 (lazy routes), tree-shaking 검증, 미사용 코드 제거. 목표: gzip < 200KB |
+| Q-4 | **성능 프로파일링 + 최적화** | M | P1 | Lighthouse CI 연동, LCP/CLS/INP 측정, 병목 해소. 목표: Lighthouse 90+ |
+| Q-5 | **백엔드 통합 테스트** | M | P1 | 서비스 레이어 통합 테스트 확대. 실제 DB 연동 테스트 (test container 또는 sqlite) |
+| Q-6 | **보안 감사 + 취약점 수정** | M | P1 | npm audit fix, 의존성 업데이트, OWASP 점검, CSP 헤더 |
+| Q-7 | **에러 모니터링 체계** | S | P2 | 프론트엔드 에러 바운더리 고도화, 글로벌 에러 핸들링, 에러 로깅 표준화 |
+| Q-8 | **접근성(a11y) 자동 테스트** | S | P2 | axe-core 연동, CI에서 접근성 위반 자동 검출, WCAG AA 100% 준수 |
 
 ## Nice-to-have (잔여 — 인프라/외부 의존성)
 
@@ -48,20 +47,9 @@
 - [x] 코드 리뷰 - 보안/품질/아키텍처 (PR #28)
 - [x] 접근성 ScrollToTop 컴포넌트 (PR #26)
 - [x] 품질 체크리스트 Round 5 - 20건 수정 (PR #25)
-- [x] **Cycle 1: 종합 프로젝트 감사** (2026-02-17)
-- [x] **Cycle 2: 품질 기반 구축** (2026-02-17) — CI/CD, Dead Config, 문서정리, P0, npm audit, 에러피드백 7건, WCAG, ESLint
-- [x] **Cycle 3: 코드 구조 & 인증 통일** (2026-02-17) — HomePage 분리, useAuth 통일, AuthRequired, PageHeader, ARIA 탭
-- [x] **Cycle 4: 품질 심화** (2026-02-17) — Silent failure 15곳 수정, SettingsPage 분리, 비즈니스 로직 테스트 135개 추가 (총 400개)
-- [x] **Cycle 5: Important 완료 + UX 개선** (2026-02-17) — CSS 모듈화, useUserLocation 훅, eslint-disable 제거, 경로 저장 토스트, 설정 중복 해소
-- [x] **Cycle 6: UX Polish** (2026-02-17) — 포커스 트랩 통일, Cron 한국어 표현, 알림 기록 접근성, QuickPresets 중복 제거, PD P1 해결 2건
-- [x] **Cycle 7: 홈 인지 부하 감소** (2026-02-17) — 날씨/통계 접기 모드, useCollapsible 훅, CTA 뷰포트 내 표시
-- [x] **Cycle 8: DX 개선** (2026-02-17) — Jest→Vitest 마이그레이션, SVG 아이콘 시스템 7개, 테스트 488개
-- [x] **Cycle 9: Backend Controller 테스트** (2026-02-17) — 16개 컨트롤러 테스트 파일, 160개 신규 테스트, 총 648개
-- [x] **Cycle 10: 알림 모니터링 대시보드** (2026-02-17) — 통계 API + 프론트엔드 컴포넌트, WCAG 접근성, 총 668개 테스트
-- [x] **Cycle 11: 종합 프로젝트 리뷰** (2026-02-17) — PM 감사 + 6개 신규 Feature 도출
-- [x] **Cycle 12: F-7 react-query + F-3 실시간 교통** (2026-02-17) — PR #30, #31
-- [x] **Cycle 13: F-1 오늘의 출근 브리핑 위젯** (2026-02-17) — PR #32, #33
-- [x] **Cycle 15: F-5 출퇴근 스트릭 & 도전** (2026-02-17) — PR #34, 백엔드+프론트엔드 풀스택, 736개 테스트
+- [x] **Cycle 1-10**: 종합 감사 → 품질 기반 → 코드 구조 → 품질 심화 → UX → 포커스트랩 → 홈 인지부하 → DX → Backend 테스트 → 모니터링
+- [x] **Cycle 11-17**: 프로젝트 리뷰 → react-query → 브리핑 위젯 → 스트릭 → 주간 리포트 → Tailwind 기반
+- [x] **코드 품질 체크리스트 100%** (PR #37) — 10개 항목 전체 PASS
 
 ---
-*마지막 업데이트: 2026-02-17 (Cycle 15 완료 — Phase 2 완료, F-5 스트릭 시스템 배포)*
+*마지막 업데이트: 2026-02-18 (Phase 4 시작 — 품질/테스트 강화)*
