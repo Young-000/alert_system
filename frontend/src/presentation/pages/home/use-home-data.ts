@@ -13,7 +13,8 @@ import { useAirQualityQuery } from '@infrastructure/query/use-air-quality-query'
 import { useCommuteStatsQuery } from '@infrastructure/query/use-commute-stats-query';
 import { useTransitQuery } from '@infrastructure/query/use-transit-query';
 import { useStreakQuery } from '@infrastructure/query/use-streak-query';
-import type { StreakResponse } from '@infrastructure/api/commute-api.client';
+import { useWeeklyReportQuery } from '@infrastructure/query/use-weekly-report-query';
+import type { StreakResponse, WeeklyReportResponse } from '@infrastructure/api/commute-api.client';
 import {
   getAqiStatus,
   getWeatherChecklist,
@@ -56,6 +57,11 @@ export interface UseHomeDataReturn {
   nextAlert: { time: string; label: string } | null;
   commuteStats: CommuteStatsResponse | null;
   streak: StreakResponse | null;
+  weeklyReport: WeeklyReportResponse | null;
+  weeklyReportLoading: boolean;
+  weeklyReportError: string;
+  weekOffset: number;
+  setWeekOffset: (offset: number) => void;
   isDefaultLocation: boolean;
   isCommuteStarting: boolean;
   handleStartCommute: () => Promise<void>;
@@ -76,6 +82,10 @@ export function useHomeData(): UseHomeDataReturn {
   const statsQuery = useCommuteStatsQuery(userId, 7);
   const streakQuery = useStreakQuery(userId);
 
+  // F-2: Weekly Report
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weeklyReportQuery = useWeeklyReportQuery(userId, weekOffset);
+
   const locationReady = !!userId && !userLocation.isLoading;
   const weatherQuery = useWeatherQuery(
     userLocation.latitude, userLocation.longitude, locationReady,
@@ -90,6 +100,9 @@ export function useHomeData(): UseHomeDataReturn {
   const routes = useMemo(() => routesQuery.data ?? [], [routesQuery.data]);
   const commuteStats = statsQuery.data ?? null;
   const streak = streakQuery.data ?? null;
+  const weeklyReport = weeklyReportQuery.data ?? null;
+  const weeklyReportLoading = weeklyReportQuery.isLoading;
+  const weeklyReportError = weeklyReportQuery.error ? '주간 리포트를 불러올 수 없습니다' : '';
   const weather = weatherQuery.data ?? null;
   const airQualityData = airQualityQuery.data ?? null;
 
@@ -236,6 +249,11 @@ export function useHomeData(): UseHomeDataReturn {
     nextAlert,
     commuteStats,
     streak,
+    weeklyReport,
+    weeklyReportLoading,
+    weeklyReportError,
+    weekOffset,
+    setWeekOffset,
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,

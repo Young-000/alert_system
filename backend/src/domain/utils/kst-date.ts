@@ -28,7 +28,43 @@ export function subtractDays(dateStr: string, days: number): string {
   return formatDateToString(date);
 }
 
-/** YYYY-MM-DD 문자열을 Date 객체로 변환 */
+/** 날짜에 N일 추가 */
+export function addDays(dateStr: string, days: number): string {
+  const date = parseDateString(dateStr);
+  date.setDate(date.getDate() + days);
+  return formatDateToString(date);
+}
+
+/**
+ * 주어진 날짜 기준 weekOffset만큼 이전 주의 월요일~일요일 범위 반환
+ * weekOffset=0: 이번 주, weekOffset=1: 지난주, ...
+ */
+export function getWeekBounds(
+  todayKST: string,
+  weekOffset: number,
+): { weekStart: string; weekEnd: string } {
+  const currentWeekStart = getWeekStartKST(todayKST);
+  const offsetDays = weekOffset * 7;
+  const weekStart = subtractDays(currentWeekStart, offsetDays);
+  const weekEnd = addDays(weekStart, 6);
+  return { weekStart, weekEnd };
+}
+
+/** 주차 라벨 생성: "2월 3주차" 형태 */
+export function formatWeekLabel(weekStartDate: string): string {
+  const date = parseDateString(weekStartDate);
+  const month = date.getMonth() + 1;
+  const weekOfMonth = Math.ceil(date.getDate() / 7);
+  return `${month}월 ${weekOfMonth}주차`;
+}
+
+/** YYYY-MM-DD 문자열을 KST Date 객체로 변환 */
+export function toDateKST(dateStr: string, endOfDay = false): Date {
+  const time = endOfDay ? 'T23:59:59+09:00' : 'T00:00:00+09:00';
+  return new Date(dateStr + time);
+}
+
+/** YYYY-MM-DD 문자열을 Date 객체로 변환 (내부용, 로컬 시간) */
 function parseDateString(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);

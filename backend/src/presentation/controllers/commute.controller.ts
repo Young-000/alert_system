@@ -16,6 +16,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commute-session.use-case';
 import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats.use-case';
+import { GetWeeklyReportUseCase } from '@application/use-cases/get-weekly-report.use-case';
 import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
 import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
 import {
@@ -31,6 +32,7 @@ import {
   StreakResponseDto,
   MilestonesResponseDto,
 } from '@application/dto/streak.dto';
+import type { WeeklyReportResponseDto } from '@application/dto/weekly-report.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('commute')
@@ -41,6 +43,7 @@ export class CommuteController {
   constructor(
     private readonly manageSessionUseCase: ManageCommuteSessionUseCase,
     private readonly getStatsUseCase: GetCommuteStatsUseCase,
+    private readonly getWeeklyReportUseCase: GetWeeklyReportUseCase,
     private readonly getStreakUseCase: GetStreakUseCase,
     private readonly updateStreakUseCase: UpdateStreakUseCase,
   ) {}
@@ -199,6 +202,27 @@ export class CommuteController {
     }
     const daysNum = days ? parseInt(days, 10) : 30;
     return this.getStatsUseCase.execute(userId, daysNum);
+  }
+
+  // ========== Weekly Report Endpoints ==========
+
+  /**
+   * 주간 출퇴근 리포트 조회
+   * weekOffset: 0=이번 주, 1=지난주, ..., 최대 4
+   */
+  @Get('weekly-report/:userId')
+  async getWeeklyReport(
+    @Param('userId') userId: string,
+    @Query('weekOffset') weekOffsetStr: string | undefined,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<WeeklyReportResponseDto> {
+    // 권한 검사: 자신의 리포트만 조회 가능
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 주간 리포트에 접근할 수 없습니다.');
+    }
+    const weekOffset = weekOffsetStr ? parseInt(weekOffsetStr, 10) : 0;
+    this.logger.log(`Getting weekly report for user ${userId}, weekOffset=${weekOffset}`);
+    return this.getWeeklyReportUseCase.execute(userId, weekOffset);
   }
 
   // ========== Streak Endpoints ==========
