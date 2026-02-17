@@ -2695,3 +2695,175 @@ section.page {
   line-height: 1.4;
 }
 
+/* ========== COLLAPSIBLE SECTIONS (Cycle 7: N-11) ========== */
+
+/* --- Shared collapsible content transition --- */
+.collapsible-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.collapsible-content--expanded {
+  max-height: 600px;
+  opacity: 1;
+}
+
+/* --- Shared chevron indicator --- */
+.collapsible-chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ink-muted);
+  transition: transform 0.2s ease;
+}
+
+.collapsible-chevron--expanded {
+  transform: rotate(180deg);
+}
+
+/* --- Weather Hero: Collapsed Mode --- */
+.weather-hero--collapsed {
+  padding: 12px 16px;
+}
+
+.weather-hero-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin: -4px;
+  transition: background 0.15s ease;
+  min-height: 44px;
+}
+
+.weather-hero-summary:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.weather-hero-summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+.weather-hero-summary-temp {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.weather-hero-summary-condition {
+  font-size: 0.875rem;
+  color: var(--ink-secondary);
+}
+
+.weather-hero-summary-aqi {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.weather-hero-summary-location {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+/* When expanded, hide summary temp/condition since detail shows them */
+.weather-hero:not(.weather-hero--collapsed) .weather-hero-summary-temp,
+.weather-hero:not(.weather-hero--collapsed) .weather-hero-summary-condition,
+.weather-hero:not(.weather-hero--collapsed) .weather-hero-summary-aqi,
+.weather-hero:not(.weather-hero--collapsed) .weather-hero-summary-location {
+  display: none;
+}
+
+/* Detail area spacing */
+.weather-hero-detail {
+  padding-top: 8px;
+}
+
+/* --- Stats Section: Collapsed Mode --- */
+.home-stats--collapsed {
+  padding: 12px 16px;
+}
+
+.home-stats-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin: -4px;
+  transition: background 0.15s ease;
+  min-height: 44px;
+}
+
+.home-stats-summary-row:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.home-stats-summary-row:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+.home-stats-title--inline {
+  margin-bottom: 0;
+}
+
+.home-stats-summary-text {
+  font-size: 0.875rem;
+  color: var(--ink-secondary);
+  flex: 1;
+}
+
+/* When expanded, hide the inline summary text */
+.home-stats:not(.home-stats--collapsed) .home-stats-summary-text {
+  display: none;
+}
+
+/* Detail area spacing */
+.home-stats-detail {
+  padding-top: 12px;
+}
+
+/* --- prefers-reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-content {
+    transition: none;
+  }
+
+  .collapsible-chevron {
+    transition: none;
+  }
+
+  .weather-hero-summary {
+    transition: none;
+  }
+
+  .home-stats-summary-row {
+    transition: none;
+  }
+}
+
+/* --- Skeleton class replacements for inline styles --- */
+.home-greeting-skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  width: 160px;
+  height: 24px;
+}
+
+.home-skeleton-card-lg {
+  height: 200px;
+}
+
+.home-skeleton-card-sm {
+  height: 120px;
+  margin-top: 12px;
+}
+

@@ -17,10 +17,10 @@ export function HomePage(): JSX.Element {
     return (
       <main className="page home-page">
         <div className="home-header">
-          <span className="home-greeting-skeleton skeleton" style={{ width: '160px', height: '24px' }} />
+          <span className="home-greeting-skeleton skeleton" />
         </div>
-        <div className="today-card skeleton-card" style={{ height: '200px' }} />
-        <div className="today-card skeleton-card" style={{ height: '120px', marginTop: '12px' }} />
+        <div className="today-card skeleton-card home-skeleton-card-lg" />
+        <div className="today-card skeleton-card home-skeleton-card-sm" />
       </main>
     );
   }
