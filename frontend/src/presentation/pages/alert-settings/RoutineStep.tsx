@@ -1,5 +1,10 @@
 import type { Routine } from './types';
 
+function getTimePeriod(timeStr: string): string {
+  const hour = parseInt(timeStr.split(':')[0], 10);
+  return isNaN(hour) || hour < 12 ? '오전' : '오후';
+}
+
 interface RoutineStepProps {
   readonly wantsWeather: boolean;
   readonly wantsTransport: boolean;
@@ -42,7 +47,7 @@ export function RoutineStep({
               />
               <div className="time-display">
                 <span className="time-value">{routine.wakeUp}</span>
-                <span className="time-period">{parseInt(routine.wakeUp.split(':')[0]) < 12 ? '오전' : '오후'}</span>
+                <span className="time-period">{getTimePeriod(routine.wakeUp)}</span>
               </div>
             </div>
           </div>
@@ -71,7 +76,7 @@ export function RoutineStep({
                 />
                 <div className="time-display">
                   <span className="time-value">{routine.leaveHome}</span>
-                  <span className="time-period">{parseInt(routine.leaveHome.split(':')[0]) < 12 ? '오전' : '오후'}</span>
+                  <span className="time-period">{getTimePeriod(routine.leaveHome)}</span>
                 </div>
               </div>
             </div>
@@ -96,7 +101,7 @@ export function RoutineStep({
                 />
                 <div className="time-display">
                   <span className="time-value">{routine.leaveWork}</span>
-                  <span className="time-period">{parseInt(routine.leaveWork.split(':')[0]) < 12 ? '오전' : '오후'}</span>
+                  <span className="time-period">{getTimePeriod(routine.leaveWork)}</span>
                 </div>
               </div>
             </div>

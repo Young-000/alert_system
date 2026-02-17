@@ -322,6 +322,7 @@ export function AlertSettingsPage(): JSX.Element {
           type="button"
           className="btn btn-primary add-alert-btn"
           onClick={() => wizard.setShowWizard(true)}
+          disabled={alertCrud.isSubmitting}
         >
           + 새 알림 추가
         </button>

@@ -316,7 +316,7 @@ export function RouteSetupPage(): JSX.Element {
 
   // 경로 저장
   const handleSave = async (): Promise<void> => {
-    if (!userId || selectedStops.length === 0) return;
+    if (!userId || selectedStops.length === 0 || isSaving) return;
 
     if (!validation.isValid) {
       setError(validation.errors[0]);
@@ -370,8 +370,15 @@ export function RouteSetupPage(): JSX.Element {
       }
 
       navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
-    } catch {
-      setError('저장에 실패했습니다. 다시 시도해주세요.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '';
+      if (message.includes('401') || message.includes('Unauthorized')) {
+        setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+      } else if (message.includes('network') || message.includes('fetch')) {
+        setError('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+      } else {
+        setError('저장에 실패했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -436,12 +443,13 @@ export function RouteSetupPage(): JSX.Element {
       }));
 
     setSelectedStops(stops);
+    search.clearSearch();
     setIsCreating(true);
     setStep('ask-more');
     setCreateReverse(false);
     setError('');
     setWarning('');
-  }, []);
+  }, [search]);
 
   // 취소
   const cancelCreating = (): void => {
@@ -450,6 +458,11 @@ export function RouteSetupPage(): JSX.Element {
     setSelectedStops([]);
     search.clearSearch();
     search.setLineSelectionModal(null);
+    setRouteName('');
+    setError('');
+    setWarning('');
+    setEditingRoute(null);
+    setCreateReverse(true);
   };
 
   // 삭제

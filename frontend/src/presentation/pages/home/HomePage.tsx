@@ -53,7 +53,7 @@ export function HomePage(): JSX.Element {
         </div>
       </header>
 
-      {data.streak && (
+      {data.streak != null && (
         <StreakBadge streak={data.streak} />
       )}
 
