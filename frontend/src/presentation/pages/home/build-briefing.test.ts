@@ -61,14 +61,14 @@ describe('buildBriefing', () => {
   const subwayTransit: TransitArrivalInfo = {
     type: 'subway',
     name: '강남역',
-    arrivals: [{ destination: '신도림행', arrivalTime: 3, stationId: 's1' }],
+    arrivals: [{ destination: '신도림행', arrivalTime: 3, stationId: 's1', lineId: '2', direction: '외선' }],
     isLoading: false,
   };
 
   const busTransit: TransitArrivalInfo = {
     type: 'bus',
     name: '정류장 1234',
-    arrivals: [{ routeName: '340', arrivalTime: 5 }],
+    arrivals: [{ routeName: '340', arrivalTime: 5, stopId: 'b1', routeId: 'r1', remainingStops: 3 }],
     isLoading: false,
   };
 
@@ -203,7 +203,7 @@ describe('buildBriefing', () => {
     const soonTransit: TransitArrivalInfo = {
       type: 'subway',
       name: '역삼역',
-      arrivals: [{ destination: '신도림행', arrivalTime: 0, stationId: 's2' }],
+      arrivals: [{ destination: '신도림행', arrivalTime: 0, stationId: 's2', lineId: '2', direction: '외선' }],
       isLoading: false,
     };
 
