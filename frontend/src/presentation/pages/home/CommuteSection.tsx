@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import type { TransitArrivalInfo } from './route-utils';
@@ -8,8 +9,25 @@ interface CommuteSectionProps {
   forceRouteType: 'auto' | 'morning' | 'evening';
   onForceRouteTypeChange: (v: 'auto' | 'morning' | 'evening') => void;
   transitInfos: TransitArrivalInfo[];
+  isTransitRefreshing: boolean;
+  lastTransitUpdate: number | null;
   isCommuteStarting: boolean;
   onStartCommute: () => void;
+}
+
+/** Returns a human-readable relative time string (Korean). */
+function formatRelativeTime(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 10) return '방금 전';
+  if (seconds < 60) return `${seconds}초 전`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}분 전`;
+  return `${Math.floor(minutes / 60)}시간 전`;
+}
+
+/** Checks if arrival time is "soon" (2 minutes or less). */
+function isArrivingSoon(arrivalTime: number): boolean {
+  return arrivalTime > 0 && arrivalTime <= 2;
 }
 
 export function CommuteSection({
@@ -18,10 +36,20 @@ export function CommuteSection({
   forceRouteType,
   onForceRouteTypeChange,
   transitInfos,
+  isTransitRefreshing,
+  lastTransitUpdate,
   isCommuteStarting,
   onStartCommute,
 }: CommuteSectionProps): JSX.Element {
   const hasRoutes = routes.length > 0;
+
+  // Refresh timestamp display every 10 seconds
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!lastTransitUpdate) return;
+    const interval = setInterval(() => setTick(t => t + 1), 10_000);
+    return () => clearInterval(interval);
+  }, [lastTransitUpdate]);
 
   return (
     <section id="today-card" className="today-card" aria-label="오늘의 출퇴근">
@@ -61,30 +89,53 @@ export function CommuteSection({
 
           {/* Transit Arrivals */}
           {transitInfos.length > 0 && (
-            <div className="today-transit">
-              {transitInfos.map((info, idx) => (
-                <div key={idx} className="today-transit-item">
-                  <span className="today-transit-badge" data-type={info.type}>
-                    {info.type === 'subway' ? '지하철' : '버스'}
-                  </span>
-                  <span className="today-transit-name">{info.name}</span>
-                  {info.isLoading ? (
-                    <span className="spinner spinner-sm" aria-hidden="true" />
-                  ) : info.error ? (
-                    <span className="today-transit-time muted" role="alert">{info.error}</span>
-                  ) : info.arrivals.length > 0 ? (
-                    <span className="today-transit-time">
-                      {(() => {
-                        const a = info.arrivals[0];
-                        if ('routeName' in a) return `${a.routeName} ${a.arrivalTime > 0 ? `${a.arrivalTime}분` : '곧 도착'}`;
-                        return `${a.destination}행 ${a.arrivalTime > 0 ? `${a.arrivalTime}분` : '곧 도착'}`;
-                      })()}
+            <div className="today-transit" aria-live="polite">
+              {/* Header with last update timestamp */}
+              <div className="today-transit-header">
+                <span className="today-transit-title">실시간 교통</span>
+                <span className="today-transit-update" aria-label="마지막 갱신 시간">
+                  {isTransitRefreshing
+                    ? '갱신 중...'
+                    : lastTransitUpdate
+                      ? formatRelativeTime(lastTransitUpdate)
+                      : ''}
+                </span>
+              </div>
+
+              {transitInfos.map((info, idx) => {
+                const firstArrival = info.arrivals[0];
+                const arrivalTime = firstArrival ? firstArrival.arrivalTime : -1;
+                const arrivingSoon = arrivalTime >= 0 && isArrivingSoon(arrivalTime);
+
+                return (
+                  <div
+                    key={idx}
+                    className={`today-transit-item${arrivingSoon ? ' arriving-soon' : ''}`}
+                  >
+                    <span className="today-transit-badge" data-type={info.type}>
+                      {info.type === 'subway' ? '지하철' : '버스'}
                     </span>
-                  ) : (
-                    <span className="today-transit-time muted">정보 없음</span>
-                  )}
-                </div>
-              ))}
+                    <span className="today-transit-name">{info.name}</span>
+                    {info.isLoading ? (
+                      <span className="spinner spinner-sm" aria-hidden="true" />
+                    ) : info.error ? (
+                      <span className="today-transit-time muted" role="alert">{info.error}</span>
+                    ) : info.arrivals.length > 0 ? (
+                      <span className={`today-transit-time${arrivingSoon ? ' arriving-soon-text' : ''}`}>
+                        {(() => {
+                          const a = info.arrivals[0];
+                          if ('routeName' in a) {
+                            return `${a.routeName} ${a.arrivalTime > 0 ? `${a.arrivalTime}분` : '곧 도착'}`;
+                          }
+                          return `${a.destination}행 ${a.arrivalTime > 0 ? `${a.arrivalTime}분` : '곧 도착'}`;
+                        })()}
+                      </span>
+                    ) : (
+                      <span className="today-transit-time muted">정보 없음</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 

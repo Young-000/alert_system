@@ -19,4 +19,8 @@ export const queryKeys = {
     all: ['commuteStats'] as const,
     byUser: (userId: string, days: number) => ['commuteStats', userId, days] as const,
   },
+  transit: {
+    all: ['transit'] as const,
+    byRoute: (routeId: string) => ['transit', 'route', routeId] as const,
+  },
 } as const;
