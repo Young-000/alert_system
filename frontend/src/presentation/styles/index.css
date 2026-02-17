@@ -1,3 +1,8 @@
+/* Tailwind CSS base layers */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
 /* Hub file — import order preserves cascade */
 @import './base.css';
 @import './components.css';
