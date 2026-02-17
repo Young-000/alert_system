@@ -55,6 +55,7 @@ function SettingsIcon({ active }: { active: boolean }) {
 
 // Prefetch map for lazy-loaded pages
 const PREFETCH_MAP: Record<string, () => Promise<unknown>> = {
+  '/': () => import('../pages/home/HomePage'),
   '/routes': () => import('../pages/RouteSetupPage'),
   '/alerts': () => import('../pages/AlertSettingsPage'),
   '/settings': () => import('../pages/SettingsPage'),

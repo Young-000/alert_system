@@ -36,3 +36,6 @@ coverage
 test-results/
 playwright-report/
 .env*.local
+
+# Bundle analysis
+bundle-stats.html
