@@ -28,4 +28,9 @@ export const queryKeys = {
     byUser: (userId: string) => ['streak', 'user', userId] as const,
     milestones: (userId: string) => ['streak', 'milestones', userId] as const,
   },
+  weeklyReport: {
+    all: ['weeklyReport'] as const,
+    byUser: (userId: string, weekOffset: number) =>
+      ['weeklyReport', userId, weekOffset] as const,
+  },
 } as const;

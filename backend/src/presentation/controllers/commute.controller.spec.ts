@@ -3,6 +3,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { CommuteController } from './commute.controller';
 import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commute-session.use-case';
 import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats.use-case';
+import { GetWeeklyReportUseCase } from '@application/use-cases/get-weekly-report.use-case';
 import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
 import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
 
@@ -10,6 +11,7 @@ describe('CommuteController', () => {
   let controller: CommuteController;
   let manageSessionUseCase: jest.Mocked<ManageCommuteSessionUseCase>;
   let getStatsUseCase: jest.Mocked<GetCommuteStatsUseCase>;
+  let getWeeklyReportUseCase: jest.Mocked<GetWeeklyReportUseCase>;
 
   const OWNER_ID = 'user-123';
   const OTHER_USER_ID = 'other-user';
@@ -51,11 +53,16 @@ describe('CommuteController', () => {
       execute: jest.fn(),
     } as any;
 
+    getWeeklyReportUseCase = {
+      execute: jest.fn(),
+    } as any;
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CommuteController],
       providers: [
         { provide: ManageCommuteSessionUseCase, useValue: manageSessionUseCase },
         { provide: GetCommuteStatsUseCase, useValue: getStatsUseCase },
+        { provide: GetWeeklyReportUseCase, useValue: getWeeklyReportUseCase },
         { provide: GetStreakUseCase, useValue: { execute: jest.fn(), getMilestones: jest.fn() } },
         { provide: UpdateStreakUseCase, useValue: { recordCompletion: jest.fn().mockResolvedValue(null), updateSettings: jest.fn() } },
       ],
@@ -284,6 +291,60 @@ describe('CommuteController', () => {
       ).rejects.toThrow(ForbiddenException);
 
       expect(getStatsUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getWeeklyReport', () => {
+    const mockReport = {
+      weekStartDate: '2026-02-16',
+      weekEndDate: '2026-02-22',
+      weekLabel: '2월 3주차',
+      totalSessions: 5,
+      totalRecordedDays: 3,
+      averageDuration: 47,
+      minDuration: 38,
+      maxDuration: 62,
+      dailyStats: [],
+      bestDay: null,
+      worstDay: null,
+      previousWeekAverage: null,
+      changeFromPrevious: null,
+      changePercentage: null,
+      trend: null,
+      insights: [],
+      streakWeeklyCount: 3,
+      streakWeeklyGoal: 5,
+    };
+
+    it('자신의 주간 리포트 조회 성공 (기본 weekOffset)', async () => {
+      getWeeklyReportUseCase.execute.mockResolvedValue(mockReport as any);
+
+      const result = await controller.getWeeklyReport(OWNER_ID, undefined, mockRequest(OWNER_ID));
+
+      expect(getWeeklyReportUseCase.execute).toHaveBeenCalledWith(OWNER_ID, 0);
+      expect(result).toEqual(mockReport);
+    });
+
+    it('weekOffset 쿼리 파라미터 파싱', async () => {
+      getWeeklyReportUseCase.execute.mockResolvedValue(mockReport as any);
+
+      await controller.getWeeklyReport(OWNER_ID, '2', mockRequest(OWNER_ID));
+
+      expect(getWeeklyReportUseCase.execute).toHaveBeenCalledWith(OWNER_ID, 2);
+    });
+
+    it('다른 사용자의 주간 리포트 조회 시 ForbiddenException', async () => {
+      await expect(
+        controller.getWeeklyReport(OWNER_ID, undefined, mockRequest(OTHER_USER_ID)),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(getWeeklyReportUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('다른 사용자의 주간 리포트 조회 시 올바른 에러 메시지', async () => {
+      await expect(
+        controller.getWeeklyReport(OWNER_ID, undefined, mockRequest(OTHER_USER_ID)),
+      ).rejects.toThrow('다른 사용자의 주간 리포트에 접근할 수 없습니다.');
     });
   });
 });

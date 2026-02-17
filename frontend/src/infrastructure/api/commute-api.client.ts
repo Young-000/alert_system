@@ -290,6 +290,49 @@ export interface RouteRecommendationResponse {
   weatherCondition?: string;
 }
 
+// ========== Weekly Report Types ==========
+
+export type TrendDirection = 'improving' | 'stable' | 'worsening';
+
+export interface DailyStatsResponse {
+  date: string;
+  dayOfWeek: number;
+  dayName: string;
+  sessionCount: number;
+  averageDuration: number;
+  totalDuration: number;
+  averageDelay: number;
+  averageWaitTime: number;
+  weatherCondition: string | null;
+}
+
+export interface WeeklyReportResponse {
+  weekStartDate: string;
+  weekEndDate: string;
+  weekLabel: string;
+
+  totalSessions: number;
+  totalRecordedDays: number;
+  averageDuration: number;
+  minDuration: number;
+  maxDuration: number;
+
+  dailyStats: DailyStatsResponse[];
+
+  bestDay: DailyStatsResponse | null;
+  worstDay: DailyStatsResponse | null;
+
+  previousWeekAverage: number | null;
+  changeFromPrevious: number | null;
+  changePercentage: number | null;
+  trend: TrendDirection | null;
+
+  insights: string[];
+
+  streakWeeklyCount: number;
+  streakWeeklyGoal: number;
+}
+
 // ========== Streak Types ==========
 
 export type StreakStatus = 'active' | 'at_risk' | 'broken' | 'new';
@@ -456,6 +499,14 @@ export class CommuteApiClient {
     const query = weather ? `?weather=${encodeURIComponent(weather)}` : '';
     return this.apiClient.get<RouteRecommendationResponse>(
       `/routes/user/${userId}/recommend${query}`,
+    );
+  }
+
+  // ========== Weekly Report APIs ==========
+
+  async getWeeklyReport(userId: string, weekOffset = 0): Promise<WeeklyReportResponse> {
+    return this.apiClient.get<WeeklyReportResponse>(
+      `/commute/weekly-report/${userId}?weekOffset=${weekOffset}`,
     );
   }
 

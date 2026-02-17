@@ -30,6 +30,7 @@ import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commu
 import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats.use-case';
 import { RecommendBestRouteUseCase } from '@application/use-cases/recommend-best-route.use-case';
 import { CalculateRouteAnalyticsUseCase } from '@application/use-cases/calculate-route-analytics.use-case';
+import { GetWeeklyReportUseCase } from '@application/use-cases/get-weekly-report.use-case';
 import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
 import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
 
@@ -77,6 +78,7 @@ import { AnalyticsController } from '../controllers/analytics.controller';
     ManageRouteUseCase,
     ManageCommuteSessionUseCase,
     GetCommuteStatsUseCase,
+    GetWeeklyReportUseCase,
     RecommendBestRouteUseCase,
     CalculateRouteAnalyticsUseCase,
     GetStreakUseCase,
@@ -91,6 +93,7 @@ import { AnalyticsController } from '../controllers/analytics.controller';
     ManageRouteUseCase,
     ManageCommuteSessionUseCase,
     GetCommuteStatsUseCase,
+    GetWeeklyReportUseCase,
     RecommendBestRouteUseCase,
     CalculateRouteAnalyticsUseCase,
     GetStreakUseCase,
