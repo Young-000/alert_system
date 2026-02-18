@@ -1,6 +1,21 @@
 /* base.css — auto-split from index.css */
 
-/* Pretendard font loaded via <link> in index.html for non-blocking rendering */
+/* Pretendard font loaded via <link> in index.html for non-blocking rendering.
+   CDN CSS already includes font-display: swap. */
+
+/* Font fallback with metric overrides to minimize CLS during font swap.
+   Metrics approximate Pretendard Variable to reduce layout shift when
+   the web font replaces the system fallback. */
+@font-face {
+  font-family: 'Pretendard Fallback';
+  src: local('Apple SD Gothic Neo'), local('Malgun Gothic'), local('Segoe UI'), local('sans-serif');
+  font-weight: 45 920;
+  font-style: normal;
+  size-adjust: 100.1%;
+  ascent-override: 105%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
 
 /* z-index hierarchy:
    100  - sticky headers, apple-nav
@@ -68,8 +83,9 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
   --shadow-primary: 0 4px 14px rgba(99, 102, 241, 0.25);
 
-  /* Font */
-  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Font — 'Pretendard Fallback' has metric overrides (size-adjust, ascent/descent)
+     to reduce CLS during web font swap */
+  --font: 'Pretendard Variable', 'Pretendard', 'Pretendard Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 html {

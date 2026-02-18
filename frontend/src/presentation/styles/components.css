@@ -1414,6 +1414,7 @@ textarea.input:focus {
   gap: 10px;
   z-index: 1003;
   max-width: 360px;
+  will-change: transform;
 }
 
 .toast {
@@ -1439,6 +1440,8 @@ textarea.input:focus {
   width: 100%;
   background: var(--primary);
   animation: toastProgress 4s linear forwards;
+  transform-origin: left center;
+  will-change: transform;
 }
 
 .toast-success::after { background: var(--success); }
@@ -1447,8 +1450,8 @@ textarea.input:focus {
 .toast-info::after { background: #2563eb; }
 
 @keyframes toastProgress {
-  from { width: 100%; }
-  to { width: 0%; }
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 @keyframes toastSlideIn {
@@ -1820,6 +1823,23 @@ a[aria-disabled="true"],
   padding: 20px 16px;
   padding-bottom: calc(90px + env(safe-area-inset-bottom));
   animation: fadeIn 0.3s ease;
+  min-height: 100vh;
+}
+
+/* Skeleton placeholder dimensions — explicit sizes prevent CLS */
+.page-skeleton-title {
+  width: 160px;
+  height: 24px;
+  margin-bottom: 16px;
+}
+
+.page-skeleton-hero {
+  height: 180px;
+  margin-bottom: 12px;
+}
+
+.page-skeleton-card {
+  height: 100px;
 }
 
 /* ========== QUICK ACTION CARD ========== */
@@ -1994,6 +2014,7 @@ a[aria-disabled="true"],
   padding-top: max(20px, env(safe-area-inset-top));
   padding-bottom: max(20px, env(safe-area-inset-bottom));
   animation: fadeIn 0.2s ease;
+  will-change: opacity;
 }
 
 @keyframes fadeIn {

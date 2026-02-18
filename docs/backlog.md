@@ -1,20 +1,14 @@
-# Backlog — Phase 4: 품질/테스트 강화
+# Backlog — Phase 4: 품질/테스트 강화 + 잔여
 
-> 목표: E2E 테스트, 프론트엔드 테스트 커버리지, 성능 최적화, 번들 사이즈 감소, 보안 강화
-> 현재 테스트: Frontend 283, Backend 539 (총 822)
+> 목표: 성능 최적화, 백엔드 통합 테스트, 인프라 개선
+> 현재 테스트: Frontend 394, Backend 539 (총 933)
 
-## Next (품질/테스트 강화)
+## Next
 
 | ID | 항목 | 노력 | 우선순위 | 설명 |
 |----|------|------|----------|------|
-| Q-1 | **E2E 테스트 기반 구축 (Playwright)** | L | P0 | 핵심 사용자 플로우 E2E 테스트: 로그인→홈→경로설정→출퇴근트래킹→알림설정. CI 연동 |
-| Q-2 | **프론트엔드 컴포넌트 테스트 확대** | L | P0 | 커버리지 목표 80%+. 미테스트 페이지: RouteSetupPage, CommuteTrackingPage, AlertSettingsPage, WeeklyReportCard, MorningBriefing |
-| Q-3 | **번들 사이즈 최적화** | M | P1 | 코드 스플리팅 (lazy routes), tree-shaking 검증, 미사용 코드 제거. 목표: gzip < 200KB |
 | Q-4 | **성능 프로파일링 + 최적화** | M | P1 | Lighthouse CI 연동, LCP/CLS/INP 측정, 병목 해소. 목표: Lighthouse 90+ |
-| Q-5 | **백엔드 통합 테스트** | M | P1 | 서비스 레이어 통합 테스트 확대. 실제 DB 연동 테스트 (test container 또는 sqlite) |
-| Q-6 | **보안 감사 + 취약점 수정** | M | P1 | npm audit fix, 의존성 업데이트, OWASP 점검, CSP 헤더 |
-| Q-7 | **에러 모니터링 체계** | S | P2 | 프론트엔드 에러 바운더리 고도화, 글로벌 에러 핸들링, 에러 로깅 표준화 |
-| Q-8 | **접근성(a11y) 자동 테스트** | S | P2 | axe-core 연동, CI에서 접근성 위반 자동 검출, WCAG AA 100% 준수 |
+| Q-5 | **백엔드 통합 테스트** | M | P1 | 서비스 레이어 통합 테스트 확대. 실제 DB 연동 테스트 (sqlite) |
 
 ## Nice-to-have (잔여 — 인프라/외부 의존성)
 
@@ -50,6 +44,12 @@
 - [x] **Cycle 1-10**: 종합 감사 → 품질 기반 → 코드 구조 → 품질 심화 → UX → 포커스트랩 → 홈 인지부하 → DX → Backend 테스트 → 모니터링
 - [x] **Cycle 11-17**: 프로젝트 리뷰 → react-query → 브리핑 위젯 → 스트릭 → 주간 리포트 → Tailwind 기반
 - [x] **코드 품질 체크리스트 100%** (PR #37) — 10개 항목 전체 PASS
+- [x] **Q-1**: E2E 테스트 기반 구축 (PR #38) — 135 E2E tests
+- [x] **Q-2**: 프론트엔드 컴포넌트 테스트 확대 (PR #39) — 377 tests
+- [x] **Q-3**: 번들 사이즈 최적화 (PR #40) — 90KB→13KB gzip
+- [x] **Q-6**: 보안 감사 + 취약점 수정 (PR #41)
+- [x] **Q-7**: 에러 모니터링 체계 (PR #42) — Error Logger + ErrorBoundary 고도화
+- [x] **Q-8**: 접근성 자동 테스트 (PR #42) — CI accessibility job
 
 ---
-*마지막 업데이트: 2026-02-18 (Phase 4 시작 — 품질/테스트 강화)*
+*마지막 업데이트: 2026-02-18 (Cycle 22 시작)*

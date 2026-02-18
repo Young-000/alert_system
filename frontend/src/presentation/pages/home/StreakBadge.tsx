@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { StreakResponse } from '@infrastructure/api/commute-api.client';
 import { WeeklyProgress } from './WeeklyProgress';
 
@@ -20,7 +21,7 @@ function getStatusClassName(streak: StreakResponse): string {
   return '';
 }
 
-export function StreakBadge({ streak }: StreakBadgeProps): JSX.Element {
+export const StreakBadge = memo(function StreakBadge({ streak }: StreakBadgeProps): JSX.Element {
   const statusMsg = getStatusMessage(streak);
   const statusClass = getStatusClassName(streak);
 
@@ -77,4 +78,4 @@ export function StreakBadge({ streak }: StreakBadgeProps): JSX.Element {
       )}
     </section>
   );
-}
+});
