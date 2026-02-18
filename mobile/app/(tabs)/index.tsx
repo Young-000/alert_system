@@ -6,8 +6,10 @@ import { colors } from '@/constants/colors';
 import { useHomeData } from '@/hooks/useHomeData';
 import { useSmartDepartureToday } from '@/hooks/useSmartDepartureToday';
 import { useBriefingAdvice } from '@/hooks/useBriefingAdvice';
-import { getGreeting } from '@/utils/weather';
+import { useCommuteMode } from '@/hooks/useCommuteMode';
+import { getModeGreeting } from '@/utils/weather';
 import { buildBriefing } from '@/utils/briefing';
+import { ModeBadge } from '@/components/home/ModeBadge';
 import { SkeletonCard } from '@/components/SkeletonBox';
 import { BriefingCard } from '@/components/briefing/BriefingCard';
 import { SmartDepartureCard } from '@/components/smart-departure/SmartDepartureCard';
@@ -21,6 +23,7 @@ import { NetworkErrorView } from '@/components/home/NetworkErrorView';
 export default function HomeScreen(): React.JSX.Element {
   const data = useHomeData();
   const departure = useSmartDepartureToday();
+  const commuteMode = useCommuteMode();
   const contextBriefing = useBriefingAdvice({
     weather: data.weather,
     airQuality: data.airQuality,
@@ -72,7 +75,7 @@ export default function HomeScreen(): React.JSX.Element {
       })
     : null;
 
-  const greeting = getGreeting();
+  const greeting = getModeGreeting(commuteMode.mode);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -91,7 +94,14 @@ export default function HomeScreen(): React.JSX.Element {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>{greeting}</Text>
+          <View style={styles.headerTop}>
+            <Text style={styles.greeting}>{greeting}</Text>
+            <ModeBadge
+              mode={commuteMode.mode}
+              isManualOverride={commuteMode.isManualOverride}
+              onToggle={commuteMode.toggleMode}
+            />
+          </View>
           {data.userName ? (
             <Text style={styles.userName}>{data.userName}님</Text>
           ) : null}
@@ -179,6 +189,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
     paddingTop: 8,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   greeting: {
     fontSize: 22,

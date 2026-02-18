@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { IsNumber, IsOptional, IsIn, Min, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { BriefingResponseDto } from './briefing.dto';
 
@@ -16,6 +16,10 @@ export class WidgetDataQueryDto {
   @Max(180)
   @Transform(({ value }) => parseFloat(value))
   lng?: number;
+
+  @IsOptional()
+  @IsIn(['commute', 'return'])
+  mode?: 'commute' | 'return';
 }
 
 export class WidgetWeatherDto {

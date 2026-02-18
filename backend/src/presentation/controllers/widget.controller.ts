@@ -16,6 +16,7 @@ export class WidgetController {
       req.user.userId,
       query.lat,
       query.lng,
+      query.mode,
     );
   }
 }
