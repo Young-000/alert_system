@@ -10,7 +10,9 @@ import {
   fetchRoutes,
   fetchSubwayArrival,
   fetchWeather,
+  fetchWidgetData,
 } from '@/services/home.service';
+import { widgetSyncService } from '@/services/widget-sync.service';
 import { getAqiStatus } from '@/utils/weather';
 import { getActiveRoute } from '@/utils/route';
 import { computeNextAlert } from '@/utils/alert-schedule';
@@ -244,7 +246,20 @@ export function useHomeData(): UseHomeDataReturn {
     if (criticalFailures.length === results.length - 1) {
       setLoadError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
     }
+
+    // Sync widget data (fire-and-forget, non-blocking)
+    void syncWidgetDataFromApi();
   }, [userId, fetchWeatherData]);
+
+  // ── Widget Data Sync ──
+  const syncWidgetDataFromApi = useCallback(async (): Promise<void> => {
+    try {
+      const widgetData = await fetchWidgetData();
+      await widgetSyncService.syncWidgetData(widgetData);
+    } catch {
+      // Widget sync is non-critical; silently ignore errors
+    }
+  }, []);
 
   // ── Initial Load ──
   useEffect(() => {

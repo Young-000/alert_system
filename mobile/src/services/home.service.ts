@@ -8,6 +8,7 @@ import type {
   RouteResponse,
   SubwayArrival,
   WeatherData,
+  WidgetDataResponse,
 } from '@/types/home';
 
 /** Fetches current weather data for given coordinates. */
@@ -61,5 +62,15 @@ export async function fetchCommuteStats(
 ): Promise<CommuteStatsResponse> {
   return apiClient.get<CommuteStatsResponse>(
     `/commute/stats/${userId}?days=${days}`,
+  );
+}
+
+/** Fetches aggregated widget data (weather + AQI + alert + transit). */
+export async function fetchWidgetData(
+  lat: number = 37.5665,
+  lng: number = 126.9780,
+): Promise<WidgetDataResponse> {
+  return apiClient.get<WidgetDataResponse>(
+    `/widget/data?lat=${lat}&lng=${lng}`,
   );
 }

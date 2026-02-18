@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { widgetSyncService } from './widget-sync.service';
 
 const KEYS = {
   ACCESS_TOKEN: 'accessToken',
@@ -22,6 +23,9 @@ export const tokenService = {
     await SecureStore.setItemAsync(KEYS.USER_EMAIL, data.email);
     await SecureStore.setItemAsync(KEYS.USER_NAME, data.name);
     await SecureStore.setItemAsync(KEYS.PHONE_NUMBER, data.phoneNumber);
+
+    // Sync auth token to shared Keychain for widget extension
+    void widgetSyncService.syncAuthToken(data.accessToken);
   },
 
   /** 저장된 토큰 가져오기 */
@@ -63,5 +67,9 @@ export const tokenService = {
         }),
       ),
     );
+
+    // Clear shared Keychain token and widget data for widget extension
+    void widgetSyncService.clearAuthToken();
+    void widgetSyncService.clearWidgetData();
   },
 };
