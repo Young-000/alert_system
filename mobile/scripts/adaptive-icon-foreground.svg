@@ -1,0 +1,41 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Android adaptive icon foreground: content centered in safe zone (66%) -->
+  <!-- Safe zone: 170 to 854 (684px area) centered on 1024x1024 canvas -->
+
+  <!-- Clock body -->
+  <circle cx="512" cy="460" r="200" fill="white" opacity="0.95"/>
+  <circle cx="512" cy="460" r="175" fill="#3B82F6"/>
+
+  <!-- Clock hands - hour (pointing to ~7:30) -->
+  <line x1="512" y1="460" x2="455" y2="388" stroke="white" stroke-width="20" stroke-linecap="round"/>
+  <!-- Clock hands - minute -->
+  <line x1="512" y1="460" x2="512" y2="325" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <!-- Clock center dot -->
+  <circle cx="512" cy="460" r="16" fill="white"/>
+
+  <!-- Clock hour markers -->
+  <circle cx="512" cy="305" r="8" fill="white" opacity="0.8"/>
+  <circle cx="647" cy="460" r="8" fill="white" opacity="0.8"/>
+  <circle cx="512" cy="615" r="8" fill="white" opacity="0.8"/>
+  <circle cx="377" cy="460" r="8" fill="white" opacity="0.8"/>
+
+  <!-- Alarm bells -->
+  <circle cx="400" cy="300" r="42" fill="white" opacity="0.9"/>
+  <circle cx="624" cy="300" r="42" fill="white" opacity="0.9"/>
+  <circle cx="400" cy="300" r="30" fill="#3B82F6"/>
+  <circle cx="624" cy="300" r="30" fill="#3B82F6"/>
+
+  <!-- Alarm foot -->
+  <line x1="445" y1="660" x2="579" y2="660" stroke="white" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Transit icon (subway) -->
+  <rect x="436" y="710" width="152" height="80" rx="16" fill="white" opacity="0.95"/>
+  <rect x="452" y="722" width="120" height="32" rx="6" fill="#3B82F6"/>
+  <!-- Train windows -->
+  <rect x="464" y="728" width="20" height="20" rx="4" fill="white" opacity="0.9"/>
+  <rect x="502" y="728" width="20" height="20" rx="4" fill="white" opacity="0.9"/>
+  <rect x="540" y="728" width="20" height="20" rx="4" fill="white" opacity="0.9"/>
+  <!-- Train wheels -->
+  <circle cx="470" cy="780" r="8" fill="white"/>
+  <circle cx="554" cy="780" r="8" fill="white"/>
+</svg>

@@ -1,0 +1,6 @@
+{
+  "v1.0.0": {
+    "ko": "출퇴근 메이트 v1.0 출시!\n\n• 출근 브리핑: 날씨, 미세먼지, 교통 정보를 한 화면에\n• 맞춤 알림: 요일/시간별 출근 알림 설정\n• 경로 관리: 자주 쓰는 출퇴근 경로 저장\n• 홈 위젯: iOS & Android 위젯으로 빠른 확인\n• 푸시 알림 & 카카오 알림톡 지원",
+    "en": "Commute Mate v1.0 is here!\n\n• Morning briefing: weather, air quality, transit in one view\n• Custom alerts: set commute reminders by day and time\n• Route management: save your frequent commute routes\n• Home widgets: quick glance on iOS & Android\n• Push notifications & KakaoTalk alerts"
+  }
+}

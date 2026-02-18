@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#3B82F6"
     },
     "plugins": [
       "expo-router",
@@ -63,7 +63,13 @@
     },
     "ios": {
       "bundleIdentifier": "com.commutemate.app",
+      "buildNumber": "1",
       "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleDisplayName": "출퇴근 메이트",
+        "NSLocationWhenInUseUsageDescription": "출퇴근 경로 기반 날씨 및 교통 정보를 제공하기 위해 위치 권한이 필요합니다.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "백그라운드에서 출퇴근 감지 및 교통 알림을 위해 위치 권한이 필요합니다."
+      },
       "entitlements": {
         "com.apple.security.application-groups": [
           "group.com.commutemate.app"
@@ -72,10 +78,23 @@
     },
     "android": {
       "package": "com.commutemate.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#3B82F6"
       },
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#3B82F6"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM"
+      ],
       "edgeToEdgeEnabled": true
     },
     "web": {

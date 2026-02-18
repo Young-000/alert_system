@@ -64,6 +64,8 @@ database.sqlite
 # Screenshots (development artifacts)
 *.png
 !frontend/public/**/*.png
+!mobile/assets/**/*.png
+!mobile/assets/widget-preview/**/*.png
 
 # Temporary checklists
 *CHECKLIST*.md

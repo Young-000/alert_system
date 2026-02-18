@@ -1,0 +1,50 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="#3B82F6"/>
+
+  <!-- Subtle gradient overlay -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024">
+      <stop offset="0%" stop-color="#60A5FA" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1D4ED8" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- Clock body -->
+  <circle cx="512" cy="480" r="260" fill="white" opacity="0.95"/>
+  <circle cx="512" cy="480" r="230" fill="#3B82F6"/>
+
+  <!-- Clock hands - hour (pointing to ~7:30 position) -->
+  <line x1="512" y1="480" x2="440" y2="390" stroke="white" stroke-width="24" stroke-linecap="round"/>
+  <!-- Clock hands - minute -->
+  <line x1="512" y1="480" x2="512" y2="310" stroke="white" stroke-width="16" stroke-linecap="round"/>
+  <!-- Clock center dot -->
+  <circle cx="512" cy="480" r="20" fill="white"/>
+
+  <!-- Clock hour markers -->
+  <circle cx="512" cy="275" r="10" fill="white" opacity="0.8"/>
+  <circle cx="687" cy="480" r="10" fill="white" opacity="0.8"/>
+  <circle cx="512" cy="685" r="10" fill="white" opacity="0.8"/>
+  <circle cx="337" cy="480" r="10" fill="white" opacity="0.8"/>
+
+  <!-- Alarm bells (top) -->
+  <circle cx="380" cy="280" r="55" fill="white" opacity="0.9"/>
+  <circle cx="644" cy="280" r="55" fill="white" opacity="0.9"/>
+  <circle cx="380" cy="280" r="40" fill="#3B82F6"/>
+  <circle cx="644" cy="280" r="40" fill="#3B82F6"/>
+
+  <!-- Alarm foot/stand -->
+  <line x1="440" y1="720" x2="584" y2="720" stroke="white" stroke-width="20" stroke-linecap="round"/>
+
+  <!-- Transit icon (subway/train at bottom) -->
+  <rect x="420" y="790" width="184" height="100" rx="20" fill="white" opacity="0.95"/>
+  <rect x="440" y="805" width="144" height="40" rx="8" fill="#3B82F6"/>
+  <!-- Train windows -->
+  <rect x="455" y="813" width="24" height="24" rx="4" fill="white" opacity="0.9"/>
+  <rect x="500" y="813" width="24" height="24" rx="4" fill="white" opacity="0.9"/>
+  <rect x="545" y="813" width="24" height="24" rx="4" fill="white" opacity="0.9"/>
+  <!-- Train wheels -->
+  <circle cx="462" cy="875" r="10" fill="white"/>
+  <circle cx="562" cy="875" r="10" fill="white"/>
+</svg>
