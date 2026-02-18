@@ -1,12 +1,15 @@
 import React from 'react';
 import { useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppInfoSection } from '@/components/settings/AppInfoSection';
+import { QuickLinksSection } from '@/components/settings/QuickLinksSection';
+import { colors } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function SettingsScreen(): React.JSX.Element {
-  const { user, logout } = useAuth();
+  const { user, isLoggedIn, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = (): void => {
@@ -24,32 +27,54 @@ export default function SettingsScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>설정</Text>
 
+        {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {user?.name?.[0]?.toUpperCase() ?? '?'}
+              {isLoggedIn
+                ? user?.name?.[0]?.toUpperCase() ?? '?'
+                : '?'}
             </Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.name}</Text>
-            <Text style={styles.profileEmail}>{user?.email}</Text>
+            {isLoggedIn ? (
+              <>
+                <Text style={styles.profileName}>{user?.name}</Text>
+                <Text style={styles.profileEmail}>{user?.email}</Text>
+              </>
+            ) : (
+              <Text style={styles.profileName}>게스트</Text>
+            )}
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Pressable
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            accessibilityRole="button"
-            accessibilityLabel="로그아웃"
-          >
-            <Text style={styles.logoutText}>로그아웃</Text>
-          </Pressable>
-        </View>
-      </View>
+        {/* Quick Links */}
+        <QuickLinksSection />
+
+        {/* App Info */}
+        <AppInfoSection />
+
+        {/* Logout */}
+        {isLoggedIn && (
+          <View style={styles.logoutSection}>
+            <Pressable
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              accessibilityRole="button"
+              accessibilityLabel="로그아웃"
+            >
+              <Text style={styles.logoutText}>로그아웃</Text>
+            </Pressable>
+          </View>
+        )}
+      </ScrollView>
 
       <Modal
         visible={showLogoutConfirm}
@@ -90,23 +115,26 @@ export default function SettingsScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.gray900,
     marginBottom: 24,
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.gray50,
     borderRadius: 12,
     padding: 16,
     marginBottom: 32,
@@ -115,13 +143,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   avatarText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -131,16 +159,15 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.gray900,
     marginBottom: 2,
   },
   profileEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.gray500,
   },
-  section: {
-    marginTop: 'auto',
-    paddingBottom: 32,
+  logoutSection: {
+    marginTop: 8,
   },
   logoutButton: {
     borderWidth: 1,
@@ -162,7 +189,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 24,
     width: '100%',
@@ -171,12 +198,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.gray900,
     marginBottom: 8,
   },
   modalMessage: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.gray500,
     marginBottom: 24,
     lineHeight: 20,
   },
@@ -191,18 +218,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalButtonCancel: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.gray100,
   },
   modalButtonConfirm: {
     backgroundColor: '#EF4444',
   },
   modalButtonTextCancel: {
-    color: '#374151',
+    color: colors.gray700,
     fontSize: 14,
     fontWeight: '600',
   },
   modalButtonTextConfirm: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
