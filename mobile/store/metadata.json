@@ -1,0 +1,29 @@
+{
+  "appName": "출퇴근 메이트",
+  "appNameEn": "Commute Mate",
+  "subtitle": "출근 날씨·교통·알림을 한눈에",
+  "description": {
+    "ko": "출퇴근 메이트는 매일 아침 출근 준비에 필요한 모든 정보를 한 곳에 모아주는 스마트 통근 앱입니다.\n\n주요 기능:\n• 실시간 날씨 & 체감온도 — 오늘 뭘 입을지 바로 결정\n• 미세먼지 등급 — 마스크 필요 여부 즉시 확인\n• 지하철·버스 도착 정보 — 다음 열차/버스까지 몇 분?\n• 맞춤 출근 알림 — 요일별, 시간별 알림 설정\n• 출퇴근 경로 관리 — 나만의 경로 저장 & 빠른 전환\n• 홈 화면 위젯 — 잠금 해제 없이 바로 확인 (iOS & Android)\n• 카카오 알림톡 — 설정한 시간에 카톡으로 브리핑 전송\n\n출퇴근 메이트와 함께 여유로운 아침을 시작하세요!",
+    "en": "Commute Mate brings together everything you need for your daily commute in one smart app.\n\nKey Features:\n• Real-time weather & feels-like temperature\n• Air quality index — instantly check if you need a mask\n• Subway & bus arrival times\n• Custom commute alerts by day and time\n• Route management — save and switch between routes\n• Home screen widgets (iOS & Android)\n• KakaoTalk notifications — get briefings at your set time\n\nStart your morning right with Commute Mate!"
+  },
+  "keywords": [
+    "출퇴근",
+    "통근",
+    "날씨",
+    "미세먼지",
+    "지하철",
+    "버스",
+    "알림",
+    "출근",
+    "교통",
+    "위젯"
+  ],
+  "category": {
+    "ios": "Utilities",
+    "android": "Tools"
+  },
+  "contentRating": "Everyone",
+  "privacyPolicyUrl": "https://d1qgl3ij2xig8k.cloudfront.net/privacy",
+  "supportUrl": "https://d1qgl3ij2xig8k.cloudfront.net/support",
+  "version": "1.0.0"
+}
