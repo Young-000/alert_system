@@ -1,22 +1,135 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/hooks/useAuth';
+import { colors } from '@/constants/colors';
+import { useHomeData } from '@/hooks/useHomeData';
+import { getGreeting } from '@/utils/weather';
+import { buildBriefing } from '@/utils/briefing';
+import { SkeletonCard } from '@/components/SkeletonBox';
+import { BriefingCard } from '@/components/home/BriefingCard';
+import { WeatherCard } from '@/components/home/WeatherCard';
+import { TransitCard } from '@/components/home/TransitCard';
+import { NextAlertCard } from '@/components/home/NextAlertCard';
+import { EmptyRouteCard } from '@/components/home/EmptyRouteCard';
+import { GuestView } from '@/components/home/GuestView';
+import { NetworkErrorView } from '@/components/home/NetworkErrorView';
 
 export default function HomeScreen(): React.JSX.Element {
-  const { user } = useAuth();
+  const data = useHomeData();
+
+  // ── Guest (not logged in) ──
+  if (!data.isLoggedIn) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <GuestView />
+      </SafeAreaView>
+    );
+  }
+
+  // ── Initial Loading ──
+  if (data.isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.greetingSkeleton} />
+          </View>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Full Network Error ──
+  if (data.loadError && !data.weather && data.routes.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <NetworkErrorView onRetry={data.retryLoad} />
+      </SafeAreaView>
+    );
+  }
+
+  // ── Build briefing data ──
+  const briefing = data.activeRoute
+    ? buildBriefing({
+        weather: data.weather,
+        aqiStatus: data.aqiStatus,
+        commuteStats: data.commuteStats,
+        transitInfos: data.transitInfos,
+        routeName: data.activeRoute.name,
+      })
+    : null;
+
+  const greeting = getGreeting();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.content}>
-        <Text style={styles.greeting}>{user?.name}님, 좋은 아침이에요!</Text>
-        <View style={styles.placeholder}>
-          <Text style={styles.placeholderIcon}>☀️</Text>
-          <Text style={styles.placeholderText}>출근 브리핑이 여기에 표시됩니다.</Text>
-          <Text style={styles.placeholderSubtext}>날씨, 미세먼지, 교통 정보를 한눈에</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={data.isRefreshing}
+            onRefresh={data.onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{greeting}</Text>
+          {data.userName ? (
+            <Text style={styles.userName}>{data.userName}님</Text>
+          ) : null}
         </View>
-      </View>
+
+        {/* Partial error notice */}
+        {data.loadError ? (
+          <View style={styles.errorNotice}>
+            <Text style={styles.errorNoticeText}>{data.loadError}</Text>
+          </View>
+        ) : null}
+
+        {/* Briefing card */}
+        {briefing ? <BriefingCard briefing={briefing} /> : null}
+
+        {/* Weather card */}
+        <WeatherCard
+          weather={data.weather}
+          weatherError={data.weatherError}
+          airQuality={data.airQuality}
+          aqiStatus={data.aqiStatus}
+          onRetry={data.retryLoad}
+        />
+
+        {/* Transit / Empty Route */}
+        {data.activeRoute ? (
+          <TransitCard
+            route={data.activeRoute}
+            transitInfos={data.transitInfos}
+            lastTransitUpdate={data.lastTransitUpdate}
+            isTransitRefreshing={data.isTransitRefreshing}
+          />
+        ) : (
+          <EmptyRouteCard />
+        )}
+
+        {/* Next Alert */}
+        {data.nextAlert ? (
+          <NextAlertCard
+            time={data.nextAlert.time}
+            label={data.nextAlert.label}
+          />
+        ) : null}
+
+        {/* Bottom spacing */}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -24,36 +137,52 @@ export default function HomeScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.gray50,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  header: {
+    marginBottom: 16,
+    paddingTop: 8,
   },
   greeting: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 24,
+    color: colors.gray900,
   },
-  placeholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 80,
+  userName: {
+    fontSize: 15,
+    color: colors.gray500,
+    marginTop: 2,
   },
-  placeholderIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+  greetingSkeleton: {
+    width: 180,
+    height: 26,
+    backgroundColor: colors.skeletonBase,
+    borderRadius: 8,
   },
-  placeholderText: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 4,
+  errorNotice: {
+    backgroundColor: colors.dangerLight,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
   },
-  placeholderSubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
+  errorNoticeText: {
+    fontSize: 13,
+    color: colors.danger,
+    textAlign: 'center',
+  },
+  bottomSpacer: {
+    height: 32,
   },
 });
