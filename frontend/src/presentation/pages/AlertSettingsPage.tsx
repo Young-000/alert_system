@@ -185,15 +185,15 @@ export function AlertSettingsPage(): JSX.Element {
   // Keep ref in sync so handleSubmit can call wizard.setStep without circular deps
   wizardSetStepRef.current = wizard.setStep;
 
-  // Show wizard by default if no alerts (moved to useEffect to avoid setState during render)
-  const alertsLoaded = !alertCrud.isLoadingAlerts;
-  const hasNoAlerts = alertCrud.alerts.length === 0;
-  const wizardHidden = !wizard.showWizard;
+  // Auto-show wizard only once when initial load reveals zero alerts
+  const autoShowEvaluated = useRef(false);
   useEffect(() => {
-    if (alertsLoaded && hasNoAlerts && wizardHidden) {
+    if (alertCrud.isLoadingAlerts || autoShowEvaluated.current) return;
+    autoShowEvaluated.current = true;
+    if (alertCrud.alerts.length === 0) {
       wizard.setShowWizard(true);
     }
-  }, [alertsLoaded, hasNoAlerts, wizardHidden, wizard.setShowWizard]);
+  }, [alertCrud.isLoadingAlerts, alertCrud.alerts.length, wizard.setShowWizard]);
 
   // Import from route handler
   const importFromRoute = (route: RouteResponse): void => {
