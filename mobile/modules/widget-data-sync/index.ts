@@ -3,16 +3,19 @@ import { requireNativeModule } from 'expo-modules-core';
 
 const MODULE_NAME = 'WidgetDataSync';
 
-// Safely require the native module (only available on iOS)
+// Load native module on both iOS and Android.
+// Only unavailable on web, which has no widget support.
 const nativeModule =
-  Platform.OS === 'ios' ? requireNativeModule(MODULE_NAME) : null;
+  Platform.OS === 'ios' || Platform.OS === 'android'
+    ? requireNativeModule(MODULE_NAME)
+    : null;
 
 /**
- * Syncs widget display data to the App Group UserDefaults.
- * Writes JSON string to UserDefaults(suiteName: "group.com.commutemate.app")
- * and triggers WidgetCenter.shared.reloadTimelines(ofKind: "CommuteWidget").
+ * Syncs widget display data to platform-specific storage.
+ * - iOS: Writes JSON to App Group UserDefaults and reloads WidgetKit timelines.
+ * - Android: Writes JSON to SharedPreferences for the widget task handler.
  *
- * No-ops on non-iOS platforms.
+ * No-ops on unsupported platforms (web).
  */
 export async function syncWidgetData(data: Record<string, unknown>): Promise<void> {
   if (!nativeModule) return;
@@ -21,10 +24,23 @@ export async function syncWidgetData(data: Record<string, unknown>): Promise<voi
 }
 
 /**
- * Clears widget data from App Group UserDefaults
- * and triggers a widget timeline reload.
+ * Reads cached widget data JSON from platform-specific storage.
+ * - iOS: Not used (WidgetKit extension reads directly from App Group UserDefaults).
+ * - Android: Reads from SharedPreferences for the widget task handler.
  *
- * No-ops on non-iOS platforms.
+ * Returns null on unsupported platforms or when no data is cached.
+ */
+export async function getWidgetData(): Promise<string | null> {
+  if (!nativeModule) return null;
+  return await nativeModule.getWidgetData();
+}
+
+/**
+ * Clears widget data from platform-specific storage.
+ * - iOS: Removes from App Group UserDefaults and reloads timelines.
+ * - Android: Removes from SharedPreferences.
+ *
+ * No-ops on unsupported platforms (web).
  */
 export async function clearWidgetData(): Promise<void> {
   if (!nativeModule) return;
@@ -32,10 +48,13 @@ export async function clearWidgetData(): Promise<void> {
 }
 
 /**
- * Syncs the JWT auth token to the shared Keychain Access Group
- * so the widget extension can authenticate API calls.
+ * Syncs the JWT auth token for the widget extension.
+ * - iOS: Writes to shared Keychain Access Group so the widget extension
+ *   (separate process) can authenticate API calls.
+ * - Android: No-op. The widget task handler runs in the app's JS context
+ *   and does not make its own API calls.
  *
- * No-ops on non-iOS platforms.
+ * No-ops on unsupported platforms (web).
  */
 export async function syncAuthToken(token: string): Promise<void> {
   if (!nativeModule) return;
@@ -43,10 +62,11 @@ export async function syncAuthToken(token: string): Promise<void> {
 }
 
 /**
- * Clears the JWT auth token from the shared Keychain Access Group.
- * Called on logout to ensure the widget shows the logged-out state.
+ * Clears the JWT auth token from the widget extension's storage.
+ * - iOS: Removes from shared Keychain Access Group.
+ * - Android: No-op.
  *
- * No-ops on non-iOS platforms.
+ * No-ops on unsupported platforms (web).
  */
 export async function clearAuthToken(): Promise<void> {
   if (!nativeModule) return;

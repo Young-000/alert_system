@@ -24,6 +24,17 @@ public class WidgetDataSyncModule: Module {
       }
     }
 
+    // MARK: - getWidgetData
+    // Reads cached widget data from App Group UserDefaults.
+    // On iOS this is primarily used by the WidgetKit extension (Swift side),
+    // but exposed here for API parity with the Android module.
+    AsyncFunction("getWidgetData") { () -> String? in
+      guard let defaults = UserDefaults(suiteName: self.appGroupId) else {
+        return nil
+      }
+      return defaults.string(forKey: self.widgetDataKey)
+    }
+
     // MARK: - clearWidgetData
     // Removes widget data from App Group UserDefaults and reloads timelines.
     AsyncFunction("clearWidgetData") {
