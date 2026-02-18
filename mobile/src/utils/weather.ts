@@ -43,6 +43,18 @@ export function getGreeting(): string {
   return '좋은 밤이에요';
 }
 
+/** Returns mode-aware greeting message. */
+export function getModeGreeting(mode: 'commute' | 'return' | 'night'): string {
+  switch (mode) {
+    case 'commute':
+      return '좋은 아침이에요';
+    case 'return':
+      return '오늘도 수고했어요';
+    case 'night':
+      return '푹 쉬세요';
+  }
+}
+
 /** Translates English weather condition to Korean. */
 export function translateCondition(condition: string): string {
   const key = condition.toLowerCase().trim();

@@ -49,6 +49,7 @@ export class WidgetDataService {
     userId: string,
     lat?: number,
     lng?: number,
+    mode?: 'commute' | 'return',
   ): Promise<WidgetDataResponseDto> {
     const latitude = lat ?? DEFAULT_LAT;
     const longitude = lng ?? DEFAULT_LNG;
@@ -90,7 +91,7 @@ export class WidgetDataService {
 
     const nextAlert = this.computeNextAlert(alerts);
 
-    const briefing = this.generateBriefing(weather, airQuality, transit, departure);
+    const briefing = this.generateBriefing(weather, airQuality, transit, departure, mode);
 
     return {
       weather,
@@ -338,15 +339,21 @@ export class WidgetDataService {
     airQuality: WidgetAirQualityDto | null,
     transit: WidgetTransitDto,
     departure: WidgetDepartureDataDto | null,
+    mode?: 'commute' | 'return',
   ): BriefingResponseDto | null {
     if (!this.briefingAdviceService) return null;
+
+    // Mode override: commute→morning, return→evening
+    const timeContext = mode
+      ? (mode === 'commute' ? 'morning' : 'evening')
+      : BriefingAdviceService.getTimeContext();
 
     return this.briefingAdviceService.generate({
       weather,
       airQuality,
       transit,
       departure,
-      timeContext: BriefingAdviceService.getTimeContext(),
+      timeContext,
     });
   }
 }
