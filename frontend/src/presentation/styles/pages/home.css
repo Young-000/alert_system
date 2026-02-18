@@ -1946,7 +1946,7 @@ section.page {
 }
 
 /* --- Logged-In Home --- */
-.home-page {
+main.home-page {
   max-width: 640px;
   margin: 0 auto;
   padding: 0 16px calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom) + 140px);

@@ -1809,7 +1809,7 @@ kbd {
    간소화된 알림 페이지 헤더 + 타입 태그
    ============================================= */
 
-.alert-page-v2 {
+main.alert-page-v2 {
   padding-bottom: calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom) + 80px);
 }
 
