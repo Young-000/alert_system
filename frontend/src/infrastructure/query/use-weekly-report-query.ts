@@ -9,5 +9,6 @@ export function useWeeklyReportQuery(userId: string, weekOffset = 0) {
     enabled: !!userId,
     staleTime: 10 * 60 * 1000,       // 10분 — 주간 데이터라 자주 안 바뀜
     refetchOnWindowFocus: false,      // 비용 대비 효용 낮음
+    retry: false,                     // 404(미구현 엔드포인트) 재시도 방지
   });
 }

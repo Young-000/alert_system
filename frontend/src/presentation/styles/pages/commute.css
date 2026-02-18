@@ -3541,7 +3541,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: calc(90px + env(safe-area-inset-bottom, 0));
+  padding-bottom: calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom, 0) + 24px);
 }
 
 /* Loading */
