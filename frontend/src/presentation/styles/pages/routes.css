@@ -3570,8 +3570,9 @@
   border: 1px solid var(--border);
   border-left: 4px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
 
 .route-card-v2[data-route-type="morning"] {
@@ -3584,6 +3585,7 @@
 
 .route-card-v2:hover {
   border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
 }
 
 .route-card-v2-body {

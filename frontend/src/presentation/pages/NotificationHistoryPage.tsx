@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
@@ -156,7 +156,13 @@ export function NotificationHistoryPage(): JSX.Element {
     return () => { isMounted = false; };
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Skip initial mount — stats already fetched by the first useEffect
+  const isInitialMount = useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (!userId) return;
     let isMounted = true;
 

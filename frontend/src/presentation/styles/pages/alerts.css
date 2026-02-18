@@ -892,9 +892,7 @@
 
 /* Existing Alerts Section */
 .existing-alerts {
-  margin-top: 40px;
-  padding-top: 40px;
-  border-top: 1px solid var(--border);
+  margin-top: 8px;
 }
 
 .existing-alerts h2 {
@@ -1605,7 +1603,8 @@ kbd {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 .alert-item-card.disabled {
