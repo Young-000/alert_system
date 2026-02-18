@@ -107,11 +107,7 @@ export function BottomNavigation(): JSX.Element | null {
   }, []);
 
   const hiddenPaths = ['/login', '/onboarding', '/auth/callback'];
-  const exactHiddenPaths = ['/commute'];
-  if (
-    hiddenPaths.some(path => location.pathname.startsWith(path)) ||
-    exactHiddenPaths.includes(location.pathname)
-  ) {
+  if (hiddenPaths.some(path => location.pathname.startsWith(path))) {
     return null;
   }
 

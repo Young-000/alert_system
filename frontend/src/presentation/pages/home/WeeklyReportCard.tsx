@@ -27,14 +27,6 @@ function renderSkeleton(): JSX.Element {
   );
 }
 
-function renderError(error: string): JSX.Element {
-  return (
-    <section className="weekly-report-card weekly-report-card--error" aria-label="주간 리포트 오류">
-      <p className="weekly-report-error" role="alert">{error}</p>
-    </section>
-  );
-}
-
 function renderEmpty(): JSX.Element {
   return (
     <section className="weekly-report-card weekly-report-card--empty" aria-label="주간 리포트">
@@ -58,8 +50,7 @@ export function WeeklyReportCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) return renderSkeleton();
-  if (error) return renderError(error);
-  if (!report) return renderEmpty();
+  if (error || !report) return renderEmpty();
   if (report.totalSessions === 0 && weekOffset === 0) return renderEmpty();
 
   const canGoNewer = weekOffset > 0;

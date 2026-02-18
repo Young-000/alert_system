@@ -121,11 +121,20 @@ export function CommuteTrackingPage(): JSX.Element {
       updateTimer();
       timerRef.current = setInterval(updateTimer, 1000);
 
+      // Page Visibility API: 백그라운드에서 돌아올 때 즉시 타이머 갱신
+      const handleVisibility = (): void => {
+        if (document.visibilityState === 'visible') {
+          updateTimer();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibility);
+
       return () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
+        document.removeEventListener('visibilitychange', handleVisibility);
       };
     }
   }, [session]);
@@ -271,7 +280,7 @@ export function CommuteTrackingPage(): JSX.Element {
         <button
           type="button"
           className="commute-v2-back"
-          onClick={() => { if (session?.status === 'in_progress') { setShowCancelConfirm(true); } else { navigate(-1); } }}
+          onClick={() => navigate('/')}
           aria-label="뒤로 가기"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
