@@ -5,10 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/constants/colors';
 import { useHomeData } from '@/hooks/useHomeData';
 import { useSmartDepartureToday } from '@/hooks/useSmartDepartureToday';
+import { useBriefingAdvice } from '@/hooks/useBriefingAdvice';
 import { getGreeting } from '@/utils/weather';
 import { buildBriefing } from '@/utils/briefing';
 import { SkeletonCard } from '@/components/SkeletonBox';
-import { BriefingCard } from '@/components/home/BriefingCard';
+import { BriefingCard } from '@/components/briefing/BriefingCard';
 import { SmartDepartureCard } from '@/components/smart-departure/SmartDepartureCard';
 import { WeatherCard } from '@/components/home/WeatherCard';
 import { TransitCard } from '@/components/home/TransitCard';
@@ -20,6 +21,11 @@ import { NetworkErrorView } from '@/components/home/NetworkErrorView';
 export default function HomeScreen(): React.JSX.Element {
   const data = useHomeData();
   const departure = useSmartDepartureToday();
+  const contextBriefing = useBriefingAdvice({
+    weather: data.weather,
+    airQuality: data.airQuality,
+    transitInfos: data.transitInfos,
+  });
 
   // ── Guest (not logged in) ──
   if (!data.isLoggedIn) {
@@ -98,8 +104,13 @@ export default function HomeScreen(): React.JSX.Element {
           </View>
         ) : null}
 
-        {/* Briefing card */}
-        {briefing ? <BriefingCard briefing={briefing} /> : null}
+        {/* Briefing card (context-aware advices with legacy fallback) */}
+        <BriefingCard
+          contextBriefing={contextBriefing}
+          legacyBriefing={briefing}
+          weather={data.weather}
+          aqiStatus={data.aqiStatus}
+        />
 
         {/* Smart Departure card */}
         {data.isLoggedIn && (

@@ -1,5 +1,6 @@
 import { IsNumber, IsOptional, Min, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { BriefingResponseDto } from './briefing.dto';
 
 export class WidgetDataQueryDto {
   @IsOptional()
@@ -75,5 +76,6 @@ export class WidgetDataResponseDto {
   nextAlert: WidgetNextAlertDto | null;
   transit: WidgetTransitDto;
   departure: WidgetDepartureDataDto | null;
+  briefing: BriefingResponseDto | null;
   updatedAt: string;
 }
