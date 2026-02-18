@@ -23,6 +23,8 @@ import {
   WidgetDepartureDataDto,
 } from '@application/dto/widget-data.dto';
 import { CalculateDepartureUseCase } from '@application/use-cases/calculate-departure.use-case';
+import { BriefingAdviceService } from '@application/services/briefing-advice.service';
+import { BriefingResponseDto } from '@application/dto/briefing.dto';
 
 const DEFAULT_LAT = 37.5665;
 const DEFAULT_LNG = 126.9780;
@@ -40,6 +42,7 @@ export class WidgetDataService {
     @Optional() @Inject(COMMUTE_ROUTE_REPOSITORY) private readonly routeRepository?: ICommuteRouteRepository,
     @Optional() @Inject('ISubwayStationRepository') private readonly subwayStationRepository?: ISubwayStationRepository,
     @Optional() private readonly calculateDepartureUseCase?: CalculateDepartureUseCase,
+    @Optional() private readonly briefingAdviceService?: BriefingAdviceService,
   ) {}
 
   async getData(
@@ -87,12 +90,15 @@ export class WidgetDataService {
 
     const nextAlert = this.computeNextAlert(alerts);
 
+    const briefing = this.generateBriefing(weather, airQuality, transit, departure);
+
     return {
       weather,
       airQuality,
       nextAlert,
       transit,
       departure,
+      briefing,
       updatedAt: new Date().toISOString(),
     };
   }
@@ -321,5 +327,26 @@ export class WidgetDataService {
     if (!this.calculateDepartureUseCase) return null;
 
     return this.calculateDepartureUseCase.getWidgetDepartureData(userId);
+  }
+
+  /**
+   * Generates context-aware briefing advices using the BriefingAdviceService.
+   * Combines weather, air quality, transit, and departure data into actionable advice.
+   */
+  private generateBriefing(
+    weather: WidgetWeatherDto | null,
+    airQuality: WidgetAirQualityDto | null,
+    transit: WidgetTransitDto,
+    departure: WidgetDepartureDataDto | null,
+  ): BriefingResponseDto | null {
+    if (!this.briefingAdviceService) return null;
+
+    return this.briefingAdviceService.generate({
+      weather,
+      airQuality,
+      transit,
+      departure,
+      timeContext: BriefingAdviceService.getTimeContext(),
+    });
   }
 }

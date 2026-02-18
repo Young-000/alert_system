@@ -9,6 +9,7 @@ import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.clie
 import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
 import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
+import { BriefingAdviceService } from '@application/services/briefing-advice.service';
 
 @Module({
   imports: [CommuteModule, SmartDepartureModule],
@@ -53,6 +54,7 @@ import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
         return new BusApiClient(apiKey);
       },
     },
+    BriefingAdviceService,
     WidgetDataService,
   ],
 })
