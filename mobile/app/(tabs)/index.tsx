@@ -4,10 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 import { useHomeData } from '@/hooks/useHomeData';
+import { useSmartDepartureToday } from '@/hooks/useSmartDepartureToday';
 import { getGreeting } from '@/utils/weather';
 import { buildBriefing } from '@/utils/briefing';
 import { SkeletonCard } from '@/components/SkeletonBox';
 import { BriefingCard } from '@/components/home/BriefingCard';
+import { SmartDepartureCard } from '@/components/smart-departure/SmartDepartureCard';
 import { WeatherCard } from '@/components/home/WeatherCard';
 import { TransitCard } from '@/components/home/TransitCard';
 import { NextAlertCard } from '@/components/home/NextAlertCard';
@@ -17,6 +19,7 @@ import { NetworkErrorView } from '@/components/home/NetworkErrorView';
 
 export default function HomeScreen(): React.JSX.Element {
   const data = useHomeData();
+  const departure = useSmartDepartureToday();
 
   // ── Guest (not logged in) ──
   if (!data.isLoggedIn) {
@@ -97,6 +100,17 @@ export default function HomeScreen(): React.JSX.Element {
 
         {/* Briefing card */}
         {briefing ? <BriefingCard briefing={briefing} /> : null}
+
+        {/* Smart Departure card */}
+        {data.isLoggedIn && (
+          <SmartDepartureCard
+            commute={departure.commute}
+            return_={departure.return_}
+            commuteMinutes={departure.commuteMinutes}
+            returnMinutes={departure.returnMinutes}
+            isLoading={departure.isLoading}
+          />
+        )}
 
         {/* Weather card */}
         <WeatherCard

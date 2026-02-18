@@ -1,12 +1,12 @@
 # Pipeline State — Native App v2.0
 
-> 마지막 업데이트: Cycle 31 완료 (2026-02-19)
+> 마지막 업데이트: Cycle 32 완료 (2026-02-19)
 
 ## In-Flight Features
 
 | Feature | ID | Phase | Status | Branch | Cycle |
 |---------|:--:|:-----:|:------:|--------|:-----:|
-| Geofence 자동 출퇴근 감지 | P2-1 | PENDING | ⏳ NEXT | - | 32 |
+| 스마트 출발 알림 | P2-2 | PENDING | ⏳ NEXT | - | 33 |
 
 ## Phase 1: 작동하는 위젯 (2주 목표)
 
@@ -23,13 +23,13 @@
 
 ## Phase 2: 스마트 출발 (3주 목표)
 
-| Feature | ID | Status | Effort |
-|---------|:--:|:------:|:------:|
-| Geofence 자동 출퇴근 감지 | P2-1 | PENDING | L |
-| 스마트 출발 알림 | P2-2 | PENDING | L |
-| 상황 인식 브리핑 | P2-3 | PENDING | M |
-| 퇴근 모드 | P2-4 | PENDING | M |
-| iOS Live Activity | P2-5 | PENDING | M |
+| Feature | ID | Status | PR | Effort |
+|---------|:--:|:------:|:--:|:------:|
+| Geofence 자동 출퇴근 감지 | P2-1 | ✅ DONE | #53 | L |
+| 스마트 출발 알림 | P2-2 | PENDING | - | L |
+| 상황 인식 브리핑 | P2-3 | PENDING | - | M |
+| 퇴근 모드 | P2-4 | PENDING | - | M |
+| iOS Live Activity | P2-5 | PENDING | - | M |
 
 ## Phase 3: 출퇴근 코치 (4주 목표)
 

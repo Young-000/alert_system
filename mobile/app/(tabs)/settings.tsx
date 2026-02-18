@@ -7,17 +7,24 @@ import { AppInfoSection } from '@/components/settings/AppInfoSection';
 import { GeofenceSection } from '@/components/settings/GeofenceSection';
 import { NotificationSection } from '@/components/settings/NotificationSection';
 import { QuickLinksSection } from '@/components/settings/QuickLinksSection';
+import { SmartDepartureSection } from '@/components/settings/SmartDepartureSection';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { useGeofence } from '@/hooks/useGeofence';
 import { usePlaces } from '@/hooks/usePlaces';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useSmartDeparture } from '@/hooks/useSmartDeparture';
 
 export default function SettingsScreen(): React.JSX.Element {
   const { user, isLoggedIn, logout } = useAuth();
   const { isEnabled, isLoading: isPushLoading, error: pushError, enable, disable } =
     usePushNotifications({ enabled: isLoggedIn });
   const { places } = usePlaces();
+  const {
+    settings: smartDepartureSettings,
+    isLoading: isSmartDepartureLoading,
+    toggleSetting: toggleSmartDeparture,
+  } = useSmartDeparture();
   const {
     isEnabled: isGeofenceEnabled,
     isPermissionLoading: isGeofenceLoading,
@@ -99,6 +106,15 @@ export default function SettingsScreen(): React.JSX.Element {
             placesCount={places.length}
             offlineCount={offlineCount}
             onToggle={handleGeofenceToggle}
+          />
+        )}
+
+        {/* Smart Departure */}
+        {isLoggedIn && (
+          <SmartDepartureSection
+            settings={smartDepartureSettings}
+            isLoading={isSmartDepartureLoading}
+            onToggle={toggleSmartDeparture}
           />
         )}
 

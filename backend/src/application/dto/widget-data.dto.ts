@@ -59,10 +59,21 @@ export class WidgetTransitDto {
   bus: WidgetBusDto | null;
 }
 
+export class WidgetDepartureDataDto {
+  departureType: 'commute' | 'return';
+  optimalDepartureAt: string;
+  minutesUntilDeparture: number;
+  estimatedTravelMin: number;
+  arrivalTarget: string;
+  status: string;
+  hasTrafficDelay: boolean;
+}
+
 export class WidgetDataResponseDto {
   weather: WidgetWeatherDto | null;
   airQuality: WidgetAirQualityDto | null;
   nextAlert: WidgetNextAlertDto | null;
   transit: WidgetTransitDto;
+  departure: WidgetDepartureDataDto | null;
   updatedAt: string;
 }
