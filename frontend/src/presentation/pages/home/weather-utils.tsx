@@ -19,6 +19,40 @@ export interface ChecklistItem {
 
 export type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'default';
 
+// English → Korean weather condition map (OpenWeatherMap API responses)
+const CONDITION_KR_MAP: Record<string, string> = {
+  clear: '맑음',
+  'clear sky': '맑음',
+  sunny: '맑음',
+  clouds: '구름많음',
+  'few clouds': '구름조금',
+  'scattered clouds': '구름조금',
+  'broken clouds': '구름많음',
+  'overcast clouds': '흐림',
+  overcast: '흐림',
+  rain: '비',
+  'light rain': '가벼운 비',
+  'moderate rain': '비',
+  'heavy rain': '폭우',
+  'light intensity drizzle': '이슬비',
+  drizzle: '이슬비',
+  thunderstorm: '뇌우',
+  snow: '눈',
+  'light snow': '가벼운 눈',
+  'heavy snow': '폭설',
+  mist: '안개',
+  fog: '안개',
+  haze: '연무',
+  dust: '먼지',
+  smoke: '연기',
+};
+
+/** Translates English weather condition to Korean. */
+export function translateCondition(condition: string): string {
+  const key = condition.toLowerCase().trim();
+  return CONDITION_KR_MAP[key] ?? condition;
+}
+
 // ─── Pure Functions ────────────────────────────────
 
 export function getWeatherType(condition: string): WeatherType {

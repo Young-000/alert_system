@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { WeatherData } from '@infrastructure/api';
-import { WeatherIcon, getWeatherAdvice } from './weather-utils';
+import { WeatherIcon, getWeatherAdvice, translateCondition } from './weather-utils';
 import type { ChecklistItem } from './weather-utils';
 import { useCollapsible } from '@presentation/hooks/useCollapsible';
 import { ChevronIcon } from '@presentation/components/icons';
@@ -37,7 +37,7 @@ export function WeatherHeroSection({
       <section
         id="weather-hero"
         className={`weather-hero ${!isExpanded ? 'weather-hero--collapsed' : ''}`}
-        aria-label={`현재 날씨 ${weather.conditionKr || weather.condition} ${Math.round(weather.temperature)}도`}
+        aria-label={`현재 날씨 ${weather.conditionKr || translateCondition(weather.condition)} ${Math.round(weather.temperature)}도`}
       >
         {/* Summary row (always visible, clickable to toggle) */}
         <div
@@ -48,7 +48,7 @@ export function WeatherHeroSection({
         >
           <WeatherIcon condition={weather.condition} size={isExpanded ? 48 : 24} />
           <span className="weather-hero-summary-temp">{Math.round(weather.temperature)}&deg;</span>
-          <span className="weather-hero-summary-condition">{weather.conditionKr || weather.condition}</span>
+          <span className="weather-hero-summary-condition">{weather.conditionKr || translateCondition(weather.condition)}</span>
           {airQuality.label !== '-' && (
             <span className={`aqi-badge ${airQuality.className} weather-hero-summary-aqi`}>
               {airQuality.label}
@@ -69,7 +69,7 @@ export function WeatherHeroSection({
             <div className="weather-hero-main">
               <div className="weather-hero-text">
                 <span className="weather-temp-value">{Math.round(weather.temperature)}&deg;</span>
-                <span className="weather-condition">{weather.conditionKr || weather.condition}</span>
+                <span className="weather-condition">{weather.conditionKr || translateCondition(weather.condition)}</span>
               </div>
               {isDefaultLocation && (
                 <button

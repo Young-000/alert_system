@@ -62,7 +62,13 @@ export function buildBriefing(params: {
   }
 
   // Commute duration estimate (from stats)
-  if (commuteStats && commuteStats.overallAverageDuration > 0) {
+  // Only show if we have enough data (3+ sessions) and value is reasonable (< 180 min)
+  if (
+    commuteStats &&
+    commuteStats.overallAverageDuration > 0 &&
+    commuteStats.overallAverageDuration < 180 &&
+    (commuteStats.totalSessions ?? 0) >= 3
+  ) {
     const minutes = Math.round(commuteStats.overallAverageDuration);
     parts.push(`약 ${minutes}분 예상`);
   }

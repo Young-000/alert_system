@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
@@ -185,10 +185,15 @@ export function AlertSettingsPage(): JSX.Element {
   // Keep ref in sync so handleSubmit can call wizard.setStep without circular deps
   wizardSetStepRef.current = wizard.setStep;
 
-  // Show wizard by default if no alerts
-  if (!alertCrud.isLoadingAlerts && alertCrud.alerts.length === 0 && !wizard.showWizard) {
-    wizard.setShowWizard(true);
-  }
+  // Show wizard by default if no alerts (moved to useEffect to avoid setState during render)
+  const alertsLoaded = !alertCrud.isLoadingAlerts;
+  const hasNoAlerts = alertCrud.alerts.length === 0;
+  const wizardHidden = !wizard.showWizard;
+  useEffect(() => {
+    if (alertsLoaded && hasNoAlerts && wizardHidden) {
+      wizard.setShowWizard(true);
+    }
+  }, [alertsLoaded, hasNoAlerts, wizardHidden, wizard.setShowWizard]);
 
   // Import from route handler
   const importFromRoute = (route: RouteResponse): void => {

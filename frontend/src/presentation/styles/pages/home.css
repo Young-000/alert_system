@@ -1972,6 +1972,14 @@ section.page {
   margin-top: 2px;
 }
 
+.home-error-notice {
+  margin: 0 0 0.75rem;
+}
+
+.home-retry-btn {
+  margin-left: 8px;
+}
+
 .home-weather-badge {
   display: flex;
   align-items: center;
@@ -1989,7 +1997,7 @@ section.page {
 
 /* --- Morning Briefing Card --- */
 .morning-briefing {
-  margin: 0 1rem 0.75rem;
+  margin: 0 0 12px;
   padding: 12px 16px;
   border-radius: var(--radius-lg, 12px);
   border: 1px solid var(--border-light, #e2e8f0);
@@ -2041,7 +2049,7 @@ section.page {
   border: 1px solid #bae6fd;
   border-radius: var(--radius-xl, 16px);
   padding: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .weather-hero-main {
@@ -2096,6 +2104,7 @@ section.page {
   border: 1px solid var(--border);
   border-radius: var(--radius-xl, 16px);
   padding: 20px;
+  margin-bottom: 12px;
   overflow: hidden;
 }
 

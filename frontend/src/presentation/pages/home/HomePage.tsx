@@ -33,13 +33,12 @@ export function HomePage(): JSX.Element {
       <a href="#weather-hero" className="skip-link">본문으로 건너뛰기</a>
 
       {data.loadError && (
-        <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
+        <div className="home-error-notice notice error" role="alert">
           {data.loadError}
           <button
             type="button"
-            className="btn btn-sm"
+            className="btn btn-sm home-retry-btn"
             onClick={data.retryLoad}
-            style={{ marginLeft: '8px' }}
           >
             다시 시도
           </button>
