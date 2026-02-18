@@ -2,8 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@infrastructure/query/query-client';
+import { installGlobalErrorHandlers } from '@infrastructure/monitoring/error-logger';
 import App from './presentation/App';
 import './presentation/styles/index.css';
+
+// Install global error handlers before rendering
+installGlobalErrorHandlers();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

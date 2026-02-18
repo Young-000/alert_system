@@ -41,10 +41,6 @@ export function buildDailyStats(
 
   for (let i = 0; i < 7; i++) {
     const dateStr = addDays(weekStartDate, i);
-    const date = new Date(dateStr + 'T00:00:00+09:00');
-    const dayOfWeek = date.getUTCDay();
-    // KST offset: +09:00 means the day index is based on the KST date
-    // We need the local day-of-week for the KST date
     const kstDate = new Date(dateStr + 'T12:00:00+09:00');
     const kstDayOfWeek = kstDate.getUTCDay();
 

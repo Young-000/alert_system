@@ -1,8 +1,11 @@
-import type { ReactNode } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
+import { logReactError } from '@infrastructure/monitoring/error-logger';
 
 interface Props {
   children: ReactNode;
+  /** Optional fallback key: change to reset the boundary without reload. */
+  resetKey?: string;
 }
 
 interface State {
@@ -18,6 +21,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    logReactError(error, info.componentStack ?? '');
+  }
+
+  componentDidUpdate(prevProps: Props): void {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   handleRetry = () => {
