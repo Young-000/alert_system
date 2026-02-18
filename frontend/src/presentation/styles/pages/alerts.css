@@ -1810,7 +1810,7 @@ kbd {
    ============================================= */
 
 .alert-page-v2 {
-  padding-bottom: 100px;
+  padding-bottom: calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom) + 80px);
 }
 
 /* alert-page-v2-header removed -- replaced by .page-header */

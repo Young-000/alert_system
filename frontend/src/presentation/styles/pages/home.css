@@ -1327,7 +1327,7 @@ h3 {
 main.page,
 div.page,
 section.page {
-  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom) + 40px);
 }
 
 /* 홈 푸터 숨김 (하단 네비게이션으로 대체) */
@@ -1949,7 +1949,7 @@ section.page {
 .home-page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 0 16px 100px;
+  padding: 0 16px calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom) + 140px);
 }
 
 .home-header {

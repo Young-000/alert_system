@@ -4,10 +4,10 @@
 .page {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 24px 20px 100px;
+  padding: 24px 20px 120px;
   padding-left: max(20px, env(safe-area-inset-left));
   padding-right: max(20px, env(safe-area-inset-right));
-  padding-bottom: max(100px, calc(100px + env(safe-area-inset-bottom)));
+  padding-bottom: calc(var(--bottom-nav-height, 80px) + env(safe-area-inset-bottom) + 40px);
   display: flex;
   flex-direction: column;
   gap: 40px;
@@ -2226,7 +2226,7 @@ a[aria-disabled="true"],
 
 /* ========== RESPONSIVE - MOBILE ========== */
 @media (max-width: 600px) {
-  .page { padding: 16px 14px 90px; gap: 28px; }
+  .page { padding: 16px 14px 120px; gap: 28px; }
   .nav {
     padding: 12px 14px;
     border-radius: var(--radius-lg);
