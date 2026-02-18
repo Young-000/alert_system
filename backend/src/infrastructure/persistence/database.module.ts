@@ -22,6 +22,9 @@ import { CheckpointRecordEntity } from './typeorm/checkpoint-record.entity';
 import { RouteAnalyticsEntity } from './typeorm/route-analytics.entity';
 import { NotificationLogEntity } from './typeorm/notification-log.entity';
 import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
+// Geofence entities
+import { UserPlaceEntity } from './typeorm/user-place.entity';
+import { CommuteEventEntity } from './typeorm/commute-event.entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -56,6 +59,9 @@ import { buildDataSourceOptions } from './database.config';
       RouteAnalyticsEntity,
       NotificationLogEntity,
       PushSubscriptionEntity,
+      // Geofence
+      UserPlaceEntity,
+      CommuteEventEntity,
     ]),
   ],
   exports: [TypeOrmModule],

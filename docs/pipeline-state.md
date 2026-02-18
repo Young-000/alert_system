@@ -1,12 +1,12 @@
 # Pipeline State — Native App v2.0
 
-> 마지막 업데이트: Cycle 29 완료 (2026-02-19)
+> 마지막 업데이트: Cycle 31 완료 (2026-02-19)
 
 ## In-Flight Features
 
 | Feature | ID | Phase | Status | Branch | Cycle |
 |---------|:--:|:-----:|:------:|--------|:-----:|
-| Android Widget | P1-7 | PENDING | ⏳ NEXT | - | 30 |
+| Geofence 자동 출퇴근 감지 | P2-1 | PENDING | ⏳ NEXT | - | 32 |
 
 ## Phase 1: 작동하는 위젯 (2주 목표)
 
@@ -18,8 +18,8 @@
 | 경로 설정 + 설정 + 알림 기록 화면 | P1-4 | ✅ DONE | #48 | M |
 | FCM/APNs 푸시 알림 | P1-5 | ✅ DONE | #49 | M |
 | iOS WidgetKit (Small + Medium) | P1-6 | ✅ DONE | #50 | L |
-| Android Widget | P1-7 | PENDING | - | M |
-| 앱 아이콘 + 스플래시 + 스토어 에셋 | P1-8 | PENDING | - | S |
+| Android Widget | P1-7 | ✅ DONE | #51 | M |
+| 앱 아이콘 + 스플래시 + 스토어 에셋 | P1-8 | ✅ DONE | #52 | S |
 
 ## Phase 2: 스마트 출발 (3주 목표)
 

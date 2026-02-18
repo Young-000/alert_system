@@ -23,6 +23,16 @@
           "sounds": []
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "백그라운드에서 출퇴근 감지를 위해 위치 권한이 필요합니다.",
+          "locationAlwaysPermission": "백그라운드에서 출퇴근 감지를 위해 '항상 허용'이 필요합니다.",
+          "locationWhenInUsePermission": "현재 위치 확인을 위해 위치 권한이 필요합니다.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
       "@bacons/apple-targets",
       [
         "react-native-android-widget",
@@ -91,6 +101,7 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"

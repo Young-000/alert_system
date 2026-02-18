@@ -16,6 +16,7 @@ import { CommuteModule } from './modules/commute.module';
 import { NotificationHistoryModule } from './modules/notification-history.module';
 import { PushModule } from './modules/push.module';
 import { WidgetModule } from './modules/widget.module';
+import { GeofenceModule } from './modules/geofence.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
 import { DevController } from './controllers/dev.controller';
@@ -46,6 +47,7 @@ const isDev = process.env.NODE_ENV !== 'production';
     NotificationHistoryModule,
     PushModule,
     WidgetModule,
+    GeofenceModule,
   ],
   providers: [
     // 전역 JWT 인증 가드

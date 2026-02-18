@@ -31,7 +31,10 @@ function RootNavigator(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {isLoggedIn ? (
-        <Stack.Screen name="(tabs)" />
+        <>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="places" options={{ presentation: 'modal' }} />
+        </>
       ) : (
         <Stack.Screen name="(auth)" />
       )}
