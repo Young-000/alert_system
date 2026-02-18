@@ -1278,6 +1278,7 @@ h3 {
   padding: 8px 0;
   padding-bottom: max(8px, env(safe-area-inset-bottom));
   z-index: 1000;
+  will-change: transform;
 }
 
 .bottom-nav-item {
@@ -3555,5 +3556,19 @@ section.page {
   .daily-bar__fill {
     transition: none;
   }
+}
+
+/* ========== PERFORMANCE: content-visibility for below-fold sections ========== */
+/* These sections are typically below the viewport on initial load.
+   content-visibility: auto lets the browser skip rendering off-screen content,
+   improving INP and initial render time. */
+.home-alert-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
+}
+
+.home-stats {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 160px;
 }
 

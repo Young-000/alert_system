@@ -20,9 +20,9 @@ const NotificationHistoryPage = lazy(() => import('./pages/NotificationHistoryPa
 function PageLoader() {
   return (
     <div className="page-skeleton" role="status" aria-live="polite">
-      <div className="skeleton" style={{ width: '160px', height: '24px', marginBottom: '16px' }} />
-      <div className="skeleton-card" style={{ height: '180px', marginBottom: '12px' }} />
-      <div className="skeleton-card" style={{ height: '100px' }} />
+      <div className="skeleton page-skeleton-title" />
+      <div className="skeleton-card page-skeleton-hero" />
+      <div className="skeleton-card page-skeleton-card" />
       <span className="sr-only">페이지 로딩 중...</span>
     </div>
   );

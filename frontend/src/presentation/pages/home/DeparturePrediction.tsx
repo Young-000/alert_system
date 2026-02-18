@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import type { DeparturePrediction as DeparturePredictionData } from '@infrastructure/api';
 
 interface DeparturePredictionProps {
   prediction: DeparturePredictionData;
 }
 
-export function DeparturePrediction({ prediction }: DeparturePredictionProps): JSX.Element {
+export const DeparturePrediction = memo(function DeparturePrediction({ prediction }: DeparturePredictionProps): JSX.Element {
   return (
     <section className="departure-prediction" aria-label="추천 출발 시간">
       <div className="departure-prediction-content">
@@ -21,4 +22,4 @@ export function DeparturePrediction({ prediction }: DeparturePredictionProps): J
       </div>
     </section>
   );
-}
+});

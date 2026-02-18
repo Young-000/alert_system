@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 
 interface AlertSectionProps {
   nextAlert: { time: string; label: string } | null;
 }
 
-export function AlertSection({ nextAlert }: AlertSectionProps): JSX.Element {
+export const AlertSection = memo(function AlertSection({ nextAlert }: AlertSectionProps): JSX.Element {
   return (
     <section className="home-alert-section" aria-label="알림">
       {nextAlert ? (
@@ -33,4 +34,4 @@ export function AlertSection({ nextAlert }: AlertSectionProps): JSX.Element {
       )}
     </section>
   );
-}
+});
