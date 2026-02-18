@@ -1,19 +1,19 @@
 # Pipeline State — Native App v2.0
 
-> 마지막 업데이트: Cycle 24 시작 (2026-02-19)
+> 마지막 업데이트: Cycle 25 시작 (2026-02-19)
 
 ## In-Flight Features
 
 | Feature | ID | Phase | Status | Branch | Cycle |
 |---------|:--:|:-----:|:------:|--------|:-----:|
-| Expo 프로젝트 셋업 + 네비게이션 + JWT 인증 | P1-1 | Build (0-1-2) | 🔄 IN PROGRESS | feature/expo-setup | 24 |
+| 홈 화면 (출근 브리핑 + 실시간 교통 + 경로) | P1-2 | Build (0-1-2) | 🔄 IN PROGRESS | feature/home-screen | 25 |
 
 ## Phase 1: 작동하는 위젯 (2주 목표)
 
 | Feature | ID | Status | PR | Effort |
 |---------|:--:|:------:|:--:|:------:|
-| Expo 프로젝트 셋업 + 네비게이션 + JWT 인증 | P1-1 | 🔄 IN PROGRESS | - | M |
-| 홈 화면 (출근 브리핑 + 실시간 교통 + 경로) | P1-2 | PENDING | - | L |
+| Expo 프로젝트 셋업 + 네비게이션 + JWT 인증 | P1-1 | ✅ DONE | #45 | M |
+| 홈 화면 (출근 브리핑 + 실시간 교통 + 경로) | P1-2 | 🔄 IN PROGRESS | - | L |
 | 알림 설정 화면 (CRUD + 토글) | P1-3 | PENDING | - | M |
 | 경로 설정 + 설정 + 알림 기록 화면 | P1-4 | PENDING | - | M |
 | FCM/APNs 푸시 알림 | P1-5 | PENDING | - | M |
