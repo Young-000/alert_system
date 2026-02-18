@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useEffect, useMemo, useRef, useState
 import { apiClient } from '@/services/api-client';
 import { authService } from '@/services/auth.service';
 import { tokenService } from '@/services/token.service';
+import { cleanupPushToken } from '@/hooks/usePushNotifications';
 
 import type { ReactNode } from 'react';
 import type { AuthUser, RegisterDto } from '@/types/auth';
@@ -33,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }): React.JSX.E
     isLoggingOut.current = true;
 
     try {
+      // Remove Expo Push Token from server before clearing auth tokens
+      await cleanupPushToken();
       await tokenService.clearAll();
       setUser(null);
     } finally {

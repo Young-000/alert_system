@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PushController } from '../controllers/push.controller';
 import { PushSubscriptionEntity } from '../../infrastructure/persistence/typeorm/push-subscription.entity';
 import { WebPushService, WEB_PUSH_SERVICE } from '../../infrastructure/messaging/web-push.service';
+import { ExpoPushService, EXPO_PUSH_SERVICE } from '../../infrastructure/messaging/expo-push.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PushSubscriptionEntity])],
@@ -13,7 +14,12 @@ import { WebPushService, WEB_PUSH_SERVICE } from '../../infrastructure/messaging
       provide: WEB_PUSH_SERVICE,
       useExisting: WebPushService,
     },
+    ExpoPushService,
+    {
+      provide: EXPO_PUSH_SERVICE,
+      useExisting: ExpoPushService,
+    },
   ],
-  exports: [WEB_PUSH_SERVICE, TypeOrmModule],
+  exports: [WEB_PUSH_SERVICE, EXPO_PUSH_SERVICE, TypeOrmModule],
 })
 export class PushModule {}
