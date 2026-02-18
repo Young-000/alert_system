@@ -134,6 +134,58 @@ export type AqiStatus = {
   backgroundColor: string;
 };
 
+// ─── Widget Data Types ───────────────────────────
+
+export type WidgetWeatherData = {
+  temperature: number;
+  condition: string;
+  conditionEmoji: string;
+  conditionKr: string;
+  feelsLike?: number;
+  maxTemp?: number;
+  minTemp?: number;
+};
+
+export type WidgetAirQualityData = {
+  pm10: number;
+  pm25: number;
+  status: string;
+  statusLevel: 'good' | 'moderate' | 'unhealthy' | 'veryUnhealthy';
+};
+
+export type WidgetNextAlertData = {
+  time: string;
+  label: string;
+  alertTypes: string[];
+};
+
+export type WidgetSubwayData = {
+  stationName: string;
+  lineInfo: string;
+  arrivalMinutes: number;
+  destination: string;
+};
+
+export type WidgetBusData = {
+  stopName: string;
+  routeName: string;
+  arrivalMinutes: number;
+  remainingStops: number;
+};
+
+export type WidgetTransitData = {
+  subway: WidgetSubwayData | null;
+  bus: WidgetBusData | null;
+};
+
+export type WidgetDataResponse = {
+  weather: WidgetWeatherData | null;
+  airQuality: WidgetAirQualityData | null;
+  nextAlert: WidgetNextAlertData | null;
+  transit: WidgetTransitData;
+  updatedAt: string;
+};
+
 // ─── Time Context ─────────────────────────────────
 
 export type TimeContext = 'morning' | 'evening' | 'tomorrow';

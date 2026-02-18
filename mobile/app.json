@@ -22,14 +22,20 @@
           "color": "#3B82F6",
           "sounds": []
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
       "bundleIdentifier": "com.commutemate.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.commutemate.app"
+        ]
+      }
     },
     "android": {
       "package": "com.commutemate.app",
