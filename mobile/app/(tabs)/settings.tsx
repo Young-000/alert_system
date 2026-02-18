@@ -4,16 +4,28 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppInfoSection } from '@/components/settings/AppInfoSection';
+import { GeofenceSection } from '@/components/settings/GeofenceSection';
 import { NotificationSection } from '@/components/settings/NotificationSection';
 import { QuickLinksSection } from '@/components/settings/QuickLinksSection';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { useGeofence } from '@/hooks/useGeofence';
+import { usePlaces } from '@/hooks/usePlaces';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export default function SettingsScreen(): React.JSX.Element {
   const { user, isLoggedIn, logout } = useAuth();
   const { isEnabled, isLoading: isPushLoading, error: pushError, enable, disable } =
     usePushNotifications({ enabled: isLoggedIn });
+  const { places } = usePlaces();
+  const {
+    isEnabled: isGeofenceEnabled,
+    isPermissionLoading: isGeofenceLoading,
+    permissionStatus,
+    offlineCount,
+    startMonitoring,
+    stopMonitoring,
+  } = useGeofence();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handlePushToggle = (value: boolean): void => {
@@ -35,6 +47,14 @@ export default function SettingsScreen(): React.JSX.Element {
 
   const cancelLogout = (): void => {
     setShowLogoutConfirm(false);
+  };
+
+  const handleGeofenceToggle = (value: boolean): void => {
+    if (value) {
+      void startMonitoring(places);
+    } else {
+      void stopMonitoring();
+    }
   };
 
   return (
@@ -69,6 +89,18 @@ export default function SettingsScreen(): React.JSX.Element {
 
         {/* Quick Links */}
         <QuickLinksSection />
+
+        {/* Geofence Auto Detection */}
+        {isLoggedIn && (
+          <GeofenceSection
+            isEnabled={isGeofenceEnabled}
+            isLoading={isGeofenceLoading}
+            permissionStatus={permissionStatus}
+            placesCount={places.length}
+            offlineCount={offlineCount}
+            onToggle={handleGeofenceToggle}
+          />
+        )}
 
         {/* Push Notifications */}
         {isLoggedIn && (
