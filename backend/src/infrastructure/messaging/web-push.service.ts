@@ -40,7 +40,7 @@ export class WebPushService implements IWebPushService {
   async sendToUser(userId: string, title: string, body: string, url?: string): Promise<number> {
     if (!this.isConfigured || !this.subscriptionRepo) return 0;
 
-    const subscriptions = await this.subscriptionRepo.find({ where: { userId } });
+    const subscriptions = await this.subscriptionRepo.find({ where: { userId, platform: 'web' } });
     if (subscriptions.length === 0) return 0;
 
     const payload = JSON.stringify({

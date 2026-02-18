@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Delete,
   Body,
   UseGuards,
   Request,
@@ -10,7 +11,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsString, Matches, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PushSubscriptionEntity } from '../../infrastructure/persistence/typeorm/push-subscription.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
@@ -39,6 +40,15 @@ class UnsubscribeDto {
   @IsString()
   @IsNotEmpty()
   endpoint: string;
+}
+
+class ExpoTokenDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^ExponentPushToken\[.+\]$/, {
+    message: 'Invalid Expo Push Token format',
+  })
+  token: string;
 }
 
 @Controller('push')
@@ -85,6 +95,46 @@ export class PushController {
     await this.subscriptionRepo.delete({
       userId: req.user.userId,
       endpoint: dto.endpoint,
+    });
+    return { success: true };
+  }
+
+  @Post('expo-token')
+  @HttpCode(HttpStatus.CREATED)
+  async registerExpoToken(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ExpoTokenDto,
+  ): Promise<{ success: boolean }> {
+    const existing = await this.subscriptionRepo.findOne({
+      where: { endpoint: dto.token },
+    });
+
+    if (existing) {
+      existing.userId = req.user.userId;
+      existing.platform = 'expo';
+      await this.subscriptionRepo.save(existing);
+    } else {
+      await this.subscriptionRepo.save({
+        userId: req.user.userId,
+        endpoint: dto.token,
+        keys: '{}',
+        platform: 'expo',
+      });
+    }
+
+    return { success: true };
+  }
+
+  @Delete('expo-token')
+  @HttpCode(HttpStatus.OK)
+  async removeExpoToken(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ExpoTokenDto,
+  ): Promise<{ success: boolean }> {
+    await this.subscriptionRepo.delete({
+      userId: req.user.userId,
+      endpoint: dto.token,
+      platform: 'expo',
     });
     return { success: true };
   }

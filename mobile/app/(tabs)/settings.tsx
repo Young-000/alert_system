@@ -4,13 +4,25 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppInfoSection } from '@/components/settings/AppInfoSection';
+import { NotificationSection } from '@/components/settings/NotificationSection';
 import { QuickLinksSection } from '@/components/settings/QuickLinksSection';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export default function SettingsScreen(): React.JSX.Element {
   const { user, isLoggedIn, logout } = useAuth();
+  const { isEnabled, isLoading: isPushLoading, error: pushError, enable, disable } =
+    usePushNotifications({ enabled: isLoggedIn });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handlePushToggle = (value: boolean): void => {
+    if (value) {
+      void enable();
+    } else {
+      void disable();
+    }
+  };
 
   const handleLogout = (): void => {
     setShowLogoutConfirm(true);
@@ -57,6 +69,16 @@ export default function SettingsScreen(): React.JSX.Element {
 
         {/* Quick Links */}
         <QuickLinksSection />
+
+        {/* Push Notifications */}
+        {isLoggedIn && (
+          <NotificationSection
+            isEnabled={isEnabled}
+            isLoading={isPushLoading}
+            error={pushError}
+            onToggle={handlePushToggle}
+          />
+        )}
 
         {/* App Info */}
         <AppInfoSection />

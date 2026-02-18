@@ -129,8 +129,13 @@ class ApiClient {
     );
   }
 
-  async delete<T>(url: string): Promise<T> {
-    return this.withRetry(() => this.request<T>(url, { method: 'DELETE' }));
+  async delete<T, D = unknown>(url: string, data?: D): Promise<T> {
+    return this.withRetry(() =>
+      this.request<T>(url, {
+        method: 'DELETE',
+        body: data !== undefined ? JSON.stringify(data) : undefined,
+      }),
+    );
   }
 }
 

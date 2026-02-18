@@ -22,6 +22,7 @@ import { RecommendBestRouteUseCase } from './recommend-best-route.use-case';
 import { Repository } from 'typeorm';
 import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
 import { IWebPushService, WEB_PUSH_SERVICE } from '@infrastructure/messaging/web-push.service';
+import { IExpoPushService, EXPO_PUSH_SERVICE } from '@infrastructure/messaging/expo-push.service';
 import {
   ISolapiService,
   SOLAPI_SERVICE,
@@ -58,6 +59,7 @@ export class SendNotificationUseCase {
     @Optional() @Inject(SOLAPI_SERVICE) private solapiService?: ISolapiService,
     @Optional() @InjectRepository(NotificationLogEntity) private notificationLogRepo?: Repository<NotificationLogEntity>,
     @Optional() @Inject(WEB_PUSH_SERVICE) private webPushService?: IWebPushService,
+    @Optional() @Inject(EXPO_PUSH_SERVICE) private expoPushService?: IExpoPushService,
   ) {}
 
   async execute(alertId: string): Promise<void> {
@@ -99,6 +101,7 @@ export class SendNotificationUseCase {
       await this.sendNotification(user.name, user.phoneNumber, alert, data, timeType);
       await this.saveNotificationLog(alert, 'success', logSummary);
       this.sendWebPush(alert, logSummary);
+      this.sendExpoPush(alert, logSummary);
     } catch (error) {
       await this.handleSendFailure(error, alert, user.name, user.phoneNumber, data, logSummary);
     }
@@ -136,12 +139,15 @@ export class SendNotificationUseCase {
       try {
         data.subwayStations = await this.collectSubwayData(alert.subwayStationId);
 
-        // B-7: Detect subway delays and send urgent Web Push
-        if (data.subwayStations.length > 0 && this.webPushService) {
+        // B-7: Detect subway delays and send urgent push notifications
+        if (data.subwayStations.length > 0 && (this.webPushService || this.expoPushService)) {
           const delayInfo = this.detectSubwayDelay(data.subwayStations);
           if (delayInfo) {
             this.sendDelayAlert(alert, delayInfo, data).catch(err =>
               this.logger.warn(`Delay alert push failed: ${err}`),
+            );
+            this.sendDelayAlertExpo(alert, delayInfo, data).catch(err =>
+              this.logger.warn(`Delay alert expo push failed: ${err}`),
             );
           }
         }
@@ -283,6 +289,16 @@ export class SendNotificationUseCase {
     ).catch(err => this.logger.warn(`Web push failed: ${err}`));
   }
 
+  private sendExpoPush(alert: Alert, summary: string): void {
+    if (!this.expoPushService) return;
+    this.expoPushService.sendToUser(
+      alert.userId,
+      alert.name,
+      summary,
+      { url: '/', alertId: alert.id },
+    ).catch(err => this.logger.warn(`Expo push failed: ${err}`));
+  }
+
   private async handleSendFailure(
     error: unknown,
     alert: Alert,
@@ -379,5 +395,33 @@ export class SendNotificationUseCase {
     const url = `/commute?mode=${modeParam}`;
     await this.webPushService.sendToUser(alert.userId, title, body, url);
     this.logger.log(`Delay alert sent for ${delayInfo.stationName}역 (${delayInfo.type})`);
+  }
+
+  // B-7: Send urgent delay Expo Push notification
+  private async sendDelayAlertExpo(
+    alert: Alert,
+    delayInfo: DelayInfo,
+    data: NotificationData,
+  ): Promise<void> {
+    if (!this.expoPushService) return;
+
+    const title = '\u26A0\uFE0F 지하철 지연 감지';
+    const timeType = this.determineTimeType(alert);
+    const modeParam = timeType === 'morning' ? 'morning' : 'evening';
+
+    let body: string;
+    if (delayInfo.type === 'no_arrivals') {
+      body = `${delayInfo.stationName}역 도착 예정 열차 없음`;
+    } else {
+      body = `${delayInfo.stationName}역 열차 10분 이상 대기`;
+    }
+
+    if (data.routeRecommendation) {
+      body += `. ${data.routeRecommendation.routeName} 경로를 고려해보세요`;
+    }
+
+    const url = `/commute?mode=${modeParam}`;
+    await this.expoPushService.sendToUser(alert.userId, title, body, { url });
+    this.logger.log(`Delay alert (expo) sent for ${delayInfo.stationName}역 (${delayInfo.type})`);
   }
 }

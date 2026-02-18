@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export default function RootLayout(): React.JSX.Element {
   return (
@@ -15,6 +16,9 @@ export default function RootLayout(): React.JSX.Element {
 
 function RootNavigator(): React.JSX.Element {
   const { isLoggedIn, isLoading } = useAuth();
+
+  // Initialize push notifications when authenticated
+  usePushNotifications({ enabled: isLoggedIn });
 
   if (isLoading) {
     return (
