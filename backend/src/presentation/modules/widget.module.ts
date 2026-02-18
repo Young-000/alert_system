@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { WidgetController } from '../controllers/widget.controller';
 import { WidgetDataService } from '@application/services/widget-data.service';
 import { CommuteModule } from './commute.module';
+import { SmartDepartureModule } from './smart-departure.module';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 import { PostgresSubwayStationRepository } from '@infrastructure/persistence/postgres-subway-station.repository';
 import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
@@ -10,7 +11,7 @@ import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client
 import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
 
 @Module({
-  imports: [CommuteModule],
+  imports: [CommuteModule, SmartDepartureModule],
   controllers: [WidgetController],
   providers: [
     {

@@ -25,6 +25,9 @@ import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
 // Geofence entities
 import { UserPlaceEntity } from './typeorm/user-place.entity';
 import { CommuteEventEntity } from './typeorm/commute-event.entity';
+// Smart departure entities
+import { SmartDepartureSettingEntity } from './typeorm/smart-departure-setting.entity';
+import { SmartDepartureSnapshotEntity } from './typeorm/smart-departure-snapshot.entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -62,6 +65,9 @@ import { buildDataSourceOptions } from './database.config';
       // Geofence
       UserPlaceEntity,
       CommuteEventEntity,
+      // Smart departure
+      SmartDepartureSettingEntity,
+      SmartDepartureSnapshotEntity,
     ]),
   ],
   exports: [TypeOrmModule],

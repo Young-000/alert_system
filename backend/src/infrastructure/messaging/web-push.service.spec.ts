@@ -55,7 +55,7 @@ describe('WebPushService', () => {
       const sent = await service.sendToUser('user-1', '출근 알림', '오늘 날씨 맑음');
 
       expect(sent).toBe(2);
-      expect(mockSubscriptionRepo.find).toHaveBeenCalledWith({ where: { userId: 'user-1' } });
+      expect(mockSubscriptionRepo.find).toHaveBeenCalledWith({ where: { userId: 'user-1', platform: 'web' } });
       expect(mockSendNotification).toHaveBeenCalledTimes(2);
     });
 

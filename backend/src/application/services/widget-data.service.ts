@@ -20,7 +20,9 @@ import {
   WidgetTransitDto,
   WidgetSubwayDto,
   WidgetBusDto,
+  WidgetDepartureDataDto,
 } from '@application/dto/widget-data.dto';
+import { CalculateDepartureUseCase } from '@application/use-cases/calculate-departure.use-case';
 
 const DEFAULT_LAT = 37.5665;
 const DEFAULT_LNG = 126.9780;
@@ -37,6 +39,7 @@ export class WidgetDataService {
     @Optional() @Inject('IAlertRepository') private readonly alertRepository?: IAlertRepository,
     @Optional() @Inject(COMMUTE_ROUTE_REPOSITORY) private readonly routeRepository?: ICommuteRouteRepository,
     @Optional() @Inject('ISubwayStationRepository') private readonly subwayStationRepository?: ISubwayStationRepository,
+    @Optional() private readonly calculateDepartureUseCase?: CalculateDepartureUseCase,
   ) {}
 
   async getData(
@@ -47,12 +50,13 @@ export class WidgetDataService {
     const latitude = lat ?? DEFAULT_LAT;
     const longitude = lng ?? DEFAULT_LNG;
 
-    const [weatherResult, airQualityResult, alertsResult, transitResult] =
+    const [weatherResult, airQualityResult, alertsResult, transitResult, departureResult] =
       await Promise.allSettled([
         this.fetchWeather(latitude, longitude),
         this.fetchAirQuality(latitude, longitude),
         this.fetchAlerts(userId),
         this.fetchTransitData(userId),
+        this.fetchDepartureData(userId),
       ]);
 
     const weather = weatherResult.status === 'fulfilled' ? weatherResult.value : null;
@@ -61,6 +65,9 @@ export class WidgetDataService {
     const transit = transitResult.status === 'fulfilled'
       ? transitResult.value
       : { subway: null, bus: null };
+    const departure = departureResult.status === 'fulfilled'
+      ? departureResult.value
+      : null;
 
     if (weatherResult.status === 'rejected') {
       this.logger.warn(`Widget weather fetch failed: ${weatherResult.reason}`);
@@ -74,6 +81,9 @@ export class WidgetDataService {
     if (transitResult.status === 'rejected') {
       this.logger.warn(`Widget transit fetch failed: ${transitResult.reason}`);
     }
+    if (departureResult.status === 'rejected') {
+      this.logger.warn(`Widget departure fetch failed: ${departureResult.reason}`);
+    }
 
     const nextAlert = this.computeNextAlert(alerts);
 
@@ -82,6 +92,7 @@ export class WidgetDataService {
       airQuality,
       nextAlert,
       transit,
+      departure,
       updatedAt: new Date().toISOString(),
     };
   }
@@ -300,5 +311,15 @@ export class WidgetDataService {
     dto.arrivalMinutes = Math.round(firstArrival.arrivalTime / 60);
     dto.remainingStops = firstArrival.remainingStops;
     return dto;
+  }
+
+  /**
+   * Fetches smart departure data for the widget.
+   * Returns the most relevant upcoming departure (commute or return).
+   */
+  private async fetchDepartureData(userId: string): Promise<WidgetDepartureDataDto | null> {
+    if (!this.calculateDepartureUseCase) return null;
+
+    return this.calculateDepartureUseCase.getWidgetDepartureData(userId);
   }
 }
