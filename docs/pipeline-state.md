@@ -1,12 +1,12 @@
 # Pipeline State — Native App v2.0
 
-> 마지막 업데이트: Cycle 28 완료 (2026-02-19)
+> 마지막 업데이트: Cycle 29 완료 (2026-02-19)
 
 ## In-Flight Features
 
 | Feature | ID | Phase | Status | Branch | Cycle |
 |---------|:--:|:-----:|:------:|--------|:-----:|
-| iOS WidgetKit (Small + Medium) | P1-6 | PENDING | ⏳ NEXT | - | 29 |
+| Android Widget | P1-7 | PENDING | ⏳ NEXT | - | 30 |
 
 ## Phase 1: 작동하는 위젯 (2주 목표)
 
@@ -17,7 +17,7 @@
 | 알림 설정 화면 (CRUD + 토글) | P1-3 | ✅ DONE | #47 | M |
 | 경로 설정 + 설정 + 알림 기록 화면 | P1-4 | ✅ DONE | #48 | M |
 | FCM/APNs 푸시 알림 | P1-5 | ✅ DONE | #49 | M |
-| iOS WidgetKit (Small + Medium) | P1-6 | PENDING | - | L |
+| iOS WidgetKit (Small + Medium) | P1-6 | ✅ DONE | #50 | L |
 | Android Widget | P1-7 | PENDING | - | M |
 | 앱 아이콘 + 스플래시 + 스토어 에셋 | P1-8 | PENDING | - | S |
 

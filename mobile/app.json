@@ -23,7 +23,40 @@
           "sounds": []
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "CommuteSmall",
+              "label": "출퇴근 메이트 (소)",
+              "description": "날씨, 미세먼지, 다음 알림을 한눈에",
+              "minWidth": "250dp",
+              "minHeight": "50dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 1,
+              "previewImage": "./assets/widget-preview/commute-small.png",
+              "widgetFeatures": "reconfigurable",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "none"
+            },
+            {
+              "name": "CommuteMedium",
+              "label": "출퇴근 메이트",
+              "description": "날씨, 미세먼지, 알림, 교통 정보를 한눈에",
+              "minWidth": "250dp",
+              "minHeight": "100dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widget-preview/commute-medium.png",
+              "widgetFeatures": "reconfigurable",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "none"
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
