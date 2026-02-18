@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
@@ -185,15 +185,8 @@ export function AlertSettingsPage(): JSX.Element {
   // Keep ref in sync so handleSubmit can call wizard.setStep without circular deps
   wizardSetStepRef.current = wizard.setStep;
 
-  // Auto-show wizard only once when initial load reveals zero alerts
-  const autoShowEvaluated = useRef(false);
-  useEffect(() => {
-    if (alertCrud.isLoadingAlerts || autoShowEvaluated.current) return;
-    autoShowEvaluated.current = true;
-    if (alertCrud.alerts.length === 0) {
-      wizard.setShowWizard(true);
-    }
-  }, [alertCrud.isLoadingAlerts, alertCrud.alerts.length, wizard.setShowWizard]);
+  // Wizard visibility: show when no alerts (automatic) or user clicked "+" (explicit)
+  const shouldShowWizard = alertCrud.alerts.length === 0 || wizard.showWizard;
 
   // Import from route handler
   const importFromRoute = (route: RouteResponse): void => {
@@ -321,8 +314,8 @@ export function AlertSettingsPage(): JSX.Element {
         />
       )}
 
-      {/* "Add new alert" toggle button */}
-      {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && !wizard.showWizard && (
+      {/* "Add new alert" toggle button — only when alerts exist and wizard is hidden */}
+      {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && !shouldShowWizard && (
         <button
           type="button"
           className="btn btn-primary add-alert-btn"
@@ -333,7 +326,7 @@ export function AlertSettingsPage(): JSX.Element {
         </button>
       )}
 
-      {!alertCrud.isLoadingAlerts && wizard.showWizard && (
+      {!alertCrud.isLoadingAlerts && shouldShowWizard && (
       <div id="wizard-content" className="wizard-container">
         <WizardStepIndicator
           progress={progress}
@@ -426,7 +419,7 @@ export function AlertSettingsPage(): JSX.Element {
       )}
 
       {/* 빠른 알림 프리셋 - 위저드가 활성화되지 않은 경우에만 표시 */}
-      {!wizard.showWizard && (
+      {!shouldShowWizard && (
         <QuickPresets
           alerts={alertCrud.alerts}
           isSubmitting={alertCrud.isSubmitting}
