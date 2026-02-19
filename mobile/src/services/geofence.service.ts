@@ -11,7 +11,37 @@ import type { Place } from '@/types/place';
 
 export const GEOFENCE_TASK_NAME = 'commute-geofence-task';
 const OFFLINE_QUEUE_KEY = '@geofence_offline_queue';
+const LIVE_ACTIVITY_EVENT_KEY = '@geofence_live_activity_event';
 const MAX_BATCH_SIZE = 50;
+
+// ─── Live Activity Event Queue (Background → Foreground) ─────
+
+type LiveActivityGeofenceEvent = {
+  eventType: 'enter' | 'exit';
+  placeId: string;
+  triggeredAt: string;
+};
+
+async function writeLiveActivityEvent(
+  event: LiveActivityGeofenceEvent,
+): Promise<void> {
+  try {
+    await AsyncStorage.setItem(LIVE_ACTIVITY_EVENT_KEY, JSON.stringify(event));
+  } catch {
+    // Non-critical: Live Activity update is best-effort from background
+  }
+}
+
+async function readAndClearLiveActivityEvent(): Promise<LiveActivityGeofenceEvent | null> {
+  try {
+    const raw = await AsyncStorage.getItem(LIVE_ACTIVITY_EVENT_KEY);
+    if (!raw) return null;
+    await AsyncStorage.removeItem(LIVE_ACTIVITY_EVENT_KEY);
+    return JSON.parse(raw) as LiveActivityGeofenceEvent;
+  } catch {
+    return null;
+  }
+}
 
 // ─── Offline Queue ──────────────────────────────────
 
@@ -83,6 +113,13 @@ export function defineGeofenceTask(): void {
       longitude: region.longitude,
     };
 
+    // Write event for Live Activity foreground consumption (Bug #1 fix)
+    await writeLiveActivityEvent({
+      eventType: mappedEventType,
+      placeId: region.identifier,
+      triggeredAt: event.triggeredAt,
+    });
+
     const sent = await sendEventToServer(event);
     if (!sent) {
       await addToOfflineQueue(event);
@@ -91,6 +128,8 @@ export function defineGeofenceTask(): void {
 }
 
 // ─── Geofence Service ───────────────────────────────
+
+export { readAndClearLiveActivityEvent };
 
 export const geofenceService = {
   /**
