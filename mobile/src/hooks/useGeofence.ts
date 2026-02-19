@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { geofenceService } from '@/services/geofence.service';
+import { geofenceService, readAndClearLiveActivityEvent } from '@/services/geofence.service';
 import { useLocationPermission } from './useLocationPermission';
+import { useLiveActivity } from './useLiveActivity';
 
 import type { Place } from '@/types/place';
+
+type GeofenceEventType = 'enter' | 'exit';
 
 type UseGeofenceReturn = {
   isMonitoring: boolean;
@@ -17,7 +20,14 @@ type UseGeofenceReturn = {
   syncOfflineEvents: () => Promise<number>;
   requestPermission: () => Promise<boolean>;
   openSettings: () => Promise<void>;
+  /** Register a callback for geofence events (FE-5: Live Activity integration). */
+  onGeofenceEvent: (callback: GeofenceEventCallback) => void;
 };
+
+type GeofenceEventCallback = (
+  eventType: GeofenceEventType,
+  placeId: string,
+) => void;
 
 export function useGeofence(): UseGeofenceReturn {
   const {
@@ -26,11 +36,13 @@ export function useGeofence(): UseGeofenceReturn {
     requestBackground,
     openSettings,
   } = useLocationPermission();
+  const liveActivity = useLiveActivity();
 
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
   const syncAttempted = useRef(false);
+  const geofenceCallbackRef = useRef<GeofenceEventCallback | null>(null);
 
   // Check geofencing state on mount
   useEffect(() => {
@@ -60,6 +72,54 @@ export function useGeofence(): UseGeofenceReturn {
       syncAttempted.current = false;
     };
   }, []);
+
+  // ─── FE-5: Live Activity Integration on Geofence Events ────
+  // Bug #1 fix: Background TaskManager can't access React refs.
+  // Instead, the background task writes events to AsyncStorage, and we
+  // read them when the app returns to foreground (AppState 'active').
+
+  useEffect(() => {
+    if (!liveActivity.isSupported) return;
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') return;
+      void checkPendingGeofenceEvent();
+    });
+
+    // Also check immediately on mount (app may already be active)
+    void checkPendingGeofenceEvent();
+
+    return () => {
+      subscription.remove();
+    };
+  }, [liveActivity.isSupported, liveActivity.isActive]);
+
+  const checkPendingGeofenceEvent = async (): Promise<void> => {
+    const event = await readAndClearLiveActivityEvent();
+    if (!event) return;
+
+    // Dispatch to registered callback (for external consumers)
+    if (geofenceCallbackRef.current) {
+      geofenceCallbackRef.current(event.eventType, event.placeId);
+    }
+
+    // Handle Live Activity state transitions
+    if (!liveActivity.isActive) return;
+
+    if (event.eventType === 'exit') {
+      void liveActivity.update({
+        optimalDepartureAt: new Date().toISOString(),
+        estimatedTravelMin: 0,
+        status: 'inTransit',
+        minutesUntilDeparture: 0,
+        hasTrafficDelay: false,
+      });
+    }
+
+    if (event.eventType === 'enter') {
+      void liveActivity.end();
+    }
+  };
 
   const syncOfflineIfNeeded = async (): Promise<void> => {
     const count = await geofenceService.getOfflineQueueCount();
@@ -112,6 +172,13 @@ export function useGeofence(): UseGeofenceReturn {
     return requestBackground();
   }, [requestBackground]);
 
+  const onGeofenceEvent = useCallback(
+    (callback: GeofenceEventCallback): void => {
+      geofenceCallbackRef.current = callback;
+    },
+    [],
+  );
+
   return {
     isMonitoring,
     isEnabled,
@@ -123,5 +190,6 @@ export function useGeofence(): UseGeofenceReturn {
     syncOfflineEvents,
     requestPermission,
     openSettings,
+    onGeofenceEvent,
   };
 }

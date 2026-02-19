@@ -7,6 +7,9 @@ import WidgetKit
 struct CommuteWidgetBundle: WidgetBundle {
   var body: some Widget {
     CommuteWidget()
+    if #available(iOS 16.1, *) {
+      CommuteLiveActivity()
+    }
   }
 }
 

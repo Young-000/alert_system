@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger, Optional } from '@nestjs/common';
 import {
   SmartDepartureSnapshot,
 } from '@domain/entities/smart-departure-snapshot.entity';
@@ -24,6 +24,10 @@ import {
   WidgetDepartureDto,
 } from '@application/dto/smart-departure.dto';
 import type { SmartDepartureSetting, DepartureType } from '@domain/entities/smart-departure-setting.entity';
+import {
+  ILiveActivityPushService,
+  LIVE_ACTIVITY_PUSH_SERVICE,
+} from '@application/services/live-activity-push.service';
 
 const HISTORY_DAYS = 14;
 const MIN_HISTORY_RECORDS = 3;
@@ -48,6 +52,9 @@ export class CalculateDepartureUseCase {
     private readonly routeRepo: ICommuteRouteRepository,
     @Inject(COMMUTE_SESSION_REPOSITORY)
     private readonly sessionRepo: ICommuteSessionRepository,
+    @Optional()
+    @Inject(LIVE_ACTIVITY_PUSH_SERVICE)
+    private readonly liveActivityPush?: ILiveActivityPushService,
   ) {}
 
   /**
@@ -123,6 +130,7 @@ export class CalculateDepartureUseCase {
 
     // 7. Create or update snapshot
     if (existing) {
+      const previousTravelMin = existing.estimatedTravelMin;
       const updated = existing.withUpdatedCalculation({
         estimatedTravelMin,
         optimalDepartureAt,
@@ -132,6 +140,13 @@ export class CalculateDepartureUseCase {
       this.logger.debug(
         `Updated snapshot for setting ${setting.id}: departure at ${optimalDepartureAt.toISOString()}`,
       );
+
+      // Notify Live Activity if travel time changed significantly (>= 2 min difference)
+      const travelTimeDelta = Math.abs(estimatedTravelMin - previousTravelMin);
+      if (travelTimeDelta >= 2) {
+        await this.notifyLiveActivityUpdate(updated, realtimeAdj > 0);
+      }
+
       return updated;
     }
 
@@ -232,6 +247,48 @@ export class CalculateDepartureUseCase {
       Math.max(Math.round(weighted), MIN_TRAVEL_MINUTES),
       MAX_TRAVEL_MINUTES,
     );
+  }
+
+  /**
+   * Notify active Live Activity tokens when departure calculation changes.
+   * This is the integration point for push-to-update (P2-5).
+   *
+   * TODO: Query live_activity_tokens table for active tokens matching
+   * the snapshot's userId and settingId, then send push-to-update via APNs.
+   */
+  private async notifyLiveActivityUpdate(
+    snapshot: SmartDepartureSnapshot,
+    hasTrafficDelay: boolean,
+  ): Promise<void> {
+    if (!this.liveActivityPush) return;
+
+    try {
+      const contentState = this.liveActivityPush.buildContentState({
+        optimalDepartureAt: snapshot.optimalDepartureAt,
+        estimatedTravelMin: snapshot.estimatedTravelMin,
+        status: snapshot.status,
+        minutesUntilDeparture: snapshot.getMinutesUntilDeparture(),
+        hasTrafficDelay,
+        trafficDelayMessage: hasTrafficDelay
+          ? `소요시간이 ${snapshot.estimatedTravelMin}분으로 변경되었습니다`
+          : undefined,
+      });
+
+      this.logger.log(
+        `Live Activity push-to-update triggered for user ${snapshot.userId}, ` +
+        `setting ${snapshot.settingId}: travel=${snapshot.estimatedTravelMin}min, delay=${hasTrafficDelay}`,
+      );
+
+      // TODO: Query LiveActivityTokenEntity for active tokens matching userId/settingId
+      // and call this.liveActivityPush.sendUpdate(token.pushToken, payload) for each.
+      // For MVP, we just build and log the payload. The actual token lookup and push
+      // will be wired when the LiveActivityModule is injected into SmartDepartureModule.
+      void contentState;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to send Live Activity push-to-update for snapshot ${snapshot.id}: ${error}`,
+      );
+    }
   }
 
   private async getHistoryAverage(
