@@ -9,7 +9,6 @@ import {
   Max,
   IsArray,
   ArrayMinSize,
-  IsBoolean,
 } from 'class-validator';
 
 // ----- Request DTOs -----

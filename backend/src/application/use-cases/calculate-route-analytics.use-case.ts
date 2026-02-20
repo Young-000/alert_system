@@ -78,14 +78,22 @@ export class CalculateRouteAnalyticsUseCase {
     }
 
     const routes = await this.routeRepository.findByUserId(userId);
-    const results: RouteAnalytics[] = [];
 
-    for (const route of routes) {
-      try {
-        const analytics = await this.execute(route.id);
-        results.push(analytics);
-      } catch (error) {
-        this.logger.error(`Failed to calculate analytics for route ${route.id}:`, error);
+    // Parallel execution to avoid sequential N+1 pattern
+    const settled = await Promise.allSettled(
+      routes.map((route) => this.execute(route.id))
+    );
+
+    const results: RouteAnalytics[] = [];
+    for (let i = 0; i < settled.length; i++) {
+      const result = settled[i];
+      if (result.status === 'fulfilled') {
+        results.push(result.value);
+      } else {
+        this.logger.error(
+          `Failed to calculate analytics for route ${routes[i].id}:`,
+          result.reason,
+        );
       }
     }
 

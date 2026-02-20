@@ -11,7 +11,6 @@ import {
   USER_PLACE_REPOSITORY,
 } from '@domain/repositories/user-place.repository';
 import { UserPlace } from '@domain/entities/user-place.entity';
-import type { PlaceType } from '@domain/entities/user-place.entity';
 import { CreatePlaceDto } from '@application/dto/create-place.dto';
 import { UpdatePlaceDto } from '@application/dto/update-place.dto';
 import type { PlaceResponseDto } from '@application/dto/place-response.dto';

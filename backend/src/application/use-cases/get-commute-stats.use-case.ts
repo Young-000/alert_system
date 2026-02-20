@@ -118,8 +118,14 @@ export class GetCommuteStatsUseCase {
 
     const routeStats: RouteStatsDto[] = [];
 
+    // Batch-fetch all routes to avoid N+1 query
+    const allRoutes = await this.routeRepository.findByUserId(
+      sessions[0]?.userId ?? ''
+    );
+    const routeMap = new Map(allRoutes.map((r) => [r.id, r]));
+
     for (const [routeId, routeSessions] of sessionsByRoute) {
-      const route = await this.routeRepository.findById(routeId);
+      const route = routeMap.get(routeId);
       if (!route) continue;
 
       const checkpointInfoMap = new Map<string, CheckpointInfo>();

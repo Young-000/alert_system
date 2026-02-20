@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { SmartDepartureSnapshotEntity } from '../typeorm/smart-departure-snapshot.entity';
 import { ISmartDepartureSnapshotRepository } from '@domain/repositories/smart-departure-snapshot.repository';
 import { SmartDepartureSnapshot } from '@domain/entities/smart-departure-snapshot.entity';

@@ -280,7 +280,7 @@ export function CommuteTrackingPage(): JSX.Element {
         <button
           type="button"
           className="commute-v2-back"
-          onClick={() => navigate('/')}
+          onClick={() => setShowCancelConfirm(true)}
           aria-label="뒤로 가기"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

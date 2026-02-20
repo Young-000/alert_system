@@ -216,7 +216,7 @@ export function RouteSetupPage(): JSX.Element {
   const removeStop = useCallback((index: number) => {
     setSelectedStops(prev => {
       if (prev.length <= 1) {
-        setError('최소 하나의 정류장은 필요합니다.');
+        setError('경유지는 최소 1개 필요합니다.');
         return prev;
       }
       return prev.filter((_, i) => i !== index);

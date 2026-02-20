@@ -50,7 +50,17 @@ export function WeeklyReportCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) return renderSkeleton();
-  if (error || !report) return renderEmpty();
+  if (error) {
+    return (
+      <section className="weekly-report-card weekly-report-card--empty" aria-label="주간 리포트">
+        <div className="weekly-report-header">
+          <h2 className="weekly-report-title">주간 리포트</h2>
+        </div>
+        <p className="weekly-report-empty-msg" role="alert">{error}</p>
+      </section>
+    );
+  }
+  if (!report) return renderEmpty();
   if (report.totalSessions === 0 && weekOffset === 0) return renderEmpty();
 
   const canGoNewer = weekOffset > 0;
