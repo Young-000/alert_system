@@ -23,7 +23,7 @@ import {
   SmartDepartureTodayResponseDto,
   WidgetDepartureDto,
 } from '@application/dto/smart-departure.dto';
-import type { SmartDepartureSetting, DepartureType } from '@domain/entities/smart-departure-setting.entity';
+import type { SmartDepartureSetting } from '@domain/entities/smart-departure-setting.entity';
 import {
   ILiveActivityPushService,
   LIVE_ACTIVITY_PUSH_SERVICE,
