@@ -52,6 +52,7 @@ export function LoginPage(): JSX.Element {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      if (isLoading) return;
       setError('');
       setIsLoading(true);
 

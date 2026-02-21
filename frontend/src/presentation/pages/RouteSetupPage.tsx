@@ -471,7 +471,7 @@ export function RouteSetupPage(): JSX.Element {
   };
 
   const handleDeleteConfirm = async (): Promise<void> => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeleting) return;
     setIsDeleting(true);
     try {
       await commuteApi.deleteRoute(deleteTarget.id);

@@ -205,7 +205,7 @@ export function CommuteTrackingPage(): JSX.Element {
 
   // Cancel session
   const handleCancelConfirm = async (): Promise<void> => {
-    if (!session) return;
+    if (!session || isCancelling) return;
     setIsCancelling(true);
     try {
       await commuteApi.cancelSession(session.id);
