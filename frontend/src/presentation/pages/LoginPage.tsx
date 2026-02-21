@@ -87,7 +87,7 @@ export function LoginPage(): JSX.Element {
         setIsLoading(false);
       }
     },
-    [email, password, name, phoneNumber, mode, navigate],
+    [email, password, name, phoneNumber, mode, navigate, isLoading],
   );
 
   const toggleMode = () => {

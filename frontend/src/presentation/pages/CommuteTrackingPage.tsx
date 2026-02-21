@@ -196,7 +196,13 @@ export function CommuteTrackingPage(): JSX.Element {
 
       const completed = await commuteApi.completeSession({ sessionId: session.id });
       setSession(completed);
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('401') || msg.includes('Unauthorized')) {
+        setError('로그인이 만료되었습니다.');
+        setTimeout(() => navigate('/login'), 1500);
+        return;
+      }
       setError('기록 완료에 실패했습니다.');
     } finally {
       setIsCompleting(false);
@@ -210,7 +216,13 @@ export function CommuteTrackingPage(): JSX.Element {
     try {
       await commuteApi.cancelSession(session.id);
       navigate('/', { replace: true });
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('401') || msg.includes('Unauthorized')) {
+        setError('로그인이 만료되었습니다.');
+        setTimeout(() => navigate('/login'), 1500);
+        return;
+      }
       setError('취소에 실패했습니다.');
     } finally {
       setIsCancelling(false);
