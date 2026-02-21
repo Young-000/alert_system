@@ -87,6 +87,13 @@ export function HomePage(): JSX.Element {
       ) : data.weatherError ? (
         <section className="weather-hero" aria-label="날씨 오류">
           <p className="muted" role="alert">{data.weatherError}</p>
+          <button
+            type="button"
+            className="btn btn-sm home-retry-btn"
+            onClick={data.retryWeather}
+          >
+            다시 시도
+          </button>
         </section>
       ) : null}
 

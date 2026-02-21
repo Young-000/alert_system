@@ -66,6 +66,7 @@ export interface UseHomeDataReturn {
   isCommuteStarting: boolean;
   handleStartCommute: () => Promise<void>;
   retryLoad: () => void;
+  retryWeather: () => void;
   navigate: ReturnType<typeof useNavigate>;
 }
 
@@ -261,6 +262,12 @@ export function useHomeData(): UseHomeDataReturn {
       alertsQuery.refetch();
       routesQuery.refetch();
       statsQuery.refetch();
+      weatherQuery.refetch();
+      airQualityQuery.refetch();
+    },
+    retryWeather: () => {
+      weatherQuery.refetch();
+      airQualityQuery.refetch();
     },
     navigate,
   };

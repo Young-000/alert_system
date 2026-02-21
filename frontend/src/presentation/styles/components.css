@@ -1583,7 +1583,10 @@ textarea.input:focus {
   color: var(--primary);
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 8px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   border-radius: var(--radius-sm);
   transition: background 0.2s;
 }
