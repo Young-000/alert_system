@@ -46,6 +46,15 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
     return entity ? this.toDomain(entity) : undefined;
   }
 
+  async findByIds(ids: string[]): Promise<CommuteRoute[]> {
+    if (ids.length === 0) return [];
+    const entities = await this.routeRepository.find({
+      where: ids.map((id) => ({ id })),
+      relations: ['checkpoints'],
+    });
+    return entities.map((e) => this.toDomain(e));
+  }
+
   async findByUserId(userId: string): Promise<CommuteRoute[]> {
     const entities = await this.routeRepository.find({
       where: { userId },

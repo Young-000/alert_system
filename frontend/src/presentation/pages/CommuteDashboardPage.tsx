@@ -33,6 +33,7 @@ export function CommuteDashboardPage(): JSX.Element {
     behaviorAnalytics,
     behaviorPatterns,
     routeComparison,
+    retryLoad,
     commuteApi,
     setSearchParams,
   } = useCommuteDashboard();
@@ -81,6 +82,7 @@ export function CommuteDashboardPage(): JSX.Element {
       {loadError && (
         <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
           {loadError}
+          <button type="button" className="btn btn-sm" onClick={retryLoad} style={{ marginLeft: '0.5rem' }}>다시 시도</button>
         </div>
       )}
 

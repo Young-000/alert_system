@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -36,6 +36,7 @@ interface UseCommuteDashboardReturn {
   behaviorAnalytics: BehaviorAnalytics | null;
   behaviorPatterns: UserPattern[];
   routeComparison: RouteComparisonResponse | null;
+  retryLoad: () => void;
   commuteApi: ReturnType<typeof getCommuteApiClient>;
   searchParams: URLSearchParams;
   setSearchParams: ReturnType<typeof useSearchParams>[1];
@@ -83,6 +84,13 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
   }, []);
 
   // Load data from API
+  const [loadKey, setLoadKey] = useState(0);
+
+  const retryLoad = useCallback((): void => {
+    setLoadError('');
+    setLoadKey((k) => k + 1);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -146,7 +154,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     return () => {
       isMounted = false;
     };
-  }, [userId, commuteApi]);
+  }, [userId, commuteApi, loadKey]);
 
   return {
     userId,
@@ -167,6 +175,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     behaviorAnalytics,
     behaviorPatterns,
     routeComparison,
+    retryLoad,
     commuteApi,
     searchParams,
     setSearchParams,
