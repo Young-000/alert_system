@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 
@@ -8,7 +9,7 @@ interface RouteCardProps {
   onDelete: (route: RouteResponse) => void;
 }
 
-export function RouteCard({
+export const RouteCard = memo(function RouteCard({
   route,
   alertCount,
   onEdit,
@@ -74,4 +75,4 @@ export function RouteCard({
       </div>
     </div>
   );
-}
+});

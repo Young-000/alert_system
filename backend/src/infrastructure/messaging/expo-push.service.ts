@@ -46,7 +46,7 @@ export class ExpoPushService implements IExpoPushService {
     const messages: ExpoPushMessage[] = [];
     for (const sub of subscriptions) {
       if (!Expo.isExpoPushToken(sub.endpoint)) {
-        this.logger.warn(`Invalid Expo push token: ${sub.endpoint}, removing`);
+        this.logger.warn(`Invalid Expo push token: ${String(sub.endpoint).substring(0, 12)}***, removing`);
         await this.subscriptionRepo.delete(sub.id);
         continue;
       }
@@ -101,7 +101,7 @@ export class ExpoPushService implements IExpoPushService {
     if (!this.subscriptionRepo) return;
     try {
       await this.subscriptionRepo.delete({ endpoint: token, platform: 'expo' });
-      this.logger.debug(`Removed expired Expo token: ${token}`);
+      this.logger.debug(`Removed expired Expo token: ${token.substring(0, 12)}***`);
     } catch (error) {
       this.logger.warn(`Failed to remove expired token: ${error}`);
     }
