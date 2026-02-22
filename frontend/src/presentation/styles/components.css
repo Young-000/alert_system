@@ -1213,8 +1213,8 @@ textarea.input:focus {
 .input-addon {
   position: absolute;
   right: 4px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   background: transparent;

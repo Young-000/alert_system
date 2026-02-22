@@ -42,7 +42,7 @@ async function bootstrap() {
         callback(null, true);
       } else {
         // Vercel 프리뷰 URL은 정확한 프로젝트 패턴만 허용
-        const vercelPattern = /^https:\/\/frontend-xi-two-52(-[a-z0-9]+)?\.vercel\.app$/;
+        const vercelPattern = /^https:\/\/frontend-xi-two-52(-[a-z0-9]+)*\.vercel\.app$/;
         if (vercelPattern.test(origin)) {
           callback(null, true);
         } else {
