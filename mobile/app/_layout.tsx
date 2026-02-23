@@ -35,6 +35,7 @@ function RootNavigator(): React.JSX.Element {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="places" options={{ presentation: 'modal' }} />
           <Stack.Screen name="smart-departure" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="challenges" options={{ presentation: 'modal' }} />
         </>
       ) : (
         <Stack.Screen name="(auth)" />
