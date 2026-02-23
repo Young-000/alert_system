@@ -26,6 +26,16 @@ import { CheckpointRecordEntity } from './typeorm/checkpoint-record.entity';
 import { RouteAnalyticsEntity } from './typeorm/route-analytics.entity';
 import { NotificationLogEntity } from './typeorm/notification-log.entity';
 import { PushSubscriptionEntity } from './typeorm/push-subscription.entity';
+// Geofence entities
+import { UserPlaceEntity } from './typeorm/user-place.entity';
+import { CommuteEventEntity } from './typeorm/commute-event.entity';
+// Smart departure entities
+import { SmartDepartureSettingEntity } from './typeorm/smart-departure-setting.entity';
+import { SmartDepartureSnapshotEntity } from './typeorm/smart-departure-snapshot.entity';
+// Challenge system entities
+import { ChallengeTemplateEntity } from './typeorm/challenge-template.entity';
+import { UserChallengeEntity } from './typeorm/user-challenge.entity';
+import { UserBadgeEntity } from './typeorm/user-badge.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -53,6 +63,16 @@ export function buildDataSourceOptions(): DataSourceOptions {
       RouteAnalyticsEntity,
       NotificationLogEntity,
       PushSubscriptionEntity,
+      // Geofence
+      UserPlaceEntity,
+      CommuteEventEntity,
+      // Smart departure
+      SmartDepartureSettingEntity,
+      SmartDepartureSnapshotEntity,
+      // Challenge system
+      ChallengeTemplateEntity,
+      UserChallengeEntity,
+      UserBadgeEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -94,6 +114,16 @@ export function buildDataSourceOptions(): DataSourceOptions {
     RouteAnalyticsEntity,
     NotificationLogEntity,
     PushSubscriptionEntity,
+    // Geofence
+    UserPlaceEntity,
+    CommuteEventEntity,
+    // Smart departure
+    SmartDepartureSettingEntity,
+    SmartDepartureSnapshotEntity,
+    // Challenge system
+    ChallengeTemplateEntity,
+    UserChallengeEntity,
+    UserBadgeEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {
