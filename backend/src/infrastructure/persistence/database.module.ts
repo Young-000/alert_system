@@ -39,6 +39,7 @@ import { buildDataSourceOptions } from './database.config';
   imports: [
     TypeOrmModule.forRoot({
       ...buildDataSourceOptions(),
+      autoLoadEntities: true,
       retryAttempts: process.env.NODE_ENV === 'production' ? 3 : 1,
       retryDelay: 3000,
     }),
