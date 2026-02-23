@@ -12,6 +12,7 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ManageCommuteSessionUseCase } from '@application/use-cases/manage-commute-session.use-case';
@@ -19,6 +20,8 @@ import { GetCommuteStatsUseCase } from '@application/use-cases/get-commute-stats
 import { GetWeeklyReportUseCase } from '@application/use-cases/get-weekly-report.use-case';
 import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
 import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
+import { EvaluateChallengeUseCase } from '@application/use-cases/evaluate-challenge.use-case';
+import type { ChallengeUpdate } from '@application/dto/challenge.dto';
 import {
   StartSessionDto,
   RecordCheckpointDto,
@@ -46,6 +49,8 @@ export class CommuteController {
     private readonly getWeeklyReportUseCase: GetWeeklyReportUseCase,
     private readonly getStreakUseCase: GetStreakUseCase,
     private readonly updateStreakUseCase: UpdateStreakUseCase,
+    @Optional()
+    private readonly evaluateChallengeUseCase?: EvaluateChallengeUseCase,
   ) {}
 
   /**
@@ -91,7 +96,10 @@ export class CommuteController {
   async completeSession(
     @Body() dto: CompleteSessionDto,
     @Request() req: AuthenticatedRequest,
-  ): Promise<SessionResponseDto & { streakUpdate?: import('@application/dto/streak.dto').StreakUpdateResultDto | null }> {
+  ): Promise<SessionResponseDto & {
+    streakUpdate?: import('@application/dto/streak.dto').StreakUpdateResultDto | null;
+    challengeUpdates?: ChallengeUpdate[];
+  }> {
     // 권한 검사: 해당 세션이 본인의 것인지 확인
     const session = await this.manageSessionUseCase.getSessionById(dto.sessionId);
     if (session.userId !== req.user.userId) {
@@ -111,7 +119,26 @@ export class CommuteController {
       this.logger.warn(`Failed to update streak for user ${req.user.userId}: ${err}`);
     }
 
-    return { ...result, streakUpdate };
+    // 챌린지 진행도 평가 (실패해도 세션 완료는 성공으로 처리)
+    let challengeUpdates: ChallengeUpdate[] = [];
+    if (this.evaluateChallengeUseCase) {
+      try {
+        challengeUpdates = await this.evaluateChallengeUseCase.execute(
+          req.user.userId,
+          {
+            totalDurationMinutes: result.totalDurationMinutes,
+            currentStreak: streakUpdate?.currentStreak,
+            weeklySessionCount: streakUpdate?.weeklyCount,
+          },
+        );
+      } catch (err) {
+        this.logger.warn(
+          `Failed to evaluate challenges for user ${req.user.userId}: ${err}`,
+        );
+      }
+    }
+
+    return { ...result, streakUpdate, challengeUpdates };
   }
 
   /**
