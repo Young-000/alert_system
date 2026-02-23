@@ -10,6 +10,7 @@ describe('UpdateUserLocationUseCase', () => {
     userRepository = {
       save: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findByEmail: jest.fn(),
       findByGoogleId: jest.fn(),
       updateGoogleId: jest.fn(),

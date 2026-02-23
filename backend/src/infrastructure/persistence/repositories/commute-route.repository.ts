@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CommuteRouteEntity } from '../typeorm/commute-route.entity';
 import { RouteCheckpointEntity } from '../typeorm/route-checkpoint.entity';
 import { ICommuteRouteRepository } from '@domain/repositories/commute-route.repository';
@@ -44,6 +44,15 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
       relations: ['checkpoints'],
     });
     return entity ? this.toDomain(entity) : undefined;
+  }
+
+  async findByIds(ids: string[]): Promise<CommuteRoute[]> {
+    if (ids.length === 0) return [];
+    const entities = await this.routeRepository.find({
+      where: { id: In(ids) },
+      relations: ['checkpoints'],
+    });
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserId(userId: string): Promise<CommuteRoute[]> {
