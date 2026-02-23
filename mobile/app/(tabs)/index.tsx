@@ -1,8 +1,11 @@
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ChallengeCard } from '@/components/challenge/ChallengeCard';
 import { colors } from '@/constants/colors';
+import { useChallenges } from '@/hooks/useChallenges';
 import { useHomeData } from '@/hooks/useHomeData';
 import { useSmartDepartureToday } from '@/hooks/useSmartDepartureToday';
 import { useBriefingAdvice } from '@/hooks/useBriefingAdvice';
@@ -21,9 +24,11 @@ import { GuestView } from '@/components/home/GuestView';
 import { NetworkErrorView } from '@/components/home/NetworkErrorView';
 
 export default function HomeScreen(): React.JSX.Element {
+  const router = useRouter();
   const data = useHomeData();
   const departure = useSmartDepartureToday();
   const commuteMode = useCommuteMode();
+  const { activeChallenges } = useChallenges();
   const contextBriefing = useBriefingAdvice({
     weather: data.weather,
     airQuality: data.airQuality,
@@ -130,6 +135,14 @@ export default function HomeScreen(): React.JSX.Element {
             commuteMinutes={departure.commuteMinutes}
             returnMinutes={departure.returnMinutes}
             isLoading={departure.isLoading}
+          />
+        )}
+
+        {/* Challenge card */}
+        {data.isLoggedIn && (
+          <ChallengeCard
+            challenges={activeChallenges}
+            onPress={() => router.push('/challenges')}
           />
         )}
 

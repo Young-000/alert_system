@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // TypeORM Entities
@@ -34,6 +34,9 @@ import { GetWeeklyReportUseCase } from '@application/use-cases/get-weekly-report
 import { GetStreakUseCase } from '@application/use-cases/get-streak.use-case';
 import { UpdateStreakUseCase } from '@application/use-cases/update-streak.use-case';
 
+// Challenge module (for session completion -> challenge evaluation)
+import { ChallengeModule } from './challenge.module';
+
 // Controllers
 import { RouteController } from '../controllers/route.controller';
 import { CommuteController } from '../controllers/commute.controller';
@@ -41,6 +44,7 @@ import { AnalyticsController } from '../controllers/analytics.controller';
 
 @Module({
   imports: [
+    forwardRef(() => ChallengeModule),
     TypeOrmModule.forFeature([
       CommuteRouteEntity,
       RouteCheckpointEntity,
