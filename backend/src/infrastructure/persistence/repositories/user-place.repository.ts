@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UserPlaceEntity } from '../typeorm/user-place.entity';
 import { IUserPlaceRepository } from '@domain/repositories/user-place.repository';
 import { UserPlace } from '@domain/entities/user-place.entity';
@@ -24,6 +24,14 @@ export class UserPlaceRepositoryImpl implements IUserPlaceRepository {
       where: { id },
     });
     return entity ? this.toDomain(entity) : undefined;
+  }
+
+  async findByIds(ids: string[]): Promise<UserPlace[]> {
+    if (ids.length === 0) return [];
+    const entities = await this.placeRepository.find({
+      where: { id: In(ids) },
+    });
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserId(userId: string): Promise<UserPlace[]> {

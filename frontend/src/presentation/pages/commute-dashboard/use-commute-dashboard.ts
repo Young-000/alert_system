@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -27,6 +27,7 @@ interface UseCommuteDashboardReturn {
   setSelectedRouteId: React.Dispatch<React.SetStateAction<string | null>>;
   isLoading: boolean;
   loadError: string;
+  retryLoad: () => void;
   activeTab: TabId;
   setActiveTab: React.Dispatch<React.SetStateAction<TabId>>;
   routeAnalytics: RouteAnalyticsResponse[];
@@ -61,6 +62,12 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
   const [analyticsError, setAnalyticsError] = useState('');
   const [comparisonError, setComparisonError] = useState('');
   const [behaviorError, setBehaviorError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
+
+  const retryLoad = useCallback((): void => {
+    setLoadError('');
+    setRetryKey(k => k + 1);
+  }, []);
 
   // Handle URL tab parameter first (highest priority) -- validate tab is actually visible
   useEffect(() => {
@@ -146,7 +153,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     return () => {
       isMounted = false;
     };
-  }, [userId, commuteApi]);
+  }, [userId, commuteApi, retryKey]);
 
   return {
     userId,
@@ -158,6 +165,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     setSelectedRouteId,
     isLoading,
     loadError,
+    retryLoad,
     activeTab,
     setActiveTab,
     routeAnalytics,

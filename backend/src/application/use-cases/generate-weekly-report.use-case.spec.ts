@@ -46,6 +46,7 @@ describe('GenerateWeeklyReportUseCase', () => {
     mockUserRepository = {
       save: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn().mockResolvedValue([]),
       findByEmail: jest.fn(),
       findByGoogleId: jest.fn(),
       updateGoogleId: jest.fn(),
@@ -124,7 +125,7 @@ describe('GenerateWeeklyReportUseCase', () => {
     mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
       { userId: 'non-existent-user' },
     ]);
-    mockUserRepository.findById.mockResolvedValue(undefined);
+    mockUserRepository.findByIds.mockResolvedValue([]);
 
     const result = await useCase.execute();
 
@@ -146,7 +147,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       { userId: 'user-1' },
     ]);
 
-    mockUserRepository.findById.mockResolvedValue(testUser);
+    mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
     const sessions = [
       createMockSession(40, 0, 1),
@@ -175,7 +176,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       { userId: 'user-1' },
     ]);
 
-    mockUserRepository.findById.mockResolvedValue(testUser);
+    mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
     const sessions = [
       createMockSession(42, 0, 1),
@@ -208,7 +209,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       { userId: 'user-1' },
     ]);
 
-    mockUserRepository.findById.mockResolvedValue(testUser);
+    mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
     const sessions = [
       createMockSession(42, 0, 1),
@@ -241,16 +242,13 @@ describe('GenerateWeeklyReportUseCase', () => {
       { userId: 'user-2' },
     ]);
 
-    // user-1: findById 에서 에러 발생
-    mockUserRepository.findById
-      .mockRejectedValueOnce(new Error('DB connection error'))
-      .mockResolvedValueOnce(
-        new User('user2@example.com', '사용자2', '01098765432', undefined, undefined, undefined, 'user-2'),
-      );
+    const user2 = new User('user2@example.com', '사용자2', '01098765432', undefined, undefined, undefined, 'user-2');
+    mockUserRepository.findByIds.mockResolvedValue([testUser, user2]);
 
-    mockSessionRepository.findByUserIdInDateRange.mockResolvedValue([
-      createMockSession(45, 0, 1),
-    ]);
+    // user-1: session fetch에서 에러 발생, user-2: 정상
+    mockSessionRepository.findByUserIdInDateRange
+      .mockRejectedValueOnce(new Error('DB connection error'))
+      .mockResolvedValueOnce([createMockSession(45, 0, 1)]);
 
     const result = await useCase.execute();
 
@@ -273,7 +271,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       { userId: 'user-1' },
     ]);
 
-    mockUserRepository.findById.mockResolvedValue(testUser);
+    mockUserRepository.findByIds.mockResolvedValue([testUser]);
     mockSessionRepository.findByUserIdInDateRange.mockResolvedValue([
       createMockSession(42, 0, 1),
     ]);
@@ -298,7 +296,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       { userId: 'user-1' },
     ]);
 
-    mockUserRepository.findById.mockResolvedValue(testUser);
+    mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
     // No completed sessions in date range
     mockSessionRepository.findByUserIdInDateRange.mockResolvedValue([]);

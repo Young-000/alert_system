@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { UserEntity } from './typeorm/user.entity';
 import { User, UserLocation } from '@domain/entities/user.entity';
 import { IUserRepository } from '@domain/repositories/user.repository';
@@ -22,6 +22,12 @@ export class PostgresUserRepository implements IUserRepository {
   async findById(id: string): Promise<User | undefined> {
     const entity = await this.repository.findOne({ where: { id } });
     return entity ? this.toDomain(entity) : undefined;
+  }
+
+  async findByIds(ids: string[]): Promise<User[]> {
+    if (ids.length === 0) return [];
+    const entities = await this.repository.find({ where: { id: In(ids) } });
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByEmail(email: string): Promise<User | undefined> {

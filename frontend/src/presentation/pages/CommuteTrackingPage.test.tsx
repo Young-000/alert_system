@@ -418,10 +418,10 @@ describe('CommuteTrackingPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText('뒤로 가기')).toBeInTheDocument();
+      expect(screen.getByLabelText('세션 취소')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText('뒤로 가기'));
+    fireEvent.click(screen.getByLabelText('세션 취소'));
 
     await waitFor(() => {
       expect(screen.getByText('정말 취소하시겠습니까?')).toBeInTheDocument();
