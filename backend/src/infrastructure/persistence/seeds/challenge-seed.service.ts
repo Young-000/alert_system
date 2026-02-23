@@ -14,7 +14,11 @@ export class ChallengeSeedService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.seedTemplates();
+    try {
+      await this.seedTemplates();
+    } catch (error) {
+      this.logger.error(`Failed to seed challenge templates: ${error.message}`);
+    }
   }
 
   private async seedTemplates(): Promise<void> {
