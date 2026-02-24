@@ -43,9 +43,15 @@ export class GenerateWeeklyReportUseCase {
     let sent = 0;
     let skipped = 0;
 
+    // Batch-fetch all users to avoid N+1 queries
+    const users = await this.userRepository.findByIds(activeUserIds);
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
     for (const userId of activeUserIds) {
       try {
-        const didSend = await this.generateAndSendReport(userId, weekAgo, now);
+        const user = userMap.get(userId);
+        if (!user) { skipped++; continue; }
+        const didSend = await this.generateAndSendReport(user, weekAgo, now);
         if (didSend) {
           sent++;
         } else {
@@ -76,12 +82,11 @@ export class GenerateWeeklyReportUseCase {
   }
 
   private async generateAndSendReport(
-    userId: string,
+    user: { id: string; name: string; phoneNumber?: string },
     weekStart: Date,
     weekEnd: Date,
   ): Promise<boolean> {
-    const user = await this.userRepository.findById(userId);
-    if (!user) return false;
+    const userId = user.id;
 
     // Fetch completed sessions for the week
     const sessions = this.sessionRepository

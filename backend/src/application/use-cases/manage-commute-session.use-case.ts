@@ -238,12 +238,10 @@ export class ManageCommuteSessionUseCase {
     const hasMore = sessions.length > limit;
     const resultSessions = sessions.slice(0, limit);
 
-    // Batch-fetch all routes to avoid N+1 query
-    const allRoutes = await this.routeRepository.findByUserId(userId);
-    const routeMap = new Map<string, string>();
-    for (const route of allRoutes) {
-      routeMap.set(route.id, route.name);
-    }
+    // Batch-fetch route names to avoid N+1 queries
+    const routeIds = [...new Set(resultSessions.map((s) => s.routeId))];
+    const routes = await this.routeRepository.findByIds(routeIds);
+    const routeMap = new Map(routes.map((r) => [r.id, r.name]));
 
     const sessionSummaries: SessionSummaryDto[] = resultSessions.map((session) => ({
       id: session.id,

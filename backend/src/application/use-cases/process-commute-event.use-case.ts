@@ -178,12 +178,12 @@ export class ProcessCommuteEventUseCase {
   ): Promise<CommuteEventListResponseDto> {
     const events = await this.eventRepository.findByUserId(userId, limit);
 
-    // Batch-fetch all user places to avoid N+1 query
-    const allPlaces = await this.placeRepository.findByUserId(userId);
-    const placeMap = new Map<string, { placeType: string; label: string }>();
-    for (const place of allPlaces) {
-      placeMap.set(place.id, { placeType: place.placeType, label: place.label });
-    }
+    // Batch-fetch places to avoid N+1 queries
+    const placeIds = [...new Set(events.map((e) => e.placeId))];
+    const places = await this.placeRepository.findByIds(placeIds);
+    const placeMap = new Map(
+      places.map((p) => [p.id, { placeType: p.placeType, label: p.label }])
+    );
 
     const details: CommuteEventDetailDto[] = events.map((e) => {
       const placeInfo = placeMap.get(e.placeId);

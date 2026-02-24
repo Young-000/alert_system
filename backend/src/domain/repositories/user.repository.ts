@@ -3,6 +3,7 @@ import { User } from '../entities/user.entity';
 export interface IUserRepository {
   save(user: User): Promise<User>;
   findById(id: string): Promise<User | undefined>;
+  findByIds(ids: string[]): Promise<User[]>;
   findByEmail(email: string): Promise<User | undefined>;
   findByGoogleId(googleId: string): Promise<User | undefined>;
   updateGoogleId(userId: string, googleId: string): Promise<void>;
@@ -18,6 +19,10 @@ export class UserRepository implements IUserRepository {
 
   async findById(id: string): Promise<User | undefined> {
     return this.users.get(id);
+  }
+
+  async findByIds(ids: string[]): Promise<User[]> {
+    return ids.map((id) => this.users.get(id)).filter((u): u is User => u !== undefined);
   }
 
   async findByEmail(email: string): Promise<User | undefined> {

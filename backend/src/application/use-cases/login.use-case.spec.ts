@@ -32,6 +32,7 @@ describe('LoginUseCase', () => {
   beforeEach(() => {
     mockUserRepository = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findByEmail: jest.fn(),
       findByGoogleId: jest.fn(),
       updateGoogleId: jest.fn(),

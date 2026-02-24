@@ -196,8 +196,11 @@ export function CommuteTrackingPage(): JSX.Element {
 
       const completed = await commuteApi.completeSession({ sessionId: session.id });
       setSession(completed);
-    } catch {
-      setError('기록 완료에 실패했습니다.');
+    } catch (err) {
+      const message = err instanceof Error && err.message.includes('401')
+        ? '로그인이 만료되었습니다. 다시 로그인해주세요.'
+        : '기록 완료에 실패했습니다. 네트워크 연결을 확인해주세요.';
+      setError(message);
     } finally {
       setIsCompleting(false);
     }
@@ -281,7 +284,7 @@ export function CommuteTrackingPage(): JSX.Element {
           type="button"
           className="commute-v2-back"
           onClick={() => setShowCancelConfirm(true)}
-          aria-label="뒤로 가기"
+          aria-label="세션 취소"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
