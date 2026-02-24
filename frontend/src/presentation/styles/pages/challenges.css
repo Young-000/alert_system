@@ -1,0 +1,433 @@
+/* ─── Challenges Page ─────────────────────────────── */
+
+.challenges-page {
+  padding-bottom: 100px;
+}
+
+.challenges-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.challenges-back {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.challenges-back:hover {
+  background: var(--border);
+}
+
+.challenges-title {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.challenges-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── Auth Required ──────────────────────────────── */
+
+.challenge-auth-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 12px;
+  text-align: center;
+  color: var(--ink-secondary);
+}
+
+.challenge-auth-icon {
+  font-size: 40px;
+}
+
+.challenge-auth-required .btn-primary {
+  margin-top: 8px;
+  padding: 10px 28px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.challenge-auth-required .btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* ─── Sections ───────────────────────────────────── */
+
+.challenge-section {
+  margin-bottom: 24px;
+}
+
+.challenge-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+/* ─── Empty State ────────────────────────────────── */
+
+.challenge-empty {
+  text-align: center;
+  padding: 40px 16px;
+}
+
+.challenge-empty-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.challenge-empty-text {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.challenge-empty-sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* ─── Badge Collection ───────────────────────────── */
+
+.badge-collection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.badge-collection-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.badge-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.badge-item-emoji {
+  font-size: 28px;
+}
+
+.badge-item-name {
+  font-size: 11px;
+  color: var(--ink-secondary);
+  text-align: center;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ─── Active Challenge Card ──────────────────────── */
+
+.active-challenge-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--primary-light);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.06);
+}
+
+.active-challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.active-challenge-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.active-challenge-emoji {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.active-challenge-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active-challenge-dday {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.active-challenge-dday.urgent {
+  color: var(--error);
+}
+
+/* Progress bar */
+.active-challenge-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-subtle);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.close-to-complete {
+  background: var(--success);
+}
+
+.progress-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+.active-challenge-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-abandon {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-abandon:hover {
+  color: var(--error);
+  background: var(--error-light);
+}
+
+.btn-abandon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Difficulty Badge ───────────────────────────── */
+
+.challenge-difficulty {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+}
+
+.difficulty-easy {
+  color: var(--success);
+  background: var(--success-light);
+}
+
+.difficulty-medium {
+  color: var(--warning);
+  background: var(--warning-light);
+}
+
+.difficulty-hard {
+  color: var(--error);
+  background: var(--error-light);
+}
+
+/* ─── Template Card ──────────────────────────────── */
+
+.template-card {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+
+.template-card:hover {
+  border-color: var(--border-hover);
+}
+
+.template-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+}
+
+.template-emoji {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.template-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.template-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.template-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-description {
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Challenge Action Buttons ───────────────────── */
+
+.btn-challenge {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  min-width: 56px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 10px;
+  transition: opacity 0.15s;
+}
+
+.btn-challenge:disabled {
+  cursor: default;
+}
+
+.btn-start {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-start:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-in-progress {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.btn-completed {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+/* Spinner for join button */
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.btn-in-progress .btn-spinner {
+  border-color: rgba(99, 102, 241, 0.2);
+  border-top-color: var(--primary);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
