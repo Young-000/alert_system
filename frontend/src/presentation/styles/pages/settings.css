@@ -443,3 +443,267 @@
   background: var(--primary-light);
 }
 
+/* ========== 설정 공통: 섹션 헤더 ========== */
+.settings-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.settings-section-desc {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ========== 설정 공통: 토글 버튼 ========== */
+.settings-toggle-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 44px;
+  min-height: 32px;
+}
+
+.settings-toggle-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* ========== 설정 공통: 삭제 버튼 ========== */
+.settings-delete-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--error);
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 32px;
+}
+
+.settings-delete-btn:hover {
+  background: var(--error);
+  color: white;
+}
+
+.settings-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== 설정 공통: 폼 ========== */
+.settings-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-form-row label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+
+.settings-form-row select,
+.settings-form-row input[type="text"],
+.settings-form-row input[type="time"],
+.settings-form-row input[type="number"] {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  transition: border-color 0.2s ease;
+}
+
+.settings-form-row select:focus,
+.settings-form-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ========== 장소 관리 (PlacesTab) ========== */
+.settings-place-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.settings-place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-place-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.settings-place-card.inactive {
+  opacity: 0.6;
+}
+
+.settings-place-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-place-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.settings-place-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-place-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-place-name > span:first-child {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.settings-place-type {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.settings-place-address {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-place-radius {
+  font-size: 0.75rem;
+  color: var(--ink-tertiary);
+}
+
+.settings-place-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ========== 스마트 출발 (SmartDepartureTab) ========== */
+.settings-departure-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.settings-departure-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-departure-card {
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.settings-departure-card.inactive {
+  opacity: 0.6;
+}
+
+.settings-departure-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-departure-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.settings-departure-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-departure-type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.settings-departure-target {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.settings-departure-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.settings-departure-details span {
+  padding: 4px 10px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+}
+

@@ -6,6 +6,8 @@ import { ProfileTab } from './ProfileTab';
 import { RoutesTab } from './RoutesTab';
 import { AlertsTab } from './AlertsTab';
 import { AppTab } from './AppTab';
+import { PlacesTab } from './PlacesTab';
+import { SmartDepartureTab } from './SmartDepartureTab';
 
 export function SettingsPage(): JSX.Element {
   const settings = useSettings();
@@ -31,6 +33,8 @@ export function SettingsPage(): JSX.Element {
           { id: 'profile' as const, label: '프로필', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>, badge: undefined },
           { id: 'routes' as const, label: '경로', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>, badge: settings.routes.length > 0 ? settings.routes.length : undefined },
           { id: 'alerts' as const, label: '알림', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>, badge: settings.alerts.filter(a => a.enabled).length > 0 ? settings.alerts.filter(a => a.enabled).length : undefined },
+          { id: 'places' as const, label: '장소', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>, badge: undefined },
+          { id: 'departure' as const, label: '출발', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, badge: undefined },
           { id: 'app' as const, label: '앱', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>, badge: undefined },
         ]).map(tab => (
           <button
@@ -82,6 +86,8 @@ export function SettingsPage(): JSX.Element {
           {settings.activeTab === 'alerts' && (
             <AlertsTab alertCount={settings.alerts.length} />
           )}
+          {settings.activeTab === 'places' && <PlacesTab />}
+          {settings.activeTab === 'departure' && <SmartDepartureTab />}
           {settings.activeTab === 'app' && (
             <AppTab
               pushSupported={settings.pushSupported}

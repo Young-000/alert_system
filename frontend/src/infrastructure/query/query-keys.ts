@@ -41,4 +41,12 @@ export const queryKeys = {
     history: (limit: number, offset: number) =>
       ['challenges', 'history', limit, offset] as const,
   },
+  places: {
+    all: ['places'] as const,
+  },
+  smartDeparture: {
+    all: ['smartDeparture'] as const,
+    settings: ['smartDeparture', 'settings'] as const,
+    today: ['smartDeparture', 'today'] as const,
+  },
 } as const;

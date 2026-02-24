@@ -14,3 +14,18 @@ export {
   useJoinChallengeMutation,
   useAbandonChallengeMutation,
 } from './use-challenges-query';
+export {
+  usePlacesQuery,
+  useCreatePlaceMutation,
+  useUpdatePlaceMutation,
+  useDeletePlaceMutation,
+  useTogglePlaceMutation,
+} from './use-places-query';
+export {
+  useSmartDepartureSettingsQuery,
+  useSmartDepartureTodayQuery,
+  useCreateSmartDepartureMutation,
+  useUpdateSmartDepartureMutation,
+  useDeleteSmartDepartureMutation,
+  useToggleSmartDepartureMutation,
+} from './use-smart-departure-query';
