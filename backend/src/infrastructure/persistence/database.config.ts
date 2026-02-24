@@ -32,6 +32,9 @@ import { CommuteEventEntity } from './typeorm/commute-event.entity';
 // Smart departure entities
 import { SmartDepartureSettingEntity } from './typeorm/smart-departure-setting.entity';
 import { SmartDepartureSnapshotEntity } from './typeorm/smart-departure-snapshot.entity';
+// Streak entities
+import { CommuteStreakOrmEntity } from './typeorm/commute-streak.orm-entity';
+import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
 // Challenge system entities
 import { ChallengeTemplateEntity } from './typeorm/challenge-template.entity';
 import { UserChallengeEntity } from './typeorm/user-challenge.entity';
@@ -74,6 +77,9 @@ export function buildDataSourceOptions(): DataSourceOptions {
       // Smart departure
       SmartDepartureSettingEntity,
       SmartDepartureSnapshotEntity,
+      // Streak
+      CommuteStreakOrmEntity,
+      StreakDailyLogOrmEntity,
       // Challenge system
       ChallengeTemplateEntity,
       UserChallengeEntity,
@@ -130,6 +136,9 @@ export function buildDataSourceOptions(): DataSourceOptions {
     // Smart departure
     SmartDepartureSettingEntity,
     SmartDepartureSnapshotEntity,
+    // Streak
+    CommuteStreakOrmEntity,
+    StreakDailyLogOrmEntity,
     // Challenge system
     ChallengeTemplateEntity,
     UserChallengeEntity,
