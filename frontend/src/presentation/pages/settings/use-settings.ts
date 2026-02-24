@@ -8,7 +8,7 @@ import { useAuth, notifyAuthChange } from '@presentation/hooks/useAuth';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 
-export type SettingsTab = 'profile' | 'routes' | 'alerts' | 'app';
+export type SettingsTab = 'profile' | 'routes' | 'alerts' | 'places' | 'departure' | 'app';
 
 export const TOAST_DURATION_MS = 3000;
 

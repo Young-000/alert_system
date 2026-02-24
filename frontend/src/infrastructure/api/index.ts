@@ -9,6 +9,9 @@ import { AirQualityApiClient } from './air-quality-api.client';
 import { NotificationApiClient } from './notification-api.client';
 import { getCommuteApiClient } from './commute-api.client';
 import { getBehaviorApiClient } from './behavior-api.client';
+import { ChallengeApiClient } from './challenge-api.client';
+import { PlaceApiClient } from './place-api.client';
+import { SmartDepartureApiClient } from './smart-departure-api.client';
 
 // 싱글톤 인스턴스
 export const apiClient = new ApiClient();
@@ -22,6 +25,9 @@ export const airQualityApiClient = new AirQualityApiClient(apiClient);
 export const notificationApiClient = new NotificationApiClient(apiClient);
 export const commuteApiClient = getCommuteApiClient();
 export const behaviorApiClient = getBehaviorApiClient();
+export const challengeApiClient = new ChallengeApiClient(apiClient);
+export const placeApiClient = new PlaceApiClient(apiClient);
+export const smartDepartureApiClient = new SmartDepartureApiClient(apiClient);
 
 // 클래스 및 타입 재export
 export { ApiClient } from './api-client';
@@ -50,3 +56,16 @@ export type {
 } from './commute-api.client';
 export { BehaviorApiClient, getBehaviorApiClient } from './behavior-api.client';
 export type { DeparturePrediction, BehaviorAnalytics, UserPattern } from './behavior-api.client';
+export { ChallengeApiClient } from './challenge-api.client';
+export type {
+  ChallengeDifficulty, ChallengeStatus, ChallengeTemplate, ChallengeCategory,
+  TemplatesResponse, ActiveChallenge, ActiveChallengesResponse,
+  JoinChallengeResponse, ChallengeHistoryResponse, Badge, BadgesResponse,
+} from './challenge-api.client';
+export { PlaceApiClient } from './place-api.client';
+export type { PlaceType, Place, CreatePlaceDto, UpdatePlaceDto } from './place-api.client';
+export { SmartDepartureApiClient } from './smart-departure-api.client';
+export type {
+  DepartureType, SmartDepartureSetting, CreateSmartDepartureDto,
+  UpdateSmartDepartureDto, SmartDepartureSnapshot, SmartDepartureTodayResponse,
+} from './smart-departure-api.client';

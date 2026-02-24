@@ -33,4 +33,20 @@ export const queryKeys = {
     byUser: (userId: string, weekOffset: number) =>
       ['weeklyReport', userId, weekOffset] as const,
   },
+  challenges: {
+    all: ['challenges'] as const,
+    templates: ['challenges', 'templates'] as const,
+    active: ['challenges', 'active'] as const,
+    badges: ['challenges', 'badges'] as const,
+    history: (limit: number, offset: number) =>
+      ['challenges', 'history', limit, offset] as const,
+  },
+  places: {
+    all: ['places'] as const,
+  },
+  smartDeparture: {
+    all: ['smartDeparture'] as const,
+    settings: ['smartDeparture', 'settings'] as const,
+    today: ['smartDeparture', 'today'] as const,
+  },
 } as const;

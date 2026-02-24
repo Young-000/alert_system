@@ -10,6 +10,7 @@ import { AlertSection } from './AlertSection';
 import { StatsSection } from './StatsSection';
 import { StreakBadge } from './StreakBadge';
 import { WeeklyReportCard } from './WeeklyReportCard';
+import { ChallengeQuickCard } from './ChallengeQuickCard';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -55,6 +56,8 @@ export function HomePage(): JSX.Element {
       {data.streak != null && (
         <StreakBadge streak={data.streak} />
       )}
+
+      <ChallengeQuickCard />
 
       <WeeklyReportCard
         report={data.weeklyReport}
