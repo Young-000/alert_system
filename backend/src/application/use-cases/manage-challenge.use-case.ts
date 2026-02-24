@@ -91,19 +91,26 @@ export class ManageChallengeUseCase {
     const activeChallenges =
       await this.challengeRepo.findActiveChallengesByUserId(userId);
     const now = new Date();
-    const details: ActiveChallengeDetail[] = [];
 
+    // Lazy expiry check first
+    const validChallenges: UserChallenge[] = [];
     for (const challenge of activeChallenges) {
-      // Lazy expiry check
       const checked = challenge.checkExpiry(now);
       if (checked.status === 'failed') {
         await this.challengeRepo.saveChallenge(checked);
         continue;
       }
+      validChallenges.push(checked);
+    }
 
-      const template = await this.challengeRepo.findTemplateById(
-        checked.challengeTemplateId,
-      );
+    // Batch fetch all templates at once (N+1 방지)
+    const templateIds = [...new Set(validChallenges.map((c) => c.challengeTemplateId))];
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
+
+    const details: ActiveChallengeDetail[] = [];
+    for (const checked of validChallenges) {
+      const template = templateMap.get(checked.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -131,15 +138,18 @@ export class ManageChallengeUseCase {
     const { challenges, totalCount } =
       await this.challengeRepo.findChallengeHistory(userId, limit, offset);
 
+    // Batch fetch all templates at once (N+1 방지)
+    const templateIds = [...new Set(challenges.map((c) => c.challengeTemplateId))];
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
+
     const details: ActiveChallengeDetail[] = [];
     let totalCompleted = 0;
     let totalFailed = 0;
     let totalAbandoned = 0;
 
     for (const challenge of challenges) {
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       details.push({

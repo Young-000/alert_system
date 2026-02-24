@@ -84,11 +84,16 @@ export class RecommendBestRouteUseCase {
       return this.emptyResponse('분석할 경로가 없습니다.');
     }
 
-    // 3. 각 경로 점수 계산
+    // 3. 모든 경로를 한 번에 조회 (N+1 방지)
+    const routeIds = Array.from(sessionsByRoute.keys());
+    const routes = await this.routeRepository.findByIds(routeIds);
+    const routeMap = new Map(routes.map((r) => [r.id, r]));
+
+    // 4. 각 경로 점수 계산
     const routeScores: RouteScoreDto[] = [];
 
     for (const [routeId, routeSessions] of sessionsByRoute) {
-      const route = await this.routeRepository.findById(routeId);
+      const route = routeMap.get(routeId);
       if (!route) continue;
 
       const score = this.calculateRouteScore(
@@ -102,17 +107,17 @@ export class RecommendBestRouteUseCase {
       routeScores.push(score);
     }
 
-    // 4. 점수 순 정렬
+    // 5. 점수 순 정렬
     routeScores.sort((a, b) => b.totalScore - a.totalScore);
 
-    // 5. 신뢰도 계산
+    // 6. 신뢰도 계산
     const totalSamples = completedSessions.length;
     const confidence = this.calculateConfidence(totalSamples);
 
-    // 6. 인사이트 생성
+    // 7. 인사이트 생성
     const insights = this.generateInsights(routeScores, weatherCondition);
 
-    // 7. 응답 구성
+    // 8. 응답 구성
     const [best, ...alternatives] = routeScores;
 
     return {

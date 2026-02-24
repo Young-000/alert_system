@@ -182,6 +182,7 @@ export function ChallengesPage(): JSX.Element {
   const navigate = useNavigate();
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [abandoningId, setAbandoningId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string>('');
 
   const {
     data: templatesData,
@@ -205,16 +206,17 @@ export function ChallengesPage(): JSX.Element {
   const handleJoin = useCallback(async (templateId: string) => {
     if (joiningId) return;
     setJoiningId(templateId);
+    setActionError('');
     try {
       await joinMutation.mutateAsync(templateId);
     } catch (err) {
       const status = (err as { status?: number })?.status;
       if (status === 409) {
-        alert('이미 진행 중인 동일 도전이 있습니다.');
+        setActionError('이미 진행 중인 동일 도전이 있습니다.');
       } else if (status === 400) {
-        alert('동시 진행 가능한 도전은 최대 3개입니다.');
+        setActionError('동시 진행 가능한 도전은 최대 3개입니다.');
       } else {
-        alert('도전 참가에 실패했습니다.');
+        setActionError('도전 참가에 실패했습니다.');
       }
     } finally {
       setJoiningId(null);
@@ -223,10 +225,11 @@ export function ChallengesPage(): JSX.Element {
 
   const handleAbandon = useCallback(async (challengeId: string) => {
     setAbandoningId(challengeId);
+    setActionError('');
     try {
       await abandonMutation.mutateAsync(challengeId);
     } catch {
-      alert('도전 포기에 실패했습니다.');
+      setActionError('도전 포기에 실패했습니다.');
     } finally {
       setAbandoningId(null);
     }
@@ -305,6 +308,21 @@ export function ChallengesPage(): JSX.Element {
           데이터를 불러오는 데 실패했습니다.
         </div>
       ) : null}
+
+      {actionError && (
+        <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
+          {actionError}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setActionError('')}
+            aria-label="오류 메시지 닫기"
+            style={{ marginLeft: '0.5rem' }}
+          >
+            닫기
+          </button>
+        </div>
+      )}
 
       {/* Badge collection */}
       {badgesData ? (

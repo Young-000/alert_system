@@ -86,25 +86,24 @@ export class SendNotificationUseCase {
     await this.collectSmartNotificationData(alert, contextBuilder.build(), data);
     await this.collectRouteData(alert, data);
 
-    // 알림톡 발송
-    if (!this.solapiService || !user.phoneNumber) {
-      if (!user.phoneNumber) {
-        this.logger.warn(`User ${user.id} has no phone number`);
-      }
-      return;
-    }
-
     const timeType = this.determineTimeType(alert);
     const logSummary = this.messageBuilder.buildSummary(data);
 
-    try {
-      await this.sendNotification(user.name, user.phoneNumber, alert, data, timeType);
-      await this.saveNotificationLog(alert, 'success', logSummary);
-      this.sendWebPush(alert, logSummary);
-      this.sendExpoPush(alert, logSummary);
-    } catch (error) {
-      await this.handleSendFailure(error, alert, user.name, user.phoneNumber, data, logSummary);
+    // 알림톡 발송 (전화번호가 있는 경우에만)
+    if (this.solapiService && user.phoneNumber) {
+      try {
+        await this.sendNotification(user.name, user.phoneNumber, alert, data, timeType);
+        await this.saveNotificationLog(alert, 'success', logSummary);
+      } catch (error) {
+        await this.handleSendFailure(error, alert, user.name, user.phoneNumber, data, logSummary);
+      }
+    } else if (!user.phoneNumber) {
+      this.logger.warn(`User ${user.id} has no phone number, skipping Solapi`);
     }
+
+    // Web Push / Expo Push는 전화번호 유무와 관계없이 발송
+    this.sendWebPush(alert, logSummary);
+    this.sendExpoPush(alert, logSummary);
   }
 
   private async collectWeatherData(

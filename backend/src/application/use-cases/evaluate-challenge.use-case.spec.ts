@@ -58,6 +58,7 @@ describe('EvaluateChallengeUseCase', () => {
     challengeRepo = {
       findAllTemplates: jest.fn(),
       findTemplateById: jest.fn(),
+      findTemplatesByIds: jest.fn().mockResolvedValue([]),
       findActiveChallengesByUserId: jest.fn(),
       findChallengeById: jest.fn(),
       findActiveByUserAndTemplate: jest.fn(),
