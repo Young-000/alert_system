@@ -4,7 +4,7 @@ import { userApiClient } from '@infrastructure/api';
 import type { Alert } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
-import { useAuth, notifyAuthChange } from '@presentation/hooks/useAuth';
+import { useAuth, notifyAuthChange } from '@presentation/hooks/use-auth';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 

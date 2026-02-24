@@ -84,11 +84,14 @@ export class RecommendBestRouteUseCase {
       return this.emptyResponse('분석할 경로가 없습니다.');
     }
 
-    // 3. 각 경로 점수 계산
+    // 3. Batch-fetch all routes to avoid N+1 query
+    const allRoutes = await this.routeRepository.findByUserId(userId);
+    const routeMap = new Map(allRoutes.map((r) => [r.id, r]));
+
     const routeScores: RouteScoreDto[] = [];
 
     for (const [routeId, routeSessions] of sessionsByRoute) {
-      const route = await this.routeRepository.findById(routeId);
+      const route = routeMap.get(routeId);
       if (!route) continue;
 
       const score = this.calculateRouteScore(

@@ -1,4 +1,4 @@
-import { notifyAuthChange } from '@presentation/hooks/useAuth';
+import { notifyAuthChange } from '@presentation/hooks/use-auth';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_RETRIES = 2;

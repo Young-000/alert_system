@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useFocusTrap } from './useFocusTrap';
+import { useFocusTrap } from './use-focus-trap';
 
 // Helper to create a container with focusable elements
 function createMockContainer(): HTMLDivElement {

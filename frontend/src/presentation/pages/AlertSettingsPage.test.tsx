@@ -11,7 +11,7 @@ import { TestProviders } from '../../test-utils';
 
 vi.mock('@infrastructure/api');
 
-vi.mock('@presentation/hooks/useAuth', () => ({
+vi.mock('@presentation/hooks/use-auth', () => ({
   useAuth: () => {
     const userId = localStorage.getItem('userId') || '';
     return {

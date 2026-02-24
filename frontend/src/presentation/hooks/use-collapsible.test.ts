@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useCollapsible } from './useCollapsible';
+import { useCollapsible } from './use-collapsible';
 
 describe('useCollapsible', () => {
   beforeEach(() => {

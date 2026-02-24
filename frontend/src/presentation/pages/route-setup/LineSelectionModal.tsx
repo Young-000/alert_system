@@ -1,4 +1,4 @@
-import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
+import { useFocusTrap } from '@presentation/hooks/use-focus-trap';
 import type { GroupedStation } from './types';
 
 interface LineSelectionModalProps {

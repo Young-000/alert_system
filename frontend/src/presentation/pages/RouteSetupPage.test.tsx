@@ -18,7 +18,7 @@ vi.mock('react-router-dom', async () => ({
 
 vi.mock('@infrastructure/api');
 
-vi.mock('@presentation/hooks/useAuth', () => ({
+vi.mock('@presentation/hooks/use-auth', () => ({
   useAuth: () => {
     const userId = localStorage.getItem('userId') || '';
     return {

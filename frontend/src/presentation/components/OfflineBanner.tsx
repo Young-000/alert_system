@@ -1,4 +1,4 @@
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useOnlineStatus } from '../hooks/use-online-status';
 import { cn } from '../utils/cn';
 
 export function OfflineBanner(): JSX.Element | null {

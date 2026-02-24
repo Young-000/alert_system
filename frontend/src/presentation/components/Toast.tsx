@@ -66,7 +66,7 @@ function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
       <button
         type="button"
         className={cn(
-          'w-6 h-6 grid place-items-center',
+          'w-11 h-11 grid place-items-center',
           'bg-transparent rounded-sm cursor-pointer',
           'text-[1.2rem] text-ink-muted shrink-0',
           'transition-all duration-200',

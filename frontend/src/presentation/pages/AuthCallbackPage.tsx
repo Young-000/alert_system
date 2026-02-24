@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
-import { notifyAuthChange } from '@presentation/hooks/useAuth';
+import { notifyAuthChange } from '@presentation/hooks/use-auth';
 
 function getCallbackParams(): URLSearchParams {
   // fragment hash 우선 (보안: query string은 서버 로그/referrer에 노출됨)

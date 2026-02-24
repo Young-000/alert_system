@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useUserLocation } from './useUserLocation';
+import { useUserLocation } from './use-user-location';
 
 const STORAGE_KEY = 'user-location';
 const SEOUL_DEFAULT = { latitude: 37.5665, longitude: 126.978 };

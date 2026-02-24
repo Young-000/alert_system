@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { WeatherData } from '@infrastructure/api';
 import { WeatherIcon, getWeatherAdvice, translateCondition } from './weather-utils';
 import type { ChecklistItem } from './weather-utils';
-import { useCollapsible } from '@presentation/hooks/useCollapsible';
+import { useCollapsible } from '@presentation/hooks/use-collapsible';
 import { ChevronIcon } from '@presentation/components/icons';
 
 interface WeatherHeroSectionProps {

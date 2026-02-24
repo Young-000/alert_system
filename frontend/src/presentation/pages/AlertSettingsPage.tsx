@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@presentation/hooks/useAuth';
+import { useAuth } from '@presentation/hooks/use-auth';
 import { PageHeader } from '../components/PageHeader';
 import { AuthRequired } from '../components/AuthRequired';
 import {

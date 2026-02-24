@@ -2652,6 +2652,8 @@ main.home-page {
   padding: 4px;
   min-width: 44px;
   min-height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3235,8 +3237,8 @@ main.home-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   min-width: 44px;
   min-height: 44px;
   background: none;
@@ -3548,8 +3550,8 @@ main.home-page {
   }
 
   .weekly-report-nav-btn {
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .weekly-report-highlights {

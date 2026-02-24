@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@presentation/hooks/useAuth';
+import { useAuth } from '@presentation/hooks/use-auth';
 import { AuthRequired } from '../components/AuthRequired';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -71,6 +71,15 @@ export function RouteSetupPage(): JSX.Element {
 
   // 저장 후 네비게이션 타이머 ref (토스트 dismiss 시 즉시 이동용)
   const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup navigate timer on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+      }
+    };
+  }, []);
 
   // 경로 검증 훅
   const { validation, validateRoute } = useRouteValidation(selectedStops);

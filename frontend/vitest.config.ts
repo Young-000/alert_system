@@ -13,7 +13,7 @@ export default mergeConfig(
           url: 'http://localhost:3000',
         },
       },
-      setupFiles: ['./src/setupTests.ts'],
+      setupFiles: ['./src/setup-tests.ts'],
       include: ['**/?(*.)+(spec|test).(ts|tsx)'],
       exclude: ['node_modules', 'e2e'],
       css: true,

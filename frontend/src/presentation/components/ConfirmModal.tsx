@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
+import { useFocusTrap } from '@presentation/hooks/use-focus-trap';
 
 interface ConfirmModalProps {
   open: boolean;

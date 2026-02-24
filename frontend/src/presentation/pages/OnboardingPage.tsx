@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@presentation/hooks/useAuth';
+import { useAuth } from '@presentation/hooks/use-auth';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
 import {
   getCommuteApiClient,

@@ -1,4 +1,4 @@
-import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
+import { useFocusTrap } from '@presentation/hooks/use-focus-trap';
 
 interface MilestoneModalProps {
   isOpen: boolean;

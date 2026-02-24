@@ -24,6 +24,10 @@ export class EvaluateChallengeUseCase {
 
     const updates: ChallengeUpdate[] = [];
 
+    // Batch-fetch all templates to avoid N+1 query
+    const allTemplates = await this.challengeRepo.findAllTemplates();
+    const templateMap = new Map(allTemplates.map((t) => [t.id, t]));
+
     for (const challenge of activeChallenges) {
       // First check expiry
       const checkedChallenge = challenge.checkExpiry(new Date());
@@ -32,9 +36,7 @@ export class EvaluateChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       const shouldIncrement = this.evaluateCondition(template, sessionData);

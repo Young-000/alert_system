@@ -93,6 +93,10 @@ export class ManageChallengeUseCase {
     const now = new Date();
     const details: ActiveChallengeDetail[] = [];
 
+    // Batch-fetch all templates to avoid N+1 query
+    const allTemplates = await this.challengeRepo.findAllTemplates();
+    const templateMap = new Map(allTemplates.map((t) => [t.id, t]));
+
     for (const challenge of activeChallenges) {
       // Lazy expiry check
       const checked = challenge.checkExpiry(now);
@@ -101,9 +105,7 @@ export class ManageChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        checked.challengeTemplateId,
-      );
+      const template = templateMap.get(checked.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -136,10 +138,12 @@ export class ManageChallengeUseCase {
     let totalFailed = 0;
     let totalAbandoned = 0;
 
+    // Batch-fetch all templates to avoid N+1 query
+    const allTemplates = await this.challengeRepo.findAllTemplates();
+    const templateMap = new Map(allTemplates.map((t) => [t.id, t]));
+
     for (const challenge of challenges) {
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       details.push({

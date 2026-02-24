@@ -14,7 +14,7 @@ vi.mock('@infrastructure/push/push-manager', () => ({
   unsubscribeFromPush: vi.fn(),
 }));
 
-vi.mock('@presentation/hooks/useAuth', () => ({
+vi.mock('@presentation/hooks/use-auth', () => ({
   useAuth: () => {
     const userId = localStorage.getItem('userId') || '';
     const phoneNumber = localStorage.getItem('phoneNumber') || '';

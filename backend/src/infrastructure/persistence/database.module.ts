@@ -32,6 +32,11 @@ import { SmartDepartureSnapshotEntity } from './typeorm/smart-departure-snapshot
 import { ChallengeTemplateEntity } from './typeorm/challenge-template.entity';
 import { UserChallengeEntity } from './typeorm/user-challenge.entity';
 import { UserBadgeEntity } from './typeorm/user-badge.entity';
+// Live Activity entities
+import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
+// Streak entities
+import { CommuteStreakOrmEntity } from './typeorm/commute-streak.orm-entity';
+import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -77,6 +82,11 @@ import { buildDataSourceOptions } from './database.config';
       ChallengeTemplateEntity,
       UserChallengeEntity,
       UserBadgeEntity,
+      // Live Activity
+      LiveActivityTokenEntity,
+      // Streak
+      CommuteStreakOrmEntity,
+      StreakDailyLogOrmEntity,
     ]),
   ],
   exports: [TypeOrmModule],

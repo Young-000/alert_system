@@ -168,7 +168,7 @@ describe('ManageChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findAllTemplates.mockResolvedValue([template]);
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -189,6 +189,7 @@ describe('ManageChallengeUseCase', () => {
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([
         expiredChallenge,
       ]);
+      challengeRepo.findAllTemplates.mockResolvedValue([makeTemplate()]);
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -200,6 +201,7 @@ describe('ManageChallengeUseCase', () => {
 
     it('활성 챌린지가 없으면 빈 배열을 반환한다', async () => {
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([]);
+      challengeRepo.findAllTemplates.mockResolvedValue([]);
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -290,11 +292,7 @@ describe('ManageChallengeUseCase', () => {
         challenges: [completed, failed],
         totalCount: 2,
       });
-      challengeRepo.findTemplateById.mockImplementation(async (id) => {
-        if (id === 'time-under-40') return template1;
-        if (id === 'streak-3d') return template2;
-        return null;
-      });
+      challengeRepo.findAllTemplates.mockResolvedValue([template1, template2]);
 
       const result = await useCase.getChallengeHistory(userId, 10, 0);
 
@@ -311,6 +309,7 @@ describe('ManageChallengeUseCase', () => {
         challenges: [],
         totalCount: 0,
       });
+      challengeRepo.findAllTemplates.mockResolvedValue([]);
 
       const result = await useCase.getChallengeHistory(userId, 10, 0);
 

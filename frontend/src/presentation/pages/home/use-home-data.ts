@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@presentation/hooks/useAuth';
-import { useUserLocation } from '@presentation/hooks/useUserLocation';
+import { useAuth } from '@presentation/hooks/use-auth';
+import { useUserLocation } from '@presentation/hooks/use-user-location';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
 import { behaviorApiClient } from '@infrastructure/api';
 import type { Alert, WeatherData, DeparturePrediction } from '@infrastructure/api';

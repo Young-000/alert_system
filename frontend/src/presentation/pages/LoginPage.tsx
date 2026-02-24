@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApiClient } from '@infrastructure/api';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
-import { notifyAuthChange } from '@presentation/hooks/useAuth';
+import { notifyAuthChange } from '@presentation/hooks/use-auth';
 
 type AuthMode = 'login' | 'register';
 

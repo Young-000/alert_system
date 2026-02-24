@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
-import { useCollapsible } from '@presentation/hooks/useCollapsible';
+import { useCollapsible } from '@presentation/hooks/use-collapsible';
 import { ChevronIcon } from '@presentation/components/icons';
 
 interface StatsSectionProps {

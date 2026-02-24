@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@presentation/hooks/useAuth';
+import { useAuth } from '@presentation/hooks/use-auth';
 import {
   getCommuteApiClient,
   type RouteResponse,

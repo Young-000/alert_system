@@ -1076,8 +1076,8 @@ details[open] > summary {
 }
 
 .stepper-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   background: transparent;
@@ -1114,8 +1114,8 @@ details[open] > summary {
 }
 
 .stepper-sm .stepper-btn {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   font-size: 1rem;
 }
 
@@ -1333,9 +1333,9 @@ textarea.input:focus {
 
 .notice-link {
   display: inline-block;
-  padding: 4px 8px;
-  min-height: 32px;
-  line-height: 24px;
+  padding: 8px;
+  min-height: 44px;
+  line-height: 28px;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -2049,10 +2049,10 @@ a[aria-disabled="true"],
 
 .modal-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   background: transparent;
@@ -2953,11 +2953,11 @@ button.nav-back-btn {
   color: white;
   border: none;
   border-radius: var(--radius-md);
-  padding: 4px 12px;
+  padding: 6px 12px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  min-height: 32px;
+  min-height: 44px;
 }
 
 .arrive-btn-mini:hover {
