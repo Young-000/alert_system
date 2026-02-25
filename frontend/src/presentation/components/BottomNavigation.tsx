@@ -43,6 +43,17 @@ function BellIcon({ active }: { active: boolean }) {
   );
 }
 
+function MissionIcon({ active }: { active: boolean }) {
+  const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" fill={active ? 'var(--primary-light)' : 'none'} />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" fill={active ? STROKE_ACTIVE : s} />
+    </svg>
+  );
+}
+
 function SettingsIcon({ active }: { active: boolean }) {
   const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
   return (
@@ -57,6 +68,7 @@ function SettingsIcon({ active }: { active: boolean }) {
 const PREFETCH_MAP: Record<string, () => Promise<unknown>> = {
   '/': () => import('../pages/home/HomePage'),
   '/routes': () => import('../pages/RouteSetupPage'),
+  '/missions': () => import('../pages/MissionsPage'),
   '/alerts': () => import('../pages/AlertSettingsPage'),
   '/settings': () => import('../pages/SettingsPage'),
 };
@@ -73,6 +85,12 @@ const NAV_ITEMS: NavItem[] = [
     label: '경로',
     matchPaths: ['/routes', '/commute'],
     icon: (active) => <RouteIcon active={active} />,
+  },
+  {
+    path: '/missions',
+    label: '미션',
+    matchPaths: ['/missions', '/missions/settings'],
+    icon: (active) => <MissionIcon active={active} />,
   },
   {
     path: '/alerts',
