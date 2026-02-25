@@ -1,0 +1,811 @@
+/* ─── Mission Settings Page ─────────────────────────── */
+
+.msettings-page {
+  padding-bottom: 100px;
+}
+
+.msettings-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.msettings-back {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.msettings-back:hover {
+  background: var(--border);
+}
+
+.msettings-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.msettings-description {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.msettings-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ─── Auth Required ─────────────────────────────────── */
+
+.msettings-auth-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 12px;
+  text-align: center;
+  color: var(--ink-secondary);
+}
+
+.msettings-auth-icon {
+  font-size: 40px;
+}
+
+.msettings-auth-required .btn-primary {
+  margin-top: 8px;
+  padding: 10px 28px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.msettings-auth-required .btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* ─── Error State ───────────────────────────────────── */
+
+.msettings-error {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--error);
+  font-size: 14px;
+}
+
+.msettings-error .btn-retry {
+  margin-top: 12px;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  background: var(--error-light);
+  color: var(--error);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.msettings-error .btn-retry:hover {
+  background: var(--error);
+  color: #fff;
+}
+
+/* ─── Section ───────────────────────────────────────── */
+
+.msettings-section {
+  margin-bottom: 24px;
+}
+
+.msettings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.msettings-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.msettings-section-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+/* ─── Empty Section ─────────────────────────────────── */
+
+.msettings-empty-section {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.msettings-empty-text {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+/* ─── Mission Card ──────────────────────────────────── */
+
+.msettings-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.msettings-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s, opacity 0.15s;
+}
+
+.msettings-card:hover {
+  border-color: var(--border-hover);
+}
+
+.msettings-card.inactive {
+  opacity: 0.55;
+}
+
+.msettings-card.toggling {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ─── Reorder Buttons ───────────────────────────────── */
+
+.msettings-card-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.msettings-reorder-btn {
+  width: 24px;
+  height: 20px;
+  border: none;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.msettings-reorder-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.msettings-reorder-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ─── Card Info ─────────────────────────────────────── */
+
+.msettings-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.msettings-card-emoji {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.msettings-card-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.msettings-card.inactive .msettings-card-title {
+  color: var(--ink-muted);
+}
+
+/* ─── Card Actions ──────────────────────────────────── */
+
+.msettings-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ─── Toggle Switch ─────────────────────────────────── */
+
+.msettings-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.msettings-toggle.active {
+  background: var(--success);
+}
+
+.msettings-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.msettings-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s;
+}
+
+.msettings-toggle.active .msettings-toggle-thumb {
+  transform: translateX(18px);
+}
+
+/* ─── Action Buttons ────────────────────────────────── */
+
+.msettings-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.msettings-action-btn:hover:not(:disabled) {
+  background: var(--bg-subtle);
+}
+
+.msettings-action-delete:hover:not(:disabled) {
+  background: var(--error-light);
+}
+
+.msettings-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Add Button ────────────────────────────────────── */
+
+.msettings-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border);
+  color: var(--ink-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.msettings-add-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.msettings-add-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-style: solid;
+}
+
+.msettings-add-icon {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.msettings-add-label {
+  font-size: 14px;
+}
+
+/* ─── Modal Overlay ─────────────────────────────────── */
+
+.msettings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1100;
+  animation: msettings-fadeIn 0.2s ease;
+}
+
+@keyframes msettings-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ─── Modal ─────────────────────────────────────────── */
+
+.msettings-modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px;
+  animation: msettings-slideUp 0.25s ease;
+}
+
+@keyframes msettings-slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.msettings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.msettings-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.msettings-modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-subtle);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.msettings-modal-close:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.msettings-modal-close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Modal Type Badge ──────────────────────────────── */
+
+.msettings-modal-type {
+  margin-bottom: 16px;
+}
+
+.msettings-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ─── Modal Form ────────────────────────────────────── */
+
+.msettings-modal-field {
+  margin-bottom: 16px;
+}
+
+.msettings-modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  margin-bottom: 6px;
+}
+
+.msettings-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  transition: border-color 0.15s;
+}
+
+.msettings-input-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.msettings-input-emoji {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.msettings-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+}
+
+.msettings-input::placeholder {
+  color: var(--ink-muted);
+}
+
+.msettings-input-wrap:has(.msettings-input.error) {
+  border-color: var(--error);
+}
+
+.msettings-input-wrap:has(.msettings-input.error):focus-within {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.msettings-input-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  min-height: 18px;
+}
+
+.msettings-input-error {
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 500;
+}
+
+.msettings-input-hint {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.msettings-input-count {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* ─── Emoji Grid ────────────────────────────────────── */
+
+.msettings-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 6px;
+}
+
+.msettings-emoji-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid transparent;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  padding: 0;
+}
+
+.msettings-emoji-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.msettings-emoji-btn.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: scale(1.05);
+}
+
+.msettings-emoji-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Suggestion Chips ──────────────────────────────── */
+
+.msettings-suggestion-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.msettings-suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.msettings-suggestion-chip:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.msettings-suggestion-chip.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.msettings-suggestion-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Modal Actions ─────────────────────────────────── */
+
+.msettings-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.msettings-btn-cancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.msettings-btn-cancel:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.msettings-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.msettings-btn-save {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.msettings-btn-save:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.msettings-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Delete Confirm Dialog ─────────────────────────── */
+
+.msettings-confirm {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 320px;
+  padding: 24px;
+  text-align: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: msettings-popIn 0.2s ease;
+}
+
+@keyframes msettings-popIn {
+  from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.msettings-confirm-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.msettings-confirm-text {
+  font-size: 14px;
+  color: var(--ink-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.msettings-confirm-emoji {
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+.msettings-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.msettings-btn-delete {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--error);
+  border: none;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.msettings-btn-delete:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.msettings-btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Responsive ────────────────────────────────────── */
+
+@media (min-width: 481px) {
+  .msettings-modal {
+    border-radius: var(--radius-xl);
+    margin-bottom: 20vh;
+  }
+
+  .msettings-modal-overlay {
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .msettings-card-actions {
+    gap: 4px;
+  }
+
+  .msettings-action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .msettings-toggle {
+    width: 36px;
+    height: 20px;
+  }
+
+  .msettings-toggle-thumb {
+    width: 16px;
+    height: 16px;
+  }
+
+  .msettings-toggle.active .msettings-toggle-thumb {
+    transform: translateX(16px);
+  }
+
+  .msettings-emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  }
+
+  .msettings-emoji-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+}
+
+/* ─── Reduced Motion ────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .msettings-card,
+  .msettings-toggle-thumb,
+  .msettings-emoji-btn,
+  .msettings-add-btn,
+  .msettings-suggestion-chip {
+    transition: none;
+  }
+
+  .msettings-modal,
+  .msettings-modal-overlay,
+  .msettings-confirm {
+    animation: none;
+  }
+}

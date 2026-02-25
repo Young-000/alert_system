@@ -13,3 +13,5 @@
 @import './pages/settings.css';
 @import './pages/auth.css';
 @import './pages/notification-history.css';
+@import './pages/missions.css';
+@import './pages/mission-settings.css';
