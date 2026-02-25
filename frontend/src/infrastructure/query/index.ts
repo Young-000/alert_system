@@ -8,13 +8,6 @@ export { useAirQualityQuery } from './use-air-quality-query';
 export { useCommuteStatsQuery } from './use-commute-stats-query';
 export { useTransitQuery, fetchTransitArrivals } from './use-transit-query';
 export {
-  useChallengeTemplatesQuery,
-  useActiveChallengesQuery,
-  useBadgesQuery,
-  useJoinChallengeMutation,
-  useAbandonChallengeMutation,
-} from './use-challenges-query';
-export {
   usePlacesQuery,
   useCreatePlaceMutation,
   useUpdatePlaceMutation,
