@@ -1,0 +1,570 @@
+/* ─── Missions Page ──────────────────────────────── */
+
+.missions-page {
+  padding-bottom: 100px;
+}
+
+.missions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.missions-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.missions-back {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.missions-back:hover {
+  background: var(--border);
+}
+
+.missions-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.missions-date {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.missions-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── Auth Required ──────────────────────────────── */
+
+.mission-auth-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 12px;
+  text-align: center;
+  color: var(--ink-secondary);
+}
+
+.mission-auth-icon {
+  font-size: 40px;
+}
+
+.mission-auth-required .btn-primary {
+  margin-top: 8px;
+  padding: 10px 28px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mission-auth-required .btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* ─── Mission Section ────────────────────────────── */
+
+.mission-section {
+  margin-bottom: 20px;
+}
+
+.mission-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.mission-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mission-section-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+/* ─── Mission Check Card ─────────────────────────── */
+
+.mission-check-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mission-check-card:hover {
+  border-color: var(--border-hover);
+}
+
+.mission-check-card:active {
+  transform: scale(0.98);
+}
+
+.mission-check-card.completed {
+  border-color: var(--success-light);
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--success-light) 100%);
+}
+
+.mission-check-card.toggling {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ─── Checkbox ───────────────────────────────────── */
+
+.mission-checkbox {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.mission-checkbox.checked {
+  background: var(--success);
+  border-color: var(--success);
+  animation: checkBounce 0.3s ease;
+}
+
+.mission-checkbox-icon {
+  font-size: 14px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.mission-checkbox.checked .mission-checkbox-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@keyframes checkBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.2); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Mission Info ───────────────────────────────── */
+
+.mission-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mission-emoji {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.mission-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
+}
+
+.mission-check-card.completed .mission-title {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-muted);
+}
+
+/* ─── Empty State ────────────────────────────────── */
+
+.mission-empty {
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.mission-empty-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.mission-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.mission-empty-text {
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.mission-empty .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mission-empty .btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* ─── Stats Card ─────────────────────────────────── */
+
+.mission-stats-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.mission-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mission-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.mission-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mission-stat-label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.mission-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.mission-streak {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mission-streak-fire {
+  font-size: 20px;
+}
+
+/* ─── Progress Bar ───────────────────────────────── */
+
+.mission-progress {
+  margin-top: 12px;
+}
+
+.mission-progress-track {
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mission-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.mission-progress-fill.complete {
+  background: var(--success);
+}
+
+.mission-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.mission-progress-text {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.mission-progress-percent {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.mission-progress-percent.complete {
+  color: var(--success);
+}
+
+/* ─── Weekly Overview ────────────────────────────── */
+
+.weekly-overview {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.weekly-overview-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.weekly-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.weekly-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.weekly-day-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.weekly-day-label.today {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.weekly-day-indicator {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: var(--bg-subtle);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.weekly-day-indicator.full {
+  background: var(--success-light);
+}
+
+.weekly-day-indicator.partial {
+  background: var(--warning-light);
+}
+
+.weekly-day-indicator.empty {
+  background: var(--bg-subtle);
+}
+
+.weekly-day-indicator.today {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.weekly-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.weekly-summary-text {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.weekly-summary-rate {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* ─── Footer Button ──────────────────────────────── */
+
+.mission-footer {
+  margin-top: 8px;
+}
+
+.mission-manage-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mission-manage-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.mission-manage-icon {
+  font-size: 18px;
+}
+
+/* ─── Error State ────────────────────────────────── */
+
+.mission-error {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--error);
+  font-size: 14px;
+}
+
+.mission-error .btn-retry {
+  margin-top: 12px;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  background: var(--error-light);
+  color: var(--error);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mission-error .btn-retry:hover {
+  background: var(--error);
+  color: #fff;
+}
+
+/* ─── Responsive ─────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .missions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .missions-header-left {
+    width: 100%;
+  }
+
+  .weekly-day-indicator {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .weekly-day-label {
+    font-size: 11px;
+  }
+}
+
+/* ─── Reduced Motion ─────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-check-card {
+    transition: none;
+  }
+
+  .mission-check-card:active {
+    transform: none;
+  }
+
+  .mission-checkbox {
+    transition: none;
+    animation: none;
+  }
+
+  .mission-checkbox.checked {
+    animation: none;
+  }
+
+  .mission-checkbox-icon {
+    transition: none;
+  }
+
+  .mission-progress-fill {
+    transition: none;
+  }
+}
