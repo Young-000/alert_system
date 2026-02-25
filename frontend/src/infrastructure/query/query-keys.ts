@@ -49,4 +49,12 @@ export const queryKeys = {
     settings: ['smartDeparture', 'settings'] as const,
     today: ['smartDeparture', 'today'] as const,
   },
+  missions: {
+    all: ['missions'] as const,
+    daily: ['missions', 'daily'] as const,
+    dailyScore: ['missions', 'daily', 'score'] as const,
+    weeklyStats: ['missions', 'stats', 'weekly'] as const,
+    monthlyStats: ['missions', 'stats', 'monthly'] as const,
+    streak: ['missions', 'streak'] as const,
+  },
 } as const;

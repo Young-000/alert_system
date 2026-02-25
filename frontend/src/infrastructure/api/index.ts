@@ -12,6 +12,7 @@ import { getBehaviorApiClient } from './behavior-api.client';
 import { ChallengeApiClient } from './challenge-api.client';
 import { PlaceApiClient } from './place-api.client';
 import { SmartDepartureApiClient } from './smart-departure-api.client';
+import { MissionApiClient } from './mission-api.client';
 
 // 싱글톤 인스턴스
 export const apiClient = new ApiClient();
@@ -28,6 +29,7 @@ export const behaviorApiClient = getBehaviorApiClient();
 export const challengeApiClient = new ChallengeApiClient(apiClient);
 export const placeApiClient = new PlaceApiClient(apiClient);
 export const smartDepartureApiClient = new SmartDepartureApiClient(apiClient);
+export const missionApiClient = new MissionApiClient(apiClient);
 
 // 클래스 및 타입 재export
 export { ApiClient } from './api-client';
@@ -69,3 +71,9 @@ export type {
   DepartureType, SmartDepartureSetting, CreateSmartDepartureDto,
   UpdateSmartDepartureDto, SmartDepartureSnapshot, SmartDepartureTodayResponse,
 } from './smart-departure-api.client';
+export { MissionApiClient } from './mission-api.client';
+export type {
+  MissionType, Mission, DailyMissionRecord, MissionWithRecord,
+  DailyStatus, MissionScore, WeeklyStats, MonthlyStats,
+  CreateMissionDto, UpdateMissionDto,
+} from './mission-api.client';
