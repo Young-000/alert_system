@@ -36,6 +36,10 @@ import { SmartDepartureSnapshotEntity } from './typeorm/smart-departure-snapshot
 import { ChallengeTemplateEntity } from './typeorm/challenge-template.entity';
 import { UserChallengeEntity } from './typeorm/user-challenge.entity';
 import { UserBadgeEntity } from './typeorm/user-badge.entity';
+// Mission system entities
+import { MissionEntity } from './typeorm/mission.entity';
+import { DailyMissionRecordEntity } from './typeorm/daily-mission-record.entity';
+import { MissionScoreEntity } from './typeorm/mission-score.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -73,6 +77,10 @@ export function buildDataSourceOptions(): DataSourceOptions {
       ChallengeTemplateEntity,
       UserChallengeEntity,
       UserBadgeEntity,
+      // Mission system
+      MissionEntity,
+      DailyMissionRecordEntity,
+      MissionScoreEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -124,6 +132,10 @@ export function buildDataSourceOptions(): DataSourceOptions {
     ChallengeTemplateEntity,
     UserChallengeEntity,
     UserBadgeEntity,
+    // Mission system
+    MissionEntity,
+    DailyMissionRecordEntity,
+    MissionScoreEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {
