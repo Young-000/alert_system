@@ -2,6 +2,13 @@ import type { Alert } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { cronToHuman } from './cron-utils';
 
+const ALERT_TYPE_LABEL: Record<string, string> = {
+  weather: '날씨',
+  airQuality: '미세먼지',
+  subway: '지하철',
+  bus: '버스',
+};
+
 interface AlertListProps {
   readonly alerts: Alert[];
   readonly savedRoutes: RouteResponse[];
@@ -42,7 +49,7 @@ export function AlertList({
                   <div className="alert-type-tags">
                     {alert.alertTypes.map((type) => (
                       <span key={type} className={`alert-type-tag ${type}`}>
-                        {type === 'weather' ? '날씨' : type === 'airQuality' ? '미세먼지' : type === 'subway' ? '지하철' : '버스'}
+                        {ALERT_TYPE_LABEL[type] ?? type}
                       </span>
                     ))}
                   </div>

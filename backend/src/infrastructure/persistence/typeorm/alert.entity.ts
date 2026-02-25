@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 
@@ -17,6 +18,7 @@ export enum AlertTypeEnum {
 }
 
 @Entity('alerts', { schema: 'alert_system' })
+@Index(['userId'])
 export class AlertEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

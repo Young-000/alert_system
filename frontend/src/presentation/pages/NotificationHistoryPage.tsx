@@ -206,6 +206,9 @@ export function NotificationHistoryPage(): JSX.Element {
       {error && (
         <div className="error-banner" role="alert">
           {error}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => loadHistory(0)} aria-label="다시 시도">
+            다시 시도
+          </button>
           <button type="button" className="error-dismiss" onClick={() => setError('')} aria-label="오류 닫기">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>

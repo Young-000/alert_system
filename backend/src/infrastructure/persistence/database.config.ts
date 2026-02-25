@@ -40,6 +40,11 @@ import { UserBadgeEntity } from './typeorm/user-badge.entity';
 import { MissionEntity } from './typeorm/mission.entity';
 import { DailyMissionRecordEntity } from './typeorm/daily-mission-record.entity';
 import { MissionScoreEntity } from './typeorm/mission-score.entity';
+// Streak entities
+import { CommuteStreakOrmEntity } from './typeorm/commute-streak.orm-entity';
+import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
+// Live Activity entities
+import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -81,6 +86,11 @@ export function buildDataSourceOptions(): DataSourceOptions {
       MissionEntity,
       DailyMissionRecordEntity,
       MissionScoreEntity,
+      // Streak
+      CommuteStreakOrmEntity,
+      StreakDailyLogOrmEntity,
+      // Live Activity
+      LiveActivityTokenEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -136,6 +146,11 @@ export function buildDataSourceOptions(): DataSourceOptions {
     MissionEntity,
     DailyMissionRecordEntity,
     MissionScoreEntity,
+    // Streak
+    CommuteStreakOrmEntity,
+    StreakDailyLogOrmEntity,
+    // Live Activity
+    LiveActivityTokenEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {
