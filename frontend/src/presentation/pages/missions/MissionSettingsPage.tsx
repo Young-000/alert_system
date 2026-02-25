@@ -260,6 +260,8 @@ export function MissionSettingsPage(): JSX.Element {
   const [modalType, setModalType] = useState<MissionType>('commute');
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [deletingMission, setDeletingMission] = useState<Mission | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   const togglingId = toggleMutation.isPending
     ? (toggleMutation.variables ?? null)
@@ -298,10 +300,12 @@ export function MissionSettingsPage(): JSX.Element {
     if (createMutation.isPending || updateMutation.isPending) return;
     setModalOpen(false);
     setEditingMission(null);
+    setSaveError('');
   }, [createMutation.isPending, updateMutation.isPending]);
 
   const handleSave = useCallback(
     async (data: { title: string; emoji: string }) => {
+      setSaveError('');
       try {
         if (editingMission) {
           await updateMutation.mutateAsync({
@@ -318,7 +322,7 @@ export function MissionSettingsPage(): JSX.Element {
         setModalOpen(false);
         setEditingMission(null);
       } catch {
-        // Error is handled by mutation state; user sees loading stop
+        setSaveError('저장에 실패했습니다. 다시 시도해주세요.');
       }
     },
     [editingMission, modalType, createMutation, updateMutation],
@@ -338,17 +342,18 @@ export function MissionSettingsPage(): JSX.Element {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!deletingMission) return;
+    setDeleteError('');
     try {
       await deleteMutation.mutateAsync(deletingMission.id);
-    } catch {
-      // silent
-    } finally {
       setDeletingMission(null);
+    } catch {
+      setDeleteError('삭제에 실패했습니다. 다시 시도해주세요.');
     }
   }, [deletingMission, deleteMutation]);
 
   const handleCancelDelete = useCallback(() => {
     setDeletingMission(null);
+    setDeleteError('');
   }, []);
 
   const handleMoveUp = useCallback(
@@ -503,6 +508,7 @@ export function MissionSettingsPage(): JSX.Element {
         missionType={modalType}
         editingMission={editingMission}
         isLoading={isSaving}
+        error={saveError}
         onSave={handleSave}
         onClose={handleCloseModal}
       />
@@ -527,6 +533,9 @@ export function MissionSettingsPage(): JSX.Element {
               <span className="msettings-confirm-emoji" aria-hidden="true">{deletingMission.emoji}</span>
               &quot;{deletingMission.title}&quot;을 삭제할까요?
             </p>
+            {deleteError ? (
+              <p className="msettings-confirm-error" role="alert">{deleteError}</p>
+            ) : null}
             <div className="msettings-confirm-actions">
               <button
                 type="button"
