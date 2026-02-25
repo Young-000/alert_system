@@ -20,6 +20,7 @@ import { GeofenceModule } from './modules/geofence.module';
 import { SmartDepartureModule } from './modules/smart-departure.module';
 import { LiveActivityModule } from './modules/live-activity.module';
 import { ChallengeModule } from './modules/challenge.module';
+import { MissionModule } from './modules/mission.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
 import { DevController } from './controllers/dev.controller';
@@ -54,6 +55,7 @@ const isDev = process.env.NODE_ENV !== 'production';
     SmartDepartureModule,
     LiveActivityModule,
     ChallengeModule,
+    MissionModule,
   ],
   providers: [
     // 전역 JWT 인증 가드
