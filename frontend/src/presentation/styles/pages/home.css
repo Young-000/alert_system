@@ -3572,7 +3572,7 @@ main.home-page {
   }
 }
 
-/* ========== CHALLENGE QUICK CARD ========== */
+/* ========== CHALLENGE QUICK CARD (legacy) ========== */
 
 .challenge-quick-card {
   display: flex;
@@ -3635,6 +3635,126 @@ main.home-page {
 .challenge-quick-arrow {
   font-size: 20px;
   color: var(--ink-muted);
+}
+
+/* ========== MISSION QUICK CARD ========== */
+
+.mission-quick-card {
+  display: block;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mission-quick-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.mission-quick-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mission-quick-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mission-quick-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mission-quick-icon {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.mission-quick-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mission-quick-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.mission-quick-detail {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 1px;
+}
+
+.mission-quick-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mission-quick-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.mission-quick-badge--streak {
+  background: var(--warning-bg, rgba(251, 191, 36, 0.12));
+  color: var(--warning);
+}
+
+.mission-quick-badge--weekly {
+  background: var(--primary-bg, rgba(59, 130, 246, 0.1));
+  color: var(--primary);
+}
+
+.mission-quick-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.mission-quick-cta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.mission-quick-arrow {
+  font-size: 20px;
+  color: var(--ink-muted);
+}
+
+.mission-quick-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-tertiary, rgba(0, 0, 0, 0.06));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mission-quick-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  min-width: 0;
 }
 
 /* ========== PERFORMANCE: content-visibility for below-fold sections ========== */
