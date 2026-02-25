@@ -498,6 +498,7 @@ export function MissionSettingsPage(): JSX.Element {
 
       {/* Add/Edit Modal */}
       <MissionAddModal
+        key={modalOpen ? `modal-${editingMission?.id ?? 'new'}` : 'closed'}
         open={modalOpen}
         missionType={modalType}
         editingMission={editingMission}

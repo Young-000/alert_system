@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
 import type { MissionType, Mission } from '@infrastructure/api';
 
@@ -53,28 +53,14 @@ export function MissionAddModal({
   onSave,
   onClose,
 }: MissionAddModalProps): JSX.Element | null {
-  const [title, setTitle] = useState('');
-  const [emoji, setEmoji] = useState('🎯');
+  const [title, setTitle] = useState(editingMission?.title ?? '');
+  const [emoji, setEmoji] = useState(editingMission?.emoji ?? '🎯');
   const [titleError, setTitleError] = useState('');
 
   const trapRef = useFocusTrap({
     active: open,
     onEscape: isLoading ? undefined : onClose,
   });
-
-  // Populate form when editing
-  useEffect(() => {
-    if (open) {
-      if (editingMission) {
-        setTitle(editingMission.title);
-        setEmoji(editingMission.emoji);
-      } else {
-        setTitle('');
-        setEmoji('🎯');
-      }
-      setTitleError('');
-    }
-  }, [open, editingMission]);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
