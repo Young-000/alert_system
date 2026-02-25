@@ -1638,7 +1638,8 @@
   cursor: pointer;
   padding: 0;
   text-decoration: none;
-  width: 40px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .apple-title {

@@ -114,6 +114,8 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       await alertApiClient.deleteAlert(deleteTarget.id);
       reloadAlerts();
       setDeleteTarget(null);
+      setSuccess('알림이 삭제되었습니다.');
+      setTimeout(() => setSuccess(''), TOAST_DURATION_MS);
     } catch {
       setError('삭제에 실패했습니다.');
     } finally {
