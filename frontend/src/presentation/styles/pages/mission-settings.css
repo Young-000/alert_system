@@ -109,6 +109,14 @@
   color: #fff;
 }
 
+.msettings-confirm-error,
+.msettings-modal-error {
+  color: var(--error);
+  font-size: 13px;
+  margin: 8px 0 0;
+  text-align: center;
+}
+
 /* ─── Section ───────────────────────────────────────── */
 
 .msettings-section {

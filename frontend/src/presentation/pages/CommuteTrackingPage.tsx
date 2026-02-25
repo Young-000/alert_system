@@ -348,7 +348,21 @@ export function CommuteTrackingPage(): JSX.Element {
       )}
 
       {/* Error (above actions so it's always visible) */}
-      {error && <div className="commute-v2-error" role="alert">{error}</div>}
+      {error && (
+        <div className="commute-v2-error" role="alert">
+          {error}
+          {error.includes('로그인') && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate('/login')}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              로그인
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Arrive Button */}
       <div className="commute-v2-actions">

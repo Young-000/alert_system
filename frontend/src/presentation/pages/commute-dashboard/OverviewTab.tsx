@@ -1,6 +1,13 @@
 import type { CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
 import { StatCard } from '../../components/StatCard';
 
+const WEATHER_ICON_CLASS: Record<string, string> = {
+  '맑음': 'sunny',
+  '흐림': 'cloudy',
+  '비': 'rainy',
+  '눈': 'snowy',
+};
+
 interface OverviewTabProps {
   stats: CommuteStatsResponse;
 }
@@ -46,7 +53,7 @@ export function OverviewTab({ stats }: OverviewTabProps): JSX.Element {
             {stats.weatherImpact.map((weather) => (
               <div key={weather.condition} className="weather-item">
                 <span className="weather-condition">
-                  <span className={`weather-icon weather-icon--${weather.condition === '맑음' ? 'sunny' : weather.condition === '흐림' ? 'cloudy' : weather.condition === '비' ? 'rainy' : weather.condition === '눈' ? 'snowy' : 'default'}`} aria-hidden="true" />
+                  <span className={`weather-icon weather-icon--${WEATHER_ICON_CLASS[weather.condition] ?? 'default'}`} aria-hidden="true" />
                   {' '}{weather.condition}
                 </span>
                 <span className="weather-duration">{weather.averageDuration}분</span>

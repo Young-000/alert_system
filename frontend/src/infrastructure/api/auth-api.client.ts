@@ -37,5 +37,3 @@ export class AuthApiClient {
     return this.client.post<AuthResponse>('/auth/login', dto);
   }
 }
-
-export const authApiClient = new AuthApiClient();

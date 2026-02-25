@@ -39,6 +39,7 @@ type MissionAddModalProps = {
   missionType: MissionType;
   editingMission: Mission | null;
   isLoading: boolean;
+  error?: string;
   onSave: (data: { title: string; emoji: string }) => void;
   onClose: () => void;
 };
@@ -50,6 +51,7 @@ export function MissionAddModal({
   missionType,
   editingMission,
   isLoading,
+  error,
   onSave,
   onClose,
 }: MissionAddModalProps): JSX.Element | null {
@@ -215,6 +217,11 @@ export function MissionAddModal({
             </div>
           </div>
         )}
+
+        {/* Error */}
+        {error ? (
+          <p className="msettings-modal-error" role="alert">{error}</p>
+        ) : null}
 
         {/* Actions */}
         <div className="msettings-modal-actions">

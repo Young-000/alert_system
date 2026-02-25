@@ -147,7 +147,7 @@ export function ConfirmStep({
           <p>소요시간은 실제 출퇴근을 기록하면서 자동으로 측정됩니다</p>
         </div>
 
-        {error && <div className="apple-error">{error}</div>}
+        {error && <div className="apple-error" role="alert">{error}</div>}
       </div>
 
       <div className="apple-step-footer">
@@ -157,9 +157,21 @@ export function ConfirmStep({
           onClick={onSave}
           disabled={isSaving || !validation.isValid}
         >
-          {isSaving ? '저장 중...' : editingRoute ? '수정 완료' : (routeType === 'morning' && createReverse ? '경로 2개 저장' : '경로 저장')}
+          {getSaveButtonLabel(isSaving, !!editingRoute, routeType, createReverse)}
         </button>
       </div>
     </section>
   );
+}
+
+function getSaveButtonLabel(
+  isSaving: boolean,
+  isEditing: boolean,
+  routeType: RouteType,
+  createReverse: boolean,
+): string {
+  if (isSaving) return '저장 중...';
+  if (isEditing) return '수정 완료';
+  if (routeType === 'morning' && createReverse) return '경로 2개 저장';
+  return '경로 저장';
 }
