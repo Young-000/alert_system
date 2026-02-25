@@ -39,6 +39,7 @@ export {
   useCreateMissionMutation,
   useUpdateMissionMutation,
   useDeleteMissionMutation,
+  useReorderMissionMutation,
   useToggleActiveMutation,
   useToggleCheckMutation,
 } from './use-missions-query';

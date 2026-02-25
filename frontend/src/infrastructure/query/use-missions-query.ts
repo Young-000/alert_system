@@ -96,6 +96,18 @@ export function useDeleteMissionMutation() {
   });
 }
 
+export function useReorderMissionMutation() {
+  const qc = useQueryClient();
+
+  return useMutation<Mission, Error, { id: string; sortOrder: number }>({
+    mutationFn: ({ id, sortOrder }: { id: string; sortOrder: number }) =>
+      missionApiClient.reorder(id, sortOrder),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.missions.all });
+    },
+  });
+}
+
 export function useToggleActiveMutation() {
   const qc = useQueryClient();
 

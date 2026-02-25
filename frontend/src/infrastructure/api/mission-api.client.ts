@@ -61,11 +61,13 @@ export type MonthlyStats = WeeklyStats;
 
 export type CreateMissionDto = {
   title: string;
+  emoji?: string;
   missionType: MissionType;
 };
 
 export type UpdateMissionDto = {
   title?: string;
+  emoji?: string;
   missionType?: MissionType;
 };
 
