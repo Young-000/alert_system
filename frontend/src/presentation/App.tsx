@@ -18,6 +18,7 @@ const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ 
 const NotificationHistoryPage = lazy(() => import('./pages/NotificationHistoryPage').then(m => ({ default: m.NotificationHistoryPage })));
 const MissionsPage = lazy(() => import('./pages/MissionsPage').then(m => ({ default: m.MissionsPage })));
 const MissionSettingsPage = lazy(() => import('./pages/missions/MissionSettingsPage').then(m => ({ default: m.MissionSettingsPage })));
+const ReportPage = lazy(() => import('./pages/report/ReportPage').then(m => ({ default: m.ReportPage })));
 
 function PageLoader() {
   return (
@@ -38,6 +39,7 @@ function useIdlePreload(): void {
       import('./pages/AlertSettingsPage').catch(() => {});
       import('./pages/SettingsPage').catch(() => {});
       import('./pages/MissionsPage').catch(() => {});
+      import('./pages/report/ReportPage').catch(() => {});
     }, 3000);
     return () => clearTimeout(timer);
   }, []);
@@ -78,6 +80,7 @@ function App() {
             <Route path="/notifications" element={<NotificationHistoryPage />} />
             <Route path="/missions" element={<MissionsPage />} />
             <Route path="/missions/settings" element={<MissionSettingsPage />} />
+            <Route path="/reports" element={<ReportPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

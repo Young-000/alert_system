@@ -43,13 +43,14 @@ function BellIcon({ active }: { active: boolean }) {
   );
 }
 
-function MissionIcon({ active }: { active: boolean }) {
+function ReportIcon({ active }: { active: boolean }) {
   const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
+  const f = active ? 'var(--primary-light)' : 'none';
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" fill={active ? 'var(--primary-light)' : 'none'} />
-      <circle cx="12" cy="12" r="6" />
-      <circle cx="12" cy="12" r="2" fill={active ? STROKE_ACTIVE : s} />
+      <rect x="3" y="12" width="4" height="9" rx="1" fill={f} />
+      <rect x="10" y="5" width="4" height="16" rx="1" fill={f} />
+      <rect x="17" y="8" width="4" height="13" rx="1" fill={f} />
     </svg>
   );
 }
@@ -68,7 +69,7 @@ function SettingsIcon({ active }: { active: boolean }) {
 const PREFETCH_MAP: Record<string, () => Promise<unknown>> = {
   '/': () => import('../pages/home/HomePage'),
   '/routes': () => import('../pages/RouteSetupPage'),
-  '/missions': () => import('../pages/MissionsPage'),
+  '/reports': () => import('../pages/report/ReportPage'),
   '/alerts': () => import('../pages/AlertSettingsPage'),
   '/settings': () => import('../pages/SettingsPage'),
 };
@@ -87,10 +88,10 @@ const NAV_ITEMS: NavItem[] = [
     icon: (active) => <RouteIcon active={active} />,
   },
   {
-    path: '/missions',
-    label: '미션',
-    matchPaths: ['/missions', '/missions/settings'],
-    icon: (active) => <MissionIcon active={active} />,
+    path: '/reports',
+    label: '리포트',
+    matchPaths: ['/reports'],
+    icon: (active) => <ReportIcon active={active} />,
   },
   {
     path: '/alerts',
