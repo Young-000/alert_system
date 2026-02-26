@@ -220,6 +220,34 @@ export const authApiClient = {
   verify: vi.fn(),
 };
 
+export const briefingApiClient = {
+  getBriefing: vi.fn().mockResolvedValue({
+    advices: [],
+    weather: null,
+    airQuality: null,
+    contextLabel: '출근 브리핑',
+    summary: '',
+    updatedAt: new Date().toISOString(),
+  }),
+};
+
+export type AdviceSeverity = 'info' | 'warning' | 'danger';
+
+export interface AdviceChip {
+  emoji: string;
+  text: string;
+  severity: AdviceSeverity;
+}
+
+export interface BriefingResponse {
+  advices: AdviceChip[];
+  weather: unknown;
+  airQuality: unknown;
+  contextLabel: string;
+  summary: string;
+  updatedAt: string;
+}
+
 export type AlertType = 'weather' | 'airQuality' | 'bus' | 'subway';
 
 export interface Alert {

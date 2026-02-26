@@ -12,6 +12,7 @@ import { getBehaviorApiClient } from './behavior-api.client';
 import { PlaceApiClient } from './place-api.client';
 import { SmartDepartureApiClient } from './smart-departure-api.client';
 import { MissionApiClient } from './mission-api.client';
+import { BriefingApiClient } from './briefing-api.client';
 
 // 싱글톤 인스턴스
 export const apiClient = new ApiClient();
@@ -28,6 +29,7 @@ export const behaviorApiClient = getBehaviorApiClient();
 export const placeApiClient = new PlaceApiClient(apiClient);
 export const smartDepartureApiClient = new SmartDepartureApiClient(apiClient);
 export const missionApiClient = new MissionApiClient(apiClient);
+export const briefingApiClient = new BriefingApiClient(apiClient);
 
 // 클래스 및 타입 재export
 export { ApiClient } from './api-client';
@@ -69,3 +71,8 @@ export type {
   DailyStatus, MissionScore, WeeklyStats, MonthlyStats,
   CreateMissionDto, UpdateMissionDto,
 } from './mission-api.client';
+export { BriefingApiClient } from './briefing-api.client';
+export type {
+  AdviceSeverity, AdviceChip, BriefingWeatherData,
+  BriefingAirQualityData, BriefingResponse,
+} from './briefing-api.client';
