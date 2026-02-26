@@ -494,21 +494,11 @@ describe('RouteSetupPage', () => {
 
     renderPage();
 
-    // When the Promise.all rejects, it sets the error and isLoading=false.
-    // The page then renders the RouteListView (empty) with the error notice.
-    // Actually the component catches the error and shows the empty state with error.
-    // The error is set via setError('경로 목록을 불러올 수 없습니다')
-    // But the page renders the route list view (empty state) -- let's check
-    // Actually from the code (line 130-134): catch sets error and isLoading=false
-    // Then the component renders: !isLoading, !isCreating -> RouteListView with empty routes
-    // But the error is displayed via... let me check if RouteListView shows errors.
-    // Looking at RouteSetupPage: if error state is set + empty routes, the RouteListView renders
-    // the empty state div. But the error is managed as state — it's not passed to RouteListView.
-    // So the error text "경로 목록을 불러올 수 없습니다" might not be visible in the rendered output.
-    // Let's just verify the empty state shows after the error:
+    // 로딩 에러 시 에러 메시지 + 재시도 버튼이 표시되어야 함
     await waitFor(() => {
-      expect(screen.getByText('경로가 없어요')).toBeInTheDocument();
+      expect(screen.getByText('경로 목록을 불러올 수 없습니다')).toBeInTheDocument();
     });
+    expect(screen.getByText('다시 시도')).toBeInTheDocument();
   });
 
   it('should call getUserRoutes and getAlertsByUser on mount', async () => {

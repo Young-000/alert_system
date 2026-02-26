@@ -303,6 +303,16 @@ export function AlertSettingsPage(): JSX.Element {
         </div>
       )}
 
+      {/* 로딩 에러 → 재시도 */}
+      {alertCrud.loadError && (
+        <div className="apple-empty-state" role="alert">
+          <p>알림 목록을 불러올 수 없습니다</p>
+          <button type="button" className="btn btn-primary" onClick={alertCrud.retryLoad} style={{ marginTop: '12px' }}>
+            다시 시도
+          </button>
+        </div>
+      )}
+
       {/* Existing Alerts */}
       {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && (
         <AlertList

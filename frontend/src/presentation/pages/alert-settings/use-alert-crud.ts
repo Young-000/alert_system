@@ -13,6 +13,7 @@ import { TOAST_DURATION_MS } from './types';
 interface AlertCrudState {
   alerts: Alert[];
   isLoadingAlerts: boolean;
+  loadError: boolean;
   error: string;
   success: string;
   deleteTarget: { id: string; name: string } | null;
@@ -30,6 +31,7 @@ interface AlertCrudActions {
   setSuccess: (success: string) => void;
   setIsSubmitting: (value: boolean) => void;
   setDuplicateAlert: (alert: Alert | null) => void;
+  retryLoad: () => void;
   reloadAlerts: () => Promise<void>;
   handleDeleteClick: (alert: Alert) => void;
   handleDeleteConfirm: () => Promise<void>;
@@ -54,6 +56,8 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   // Local alerts state for optimistic mutations (synced from query)
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const isLoadingAlerts = alertsQuery.isLoading;
+  const loadError = alertsQuery.isError && !alertsQuery.isLoading;
+  const retryLoad = useCallback(() => { alertsQuery.refetch(); }, [alertsQuery]);
   const savedRoutes = routesQuery.data ?? [];
 
   // Sync query data to local state when query data changes
@@ -253,6 +257,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   return {
     alerts,
     isLoadingAlerts,
+    loadError,
     error,
     success,
     deleteTarget,
@@ -267,6 +272,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setSuccess,
     setIsSubmitting,
     setDuplicateAlert,
+    retryLoad,
     reloadAlerts,
     handleDeleteClick,
     handleDeleteConfirm,

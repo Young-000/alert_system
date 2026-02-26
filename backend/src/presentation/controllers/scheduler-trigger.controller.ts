@@ -13,12 +13,7 @@ import { timingSafeEqual } from 'crypto';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { Public } from '@infrastructure/auth/public.decorator';
-
-interface SchedulerTriggerPayload {
-  alertId: string;
-  userId: string;
-  alertTypes: string[];
-}
+import { SchedulerTriggerDto } from './scheduler-trigger.dto';
 
 /**
  * EventBridge Scheduler에서 호출하는 엔드포인트
@@ -47,7 +42,7 @@ export class SchedulerTriggerController {
   @Post('trigger')
   @HttpCode(HttpStatus.OK)
   async triggerNotification(
-    @Body() payload: SchedulerTriggerPayload,
+    @Body() payload: SchedulerTriggerDto,
     @Headers('x-scheduler-secret') schedulerSecret: string,
   ): Promise<{ success: boolean; message: string }> {
     // 스케줄러 시크릿 검증 (EventBridge에서 설정한 헤더)

@@ -40,6 +40,7 @@ export function RouteSetupPage(): JSX.Element {
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
   const [userAlerts, setUserAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // 정렬 및 편집
   const [routeTab, setRouteTab] = useState<'all' | 'morning' | 'evening'>('all');
@@ -108,11 +109,15 @@ export function RouteSetupPage(): JSX.Element {
   const search = useStationSearch(currentTransport, selectedStops, handleSelectStopDirect);
 
   // 기존 경로 로드
-  useEffect(() => {
+  const loadRoutes = useCallback(() => {
     if (!userId) {
       setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
+    setLoadError(false);
+    setError('');
 
     let isMounted = true;
     Promise.all([
@@ -129,13 +134,17 @@ export function RouteSetupPage(): JSX.Element {
       }
     }).catch(() => {
       if (isMounted) {
-        setError('경로 목록을 불러올 수 없습니다');
+        setLoadError(true);
         setIsLoading(false);
       }
     });
 
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
+
+  useEffect(() => {
+    loadRoutes();
+  }, [loadRoutes]);
 
   // Parse shared route from URL
   useEffect(() => {
@@ -215,8 +224,8 @@ export function RouteSetupPage(): JSX.Element {
   // 정류장 삭제
   const removeStop = useCallback((index: number) => {
     setSelectedStops(prev => {
-      if (prev.length <= 1) {
-        setError('경유지는 최소 1개 필요합니다.');
+      if (prev.length <= 2) {
+        setError('경유지는 최소 2개 필요합니다.');
         return prev;
       }
       return prev.filter((_, i) => i !== index);
@@ -505,6 +514,25 @@ export function RouteSetupPage(): JSX.Element {
           <span />
         </nav>
         <div className="apple-loading" role="status" aria-live="polite">불러오는 중...</div>
+      </main>
+    );
+  }
+
+  // 로딩 에러 → 재시도
+  if (loadError) {
+    return (
+      <main className="page apple-route-page">
+        <nav className="apple-nav">
+          <button type="button" className="apple-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
+          <span className="apple-title">경로</span>
+          <span />
+        </nav>
+        <div className="apple-empty-state" role="alert">
+          <p>경로 목록을 불러올 수 없습니다</p>
+          <button type="button" className="btn btn-primary" onClick={loadRoutes} style={{ marginTop: '12px' }}>
+            다시 시도
+          </button>
+        </div>
       </main>
     );
   }
