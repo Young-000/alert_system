@@ -4,7 +4,7 @@ import { useAuth } from '@presentation/hooks/useAuth';
 import { useUserLocation } from '@presentation/hooks/useUserLocation';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
 import { behaviorApiClient } from '@infrastructure/api';
-import type { Alert, WeatherData, DeparturePrediction } from '@infrastructure/api';
+import type { Alert, WeatherData, AirQualityData, DeparturePrediction } from '@infrastructure/api';
 import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse, type RouteRecommendationResponse } from '@infrastructure/api/commute-api.client';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
@@ -39,6 +39,8 @@ export interface UseHomeDataReturn {
   weatherError: string;
   airQualityError: string;
   airQuality: { label: string; className: string };
+  airQualityData: AirQualityData | null;
+  weatherLoading: boolean;
   checklistItems: ChecklistItem[];
   checkedItems: Set<string>;
   handleChecklistToggle: (id: string) => void;
@@ -231,6 +233,8 @@ export function useHomeData(): UseHomeDataReturn {
     weatherError,
     airQualityError,
     airQuality,
+    airQualityData,
+    weatherLoading: weatherQuery.isLoading,
     checklistItems,
     checkedItems,
     handleChecklistToggle,

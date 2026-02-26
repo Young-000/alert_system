@@ -3706,3 +3706,86 @@ main.home-page {
   contain-intrinsic-size: auto 160px;
 }
 
+/* ========== Briefing Section (P2-3) ========== */
+
+.briefing-section {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+}
+
+.briefing-section-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted, #64748b);
+  margin-bottom: 8px;
+}
+
+.briefing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.briefing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.briefing-chip-emoji {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.briefing-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Skeleton loading chips */
+.briefing-chip-skeleton {
+  display: inline-block;
+  height: 36px;
+  border-radius: 20px;
+  min-width: 120px;
+}
+
+.briefing-chip-skeleton:nth-child(1) { width: 140px; }
+.briefing-chip-skeleton:nth-child(2) { width: 120px; }
+.briefing-chip-skeleton:nth-child(3) { width: 160px; }
+
+/* Horizontal scroll on very narrow screens if chips don't fit */
+@media (max-width: 374px) {
+  .briefing-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+  }
+
+  .briefing-chips::-webkit-scrollbar {
+    display: none;
+  }
+}
+

@@ -49,4 +49,8 @@ export const queryKeys = {
     monthlyStats: ['missions', 'stats', 'monthly'] as const,
     streak: ['missions', 'streak'] as const,
   },
+  briefing: {
+    all: ['briefing'] as const,
+    byLocation: (lat: number, lng: number) => ['briefing', lat, lng] as const,
+  },
 } as const;

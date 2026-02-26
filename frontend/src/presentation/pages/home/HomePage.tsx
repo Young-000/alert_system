@@ -11,6 +11,7 @@ import { StatsSection } from './StatsSection';
 import { StreakBadge } from './StreakBadge';
 import { WeeklyReportCard } from './WeeklyReportCard';
 import { MissionQuickCard } from './MissionQuickCard';
+import { BriefingSection } from './BriefingSection';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -92,6 +93,12 @@ export function HomePage(): JSX.Element {
           <p className="muted" role="alert">{data.weatherError}</p>
         </section>
       ) : null}
+
+      <BriefingSection
+        weather={data.weather}
+        airQualityData={data.airQualityData}
+        isLoading={data.weatherLoading}
+      />
 
       {data.departurePrediction && (
         <DeparturePrediction prediction={data.departurePrediction} />
