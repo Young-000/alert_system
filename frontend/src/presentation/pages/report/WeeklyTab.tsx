@@ -28,7 +28,7 @@ export function WeeklyTab(): JSX.Element {
   const { userId } = useAuth();
   const [weekOffset, setWeekOffset] = useState(0);
 
-  const { data: report, isLoading, error } = useWeeklyReportQuery(userId, weekOffset);
+  const { data: report, isLoading, error, refetch } = useWeeklyReportQuery(userId, weekOffset);
 
   const canGoNewer = weekOffset > 0;
   const canGoOlder = weekOffset < MAX_WEEK_OFFSET;
@@ -41,6 +41,13 @@ export function WeeklyTab(): JSX.Element {
       <div className="report-tab-content">
         <div className="report-card report-card--empty" role="alert">
           <p className="report-empty-msg">{errorMsg}</p>
+          <button
+            type="button"
+            className="btn btn-sm btn-retry"
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
         </div>
       </div>
     );
@@ -179,8 +186,8 @@ export function WeeklyTab(): JSX.Element {
         <div className="report-card">
           <h3 className="report-section-title">인사이트</h3>
           <ul className="report-insights" aria-label="주간 인사이트">
-            {report.insights.map((insight) => (
-              <li key={insight} className="report-insight">{insight}</li>
+            {report.insights.map((insight, index) => (
+              <li key={`${index}-${insight}`} className="report-insight">{insight}</li>
             ))}
           </ul>
         </div>

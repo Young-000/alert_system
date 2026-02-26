@@ -70,7 +70,7 @@ function RouteCard({
 
 export function SummaryTab(): JSX.Element {
   const { userId } = useAuth();
-  const { data: summary, isLoading, error } = useAnalyticsSummaryQuery(userId);
+  const { data: summary, isLoading, error, refetch } = useAnalyticsSummaryQuery(userId);
 
   if (isLoading) return <SummaryTabSkeleton />;
 
@@ -80,6 +80,13 @@ export function SummaryTab(): JSX.Element {
       <div className="report-tab-content">
         <div className="report-card report-card--empty" role="alert">
           <p className="report-empty-msg">{errorMsg}</p>
+          <button
+            type="button"
+            className="btn btn-sm btn-retry"
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
         </div>
       </div>
     );
@@ -138,8 +145,8 @@ export function SummaryTab(): JSX.Element {
         <div className="report-card">
           <h3 className="report-section-title">분석 인사이트</h3>
           <ul className="report-insights" aria-label="분석 인사이트">
-            {summary.insights.map((insight) => (
-              <li key={insight} className="report-insight">{insight}</li>
+            {summary.insights.map((insight, index) => (
+              <li key={`${index}-${insight}`} className="report-insight">{insight}</li>
             ))}
           </ul>
         </div>

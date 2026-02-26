@@ -114,7 +114,7 @@ function WeatherImpactSection({ impacts }: { impacts: WeatherImpact[] }): JSX.El
 
 export function MonthlyTab(): JSX.Element {
   const { userId } = useAuth();
-  const { data: stats, isLoading, error } = useCommuteMonthlyStatsQuery(userId);
+  const { data: stats, isLoading, error, refetch } = useCommuteMonthlyStatsQuery(userId);
 
   if (isLoading) return <MonthlyTabSkeleton />;
 
@@ -124,6 +124,13 @@ export function MonthlyTab(): JSX.Element {
       <div className="report-tab-content">
         <div className="report-card report-card--empty" role="alert">
           <p className="report-empty-msg">{errorMsg}</p>
+          <button
+            type="button"
+            className="btn btn-sm btn-retry"
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
         </div>
       </div>
     );
@@ -178,8 +185,8 @@ export function MonthlyTab(): JSX.Element {
         <div className="report-card">
           <h3 className="report-section-title">인사이트</h3>
           <ul className="report-insights" aria-label="월간 인사이트">
-            {stats.insights.map((insight) => (
-              <li key={insight} className="report-insight">{insight}</li>
+            {stats.insights.map((insight, index) => (
+              <li key={`${index}-${insight}`} className="report-insight">{insight}</li>
             ))}
           </ul>
         </div>

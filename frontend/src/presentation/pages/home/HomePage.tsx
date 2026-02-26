@@ -130,6 +130,12 @@ export function HomePage(): JSX.Element {
         />
       )}
 
+      {data.commuteStartError && (
+        <div className="home-error-notice notice error" role="alert">
+          {data.commuteStartError}
+        </div>
+      )}
+
       <CommuteSection
         routes={data.routes}
         activeRoute={data.activeRoute}
