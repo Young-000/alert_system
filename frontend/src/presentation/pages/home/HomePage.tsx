@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { useHomeData } from './use-home-data';
-import { getGreeting } from './weather-utils';
+import { getModeGreeting } from './weather-utils';
+import { useCommuteMode } from './use-commute-mode';
+import { ModeBadge } from './ModeBadge';
 import { GuestLanding } from './GuestLanding';
 import { MorningBriefing } from './MorningBriefing';
 import { WeatherHeroSection } from './WeatherHeroSection';
@@ -15,6 +18,18 @@ import { BriefingSection } from './BriefingSection';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
+  const { mode, toggleMode } = useCommuteMode();
+
+  // Sync commute mode with route type selection
+  useEffect(() => {
+    if (mode === 'commute') {
+      data.setForceRouteType('morning');
+    } else if (mode === 'return') {
+      data.setForceRouteType('evening');
+    } else {
+      data.setForceRouteType('auto');
+    }
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!data.isLoggedIn) return <GuestLanding />;
 
@@ -49,9 +64,10 @@ export function HomePage(): JSX.Element {
 
       <header className="home-header">
         <div>
-          <h1 className="home-greeting">{getGreeting()}</h1>
+          <h1 className="home-greeting">{getModeGreeting(mode)}</h1>
           {data.userName && <p className="home-user-name">{data.userName}님</p>}
         </div>
+        <ModeBadge mode={mode} onToggle={toggleMode} />
       </header>
 
       {data.streak != null && (

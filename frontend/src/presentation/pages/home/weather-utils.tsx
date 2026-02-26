@@ -134,6 +134,20 @@ export function getGreeting(): string {
   return '좋은 밤이에요';
 }
 
+/**
+ * Returns a mode-aware greeting message.
+ * - commute: "좋은 아침이에요"
+ * - return:  "오늘도 수고했어요"
+ * - night:   "내일 출근 준비"
+ */
+export function getModeGreeting(mode: 'commute' | 'return' | 'night'): string {
+  switch (mode) {
+    case 'commute': return '좋은 아침이에요';
+    case 'return':  return '오늘도 수고했어요';
+    case 'night':   return '내일 출근 준비';
+  }
+}
+
 export function WeatherIcon({ condition, size = 48 }: { condition: string; size?: number }): JSX.Element {
   const type = getWeatherType(condition);
   switch (type) {
