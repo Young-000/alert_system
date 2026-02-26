@@ -115,24 +115,50 @@ describe('CommuteStreak', () => {
       expect(result.milestoneAchieved).toBeNull();
     });
 
-    it('30일 마일스톤을 달성한다', () => {
+    it('14일 마일스톤을 달성한다', () => {
       const streak = new CommuteStreak(userId, {
-        currentStreak: 29,
+        currentStreak: 13,
         lastRecordDate: '2026-02-16',
         milestonesAchieved: ['7d'],
       });
 
       const result = streak.recordCompletion('2026-02-17');
 
+      expect(result.milestoneAchieved).toBe('14d');
+      expect(streak.milestonesAchieved).toEqual(['7d', '14d']);
+    });
+
+    it('30일 마일스톤을 달성한다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 29,
+        lastRecordDate: '2026-02-16',
+        milestonesAchieved: ['7d', '14d'],
+      });
+
+      const result = streak.recordCompletion('2026-02-17');
+
       expect(result.milestoneAchieved).toBe('30d');
-      expect(streak.milestonesAchieved).toEqual(['7d', '30d']);
+      expect(streak.milestonesAchieved).toEqual(['7d', '14d', '30d']);
+    });
+
+    it('60일 마일스톤을 달성한다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 59,
+        lastRecordDate: '2026-02-16',
+        milestonesAchieved: ['7d', '14d', '30d'],
+      });
+
+      const result = streak.recordCompletion('2026-02-17');
+
+      expect(result.milestoneAchieved).toBe('60d');
+      expect(streak.milestonesAchieved).toEqual(['7d', '14d', '30d', '60d']);
     });
 
     it('100일 마일스톤을 달성한다', () => {
       const streak = new CommuteStreak(userId, {
         currentStreak: 99,
         lastRecordDate: '2026-02-16',
-        milestonesAchieved: ['7d', '30d'],
+        milestonesAchieved: ['7d', '14d', '30d', '60d'],
       });
 
       const result = streak.recordCompletion('2026-02-17');
@@ -188,22 +214,34 @@ describe('CommuteStreak', () => {
       });
     });
 
-    it('7일을 달성하면 30일이 다음 목표다', () => {
+    it('7일을 달성하면 14일이 다음 목표다', () => {
       const streak = new CommuteStreak(userId, {
-        currentStreak: 12,
+        currentStreak: 10,
         milestonesAchieved: ['7d'],
       });
 
       const next = streak.getNextMilestone();
 
+      expect(next?.type).toBe('14d');
+      expect(next?.daysRemaining).toBe(4);
+    });
+
+    it('14일을 달성하면 30일이 다음 목표다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 20,
+        milestonesAchieved: ['7d', '14d'],
+      });
+
+      const next = streak.getNextMilestone();
+
       expect(next?.type).toBe('30d');
-      expect(next?.daysRemaining).toBe(18);
+      expect(next?.daysRemaining).toBe(10);
     });
 
     it('모든 마일스톤을 달성하면 null을 반환한다', () => {
       const streak = new CommuteStreak(userId, {
         currentStreak: 150,
-        milestonesAchieved: ['7d', '30d', '100d'],
+        milestonesAchieved: ['7d', '14d', '30d', '60d', '100d'],
       });
 
       expect(streak.getNextMilestone()).toBeNull();

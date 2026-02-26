@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { StreakBadge } from './StreakBadge';
 import type { StreakResponse } from '@infrastructure/api/commute-api.client';
@@ -15,7 +15,7 @@ function makeStreak(overrides: Partial<StreakResponse> = {}): StreakResponse {
     weekStartDate: '2026-02-17',
     milestonesAchieved: ['7d'],
     latestMilestone: '7d',
-    nextMilestone: { type: '30d', label: '30일 연속', daysRemaining: 18, progress: 0.4 },
+    nextMilestone: { type: '14d', label: '14일 연속', daysRemaining: 2, progress: 12 / 14 },
     streakStatus: 'active',
     excludeWeekends: false,
     reminderEnabled: true,
@@ -65,9 +65,9 @@ describe('StreakBadge', () => {
 
   it('다음 마일스톤 진행률을 표시한다', () => {
     render(<StreakBadge streak={makeStreak()} />);
-    expect(screen.getByText('30일 연속까지 18일')).toBeInTheDocument();
+    expect(screen.getByText('14일 연속까지 2일')).toBeInTheDocument();
     const bar = screen.getByRole('progressbar');
-    expect(bar).toHaveAttribute('aria-valuenow', '40');
+    expect(bar).toHaveAttribute('aria-valuenow', '86');
   });
 
   it('다음 마일스톤이 없으면 진행률 바를 표시하지 않는다', () => {
@@ -78,5 +78,31 @@ describe('StreakBadge', () => {
   it('aria-label이 스트릭 일수를 포함한다', () => {
     render(<StreakBadge streak={makeStreak()} />);
     expect(screen.getByLabelText('연속 12일 스트릭')).toBeInTheDocument();
+  });
+
+  it('획득한 배지를 표시한다', () => {
+    render(<StreakBadge streak={makeStreak({ milestonesAchieved: ['7d', '14d'] })} />);
+    expect(screen.getByLabelText('획득한 배지 2개 보기')).toBeInTheDocument();
+    expect(screen.getByText('배지 2개')).toBeInTheDocument();
+  });
+
+  it('배지가 없으면 배지 영역을 표시하지 않는다', () => {
+    render(<StreakBadge streak={makeStreak({ milestonesAchieved: [] })} />);
+    expect(screen.queryByText(/배지/)).not.toBeInTheDocument();
+  });
+
+  it('배지 클릭 시 배지 컬렉션 패널을 표시한다', () => {
+    render(<StreakBadge streak={makeStreak({ milestonesAchieved: ['7d'] })} />);
+    fireEvent.click(screen.getByLabelText('획득한 배지 1개 보기'));
+    expect(screen.getByText('배지 컬렉션')).toBeInTheDocument();
+    expect(screen.getByText('첫걸음')).toBeInTheDocument();
+  });
+
+  it('배지 패널에서 닫기 버튼으로 닫을 수 있다', () => {
+    render(<StreakBadge streak={makeStreak({ milestonesAchieved: ['7d'] })} />);
+    fireEvent.click(screen.getByLabelText('획득한 배지 1개 보기'));
+    expect(screen.getByText('배지 컬렉션')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('닫기'));
+    expect(screen.queryByText('배지 컬렉션')).not.toBeInTheDocument();
   });
 });

@@ -49,12 +49,18 @@ describe('MilestoneModal', () => {
 
   it('마일스톤 타입에 따른 아이콘을 표시한다', () => {
     const { rerender } = render(<MilestoneModal {...defaultProps} />);
-    expect(screen.getByText('🥉')).toBeInTheDocument();
+    expect(screen.getByText('\u{1F949}')).toBeInTheDocument();
+
+    rerender(<MilestoneModal {...defaultProps} milestone={{ type: '14d', label: '14일 연속' }} />);
+    expect(screen.getByText('\u{1F3C3}')).toBeInTheDocument();
 
     rerender(<MilestoneModal {...defaultProps} milestone={{ type: '30d', label: '30일 연속' }} />);
-    expect(screen.getByText('🥈')).toBeInTheDocument();
+    expect(screen.getByText('\u{1F948}')).toBeInTheDocument();
+
+    rerender(<MilestoneModal {...defaultProps} milestone={{ type: '60d', label: '60일 연속' }} />);
+    expect(screen.getByText('\u{1F4AA}')).toBeInTheDocument();
 
     rerender(<MilestoneModal {...defaultProps} milestone={{ type: '100d', label: '100일 연속' }} />);
-    expect(screen.getByText('🥇')).toBeInTheDocument();
+    expect(screen.getByText('\u{1F947}')).toBeInTheDocument();
   });
 });
