@@ -336,7 +336,7 @@ export interface WeeklyReportResponse {
 // ========== Streak Types ==========
 
 export type StreakStatus = 'active' | 'at_risk' | 'broken' | 'new';
-export type MilestoneType = '7d' | '30d' | '100d';
+export type MilestoneType = '7d' | '14d' | '30d' | '60d' | '100d';
 
 export interface NextMilestone {
   type: MilestoneType;
@@ -379,11 +379,21 @@ export interface MilestoneInfo {
   achievedAt?: string;
   progress?: number;
   daysRemaining?: number;
+  badge: string;
+  badgeName: string;
+}
+
+export interface StreakBadgeInfo {
+  type: MilestoneType;
+  badge: string;
+  badgeName: string;
+  label: string;
 }
 
 export interface MilestonesResponse {
   milestones: MilestoneInfo[];
   currentStreak: number;
+  earnedBadges: StreakBadgeInfo[];
 }
 
 // ========== API Client ==========

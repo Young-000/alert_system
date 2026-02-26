@@ -37,11 +37,21 @@ export interface MilestoneInfoDto {
   achievedAt?: string;
   progress?: number;
   daysRemaining?: number;
+  badge: string;
+  badgeName: string;
 }
 
 export interface MilestonesResponseDto {
   milestones: MilestoneInfoDto[];
   currentStreak: number;
+  earnedBadges: StreakBadgeDto[];
+}
+
+export interface StreakBadgeDto {
+  type: MilestoneType;
+  badge: string;
+  badgeName: string;
+  label: string;
 }
 
 // ========== Input DTOs (classes with validation) ==========

@@ -15,9 +15,11 @@ interface MilestoneModalProps {
 }
 
 const MILESTONE_ICONS: Record<string, string> = {
-  '7d': '🥉',
-  '30d': '🥈',
-  '100d': '🥇',
+  '7d': '\u{1F949}',
+  '14d': '\u{1F3C3}',
+  '30d': '\u{1F948}',
+  '60d': '\u{1F4AA}',
+  '100d': '\u{1F947}',
 };
 
 export function MilestoneModal({

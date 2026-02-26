@@ -1,18 +1,22 @@
 import { subtractDays, getWeekStartKST } from '@domain/utils/kst-date';
 
 export type StreakStatus = 'active' | 'at_risk' | 'broken' | 'new';
-export type MilestoneType = '7d' | '30d' | '100d';
+export type MilestoneType = '7d' | '14d' | '30d' | '60d' | '100d';
 
 export interface MilestoneDefinition {
   type: MilestoneType;
   days: number;
   label: string;
+  badge: string;
+  badgeName: string;
 }
 
 export const MILESTONES: readonly MilestoneDefinition[] = [
-  { type: '7d', days: 7, label: '7일 연속' },
-  { type: '30d', days: 30, label: '30일 연속' },
-  { type: '100d', days: 100, label: '100일 연속' },
+  { type: '7d', days: 7, label: '7일 연속', badge: '🥉', badgeName: '첫걸음' },
+  { type: '14d', days: 14, label: '14일 연속', badge: '🏃', badgeName: '습관 형성' },
+  { type: '30d', days: 30, label: '30일 연속', badge: '🥈', badgeName: '한 달 챔피언' },
+  { type: '60d', days: 60, label: '60일 연속', badge: '💪', badgeName: '철인' },
+  { type: '100d', days: 100, label: '100일 연속', badge: '🥇', badgeName: '전설' },
 ] as const;
 
 export interface RecordCompletionResult {
