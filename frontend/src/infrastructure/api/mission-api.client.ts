@@ -77,7 +77,8 @@ export class MissionApiClient {
   constructor(private apiClient: ApiClient) {}
 
   async getMissions(): Promise<Mission[]> {
-    return this.apiClient.get<Mission[]>('/missions');
+    const res = await this.apiClient.get<{ missions: Mission[] }>('/missions');
+    return res.missions;
   }
 
   async createMission(dto: CreateMissionDto): Promise<Mission> {
