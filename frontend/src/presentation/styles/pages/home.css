@@ -4012,3 +4012,501 @@ main.home-page {
   }
 }
 
+/* ====================================================================
+   REPORT PAGE
+   ==================================================================== */
+
+.report-page {
+  padding-bottom: 80px;
+}
+
+.report-page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+/* ---------- Tab Bar ---------- */
+.report-tab-bar {
+  display: flex;
+  gap: 0;
+  background: var(--bg-subtle, #f5f5f7);
+  border-radius: var(--radius-lg, 12px);
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.report-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-tab:hover {
+  color: var(--ink);
+}
+
+.report-tab--active {
+  background: var(--bg-card, #ffffff);
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- Tab Content ---------- */
+.report-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Cards ---------- */
+.report-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 20px;
+  transition: border-color 0.2s ease;
+}
+
+.report-card:hover {
+  border-color: var(--border-hover, var(--border));
+}
+
+.report-card--empty {
+  text-align: center;
+  padding: 32px 20px;
+}
+
+/* ---------- Empty State ---------- */
+.report-empty-icon {
+  font-size: 2rem;
+  margin: 0 0 8px;
+}
+
+.report-empty-msg {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.report-empty-hint {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  margin: 0;
+}
+
+.report-login-btn {
+  margin-top: 16px;
+  display: inline-flex;
+}
+
+/* ---------- Week Navigation ---------- */
+.report-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.report-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.report-nav-btn:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.report-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.report-week-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 90px;
+  text-align: center;
+}
+
+/* ---------- Summary Row ---------- */
+.report-summary-row {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.report-stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 8px 4px;
+  background: var(--bg-subtle, #f5f5f7);
+  border-radius: var(--radius-md, 8px);
+}
+
+.report-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.report-stat-label {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+
+.report-trend-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Section Title ---------- */
+.report-section-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+/* ---------- Highlights ---------- */
+.report-highlights {
+  display: flex;
+  gap: 8px;
+}
+
+.report-highlight {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-subtle, #f5f5f7);
+}
+
+.report-highlight--best {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.report-highlight--worst {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.report-highlight-icon {
+  font-size: 1.125rem;
+}
+
+.report-highlight-label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--ink-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-highlight-value {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- Streak ---------- */
+.report-streak {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-streak-bar {
+  height: 8px;
+  background: var(--bg-subtle, #e5e7eb);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.report-streak-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.report-streak-fill--met {
+  background: var(--success, #10b981);
+}
+
+.report-streak-text {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  text-align: right;
+}
+
+.report-streak-text--met {
+  color: var(--success, #10b981);
+  font-weight: 600;
+}
+
+/* ---------- Insights ---------- */
+.report-insights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-insight {
+  position: relative;
+  padding-left: 16px;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+
+.report-insight::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+/* ---------- Notice ---------- */
+.report-notice {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--ink-muted, #999);
+  padding: 8px;
+  margin: 0;
+}
+
+/* ---------- Day of Week Chart ---------- */
+.report-dow-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  height: 140px;
+  padding-top: 8px;
+}
+
+.report-dow-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.report-dow-bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.report-dow-bar-fill {
+  width: 100%;
+  max-width: 28px;
+  background: var(--primary);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 4px;
+}
+
+.report-dow-bar-fill--empty {
+  background: var(--border, #e5e7eb);
+}
+
+.report-dow-bar-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.report-dow-bar-value {
+  font-size: 0.625rem;
+  color: var(--ink-muted, #999);
+  white-space: nowrap;
+}
+
+/* ---------- Weather Impact ---------- */
+.report-weather-impacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-weather-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--bg-subtle, #f5f5f7);
+  border-radius: var(--radius-md, 8px);
+  min-width: 72px;
+  flex: 1;
+}
+
+.report-weather-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.report-weather-duration {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.report-weather-diff {
+  font-size: 0.6875rem;
+  color: var(--ink-secondary);
+}
+
+.report-weather-diff--worse {
+  color: var(--error, #ef4444);
+}
+
+.report-weather-diff--better {
+  color: var(--success, #10b981);
+}
+
+.report-weather-count {
+  font-size: 0.625rem;
+  color: var(--ink-muted, #999);
+}
+
+/* ---------- Route Card (Summary Tab) ---------- */
+.report-route-card {
+  padding: 12px 14px;
+  background: var(--bg-subtle, #f5f5f7);
+  border-radius: var(--radius-md, 8px);
+}
+
+.report-route-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.report-route-card-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-route-grade {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.report-route-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.report-route-card-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-route-card-stat {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+}
+
+.report-route-card-stat strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.report-route-card-summary {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .report-page-title {
+    font-size: 1.25rem;
+  }
+
+  .report-summary-row {
+    gap: 6px;
+  }
+
+  .report-stat-block {
+    padding: 6px 2px;
+  }
+
+  .report-stat-value {
+    font-size: 1rem;
+  }
+
+  .report-highlights {
+    flex-direction: column;
+  }
+
+  .report-dow-chart {
+    height: 120px;
+  }
+
+  .report-weather-card {
+    min-width: 60px;
+    padding: 8px 10px;
+  }
+}
+

@@ -22,6 +22,7 @@ export {
   useDeleteSmartDepartureMutation,
   useToggleSmartDepartureMutation,
 } from './use-smart-departure-query';
+export { useCommuteMonthlyStatsQuery, useAnalyticsSummaryQuery } from './use-report-query';
 export {
   useMissionsQuery,
   useDailyStatusQuery,

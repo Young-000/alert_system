@@ -121,6 +121,12 @@ export const commuteApiClient = {
   getUserAnalytics: vi.fn().mockResolvedValue([]),
   compareRoutes: vi.fn().mockResolvedValue(null),
   getWeatherRouteRecommendation: vi.fn().mockResolvedValue({ confidence: 0, recommendation: null }),
+  getAnalyticsSummary: vi.fn().mockResolvedValue({
+    totalRoutes: 0,
+    totalTrips: 0,
+    averageScore: 0,
+    insights: [],
+  }),
   getWeeklyReport: vi.fn().mockResolvedValue({
     weekStartDate: '2026-02-17',
     weekEndDate: '2026-02-23',
@@ -417,13 +423,57 @@ export interface SessionResponse {
   checkpointRecords: CheckpointRecordResponse[];
 }
 
+export interface ScoreFactors {
+  speed: number;
+  reliability: number;
+  comfort: number;
+}
+
+export interface SegmentStats {
+  checkpointName: string;
+  transportMode: string;
+  averageDuration: number;
+  minDuration: number;
+  maxDuration: number;
+  variability: 'stable' | 'variable' | 'unpredictable';
+  sampleCount: number;
+}
+
+export interface ConditionAnalysis {
+  byWeather: Record<string, { avgDuration: number; count: number }>;
+  byDayOfWeek: Record<string, { avgDuration: number; count: number }>;
+  byTimeSlot: Record<string, { avgDuration: number; count: number }>;
+}
+
 export interface RouteAnalyticsResponse {
   routeId: string;
   routeName: string;
-  routeType: string;
-  totalSessions: number;
-  averageDuration: number;
-  trends: unknown[];
+  totalTrips: number;
+  lastTripDate?: string;
+  duration: {
+    average: number;
+    min: number;
+    max: number;
+    stdDev: number;
+  };
+  segmentStats: SegmentStats[];
+  conditionAnalysis: ConditionAnalysis;
+  score: number;
+  grade: 'S' | 'A' | 'B' | 'C' | 'D';
+  scoreFactors: ScoreFactors;
+  summary: string;
+  variabilityText: string;
+  isRecommended: boolean;
+  lastCalculatedAt: string;
+}
+
+export interface AnalyticsSummaryResponse {
+  totalRoutes: number;
+  totalTrips: number;
+  averageScore: number;
+  bestRoute?: RouteAnalyticsResponse;
+  mostUsedRoute?: RouteAnalyticsResponse;
+  insights: string[];
 }
 
 export interface RouteComparisonResponse {
