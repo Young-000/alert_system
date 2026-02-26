@@ -1972,6 +1972,44 @@ main.home-page {
   margin-top: 2px;
 }
 
+/* ─── Mode Badge (commute/return toggle) ─── */
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  min-height: 44px;
+  min-width: 44px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.mode-badge:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+  border-color: var(--primary);
+}
+
+.mode-badge:active {
+  background: var(--primary-light, rgba(99, 102, 241, 0.08));
+}
+
+.mode-badge-emoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.mode-badge-label {
+  white-space: nowrap;
+}
+
 .home-error-notice {
   margin: 0 0 0.75rem;
 }
