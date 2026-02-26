@@ -132,7 +132,7 @@ export function NotificationHistoryPage(): JSX.Element {
 
       const [historyResult, statsResult] = await Promise.allSettled([
         notificationApiClient.getHistory(20, 0),
-        notificationApiClient.getStats(PERIOD_DAYS[periodFilter]),
+        notificationApiClient.getStats(0), // Initial load always uses 'all' (0 days = no limit)
       ]);
 
       if (!isMounted) return;
@@ -154,7 +154,7 @@ export function NotificationHistoryPage(): JSX.Element {
 
     load();
     return () => { isMounted = false; };
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   // Skip initial mount — stats already fetched by the first useEffect
   const isInitialMount = useRef(true);

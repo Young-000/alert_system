@@ -141,12 +141,25 @@ export function CommuteDashboardPage(): JSX.Element {
             />
           )}
 
-          {activeTab === 'stopwatch' && stopwatchRecords.length > 0 && (
-            <StopwatchTab records={stopwatchRecords} />
+          {activeTab === 'stopwatch' && (
+            stopwatchRecords.length > 0 ? (
+              <StopwatchTab records={stopwatchRecords} />
+            ) : (
+              <div className="settings-empty">
+                <p className="muted">스톱워치 기록이 아직 없습니다</p>
+                <Link to="/commute" className="btn btn-primary btn-sm">트래킹 시작하기</Link>
+              </div>
+            )
           )}
 
-          {activeTab === 'analytics' && routeAnalytics.length > 0 && (
-            <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} />
+          {activeTab === 'analytics' && (
+            routeAnalytics.length > 0 ? (
+              <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} />
+            ) : (
+              <div className="settings-empty">
+                <p className="muted">분석할 데이터가 아직 충분하지 않습니다</p>
+              </div>
+            )
           )}
 
           {activeTab === 'behavior' && (
