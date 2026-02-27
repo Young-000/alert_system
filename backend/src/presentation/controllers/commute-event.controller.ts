@@ -70,7 +70,7 @@ export class CommuteEventController {
     @Query('limit') limitStr: string | undefined,
     @Request() req: AuthenticatedRequest,
   ): Promise<CommuteEventListResponseDto> {
-    const limit = limitStr ? parseInt(limitStr, 10) : 50;
+    const limit = Math.max(1, parseInt(limitStr || '', 10) || 50);
     return this.processCommuteEventUseCase.getEventsByUserId(req.user.userId, limit);
   }
 }

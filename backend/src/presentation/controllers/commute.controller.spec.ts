@@ -246,10 +246,8 @@ describe('CommuteController', () => {
 
       await controller.getHistory(OWNER_ID, 'abc', 'xyz', mockRequest(OWNER_ID));
 
-      // parseInt('abc', 10) returns NaN, so the ternary condition is truthy but value is NaN
-      // In the controller: limit ? parseInt(limit, 10) : 20
-      // parseInt('abc') = NaN, which is used as-is (this is the actual controller behavior)
-      expect(manageSessionUseCase.getHistory).toHaveBeenCalledWith(OWNER_ID, NaN, NaN);
+      // parseInt('abc', 10) returns NaN → fallback to default values (20, 0)
+      expect(manageSessionUseCase.getHistory).toHaveBeenCalledWith(OWNER_ID, 20, 0);
     });
 
     it('다른 사용자의 통근 기록 조회 시 ForbiddenException', async () => {

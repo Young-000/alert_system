@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
@@ -121,52 +121,36 @@ export function NotificationHistoryPage(): JSX.Element {
     }
   }, [userId]);
 
+  // History: userId 변경 시에만 다시 로드
   useEffect(() => {
     let isMounted = true;
 
-    const load = async (): Promise<void> => {
+    const loadHistory = async (): Promise<void> => {
       if (!userId) return;
       setIsLoading(true);
-      setIsStatsLoading(true);
       setError('');
-
-      const [historyResult, statsResult] = await Promise.allSettled([
-        notificationApiClient.getHistory(20, 0),
-        notificationApiClient.getStats(0), // Initial load always uses 'all' (0 days = no limit)
-      ]);
-
-      if (!isMounted) return;
-
-      if (historyResult.status === 'fulfilled') {
-        setLogs(historyResult.value.items);
-        setTotal(historyResult.value.total);
-      } else {
-        setError('알림 기록을 불러올 수 없습니다.');
+      try {
+        const res = await notificationApiClient.getHistory(20, 0);
+        if (!isMounted) return;
+        setLogs(res.items);
+        setTotal(res.total);
+      } catch {
+        if (isMounted) setError('알림 기록을 불러올 수 없습니다.');
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-
-      if (statsResult.status === 'fulfilled') {
-        setStats(statsResult.value);
-      }
-
-      setIsLoading(false);
-      setIsStatsLoading(false);
     };
 
-    load();
+    loadHistory();
     return () => { isMounted = false; };
   }, [userId]);
 
-  // Skip initial mount — stats already fetched by the first useEffect
-  const isInitialMount = useRef(true);
+  // Stats: userId 또는 periodFilter 변경 시 다시 로드
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    if (!userId) return;
     let isMounted = true;
 
     const loadStats = async (): Promise<void> => {
+      if (!userId) return;
       setIsStatsLoading(true);
       try {
         const result = await notificationApiClient.getStats(PERIOD_DAYS[periodFilter]);

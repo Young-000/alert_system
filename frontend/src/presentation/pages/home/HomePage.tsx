@@ -18,18 +18,19 @@ import { BriefingSection } from './BriefingSection';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
+  const { setForceRouteType } = data;
   const { mode, toggleMode } = useCommuteMode();
 
   // Sync commute mode with route type selection
   useEffect(() => {
     if (mode === 'commute') {
-      data.setForceRouteType('morning');
+      setForceRouteType('morning');
     } else if (mode === 'return') {
-      data.setForceRouteType('evening');
+      setForceRouteType('evening');
     } else {
-      data.setForceRouteType('auto');
+      setForceRouteType('auto');
     }
-  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mode, setForceRouteType]);
 
   if (!data.isLoggedIn) return <GuestLanding />;
 

@@ -1,4 +1,11 @@
-import { Controller, Post, Delete, Get, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Logger,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Public } from '@infrastructure/auth/public.decorator';
@@ -20,7 +27,7 @@ import {
 export class DevController {
   private assertNotProduction(): void {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('Dev endpoints are not available in production');
+      throw new ForbiddenException('Dev endpoints are not available in production');
     }
   }
 

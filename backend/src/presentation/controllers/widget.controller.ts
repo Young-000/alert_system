@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Request } from '@nestjs/common';
 import { WidgetDataService } from '@application/services/widget-data.service';
-import { WidgetDataQueryDto } from '@application/dto/widget-data.dto';
+import { WidgetDataQueryDto, WidgetDataResponseDto } from '@application/dto/widget-data.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('widget')
@@ -11,7 +11,7 @@ export class WidgetController {
   async getData(
     @Query() query: WidgetDataQueryDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<WidgetDataResponseDto> {
     return this.widgetDataService.getData(
       req.user.userId,
       query.lat,
