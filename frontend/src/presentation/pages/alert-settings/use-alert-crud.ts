@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   alertApiClient,
@@ -46,6 +46,8 @@ interface AlertCrudActions {
 
 export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions {
   const queryClient = useQueryClient();
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   // Server state via react-query
   const alertsQuery = useAlertsQuery(userId);
@@ -151,7 +153,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       reloadAlerts();
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
-      setTimeout(() => setSuccess(''), TOAST_DURATION_MS);
+      setTimeout(() => { if (mountedRef.current) setSuccess(''); }, TOAST_DURATION_MS);
     } catch {
       setError('수정에 실패했습니다.');
     } finally {
@@ -220,7 +222,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       }, 300);
 
       setTimeout(() => {
-        setSuccess('');
+        if (mountedRef.current) setSuccess('');
       }, 5000);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';

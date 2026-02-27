@@ -60,8 +60,13 @@ export class SchedulerTriggerController {
 
     const expected = Buffer.from(expectedSecret, 'utf8');
     const received = Buffer.from(schedulerSecret, 'utf8');
-    if (expected.length !== received.length ||
-        !timingSafeEqual(expected, received)) {
+    let isValid = false;
+    try {
+      isValid = expected.length === received.length && timingSafeEqual(expected, received);
+    } catch {
+      isValid = false;
+    }
+    if (!isValid) {
       this.logger.warn(`Invalid scheduler secret for alert ${payload.alertId}`);
       throw new UnauthorizedException('Authentication failed');
     }
@@ -110,8 +115,13 @@ export class SchedulerTriggerController {
 
     const expected = Buffer.from(expectedSecret, 'utf8');
     const received = Buffer.from(schedulerSecret, 'utf8');
-    if (expected.length !== received.length ||
-        !timingSafeEqual(expected, received)) {
+    let isValid = false;
+    try {
+      isValid = expected.length === received.length && timingSafeEqual(expected, received);
+    } catch {
+      isValid = false;
+    }
+    if (!isValid) {
       this.logger.warn('Invalid scheduler secret for weekly report');
       throw new UnauthorizedException('Authentication failed');
     }

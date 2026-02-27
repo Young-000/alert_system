@@ -66,6 +66,7 @@ export interface UseHomeDataReturn {
   setWeekOffset: (offset: number) => void;
   isDefaultLocation: boolean;
   isCommuteStarting: boolean;
+  commuteStartError: string;
   handleStartCommute: () => Promise<void>;
   retryLoad: () => void;
   navigate: ReturnType<typeof useNavigate>;
@@ -123,6 +124,7 @@ export function useHomeData(): UseHomeDataReturn {
 
   // Local UI state (not server state)
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
+  const [commuteStartError, setCommuteStartError] = useState('');
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
   const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
@@ -209,6 +211,7 @@ export function useHomeData(): UseHomeDataReturn {
   const handleStartCommute = useCallback(async (): Promise<void> => {
     if (!activeRoute || isCommuteStarting) return;
     setIsCommuteStarting(true);
+    setCommuteStartError('');
     try {
       const commuteApi = getCommuteApiClient();
       const session = await commuteApi.startSession({
@@ -217,7 +220,7 @@ export function useHomeData(): UseHomeDataReturn {
       });
       navigate('/commute', { state: { sessionId: session.id, routeId: activeRoute.id } });
     } catch {
-      navigate('/commute', { state: { routeId: activeRoute.id } });
+      setCommuteStartError('세션 시작에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsCommuteStarting(false);
     }
@@ -260,6 +263,7 @@ export function useHomeData(): UseHomeDataReturn {
     setWeekOffset,
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
+    commuteStartError,
     handleStartCommute,
     retryLoad: () => {
       alertsQuery.refetch();

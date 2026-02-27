@@ -209,8 +209,8 @@ export class CommuteController {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 통근 기록에 접근할 수 없습니다.');
     }
-    const limitNum = limit ? parseInt(limit, 10) : 20;
-    const offsetNum = offset ? parseInt(offset, 10) : 0;
+    const limitNum = Math.max(1, parseInt(limit || '', 10) || 20);
+    const offsetNum = Math.max(0, parseInt(offset || '', 10) || 0);
     return this.manageSessionUseCase.getHistory(userId, limitNum, offsetNum);
   }
 
@@ -227,7 +227,7 @@ export class CommuteController {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 통근 통계에 접근할 수 없습니다.');
     }
-    const daysNum = days ? parseInt(days, 10) : 30;
+    const daysNum = Math.max(1, parseInt(days || '', 10) || 30);
     return this.getStatsUseCase.execute(userId, daysNum);
   }
 
@@ -247,7 +247,7 @@ export class CommuteController {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 주간 리포트에 접근할 수 없습니다.');
     }
-    const weekOffset = weekOffsetStr ? parseInt(weekOffsetStr, 10) : 0;
+    const weekOffset = Math.max(0, parseInt(weekOffsetStr || '', 10) || 0);
     this.logger.log(`Getting weekly report for user ${userId}, weekOffset=${weekOffset}`);
     return this.getWeeklyReportUseCase.execute(userId, weekOffset);
   }

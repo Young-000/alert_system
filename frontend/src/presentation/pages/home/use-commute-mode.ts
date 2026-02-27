@@ -48,7 +48,7 @@ export function useCommuteMode(): UseCommuteModeReturn {
   const toggleMode = useCallback(() => {
     setManualOverride(prev => {
       const current = prev ?? autoMode;
-      return current === 'commute' ? 'return' : 'commute';
+      return (current === 'commute' || current === 'night') ? 'return' : 'commute';
     });
   }, [autoMode]);
 

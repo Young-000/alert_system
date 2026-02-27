@@ -7,6 +7,7 @@ import {
   useDeleteSmartDepartureMutation,
   useToggleSmartDepartureMutation,
 } from '@infrastructure/query';
+import { useToast, ToastContainer } from '@presentation/components/Toast';
 import type { SmartDepartureSetting, DepartureType } from '@infrastructure/api';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -25,7 +26,7 @@ function SettingCard({
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
-}) {
+}): JSX.Element {
   const activeDayLabels = setting.activeDays
     .map((d) => DAY_LABELS[d])
     .join(', ');
@@ -80,6 +81,7 @@ export function SmartDepartureTab(): JSX.Element {
   const createMutation = useCreateSmartDepartureMutation();
   const deleteMutation = useDeleteSmartDepartureMutation();
   const toggleMutation = useToggleSmartDepartureMutation();
+  const toast = useToast();
 
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<DepartureType>('commute');
@@ -87,13 +89,14 @@ export function SmartDepartureTab(): JSX.Element {
   const [formTarget, setFormTarget] = useState('09:00');
   const [formPrep, setFormPrep] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const routeMap = new Map((routes ?? []).map((r) => [r.id, r.name]));
 
   const handleCreate = useCallback(async () => {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
-      alert('먼저 경로를 등록해주세요.');
+      toast.warning('먼저 경로를 등록해주세요.');
       return;
     }
     try {
@@ -105,22 +108,25 @@ export function SmartDepartureTab(): JSX.Element {
         activeDays: [1, 2, 3, 4, 5], // Mon-Fri default
       });
       setShowForm(false);
+      toast.success('스마트 출발이 설정되었습니다.');
     } catch {
-      alert('스마트 출발 설정에 실패했습니다.');
+      toast.error('스마트 출발 설정에 실패했습니다.');
     }
-  }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
+  }, [formRouteId, formType, formTarget, formPrep, routes, createMutation, toast]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 스마트 출발 설정을 삭제하시겠습니까?')) return;
-    setDeletingId(id);
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!confirmDeleteId) return;
+    setDeletingId(confirmDeleteId);
+    setConfirmDeleteId(null);
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(confirmDeleteId);
+      toast.success('설정이 삭제되었습니다.');
     } catch {
-      alert('삭제에 실패했습니다.');
+      toast.error('삭제에 실패했습니다.');
     } finally {
       setDeletingId(null);
     }
-  }, [deleteMutation]);
+  }, [confirmDeleteId, deleteMutation, toast]);
 
   const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id);
@@ -199,7 +205,7 @@ export function SmartDepartureTab(): JSX.Element {
                 min={10}
                 max={60}
                 value={formPrep}
-                onChange={(e) => setFormPrep(parseInt(e.target.value) || 15)}
+                onChange={(e) => setFormPrep(parseInt(e.target.value, 10) || 15)}
               />
             </div>
             <button
@@ -231,13 +237,49 @@ export function SmartDepartureTab(): JSX.Element {
                 setting={setting}
                 routeName={routeMap.get(setting.routeId) ?? '알 수 없는 경로'}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={(id) => setConfirmDeleteId(id)}
                 isDeleting={deletingId === setting.id}
               />
             ))}
           </div>
         )}
       </section>
+
+      {/* 삭제 확인 모달 */}
+      {confirmDeleteId && (
+        <div
+          className="modal-overlay"
+          onClick={() => setConfirmDeleteId(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="삭제 확인"
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-message">이 스마트 출발 설정을 삭제하시겠습니까?</p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setConfirmDeleteId(null)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => void handleDeleteConfirm()}
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ToastContainer toasts={toast.toasts} onDismiss={toast.dismissToast} />
     </div>
   );
 }

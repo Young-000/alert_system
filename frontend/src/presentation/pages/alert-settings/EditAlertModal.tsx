@@ -23,7 +23,7 @@ export function EditAlertModal({
   return (
     <div
       className="modal-overlay"
-      onClick={onCancel}
+      onClick={isEditing ? undefined : onCancel}
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-modal-title"

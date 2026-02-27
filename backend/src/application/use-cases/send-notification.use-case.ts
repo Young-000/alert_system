@@ -87,10 +87,12 @@ export class SendNotificationUseCase {
     await this.collectRouteData(alert, data);
 
     // 알림톡 발송
-    if (!this.solapiService || !user.phoneNumber) {
-      if (!user.phoneNumber) {
-        this.logger.warn(`User ${user.id} has no phone number`);
-      }
+    if (!this.solapiService) {
+      this.logger.warn(`Solapi service not configured — notification skipped for alert ${alert.id}`);
+      return;
+    }
+    if (!user.phoneNumber) {
+      this.logger.warn(`User ${user.id} has no phone number — notification skipped for alert ${alert.id}`);
       return;
     }
 
