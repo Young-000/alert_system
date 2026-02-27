@@ -415,7 +415,7 @@ export function OnboardingPage(): JSX.Element {
                 </>
               ) : (
                 <>
-                  <Link to="/commute?mode=stopwatch" className="btn btn-primary btn-lg">
+                  <Link to="/commute/dashboard?tab=stopwatch" className="btn btn-primary btn-lg">
                     스톱워치로 시작
                   </Link>
                   <Link to="/routes" className="btn btn-ghost">

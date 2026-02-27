@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
+import { AuthRequired } from '../../components/AuthRequired';
 import { WeeklyTab } from './WeeklyTab';
 import { MonthlyTab } from './MonthlyTab';
 import { SummaryTab } from './SummaryTab';
@@ -19,15 +19,11 @@ export function ReportPage(): JSX.Element {
 
   if (!isLoggedIn) {
     return (
-      <main className="page report-page">
-        <h1 className="report-page-title">리포트</h1>
-        <div className="report-card report-card--empty">
-          <p className="report-empty-msg">로그인이 필요합니다</p>
-          <Link to="/login" className="btn btn-primary report-login-btn">
-            로그인하기
-          </Link>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="리포트"
+        icon="📊"
+        description="리포트를 확인하려면 로그인이 필요해요"
+      />
     );
   }
 

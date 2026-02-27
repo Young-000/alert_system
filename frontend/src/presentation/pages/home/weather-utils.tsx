@@ -117,10 +117,14 @@ export function getCheckedItems(): Set<string> {
 }
 
 export function saveCheckedItems(checked: Set<string>): void {
-  localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify({
-    date: getTodayKey(),
-    checked: Array.from(checked),
-  }));
+  try {
+    localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify({
+      date: getTodayKey(),
+      checked: Array.from(checked),
+    }));
+  } catch {
+    // Private browsing 모드 등에서 localStorage 쓰기 실패 가능
+  }
 }
 
 export function getGreeting(): string {

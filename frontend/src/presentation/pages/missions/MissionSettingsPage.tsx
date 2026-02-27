@@ -10,6 +10,7 @@ import {
   useToggleActiveMutation,
 } from '@infrastructure/query';
 import type { Mission, MissionType } from '@infrastructure/api';
+import { AuthRequired } from '../../components/AuthRequired';
 import { MissionAddModal } from './MissionAddModal';
 import '../../styles/pages/mission-settings.css';
 
@@ -386,15 +387,11 @@ export function MissionSettingsPage(): JSX.Element {
   // ── Auth required ──
   if (!userId) {
     return (
-      <main className="page msettings-page">
-        <div className="msettings-auth-required">
-          <span className="msettings-auth-icon" aria-hidden="true">🔒</span>
-          <p>로그인이 필요한 기능이에요</p>
-          <button type="button" className="btn-primary" onClick={() => navigate('/login')}>
-            로그인
-          </button>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="미션 설정"
+        icon="⚙️"
+        description="미션을 설정하려면 로그인이 필요해요"
+      />
     );
   }
 

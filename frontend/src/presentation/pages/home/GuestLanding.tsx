@@ -25,17 +25,17 @@ export function GuestLanding(): JSX.Element {
       <section className="guest-features">
         <div className="guest-feature-card">
           <div className="guest-feature-num">1</div>
-          <h3>경로 등록</h3>
+          <h2>경로 등록</h2>
           <p>출근 경로를 한 번만 등록하세요</p>
         </div>
         <div className="guest-feature-card">
           <div className="guest-feature-num">2</div>
-          <h3>자동 알림</h3>
+          <h2>자동 알림</h2>
           <p>날씨 + 도착정보가 알아서 옵니다</p>
         </div>
         <div className="guest-feature-card">
           <div className="guest-feature-num">3</div>
-          <h3>기록 & 분석</h3>
+          <h2>기록 & 분석</h2>
           <p>출발/도착만 누르면 패턴이 쌓여요</p>
         </div>
       </section>

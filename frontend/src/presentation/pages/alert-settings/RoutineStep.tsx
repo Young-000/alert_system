@@ -121,8 +121,8 @@ export function RoutineStep({
           <h3>알림 미리보기</h3>
         </div>
         <div className="preview-list">
-          {notificationTimes.map((item, i) => (
-            <div key={i} className="preview-item">
+          {notificationTimes.map((item) => (
+            <div key={`${item.time}-${item.content}`} className="preview-item">
               <span className="preview-time">{item.time}</span>
               <span className="preview-content">{item.content}</span>
             </div>

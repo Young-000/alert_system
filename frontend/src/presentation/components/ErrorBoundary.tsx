@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <main className="page">
           <section className="error-page">
             <div className="error-content">
-              <div className="error-code" style={{ fontSize: '4rem' }}>!</div>
+              <div className="error-code">!</div>
               <h1>문제가 발생했습니다</h1>
               <p className="muted">
                 예상치 못한 오류가 발생했습니다.

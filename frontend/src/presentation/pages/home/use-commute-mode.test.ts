@@ -53,9 +53,10 @@ describe('useCommuteMode', () => {
       result.current.toggleMode();
     });
 
-    if (initialMode === 'commute' || initialMode === 'night') {
+    if (initialMode === 'commute') {
       expect(result.current.mode).toBe('return');
     } else {
+      // 'return' and 'night' both toggle to 'commute'
       expect(result.current.mode).toBe('commute');
     }
   });

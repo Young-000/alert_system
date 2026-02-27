@@ -70,7 +70,7 @@ function RouteCard({
 
 export function SummaryTab(): JSX.Element {
   const { userId } = useAuth();
-  const { data: summary, isLoading, error } = useAnalyticsSummaryQuery(userId);
+  const { data: summary, isLoading, error, refetch } = useAnalyticsSummaryQuery(userId);
 
   if (isLoading) return <SummaryTabSkeleton />;
 
@@ -80,6 +80,13 @@ export function SummaryTab(): JSX.Element {
       <div className="report-tab-content">
         <div className="report-card report-card--empty" role="alert">
           <p className="report-empty-msg">{errorMsg}</p>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline report-retry-btn"
+            onClick={() => refetch()}
+          >
+            다시 시도
+          </button>
         </div>
       </div>
     );

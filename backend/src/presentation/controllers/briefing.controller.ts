@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Request } from '@nestjs/common';
+import { Controller, Get, Query, Request, BadRequestException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { WidgetDataService } from '@application/services/widget-data.service';
 import { BriefingAdviceService } from '@application/services/briefing-advice.service';
@@ -13,6 +13,20 @@ import {
 class BriefingQueryDto {
   lat?: string;
   lng?: string;
+}
+
+function parseCoordinate(
+  value: string | undefined,
+  name: string,
+  min: number,
+  max: number,
+): number | undefined {
+  if (!value) return undefined;
+  const parsed = parseFloat(value);
+  if (isNaN(parsed) || parsed < min || parsed > max) {
+    throw new BadRequestException(`Invalid ${name}: must be between ${min} and ${max}`);
+  }
+  return parsed;
 }
 
 type BriefingEndpointResponse = {
@@ -38,8 +52,8 @@ export class BriefingController {
     @Query() query: BriefingQueryDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<BriefingEndpointResponse> {
-    const lat = query.lat ? parseFloat(query.lat) : undefined;
-    const lng = query.lng ? parseFloat(query.lng) : undefined;
+    const lat = parseCoordinate(query.lat, 'latitude', -90, 90);
+    const lng = parseCoordinate(query.lng, 'longitude', -180, 180);
 
     const widgetData = await this.widgetDataService.getData(
       req.user.userId,
