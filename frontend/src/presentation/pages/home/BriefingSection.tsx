@@ -244,12 +244,12 @@ export function BriefingSection({
     >
       <span className="briefing-section-label">{contextLabel}</span>
       <div className="briefing-chips" role="list">
-        {advices.map((advice, index) => {
+        {advices.map((advice) => {
           const style = SEVERITY_STYLES[advice.severity];
           const severityLabel = SEVERITY_LABELS[advice.severity];
           return (
             <div
-              key={`${advice.emoji}-${index}`}
+              key={`${advice.emoji}-${advice.text}`}
               className={`briefing-chip briefing-chip--${advice.severity}`}
               style={{
                 background: style.background,

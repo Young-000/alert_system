@@ -42,8 +42,8 @@ export function ConfirmStep({
 
         <div className="confirm-section">
           <h3>알림 시간</h3>
-          {notificationTimes.map((item, i) => (
-            <div key={i} className="confirm-time">
+          {notificationTimes.map((item) => (
+            <div key={`${item.time}-${item.content}`} className="confirm-time">
               <strong>{item.time}</strong>
               <span>{item.content}</span>
             </div>

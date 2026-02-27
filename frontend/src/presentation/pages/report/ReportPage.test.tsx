@@ -64,8 +64,8 @@ describe('ReportPage', () => {
 
   it('비로그인 시 로그인 유도 메시지를 표시한다', () => {
     renderPage();
-    expect(screen.getByText('로그인이 필요합니다')).toBeInTheDocument();
-    expect(screen.getByText('로그인하기')).toBeInTheDocument();
+    expect(screen.getByText('로그인이 필요해요')).toBeInTheDocument();
+    expect(screen.getByText('로그인')).toBeInTheDocument();
   });
 
   it('로그인 시 탭 바를 표시한다', () => {

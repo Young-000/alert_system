@@ -7,6 +7,7 @@ import {
   useWeeklyStatsQuery,
 } from '@infrastructure/query';
 import type { MissionWithRecord, MissionScore } from '@infrastructure/api';
+import { AuthRequired } from '../components/AuthRequired';
 import '../styles/pages/missions.css';
 
 // ─── Constants ──────────────────────────────────────
@@ -324,15 +325,11 @@ export function MissionsPage(): JSX.Element {
   // ── Auth required ──
   if (!userId) {
     return (
-      <main className="page missions-page">
-        <div className="mission-auth-required">
-          <span className="mission-auth-icon" aria-hidden="true">🔒</span>
-          <p>로그인이 필요한 기능이에요</p>
-          <button type="button" className="btn-primary" onClick={() => navigate('/login')}>
-            로그인
-          </button>
-        </div>
-      </main>
+      <AuthRequired
+        pageTitle="미션"
+        icon="🎯"
+        description="미션 현황을 확인하려면 로그인이 필요해요"
+      />
     );
   }
 

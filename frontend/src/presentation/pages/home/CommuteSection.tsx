@@ -103,14 +103,14 @@ export function CommuteSection({
                 </span>
               </div>
 
-              {transitInfos.map((info, idx) => {
+              {transitInfos.map((info) => {
                 const firstArrival = info.arrivals[0];
                 const arrivalTime = firstArrival ? firstArrival.arrivalTime : -1;
                 const arrivingSoon = arrivalTime >= 0 && isArrivingSoon(arrivalTime);
 
                 return (
                   <div
-                    key={idx}
+                    key={`${info.type}-${info.name}`}
                     className={`today-transit-item${arrivingSoon ? ' arriving-soon' : ''}`}
                   >
                     <span className="today-transit-badge" data-type={info.type}>
