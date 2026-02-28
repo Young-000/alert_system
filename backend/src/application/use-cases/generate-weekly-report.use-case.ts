@@ -7,7 +7,6 @@ import {
   COMMUTE_SESSION_REPOSITORY,
 } from '@domain/repositories/commute-session.repository';
 import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commute-session.entity';
-import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
 import {
   ISolapiService,
   SOLAPI_SERVICE,
@@ -26,7 +25,6 @@ export class GenerateWeeklyReportUseCase {
     @Inject('IUserRepository') private userRepository: IUserRepository,
     @Optional() @Inject(COMMUTE_SESSION_REPOSITORY) private sessionRepository?: ICommuteSessionRepository,
     @Optional() @InjectRepository(CommuteSessionEntity) private sessionRepo?: Repository<CommuteSessionEntity>,
-    @Optional() @InjectRepository(NotificationLogEntity) private notificationLogRepo?: Repository<NotificationLogEntity>,
     @Optional() @Inject(SOLAPI_SERVICE) private solapiService?: ISolapiService,
     @Optional() @Inject(WEB_PUSH_SERVICE) private webPushService?: IWebPushService,
   ) {}
@@ -164,7 +162,7 @@ export class GenerateWeeklyReportUseCase {
 
   private generateWeeklyTip(
     totalCommutes: number,
-    avgDuration: number,
+    _avgDuration: number,
     sessions: Array<{ totalDurationMinutes?: number; totalDelayMinutes: number }>,
   ): string {
     const totalDelay = sessions.reduce((sum, s) => sum + (s.totalDelayMinutes || 0), 0);

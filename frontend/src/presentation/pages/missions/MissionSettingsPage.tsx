@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
+import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
 import {
   useMissionsQuery,
   useCreateMissionMutation,
@@ -263,6 +264,16 @@ export function MissionSettingsPage(): JSX.Element {
   const [deleteError, setDeleteError] = useState('');
   const [saveError, setSaveError] = useState('');
 
+  const handleCancelDelete = useCallback(() => {
+    setDeletingMission(null);
+    setDeleteError('');
+  }, []);
+
+  const deleteDialogRef = useFocusTrap({
+    active: deletingMission !== null,
+    onEscape: deleteMutation.isPending ? undefined : handleCancelDelete,
+  });
+
   const togglingId = toggleMutation.isPending
     ? (toggleMutation.variables ?? null)
     : null;
@@ -350,11 +361,6 @@ export function MissionSettingsPage(): JSX.Element {
       setDeleteError('삭제에 실패했습니다. 다시 시도해주세요.');
     }
   }, [deletingMission, deleteMutation]);
-
-  const handleCancelDelete = useCallback(() => {
-    setDeletingMission(null);
-    setDeleteError('');
-  }, []);
 
   const handleMoveUp = useCallback(
     (mission: Mission) => {
@@ -523,6 +529,7 @@ export function MissionSettingsPage(): JSX.Element {
           aria-labelledby="delete-confirm-title"
         >
           <div
+            ref={deleteDialogRef}
             className="msettings-confirm"
             onClick={(e) => e.stopPropagation()}
           >

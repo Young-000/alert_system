@@ -322,7 +322,7 @@ export class CalculateRouteAnalyticsUseCase {
   private calculateScoreFactors(
     route: CommuteRoute,
     duration: { average: number; min: number; max: number; stdDev: number },
-    segmentStats: SegmentStats[],
+    _segmentStats: SegmentStats[],
     sessions: CommuteSession[]
   ): ScoreFactors {
     // 속도 점수: 예상 시간 대비 실제 시간

@@ -9,7 +9,7 @@ import { IUserRepository } from '@domain/repositories/user.repository';
 export class PostgresUserRepository implements IUserRepository {
   private repository: Repository<UserEntity>;
 
-  constructor(@InjectDataSource() private dataSource: DataSource) {
+  constructor(@InjectDataSource() dataSource: DataSource) {
     this.repository = dataSource.getRepository(UserEntity);
   }
 

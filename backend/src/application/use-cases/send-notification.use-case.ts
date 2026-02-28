@@ -80,11 +80,14 @@ export class SendNotificationUseCase {
     const data: NotificationData = {};
     const contextBuilder = NotificationContextBuilder.create(user.id, alertId);
 
-    // 데이터 수집
-    await this.collectWeatherData(alert, user.location, data, contextBuilder);
-    await this.collectTransitData(alert, data);
+    // 데이터 수집 — weather/transit/route를 병렬로 호출 (독립적 API)
+    await Promise.all([
+      this.collectWeatherData(alert, user.location, data, contextBuilder),
+      this.collectTransitData(alert, data),
+      this.collectRouteData(alert, data),
+    ]);
+    // smart notification은 weather context에 의존하므로 순차 실행
     await this.collectSmartNotificationData(alert, contextBuilder.build(), data);
-    await this.collectRouteData(alert, data);
 
     // 알림톡 발송
     if (!this.solapiService || !user.phoneNumber) {
@@ -113,25 +116,25 @@ export class SendNotificationUseCase {
     data: NotificationData,
     contextBuilder: NotificationContextBuilder,
   ): Promise<void> {
+    const tasks: Promise<void>[] = [];
+
     if (alert.alertTypes.includes(AlertType.WEATHER)) {
-      try {
-        const weather = await this.weatherApiClient.getWeatherWithForecast(location.lat, location.lng);
-        data.weather = weather;
-        contextBuilder.withWeather(weather);
-      } catch (error) {
-        this.logger.warn(`날씨 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`);
-      }
+      tasks.push(
+        this.weatherApiClient.getWeatherWithForecast(location.lat, location.lng)
+          .then((weather) => { data.weather = weather; contextBuilder.withWeather(weather); })
+          .catch((error) => { this.logger.warn(`날씨 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`); }),
+      );
     }
 
     if (alert.alertTypes.includes(AlertType.AIR_QUALITY)) {
-      try {
-        const airQuality = await this.airQualityApiClient.getAirQuality(location.lat, location.lng);
-        data.airQuality = airQuality;
-        contextBuilder.withAirQuality(airQuality);
-      } catch (error) {
-        this.logger.warn(`미세먼지 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`);
-      }
+      tasks.push(
+        this.airQualityApiClient.getAirQuality(location.lat, location.lng)
+          .then((airQuality) => { data.airQuality = airQuality; contextBuilder.withAirQuality(airQuality); })
+          .catch((error) => { this.logger.warn(`미세먼지 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`); }),
+      );
     }
+
+    await Promise.all(tasks);
   }
 
   private async collectTransitData(alert: Alert, data: NotificationData): Promise<void> {
@@ -183,37 +186,37 @@ export class SendNotificationUseCase {
   }
 
   private async collectSubwayData(stationIds: string): Promise<Array<{ name: string; line: string; arrivals: SubwayArrival[] }>> {
-    const ids = stationIds.split(',').map(id => id.trim());
-    const results: Array<{ name: string; line: string; arrivals: SubwayArrival[] }> = [];
+    const ids = stationIds.split(',').map(id => id.trim()).slice(0, 2);
 
-    for (const id of ids.slice(0, 2)) {
-      const station = await this.subwayStationRepository.findById(id);
-      if (station) {
+    const settled = await Promise.allSettled(
+      ids.map(async (id) => {
+        const station = await this.subwayStationRepository.findById(id);
+        if (!station) return null;
         const arrivals = await this.subwayApiClient.getSubwayArrival(station.name);
-        results.push({
-          name: station.name,
-          line: station.line || '',
-          arrivals: arrivals.slice(0, 1),
-        });
-      }
-    }
+        return { name: station.name, line: station.line || '', arrivals: arrivals.slice(0, 1) };
+      }),
+    );
 
-    return results;
+    return settled
+      .filter((r): r is PromiseFulfilledResult<{ name: string; line: string; arrivals: SubwayArrival[] }> =>
+        r.status === 'fulfilled' && r.value != null)
+      .map((r) => r.value);
   }
 
   private async collectBusData(stopIds: string): Promise<Array<{ name: string; arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[] }>> {
-    const ids = stopIds.split(',').map(id => id.trim());
-    const results: Array<{ name: string; arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[] }> = [];
+    const ids = stopIds.split(',').map(id => id.trim()).slice(0, 2);
 
-    for (const id of ids.slice(0, 2)) {
-      const arrivals = await this.busApiClient.getBusArrival(id);
-      results.push({
-        name: id,
-        arrivals: arrivals.slice(0, 1),
-      });
-    }
+    const settled = await Promise.allSettled(
+      ids.map(async (id) => {
+        const arrivals = await this.busApiClient.getBusArrival(id);
+        return { name: id, arrivals: arrivals.slice(0, 1) };
+      }),
+    );
 
-    return results;
+    return settled
+      .filter((r): r is PromiseFulfilledResult<{ name: string; arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[] }> =>
+        r.status === 'fulfilled')
+      .map((r) => r.value);
   }
 
   private async collectRouteData(alert: Alert, data: NotificationData): Promise<void> {

@@ -1,4 +1,4 @@
-import { Module, OnModuleInit, Inject, Logger } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { SchedulerTriggerController } from '../controllers/scheduler-trigger.controller';
 import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 import { SmartNotificationModule } from './smart-notification.module';
@@ -87,11 +87,6 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 })
 export class NotificationModule implements OnModuleInit {
   private readonly logger = new Logger(NotificationModule.name);
-
-  constructor(
-    @Inject('INotificationScheduler')
-    private readonly scheduler: unknown,
-  ) {}
 
   async onModuleInit(): Promise<void> {
     // EventBridge Scheduler는 AWS에서 영구적으로 스케줄을 관리합니다.

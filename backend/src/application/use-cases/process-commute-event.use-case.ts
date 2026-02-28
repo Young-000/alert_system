@@ -238,7 +238,7 @@ export class ProcessCommuteEventUseCase {
 
   private async createAutoSession(
     userId: string,
-    placeType: PlaceType,
+    _placeType: PlaceType,
     action: 'commute_started' | 'return_started'
   ): Promise<string | undefined> {
     // Check for existing in-progress session
