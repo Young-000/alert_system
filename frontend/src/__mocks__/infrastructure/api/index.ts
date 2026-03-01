@@ -78,6 +78,43 @@ export const behaviorApiClient = {
     averageConfidence: 0,
     hasEnoughData: false,
   }),
+  getPrediction: vi.fn().mockResolvedValue({
+    departureTime: '08:05',
+    confidence: 0.72,
+    tier: 'day_aware',
+    departureRange: { early: '07:55', late: '08:15' },
+    contributingFactors: [
+      { type: 'day_of_week', label: '월요일 패턴', impact: -3, description: '월요일은 평균보다 3분 일찍 출발', confidence: 0.8 },
+    ],
+    dataStatus: { totalRecords: 15, tier: 'day_aware', nextTierAt: 20, nextTierName: 'weather_aware' },
+  }),
+  getInsights: vi.fn().mockResolvedValue({
+    dayOfWeek: {
+      segments: [
+        { dayOfWeek: 1, dayName: '월', avgMinutes: 485, stdDevMinutes: 4, sampleCount: 3 },
+        { dayOfWeek: 2, dayName: '화', avgMinutes: 490, stdDevMinutes: 3, sampleCount: 3 },
+        { dayOfWeek: 3, dayName: '수', avgMinutes: 488, stdDevMinutes: 2, sampleCount: 3 },
+        { dayOfWeek: 4, dayName: '목', avgMinutes: 492, stdDevMinutes: 5, sampleCount: 3 },
+        { dayOfWeek: 5, dayName: '금', avgMinutes: 500, stdDevMinutes: 9, sampleCount: 3 },
+      ],
+      mostConsistentDay: { dayOfWeek: 3, dayName: '수', stdDevMinutes: 2 },
+      mostVariableDay: { dayOfWeek: 5, dayName: '금', stdDevMinutes: 9 },
+    },
+    weatherSensitivity: {
+      level: 'medium',
+      rainImpact: -8,
+      snowImpact: -14,
+      temperatureImpact: -1,
+      comparedToAverage: { rainDelta: -2, description: '비 영향이 평균보다 2분 적음' },
+    },
+    summary: {
+      totalRecords: 15,
+      tier: 'day_aware',
+      averageDeparture: '08:05',
+      overallStdDev: 6,
+      confidence: 0.72,
+    },
+  }),
 };
 
 export const getBehaviorApiClient = vi.fn(() => behaviorApiClient);
@@ -479,6 +516,76 @@ export interface AnalyticsSummaryResponse {
 export interface RouteComparisonResponse {
   routes: unknown[];
   recommendation: string | null;
+}
+
+// Pattern ML types
+export type PredictionTier = 'cold_start' | 'basic' | 'day_aware' | 'weather_aware' | 'full';
+
+export interface ContributingFactor {
+  type: string;
+  label: string;
+  impact: number;
+  description: string;
+  confidence: number;
+}
+
+export interface DataStatus {
+  totalRecords: number;
+  tier: PredictionTier;
+  nextTierAt: number;
+  nextTierName: string;
+}
+
+export interface DepartureRange {
+  early: string;
+  late: string;
+}
+
+export interface PredictionResponse {
+  departureTime: string;
+  confidence: number;
+  tier: PredictionTier;
+  departureRange: DepartureRange;
+  contributingFactors: ContributingFactor[];
+  dataStatus: DataStatus;
+}
+
+export interface DaySegment {
+  dayOfWeek: number;
+  dayName: string;
+  avgMinutes: number;
+  stdDevMinutes: number;
+  sampleCount: number;
+}
+
+export interface DayOfWeekInsights {
+  segments: DaySegment[];
+  mostConsistentDay: { dayOfWeek: number; dayName: string; stdDevMinutes: number } | null;
+  mostVariableDay: { dayOfWeek: number; dayName: string; stdDevMinutes: number } | null;
+}
+
+export type SensitivityLevel = 'low' | 'medium' | 'high';
+
+export interface WeatherSensitivity {
+  level: SensitivityLevel;
+  rainImpact: number;
+  snowImpact: number;
+  temperatureImpact: number;
+  comparedToAverage: { rainDelta: number; description: string } | null;
+}
+
+export interface InsightsSummary {
+  totalRecords: number;
+  tier: PredictionTier;
+  averageDeparture: string;
+  overallStdDev: number;
+  confidence: number;
+}
+
+export interface InsightsResponse {
+  dayOfWeek: DayOfWeekInsights;
+  weatherSensitivity: WeatherSensitivity | null;
+  summary: InsightsSummary;
 }
 
 // Types needed by behavior-api.client

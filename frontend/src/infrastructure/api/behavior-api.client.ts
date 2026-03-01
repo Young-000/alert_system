@@ -35,6 +35,77 @@ export interface BehaviorAnalytics {
   hasEnoughData: boolean;
 }
 
+// ========== Pattern ML Types ==========
+
+export type PredictionTier = 'cold_start' | 'basic' | 'day_aware' | 'weather_aware' | 'full';
+
+export interface ContributingFactor {
+  type: string;
+  label: string;
+  impact: number;
+  description: string;
+  confidence: number;
+}
+
+export interface DataStatus {
+  totalRecords: number;
+  tier: PredictionTier;
+  nextTierAt: number;
+  nextTierName: string;
+}
+
+export interface DepartureRange {
+  early: string;
+  late: string;
+}
+
+export interface PredictionResponse {
+  departureTime: string;
+  confidence: number;
+  tier: PredictionTier;
+  departureRange: DepartureRange;
+  contributingFactors: ContributingFactor[];
+  dataStatus: DataStatus;
+}
+
+export interface DaySegment {
+  dayOfWeek: number;
+  dayName: string;
+  avgMinutes: number;
+  stdDevMinutes: number;
+  sampleCount: number;
+}
+
+export interface DayOfWeekInsights {
+  segments: DaySegment[];
+  mostConsistentDay: { dayOfWeek: number; dayName: string; stdDevMinutes: number } | null;
+  mostVariableDay: { dayOfWeek: number; dayName: string; stdDevMinutes: number } | null;
+}
+
+export type SensitivityLevel = 'low' | 'medium' | 'high';
+
+export interface WeatherSensitivity {
+  level: SensitivityLevel;
+  rainImpact: number;
+  snowImpact: number;
+  temperatureImpact: number;
+  comparedToAverage: { rainDelta: number; description: string } | null;
+}
+
+export interface InsightsSummary {
+  totalRecords: number;
+  tier: PredictionTier;
+  averageDeparture: string;
+  overallStdDev: number;
+  confidence: number;
+}
+
+export interface InsightsResponse {
+  dayOfWeek: DayOfWeekInsights;
+  weatherSensitivity: WeatherSensitivity | null;
+  summary: InsightsSummary;
+}
+
 // ========== API Client ==========
 
 export class BehaviorApiClient {
@@ -71,6 +142,14 @@ export class BehaviorApiClient {
       `/behavior/patterns/${userId}`,
     );
     return result.patterns;
+  }
+
+  async getPrediction(userId: string): Promise<PredictionResponse> {
+    return this.apiClient.get<PredictionResponse>(`/behavior/predictions/${userId}`);
+  }
+
+  async getInsights(userId: string): Promise<InsightsResponse> {
+    return this.apiClient.get<InsightsResponse>(`/behavior/insights/${userId}`);
   }
 }
 

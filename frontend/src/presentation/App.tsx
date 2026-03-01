@@ -19,6 +19,7 @@ const NotificationHistoryPage = lazy(() => import('./pages/NotificationHistoryPa
 const MissionsPage = lazy(() => import('./pages/MissionsPage').then(m => ({ default: m.MissionsPage })));
 const MissionSettingsPage = lazy(() => import('./pages/missions/MissionSettingsPage').then(m => ({ default: m.MissionSettingsPage })));
 const ReportPage = lazy(() => import('./pages/report/ReportPage').then(m => ({ default: m.ReportPage })));
+const PatternAnalysisPage = lazy(() => import('./pages/patterns/PatternAnalysisPage').then(m => ({ default: m.PatternAnalysisPage })));
 
 function PageLoader() {
   return (
@@ -81,6 +82,7 @@ function App() {
             <Route path="/missions" element={<MissionsPage />} />
             <Route path="/missions/settings" element={<MissionSettingsPage />} />
             <Route path="/reports" element={<ReportPage />} />
+            <Route path="/patterns" element={<PatternAnalysisPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

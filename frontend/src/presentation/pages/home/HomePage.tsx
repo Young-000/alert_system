@@ -15,6 +15,7 @@ import { StreakBadge } from './StreakBadge';
 import { WeeklyReportCard } from './WeeklyReportCard';
 import { MissionQuickCard } from './MissionQuickCard';
 import { BriefingSection } from './BriefingSection';
+import { PatternInsightsCard } from './PatternInsightsCard';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -119,6 +120,8 @@ export function HomePage(): JSX.Element {
       {data.departurePrediction && (
         <DeparturePrediction prediction={data.departurePrediction} />
       )}
+
+      <PatternInsightsCard />
 
       {data.routeRecommendation && data.routeRecommendation.recommendation && !data.routeRecDismissed && (
         <RouteRecommendation
