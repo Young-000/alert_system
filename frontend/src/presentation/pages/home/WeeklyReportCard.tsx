@@ -9,6 +9,7 @@ interface WeeklyReportCardProps {
   error: string;
   weekOffset: number;
   onWeekChange: (offset: number) => void;
+  onRetry?: () => void;
 }
 
 const MAX_WEEK_OFFSET = 4;
@@ -46,6 +47,7 @@ export function WeeklyReportCard({
   error,
   weekOffset,
   onWeekChange,
+  onRetry,
 }: WeeklyReportCardProps): JSX.Element {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -57,6 +59,11 @@ export function WeeklyReportCard({
           <h2 className="weekly-report-title">주간 리포트</h2>
         </div>
         <p className="weekly-report-empty-msg" role="alert">{error}</p>
+        {onRetry && (
+          <button type="button" className="btn btn-sm home-retry-btn" onClick={onRetry}>
+            다시 시도
+          </button>
+        )}
       </section>
     );
   }

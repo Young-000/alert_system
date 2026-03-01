@@ -91,6 +91,22 @@ describe('WeeklyReportCard', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('주간 리포트를 불러올 수 없습니다');
   });
 
+  it('에러 시 onRetry가 제공되면 재시도 버튼을 표시한다', () => {
+    const onRetry = vi.fn();
+    render(
+      <WeeklyReportCard
+        {...defaultProps}
+        error="주간 리포트를 불러올 수 없습니다"
+        report={null}
+        onRetry={onRetry}
+      />,
+    );
+    const retryBtn = screen.getByText('다시 시도');
+    expect(retryBtn).toBeInTheDocument();
+    fireEvent.click(retryBtn);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
   it('데이터가 없으면 빈 상태 메시지를 표시한다', () => {
     render(
       <WeeklyReportCard {...defaultProps} report={null} />,

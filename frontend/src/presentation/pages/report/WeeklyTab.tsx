@@ -28,7 +28,7 @@ export function WeeklyTab(): JSX.Element {
   const { userId } = useAuth();
   const [weekOffset, setWeekOffset] = useState(0);
 
-  const { data: report, isLoading, error } = useWeeklyReportQuery(userId, weekOffset);
+  const { data: report, isLoading, error, refetch } = useWeeklyReportQuery(userId, weekOffset);
 
   const canGoNewer = weekOffset > 0;
   const canGoOlder = weekOffset < MAX_WEEK_OFFSET;
@@ -41,6 +41,9 @@ export function WeeklyTab(): JSX.Element {
       <div className="report-tab-content">
         <div className="report-card report-card--empty" role="alert">
           <p className="report-empty-msg">{errorMsg}</p>
+          <button type="button" className="report-retry-btn" onClick={() => refetch()}>
+            다시 시도
+          </button>
         </div>
       </div>
     );

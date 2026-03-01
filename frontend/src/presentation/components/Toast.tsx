@@ -66,11 +66,12 @@ function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
       <button
         type="button"
         className={cn(
-          'w-6 h-6 grid place-items-center',
+          'min-w-[44px] min-h-[44px] grid place-items-center',
           'bg-transparent rounded-sm cursor-pointer',
           'text-[1.2rem] text-ink-muted shrink-0',
           'transition-all duration-200',
-          'hover:bg-bg-subtle hover:text-ink'
+          'hover:bg-bg-subtle hover:text-ink',
+          '-mr-2'
         )}
         onClick={() => onDismiss(toast.id)}
         aria-label="닫기"
