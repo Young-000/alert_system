@@ -24,6 +24,13 @@ import {
   CurrentConditions,
   DeparturePrediction,
 } from '@application/use-cases/predict-optimal-departure.use-case';
+import {
+  PredictionEngineService,
+  PredictionResult,
+} from '@application/services/prediction-engine.service';
+import {
+  EnhancedPatternAnalysisService,
+} from '@application/services/enhanced-pattern-analysis.service';
 import { BehaviorEventType } from '@domain/entities/behavior-event.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
@@ -62,6 +69,12 @@ export class BehaviorController {
     @Optional()
     @Inject('COMMUTE_RECORD_REPOSITORY')
     private readonly commuteRecordRepository: ICommuteRecordRepository | null,
+    @Optional()
+    @Inject(PredictionEngineService)
+    private readonly predictionEngine: PredictionEngineService | null,
+    @Optional()
+    @Inject(EnhancedPatternAnalysisService)
+    private readonly enhancedPatternAnalysis: EnhancedPatternAnalysisService | null,
   ) {}
 
   @Post('track')
@@ -240,6 +253,82 @@ export class BehaviorController {
       totalCommuteRecords: commuteRecords.length,
       averageConfidence: Math.round(averageConfidence * 100) / 100,
       hasEnoughData: commuteRecords.length >= 5,
+    };
+  }
+
+  /**
+   * ML 기반 출발 시간 예측 (5-tier Bayesian + 요일/날씨/대중교통)
+   */
+  @Get('predictions/:userId')
+  async getPrediction(
+    @Param('userId') userId: string,
+    @Query('weather') weather: string | undefined,
+    @Query('temperature') temperature: string | undefined,
+    @Query('transitDelay') transitDelay: string | undefined,
+    @Query('date') date: string | undefined,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<PredictionResult | { error: string }> {
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 예측 정보에 접근할 수 없습니다.');
+    }
+    if (!this.predictionEngine) {
+      return { error: 'Prediction engine not available' };
+    }
+
+    const conditions: {
+      weather?: string;
+      temperature?: number;
+      transitDelayMinutes?: number;
+      targetDate?: Date;
+    } = {};
+
+    if (weather) conditions.weather = weather;
+    if (temperature) conditions.temperature = parseInt(temperature, 10);
+    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10);
+    if (date) conditions.targetDate = new Date(date);
+
+    return this.predictionEngine.predict(userId, conditions);
+  }
+
+  /**
+   * 패턴 인사이트 조회 (요일별, 날씨 영향, 전체 통계)
+   */
+  @Get('insights/:userId')
+  async getInsights(
+    @Param('userId') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<ReturnType<PredictionEngineService['getInsights']> | { error: string }> {
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 인사이트에 접근할 수 없습니다.');
+    }
+    if (!this.predictionEngine) {
+      return { error: 'Prediction engine not available' };
+    }
+
+    return this.predictionEngine.getInsights(userId);
+  }
+
+  /**
+   * 패턴 재분석 트리거 (수동 분석 요청)
+   */
+  @Post('analyze/:userId')
+  @HttpCode(HttpStatus.OK)
+  async triggerAnalysis(
+    @Param('userId') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ success: boolean; message: string }> {
+    if (userId !== req.user.userId) {
+      throw new ForbiddenException('다른 사용자의 분석을 요청할 수 없습니다.');
+    }
+    if (!this.enhancedPatternAnalysis) {
+      return { success: false, message: 'Analysis service not available' };
+    }
+
+    const result = await this.enhancedPatternAnalysis.runFullAnalysis(userId);
+
+    return {
+      success: true,
+      message: `분석 완료: 요일=${result.dayOfWeek ? 'yes' : 'no'}, 날씨=${result.weatherSensitivity ? 'yes' : 'no'}, 계절=${result.seasonalTrend ? 'yes' : 'no'}`,
     };
   }
 

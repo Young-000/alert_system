@@ -27,7 +27,7 @@ describe('PredictOptimalDepartureUseCase', () => {
   });
 
   it('리포지토리가 없으면 기본 시간을 반환해야 한다', async () => {
-    useCase = new PredictOptimalDepartureUseCase(null, null);
+    useCase = new PredictOptimalDepartureUseCase(null, null, null);
 
     const result = await useCase.execute('user-1', 'alert-1');
 
@@ -49,6 +49,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
@@ -73,6 +74,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
@@ -100,6 +102,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
@@ -127,6 +130,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
@@ -153,6 +157,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
@@ -190,6 +195,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
@@ -214,6 +220,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     // 이른 아침에 큰 조정이 들어오면 00:00으로 클램핑
@@ -240,6 +247,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     // 패턴 신뢰도가 낮음
@@ -266,6 +274,7 @@ describe('PredictOptimalDepartureUseCase', () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
       mockAlertRepository,
+      null, // no ML engine — test legacy logic
     );
 
     mockPatternRepository.findByUserIdAndType.mockResolvedValue({
