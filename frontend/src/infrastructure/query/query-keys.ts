@@ -62,4 +62,8 @@ export const queryKeys = {
     all: ['briefing'] as const,
     byLocation: (lat: number, lng: number) => ['briefing', lat, lng] as const,
   },
+  delayStatus: {
+    all: ['delayStatus'] as const,
+    byRoute: (routeId: string) => ['delayStatus', 'route', routeId] as const,
+  },
 } as const;

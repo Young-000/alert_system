@@ -396,6 +396,58 @@ export interface MilestonesResponse {
   earnedBadges: StreakBadgeInfo[];
 }
 
+// ========== Delay Status Types ==========
+
+export type OverallDelayStatus = 'normal' | 'minor_delay' | 'delayed' | 'severe_delay' | 'unavailable';
+export type SegmentDelayStatus = 'normal' | 'delayed' | 'severe_delay' | 'unavailable';
+export type AlternativeConfidence = 'high' | 'medium' | 'low';
+
+export interface DelaySegmentResponse {
+  checkpointId: string;
+  checkpointName: string;
+  checkpointType: string;
+  lineInfo: string;
+  status: SegmentDelayStatus;
+  expectedWaitMinutes: number;
+  estimatedWaitMinutes: number;
+  delayMinutes: number;
+  source: 'realtime_api' | 'estimated';
+  lastUpdated: string;
+}
+
+export interface AlternativeStepResponse {
+  action: 'walk' | 'subway' | 'bus';
+  from: string;
+  to?: string;
+  line?: string;
+  durationMinutes: number;
+}
+
+export interface AlternativeSuggestionResponse {
+  id: string;
+  triggerSegment: string;
+  triggerReason: string;
+  description: string;
+  steps: AlternativeStepResponse[];
+  totalDurationMinutes: number;
+  originalDurationMinutes: number;
+  savingsMinutes: number;
+  walkingDistanceMeters?: number;
+  confidence: AlternativeConfidence;
+}
+
+export interface DelayStatusResponse {
+  routeId: string;
+  routeName: string;
+  checkedAt: string;
+  overallStatus: OverallDelayStatus;
+  totalExpectedDuration: number;
+  totalEstimatedDuration: number;
+  totalDelayMinutes: number;
+  segments: DelaySegmentResponse[];
+  alternatives: AlternativeSuggestionResponse[];
+}
+
 // ========== API Client ==========
 
 export class CommuteApiClient {
@@ -540,6 +592,12 @@ export class CommuteApiClient {
     return this.apiClient.get<MilestonesResponse>(
       `/commute/streak/${userId}/milestones`,
     );
+  }
+
+  // ========== Delay Status APIs ==========
+
+  async getRouteDelayStatus(routeId: string): Promise<DelayStatusResponse> {
+    return this.apiClient.get<DelayStatusResponse>(`/routes/${routeId}/delay-status`);
   }
 }
 
