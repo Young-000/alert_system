@@ -1,0 +1,632 @@
+/* ─── Pattern Insights Card (Home) ────────────────── */
+
+.pattern-card {
+  display: block;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+a.pattern-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.pattern-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pattern-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pattern-card-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pattern-card-arrow {
+  font-size: 20px;
+  color: var(--ink-muted);
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* Cold Start State */
+.pattern-card--cold .pattern-card-message {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin-bottom: 10px;
+}
+
+.pattern-card-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pattern-card-progress {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-subtle);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pattern-card-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.pattern-card-progress-label {
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* Learning & Full States */
+.pattern-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pattern-card-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pattern-card-label {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.pattern-card-time {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.pattern-card-time-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pattern-card-range {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.pattern-card-confidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pattern-card-confidence-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 200px;
+}
+
+.pattern-card-confidence-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pattern-card-confidence-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.pattern-card-confidence-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+
+.pattern-card-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pattern-card-factor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.pattern-card-factor-label {
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.pattern-card-factor-impact {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.pattern-card-cta {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-align: right;
+}
+
+/* ─── Pattern Analysis Page ──────────────────────── */
+
+.patterns-page {
+  padding-bottom: 100px;
+}
+
+.patterns-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.patterns-back {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.patterns-back:hover {
+  background: var(--border);
+}
+
+.patterns-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.patterns-auth-required {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-secondary);
+}
+
+/* Tabs */
+.patterns-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: 20px;
+}
+
+.patterns-tab {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 44px;
+}
+
+.patterns-tab:hover {
+  color: var(--ink-secondary);
+}
+
+.patterns-tab--active {
+  background: var(--bg-card);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.patterns-tab-content {
+  animation: patternsFadeIn 0.2s ease;
+}
+
+@keyframes patternsFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sections */
+.patterns-section {
+  margin-bottom: 24px;
+}
+
+.patterns-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+/* Summary Grid */
+.patterns-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.patterns-summary-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.patterns-summary-label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.patterns-summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+/* Tier Badge */
+.patterns-tier-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.patterns-tier-badge--cold_start {
+  background: var(--bg-subtle);
+  color: var(--ink-muted);
+}
+
+.patterns-tier-badge--basic {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.patterns-tier-badge--day_aware {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.patterns-tier-badge--weather_aware {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.patterns-tier-badge--full {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.patterns-tier-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.patterns-tier-next {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+/* Factors List */
+.patterns-factors-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.patterns-factor-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.patterns-factor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.patterns-factor-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.patterns-factor-impact {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.patterns-factor-impact--early {
+  color: var(--success);
+}
+
+.patterns-factor-impact--late {
+  color: var(--warning);
+}
+
+.patterns-factor-desc {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+/* ─── By Day Tab: CSS-only Bar Chart ─────────────── */
+
+.patterns-chart {
+  position: relative;
+  padding: 8px 0 0;
+}
+
+.patterns-chart-bars {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  min-height: 120px;
+  gap: 4px;
+}
+
+.patterns-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.patterns-bar-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.patterns-bar-container {
+  width: 100%;
+  max-width: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 60px;
+}
+
+.patterns-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.patterns-bar--consistent {
+  background: var(--success);
+}
+
+.patterns-bar--normal {
+  background: var(--primary);
+}
+
+.patterns-bar--variable {
+  background: var(--warning);
+}
+
+.patterns-bar--early {
+  border-radius: 4px 4px 0 0;
+}
+
+.patterns-bar--late {
+  border-radius: 0 0 4px 4px;
+}
+
+.patterns-bar-day {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.patterns-bar-count {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.patterns-chart-baseline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 0;
+  border-top: 1px dashed var(--border);
+}
+
+.patterns-chart-avg-label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* Day Stats */
+.patterns-day-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patterns-day-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.patterns-day-stat-label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.patterns-day-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ─── Weather Tab ────────────────────────────────── */
+
+/* Sensitivity Badge */
+.patterns-sensitivity-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.patterns-sensitivity-badge--low {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.patterns-sensitivity-badge--medium {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.patterns-sensitivity-badge--high {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+/* Weather List */
+.patterns-weather-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.patterns-weather-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.patterns-weather-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 60px;
+}
+
+.patterns-weather-impact {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 50px;
+  text-align: right;
+}
+
+.patterns-weather-impact--early {
+  color: var(--success);
+}
+
+.patterns-weather-desc {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  flex: 1;
+}
+
+.patterns-comparison {
+  font-size: 14px;
+  color: var(--ink-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+/* ─── Empty / Loading States ─────────────────────── */
+
+.patterns-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.patterns-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--ink-secondary);
+}
+
+.patterns-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.patterns-skeleton-card {
+  height: 120px;
+}

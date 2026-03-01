@@ -57,7 +57,12 @@ export type {
   RouteRecommendationResponse, RouteScoreResponse,
 } from './commute-api.client';
 export { BehaviorApiClient, getBehaviorApiClient } from './behavior-api.client';
-export type { DeparturePrediction, BehaviorAnalytics, UserPattern } from './behavior-api.client';
+export type {
+  DeparturePrediction, BehaviorAnalytics, UserPattern,
+  PredictionTier, ContributingFactor, DataStatus, DepartureRange,
+  PredictionResponse, DaySegment, DayOfWeekInsights,
+  SensitivityLevel, WeatherSensitivity, InsightsSummary, InsightsResponse,
+} from './behavior-api.client';
 export { PlaceApiClient } from './place-api.client';
 export type { PlaceType, Place, CreatePlaceDto, UpdatePlaceDto } from './place-api.client';
 export { SmartDepartureApiClient } from './smart-departure-api.client';
