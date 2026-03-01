@@ -1,0 +1,346 @@
+/* ─── Delay Alert Banner ─────────────────────────── */
+
+.delay-banner {
+  margin-bottom: 12px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+/* Status variants */
+.delay-banner--minor_delay {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.delay-banner--delayed {
+  background: #fff7ed;
+  border-color: #f97316;
+}
+
+.delay-banner--severe_delay {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.delay-banner--unavailable {
+  background: var(--bg-subtle, #f5f5f5);
+  border-color: var(--border);
+}
+
+/* Banner header */
+.delay-banner-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.delay-banner-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.delay-banner-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.delay-banner-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink, #111);
+  margin: 0;
+}
+
+.delay-banner--minor_delay .delay-banner-title {
+  color: #92400e;
+}
+
+.delay-banner--delayed .delay-banner-title {
+  color: #9a3412;
+}
+
+.delay-banner--severe_delay .delay-banner-title {
+  color: #991b1b;
+}
+
+.delay-banner--unavailable .delay-banner-title {
+  color: var(--ink-secondary, #666);
+}
+
+.delay-banner-subtitle {
+  font-size: 12px;
+  color: var(--ink-secondary, #666);
+  margin: 2px 0 0;
+}
+
+.delay-banner--minor_delay .delay-banner-subtitle {
+  color: #a16207;
+}
+
+.delay-banner--delayed .delay-banner-subtitle {
+  color: #c2410c;
+}
+
+.delay-banner--severe_delay .delay-banner-subtitle {
+  color: #b91c1c;
+}
+
+/* Toggle button */
+.delay-banner-toggle {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 8px;
+  font-size: 14px;
+  color: var(--ink-muted, #999);
+  cursor: pointer;
+  transition: transform 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delay-banner-toggle[aria-expanded='true'] {
+  transform: rotate(180deg);
+}
+
+/* Expandable detail section */
+.delay-banner-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.delay-banner-details[data-expanded='true'] {
+  max-height: 800px;
+}
+
+.delay-banner-details-inner {
+  padding: 0 14px 14px;
+}
+
+/* Segment list */
+.delay-segments {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.delay-segment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 8px);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+}
+
+.delay-segment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.delay-segment-name {
+  font-weight: 600;
+  color: var(--ink, #111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.delay-segment-line {
+  font-size: 12px;
+  color: var(--ink-secondary, #666);
+}
+
+.delay-segment-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.delay-segment-badge--normal {
+  background: var(--success-light, #dcfce7);
+  color: var(--success, #16a34a);
+}
+
+.delay-segment-badge--delayed {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.delay-segment-badge--severe_delay {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.delay-segment-badge--unavailable {
+  background: var(--bg-subtle, #f5f5f5);
+  color: var(--ink-muted, #999);
+}
+
+/* Section label */
+.delay-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary, #666);
+  margin: 12px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ─── Alternative Card ───────────────────────────── */
+
+.alt-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.alt-card:last-child {
+  margin-bottom: 0;
+}
+
+.alt-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.alt-card-desc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink, #111);
+  flex: 1;
+  min-width: 0;
+}
+
+.alt-card-savings {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--success-light, #dcfce7);
+  color: var(--success, #16a34a);
+  white-space: nowrap;
+}
+
+/* Steps */
+.alt-card-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.alt-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-secondary, #666);
+}
+
+.alt-step-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.alt-step-icon--walk {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.alt-step-icon--subway {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.alt-step-icon--bus {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.alt-step-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alt-step-duration {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--ink, #111);
+}
+
+/* Footer: confidence + total time */
+.alt-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alt-card-confidence {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.alt-confidence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.alt-confidence-dot--high {
+  background: var(--success, #16a34a);
+}
+
+.alt-confidence-dot--medium {
+  background: #f59e0b;
+}
+
+.alt-confidence-dot--low {
+  background: var(--ink-muted, #999);
+}
+
+.alt-confidence-label {
+  color: var(--ink-muted, #999);
+}
+
+.alt-card-total {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary, #666);
+}

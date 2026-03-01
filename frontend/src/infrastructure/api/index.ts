@@ -55,6 +55,9 @@ export type {
   CreateCheckpointDto, CreateRouteDto, UpdateRouteDto,
   CheckpointResponse, RouteResponse, StartSessionDto,
   RouteRecommendationResponse, RouteScoreResponse,
+  OverallDelayStatus, SegmentDelayStatus, AlternativeConfidence,
+  DelaySegmentResponse, AlternativeStepResponse,
+  AlternativeSuggestionResponse, DelayStatusResponse,
 } from './commute-api.client';
 export { BehaviorApiClient, getBehaviorApiClient } from './behavior-api.client';
 export type {

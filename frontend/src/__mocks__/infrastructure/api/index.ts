@@ -164,6 +164,17 @@ export const commuteApiClient = {
     averageScore: 0,
     insights: [],
   }),
+  getRouteDelayStatus: vi.fn().mockResolvedValue({
+    routeId: 'route-1',
+    routeName: '강남 출근길',
+    checkedAt: new Date().toISOString(),
+    overallStatus: 'normal',
+    totalExpectedDuration: 45,
+    totalEstimatedDuration: 45,
+    totalDelayMinutes: 0,
+    segments: [],
+    alternatives: [],
+  }),
   getWeeklyReport: vi.fn().mockResolvedValue({
     weekStartDate: '2026-02-17',
     weekEndDate: '2026-02-23',
@@ -602,6 +613,57 @@ export interface UserPattern {
   patternType: string;
   confidence: number;
   description: string;
+}
+
+// Delay Status types re-exported for tests
+export type OverallDelayStatus = 'normal' | 'minor_delay' | 'delayed' | 'severe_delay' | 'unavailable';
+export type SegmentDelayStatus = 'normal' | 'delayed' | 'severe_delay' | 'unavailable';
+export type AlternativeConfidence = 'high' | 'medium' | 'low';
+
+export interface DelaySegmentResponse {
+  checkpointId: string;
+  checkpointName: string;
+  checkpointType: string;
+  lineInfo: string;
+  status: SegmentDelayStatus;
+  expectedWaitMinutes: number;
+  estimatedWaitMinutes: number;
+  delayMinutes: number;
+  source: 'realtime_api' | 'estimated';
+  lastUpdated: string;
+}
+
+export interface AlternativeStepResponse {
+  action: 'walk' | 'subway' | 'bus';
+  from: string;
+  to?: string;
+  line?: string;
+  durationMinutes: number;
+}
+
+export interface AlternativeSuggestionResponse {
+  id: string;
+  triggerSegment: string;
+  triggerReason: string;
+  description: string;
+  steps: AlternativeStepResponse[];
+  totalDurationMinutes: number;
+  originalDurationMinutes: number;
+  savingsMinutes: number;
+  walkingDistanceMeters?: number;
+  confidence: AlternativeConfidence;
+}
+
+export interface DelayStatusResponse {
+  routeId: string;
+  routeName: string;
+  checkedAt: string;
+  overallStatus: OverallDelayStatus;
+  totalExpectedDuration: number;
+  totalEstimatedDuration: number;
+  totalDelayMinutes: number;
+  segments: DelaySegmentResponse[];
+  alternatives: AlternativeSuggestionResponse[];
 }
 
 // Types needed by commute-api.client
