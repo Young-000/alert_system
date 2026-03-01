@@ -66,4 +66,10 @@ export const queryKeys = {
     all: ['delayStatus'] as const,
     byRoute: (routeId: string) => ['delayStatus', 'route', routeId] as const,
   },
+  congestion: {
+    all: ['congestion'] as const,
+    segments: (timeSlot?: string) => ['congestion', 'segments', timeSlot ?? 'auto'] as const,
+    byRoute: (routeId: string, timeSlot?: string) =>
+      ['congestion', 'route', routeId, timeSlot ?? 'auto'] as const,
+  },
 } as const;
