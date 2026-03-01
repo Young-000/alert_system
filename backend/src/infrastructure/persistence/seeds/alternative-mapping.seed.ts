@@ -1,0 +1,167 @@
+/**
+ * Seed data for alternative route mappings.
+ * 15 major Seoul subway transfer corridors.
+ */
+export interface AlternativeMappingSeedData {
+  fromStationName: string;
+  fromLine: string;
+  toStationName: string;
+  toLine: string;
+  walkingMinutes: number;
+  walkingDistanceMeters: number;
+  description: string;
+  isBidirectional: boolean;
+}
+
+export const ALTERNATIVE_MAPPING_SEEDS: AlternativeMappingSeedData[] = [
+  {
+    fromStationName: '강남',
+    fromLine: '2호선',
+    toStationName: '신논현',
+    toLine: '9호선',
+    walkingMinutes: 5,
+    walkingDistanceMeters: 400,
+    description: '강남역 5번 출구 → 신논현역 4번 출구',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '교대',
+    fromLine: '2호선',
+    toStationName: '교대',
+    toLine: '3호선',
+    walkingMinutes: 2,
+    walkingDistanceMeters: 150,
+    description: '교대역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '신도림',
+    fromLine: '1호선',
+    toStationName: '신도림',
+    toLine: '2호선',
+    walkingMinutes: 3,
+    walkingDistanceMeters: 200,
+    description: '신도림역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '종로3가',
+    fromLine: '1호선',
+    toStationName: '종로3가',
+    toLine: '5호선',
+    walkingMinutes: 4,
+    walkingDistanceMeters: 300,
+    description: '종로3가역 역내 환승 (1호선 → 5호선)',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '동대문역사문화공원',
+    fromLine: '2호선',
+    toStationName: '동대문역사문화공원',
+    toLine: '4호선',
+    walkingMinutes: 3,
+    walkingDistanceMeters: 250,
+    description: '동대문역사문화공원 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '충무로',
+    fromLine: '3호선',
+    toStationName: '충무로',
+    toLine: '4호선',
+    walkingMinutes: 2,
+    walkingDistanceMeters: 150,
+    description: '충무로역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '시청',
+    fromLine: '1호선',
+    toStationName: '시청',
+    toLine: '2호선',
+    walkingMinutes: 3,
+    walkingDistanceMeters: 200,
+    description: '시청역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '을지로3가',
+    fromLine: '2호선',
+    toStationName: '을지로3가',
+    toLine: '3호선',
+    walkingMinutes: 3,
+    walkingDistanceMeters: 200,
+    description: '을지로3가역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '왕십리',
+    fromLine: '2호선',
+    toStationName: '왕십리',
+    toLine: '5호선',
+    walkingMinutes: 4,
+    walkingDistanceMeters: 300,
+    description: '왕십리역 역내 환승 (2호선 → 5호선)',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '고속터미널',
+    fromLine: '3호선',
+    toStationName: '고속터미널',
+    toLine: '7호선',
+    walkingMinutes: 5,
+    walkingDistanceMeters: 400,
+    description: '고속터미널역 역내 환승 (3호선 → 7호선)',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '노량진',
+    fromLine: '1호선',
+    toStationName: '노량진',
+    toLine: '9호선',
+    walkingMinutes: 4,
+    walkingDistanceMeters: 350,
+    description: '노량진역 환승 통로 (1호선 → 9호선)',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '잠실',
+    fromLine: '2호선',
+    toStationName: '잠실',
+    toLine: '8호선',
+    walkingMinutes: 3,
+    walkingDistanceMeters: 250,
+    description: '잠실역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '홍대입구',
+    fromLine: '2호선',
+    toStationName: '합정',
+    toLine: '6호선',
+    walkingMinutes: 7,
+    walkingDistanceMeters: 550,
+    description: '홍대입구역 1번 출구 → 합정역 3번 출구 (도보 이동)',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '사당',
+    fromLine: '2호선',
+    toStationName: '사당',
+    toLine: '4호선',
+    walkingMinutes: 2,
+    walkingDistanceMeters: 150,
+    description: '사당역 역내 환승 통로',
+    isBidirectional: true,
+  },
+  {
+    fromStationName: '건대입구',
+    fromLine: '2호선',
+    toStationName: '건대입구',
+    toLine: '7호선',
+    walkingMinutes: 3,
+    walkingDistanceMeters: 250,
+    description: '건대입구역 역내 환승 통로',
+    isBidirectional: true,
+  },
+];
