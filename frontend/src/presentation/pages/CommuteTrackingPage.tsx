@@ -351,7 +351,7 @@ export function CommuteTrackingPage(): JSX.Element {
       {error && (
         <div className="commute-v2-error" role="alert">
           {error}
-          {error.includes('로그인') && (
+          {error.includes('로그인') ? (
             <button
               type="button"
               className="btn btn-ghost btn-sm"
@@ -359,6 +359,15 @@ export function CommuteTrackingPage(): JSX.Element {
               style={{ marginLeft: '0.5rem' }}
             >
               로그인
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setError('')}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              닫기
             </button>
           )}
         </div>

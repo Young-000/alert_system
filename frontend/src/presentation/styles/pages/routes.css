@@ -303,6 +303,11 @@
   transition: background 0.2s ease;
   font-size: 1rem;
   border: none;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
@@ -1974,8 +1979,8 @@
 .search-clear {
   background: #e5e5ea;
   border: none;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   color: #86868b;
   font-size: 0.8rem;
@@ -2520,8 +2525,8 @@
   border: none;
   color: var(--ink-muted);
   font-size: 1.25rem;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

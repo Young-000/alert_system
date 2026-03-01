@@ -420,8 +420,8 @@
   transition: all 0.2s;
   color: var(--primary);
   border-radius: 50%;
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

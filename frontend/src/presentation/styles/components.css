@@ -1334,7 +1334,7 @@ textarea.input:focus {
 .notice-link {
   display: inline-block;
   padding: 4px 8px;
-  min-height: 32px;
+  min-height: 44px;
   line-height: 24px;
   font-weight: 600;
   text-decoration: underline;
@@ -2957,7 +2957,7 @@ button.nav-back-btn {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  min-height: 32px;
+  min-height: 44px;
 }
 
 .arrive-btn-mini:hover {

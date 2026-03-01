@@ -16,6 +16,8 @@ interface RouteListViewProps {
   isSaving: boolean;
   deleteTarget: { id: string; name: string } | null;
   isDeleting: boolean;
+  loadError?: string;
+  onRetryLoad?: () => void;
   onTabChange: (tab: 'all' | 'morning' | 'evening') => void;
   onStartCreating: () => void;
   onEditRoute: (route: RouteResponse) => void;
@@ -36,6 +38,8 @@ export function RouteListView({
   isSaving,
   deleteTarget,
   isDeleting,
+  loadError,
+  onRetryLoad,
   onTabChange,
   onStartCreating,
   onEditRoute,
@@ -51,6 +55,17 @@ export function RouteListView({
   return (
     <main className="page route-page-v2">
       <PageHeader title="경로" action={<button type="button" className="btn btn-primary btn-sm" onClick={onStartCreating}>+ 새 경로</button>} />
+
+      {loadError && (
+        <div className="notice error" role="alert" style={{ margin: '0 1rem 0.75rem' }}>
+          {loadError}
+          {onRetryLoad && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onRetryLoad} style={{ marginLeft: '0.5rem' }}>
+              다시 시도
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Shared route banner */}
       {sharedRoute && userId && (

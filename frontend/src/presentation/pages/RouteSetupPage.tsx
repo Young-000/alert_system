@@ -612,6 +612,23 @@ export function RouteSetupPage(): JSX.Element {
       isSaving={isSaving}
       deleteTarget={deleteTarget}
       isDeleting={isDeleting}
+      loadError={error}
+      onRetryLoad={() => {
+        setError('');
+        setIsLoading(true);
+        Promise.all([
+          commuteApi.getUserRoutes(userId),
+          alertApiClient.getAlertsByUser(userId).catch(() => [] as Alert[]),
+        ]).then(([routes, alerts]) => {
+          setExistingRoutes(routes);
+          setUserAlerts(alerts);
+          setError('');
+        }).catch(() => {
+          setError('경로 목록을 불러올 수 없습니다');
+        }).finally(() => {
+          setIsLoading(false);
+        });
+      }}
       onTabChange={setRouteTab}
       onStartCreating={startCreating}
       onEditRoute={handleEditRoute}

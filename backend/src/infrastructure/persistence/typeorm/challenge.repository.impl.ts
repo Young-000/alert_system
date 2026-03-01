@@ -35,6 +35,19 @@ export class TypeormChallengeRepository implements ChallengeRepository {
     return entity ? this.templateToDomain(entity) : null;
   }
 
+  async findTemplatesByIds(ids: string[]): Promise<Map<string, ChallengeTemplate>> {
+    if (ids.length === 0) return new Map();
+    const entities = await this.templateRepo
+      .createQueryBuilder('t')
+      .where('t.id IN (:...ids)', { ids })
+      .getMany();
+    const map = new Map<string, ChallengeTemplate>();
+    for (const entity of entities) {
+      map.set(entity.id, this.templateToDomain(entity));
+    }
+    return map;
+  }
+
   // --- User Challenges ---
 
   async findActiveChallengesByUserId(userId: string): Promise<UserChallenge[]> {

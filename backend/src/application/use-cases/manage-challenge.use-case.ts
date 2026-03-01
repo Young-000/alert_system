@@ -91,6 +91,11 @@ export class ManageChallengeUseCase {
     const activeChallenges =
       await this.challengeRepo.findActiveChallengesByUserId(userId);
     const now = new Date();
+
+    // Batch-load all templates in one query to avoid N+1
+    const templateIds = [...new Set(activeChallenges.map((c) => c.challengeTemplateId))];
+    const templateMap = await this.challengeRepo.findTemplatesByIds(templateIds);
+
     const details: ActiveChallengeDetail[] = [];
 
     for (const challenge of activeChallenges) {
@@ -101,9 +106,7 @@ export class ManageChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        checked.challengeTemplateId,
-      );
+      const template = templateMap.get(checked.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -131,15 +134,17 @@ export class ManageChallengeUseCase {
     const { challenges, totalCount } =
       await this.challengeRepo.findChallengeHistory(userId, limit, offset);
 
+    // Batch-load all templates in one query to avoid N+1
+    const templateIds = [...new Set(challenges.map((c) => c.challengeTemplateId))];
+    const templateMap = await this.challengeRepo.findTemplatesByIds(templateIds);
+
     const details: ActiveChallengeDetail[] = [];
     let totalCompleted = 0;
     let totalFailed = 0;
     let totalAbandoned = 0;
 
     for (const challenge of challenges) {
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       details.push({

@@ -64,6 +64,7 @@ describe('ManageChallengeUseCase', () => {
     challengeRepo = {
       findAllTemplates: jest.fn(),
       findTemplateById: jest.fn(),
+      findTemplatesByIds: jest.fn().mockResolvedValue(new Map()),
       findActiveChallengesByUserId: jest.fn(),
       findChallengeById: jest.fn(),
       findActiveByUserAndTemplate: jest.fn(),
@@ -168,7 +169,7 @@ describe('ManageChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -189,6 +190,7 @@ describe('ManageChallengeUseCase', () => {
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([
         expiredChallenge,
       ]);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map());
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -290,11 +292,9 @@ describe('ManageChallengeUseCase', () => {
         challenges: [completed, failed],
         totalCount: 2,
       });
-      challengeRepo.findTemplateById.mockImplementation(async (id) => {
-        if (id === 'time-under-40') return template1;
-        if (id === 'streak-3d') return template2;
-        return null;
-      });
+      challengeRepo.findTemplatesByIds.mockResolvedValue(
+        new Map([['time-under-40', template1], ['streak-3d', template2]]),
+      );
 
       const result = await useCase.getChallengeHistory(userId, 10, 0);
 

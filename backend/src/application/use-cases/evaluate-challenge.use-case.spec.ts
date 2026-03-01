@@ -58,6 +58,7 @@ describe('EvaluateChallengeUseCase', () => {
     challengeRepo = {
       findAllTemplates: jest.fn(),
       findTemplateById: jest.fn(),
+      findTemplatesByIds: jest.fn().mockResolvedValue(new Map()),
       findActiveChallengesByUserId: jest.fn(),
       findChallengeById: jest.fn(),
       findActiveByUserAndTemplate: jest.fn(),
@@ -86,7 +87,7 @@ describe('EvaluateChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
 
       const data: SessionCompletionData = { totalDurationMinutes: 35 };
       const result = await useCase.execute(userId, data);
@@ -103,7 +104,7 @@ describe('EvaluateChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
 
       const data: SessionCompletionData = { totalDurationMinutes: 45 };
       const result = await useCase.execute(userId, data);
@@ -116,7 +117,7 @@ describe('EvaluateChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
 
       const data: SessionCompletionData = { currentStreak: 3 };
       const result = await useCase.execute(userId, data);
@@ -135,7 +136,7 @@ describe('EvaluateChallengeUseCase', () => {
       const challenge = makeActiveChallenge({ templateId: 'streak-3d' });
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['streak-3d', template]]));
 
       const data: SessionCompletionData = { currentStreak: 3 };
       const result = await useCase.execute(userId, data);
@@ -153,7 +154,7 @@ describe('EvaluateChallengeUseCase', () => {
       const challenge = makeActiveChallenge({ templateId: 'streak-3d' });
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['streak-3d', template]]));
 
       const data: SessionCompletionData = { currentStreak: 2 };
       const result = await useCase.execute(userId, data);
@@ -172,7 +173,7 @@ describe('EvaluateChallengeUseCase', () => {
       const challenge = makeActiveChallenge({ templateId: 'weekly-4' });
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['weekly-4', template]]));
 
       const data: SessionCompletionData = { weeklySessionCount: 4 };
       const result = await useCase.execute(userId, data);
@@ -192,7 +193,7 @@ describe('EvaluateChallengeUseCase', () => {
       const challenge = makeActiveChallenge({ templateId: 'weekly-perfect' });
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['weekly-perfect', template]]));
 
       const data: SessionCompletionData = {
         weekdaySessionsThisWeek: [1, 2, 3, 4, 5],
@@ -212,7 +213,7 @@ describe('EvaluateChallengeUseCase', () => {
       const challenge = makeActiveChallenge({ templateId: 'weekly-perfect' });
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['weekly-perfect', template]]));
 
       const data: SessionCompletionData = {
         weekdaySessionsThisWeek: [1, 2, 3],
@@ -240,6 +241,7 @@ describe('EvaluateChallengeUseCase', () => {
       });
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map());
 
       const result = await useCase.execute(userId, {
         totalDurationMinutes: 30,
@@ -261,7 +263,7 @@ describe('EvaluateChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
       challengeRepo.findBadgeByUserAndBadgeId.mockResolvedValue(null);
 
       const data: SessionCompletionData = { totalDurationMinutes: 35 };
@@ -284,7 +286,7 @@ describe('EvaluateChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
       challengeRepo.findBadgeByUserAndBadgeId.mockResolvedValue({
         id: 'existing-badge',
         userId,
@@ -332,11 +334,9 @@ describe('EvaluateChallengeUseCase', () => {
         timeChallenge,
         streakChallenge,
       ]);
-      challengeRepo.findTemplateById.mockImplementation(async (id) => {
-        if (id === 'time-under-40') return timeTemplate;
-        if (id === 'streak-3d') return streakTemplate;
-        return null;
-      });
+      challengeRepo.findTemplatesByIds.mockResolvedValue(
+        new Map([['time-under-40', timeTemplate], ['streak-3d', streakTemplate]]),
+      );
 
       const data: SessionCompletionData = {
         totalDurationMinutes: 30,
@@ -354,7 +354,7 @@ describe('EvaluateChallengeUseCase', () => {
     const challenge = makeActiveChallenge();
 
     challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-    challengeRepo.findTemplateById.mockResolvedValue(null);
+    challengeRepo.findTemplatesByIds.mockResolvedValue(new Map());
 
     const data: SessionCompletionData = { totalDurationMinutes: 30 };
     const result = await useCase.execute(userId, data);
@@ -370,7 +370,7 @@ describe('EvaluateChallengeUseCase', () => {
     const template = makeTemplate();
 
     challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-    challengeRepo.findTemplateById.mockResolvedValue(template);
+    challengeRepo.findTemplatesByIds.mockResolvedValue(new Map([['time-under-40', template]]));
 
     const data: SessionCompletionData = { totalDurationMinutes: 35 };
     const result = await useCase.execute(userId, data);
