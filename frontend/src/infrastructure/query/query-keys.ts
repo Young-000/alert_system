@@ -53,6 +53,11 @@ export const queryKeys = {
     all: ['analyticsSummary'] as const,
     byUser: (userId: string) => ['analyticsSummary', userId] as const,
   },
+  behavior: {
+    all: ['behavior'] as const,
+    prediction: (userId: string) => ['behavior', 'prediction', userId] as const,
+    insights: (userId: string) => ['behavior', 'insights', userId] as const,
+  },
   briefing: {
     all: ['briefing'] as const,
     byLocation: (lat: number, lng: number) => ['briefing', lat, lng] as const,
