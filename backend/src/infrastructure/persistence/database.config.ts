@@ -47,6 +47,8 @@ import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
 import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
 // Alternative route entities
 import { AlternativeMappingEntity } from './typeorm/alternative-mapping.entity';
+// Congestion entities
+import { SegmentCongestionEntity } from './typeorm/segment-congestion.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -95,6 +97,8 @@ export function buildDataSourceOptions(): DataSourceOptions {
       LiveActivityTokenEntity,
       // Alternative route
       AlternativeMappingEntity,
+      // Congestion
+      SegmentCongestionEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -157,6 +161,8 @@ export function buildDataSourceOptions(): DataSourceOptions {
     LiveActivityTokenEntity,
     // Alternative route
     AlternativeMappingEntity,
+    // Congestion
+    SegmentCongestionEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {
