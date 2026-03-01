@@ -3,12 +3,16 @@ import { ForbiddenException } from '@nestjs/common';
 import { BehaviorController } from './behavior.controller';
 import { TrackBehaviorUseCase } from '@application/use-cases/track-behavior.use-case';
 import { PredictOptimalDepartureUseCase } from '@application/use-cases/predict-optimal-departure.use-case';
+import { PredictionEngineService } from '@application/services/prediction-engine.service';
+import { EnhancedPatternAnalysisService } from '@application/services/enhanced-pattern-analysis.service';
 import { BehaviorEventType } from '@domain/entities/behavior-event.entity';
 
 describe('BehaviorController', () => {
   let controller: BehaviorController;
   let trackBehaviorUseCase: jest.Mocked<TrackBehaviorUseCase>;
   let predictOptimalDepartureUseCase: jest.Mocked<PredictOptimalDepartureUseCase>;
+  let mockPredictionEngine: any;
+  let mockEnhancedAnalysis: any;
   let mockUserPatternRepo: any;
   let mockCommuteRecordRepo: any;
 
@@ -38,6 +42,15 @@ describe('BehaviorController', () => {
       findByUserId: jest.fn(),
     };
 
+    mockPredictionEngine = {
+      predict: jest.fn(),
+      getInsights: jest.fn(),
+    };
+
+    mockEnhancedAnalysis = {
+      runFullAnalysis: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BehaviorController],
       providers: [
@@ -45,6 +58,8 @@ describe('BehaviorController', () => {
         { provide: PredictOptimalDepartureUseCase, useValue: predictOptimalDepartureUseCase },
         { provide: 'USER_PATTERN_REPOSITORY', useValue: mockUserPatternRepo },
         { provide: 'COMMUTE_RECORD_REPOSITORY', useValue: mockCommuteRecordRepo },
+        { provide: PredictionEngineService, useValue: mockPredictionEngine },
+        { provide: EnhancedPatternAnalysisService, useValue: mockEnhancedAnalysis },
       ],
     }).compile();
 
@@ -275,6 +290,8 @@ describe('BehaviorController', () => {
         mockPredictUseCase as any,
         mockUserPatternRepo,
         mockCommuteRecordRepo,
+        null,
+        null,
       );
 
       const result = await ctrl.predictOptimalDeparture(
@@ -309,6 +326,8 @@ describe('BehaviorController', () => {
         mockPredictUseCase as any,
         mockUserPatternRepo,
         mockCommuteRecordRepo,
+        null,
+        null,
       );
 
       await ctrl.predictOptimalDeparture(
@@ -427,6 +446,157 @@ describe('BehaviorController', () => {
         averageConfidence: 0,
         hasEnoughData: false,
       });
+    });
+  });
+
+  describe('getPrediction', () => {
+    const mockPredictionResult = {
+      departureTime: '08:10',
+      departureRange: { early: '07:55', late: '08:25' },
+      confidence: 0.75,
+      tier: 'basic' as const,
+      factors: [{ type: 'base_pattern' as const, label: '기본 패턴', impact: 0, description: '5개 기록 기반', confidence: 0.6 }],
+      insights: [],
+      dataStatus: { totalRecords: 5, recordsUsed: 5, nextTierAt: 10, nextTierName: 'day_aware' },
+    };
+
+    it('예측 결과를 반환한다', async () => {
+      mockPredictionEngine.predict!.mockResolvedValue(mockPredictionResult);
+
+      const result = await controller.getPrediction(
+        OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OWNER_ID),
+      );
+
+      expect(mockPredictionEngine.predict).toHaveBeenCalledWith(OWNER_ID, {});
+      expect(result).toEqual(mockPredictionResult);
+    });
+
+    it('쿼리 파라미터를 올바르게 전달한다', async () => {
+      mockPredictionEngine.predict!.mockResolvedValue(mockPredictionResult);
+
+      await controller.getPrediction(
+        OWNER_ID, 'rain', '15', '10', '2026-03-02', mockRequest(OWNER_ID),
+      );
+
+      expect(mockPredictionEngine.predict).toHaveBeenCalledWith(OWNER_ID, {
+        weather: 'rain',
+        temperature: 15,
+        transitDelayMinutes: 10,
+        targetDate: new Date('2026-03-02'),
+      });
+    });
+
+    it('다른 사용자의 예측 조회 시 ForbiddenException', async () => {
+      await expect(
+        controller.getPrediction(
+          OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OTHER_USER_ID),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockPredictionEngine.predict).not.toHaveBeenCalled();
+    });
+
+    it('엔진 미주입 시 에러 응답 반환', async () => {
+      const ctrl = new BehaviorController(
+        trackBehaviorUseCase,
+        predictOptimalDepartureUseCase,
+        mockUserPatternRepo,
+        mockCommuteRecordRepo,
+        null, // no prediction engine
+        null,
+      );
+
+      const result = await ctrl.getPrediction(
+        OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OWNER_ID),
+      );
+
+      expect(result).toEqual({ error: 'Prediction engine not available' });
+    });
+  });
+
+  describe('getInsights', () => {
+    const mockInsightsResult = {
+      dayOfWeek: null,
+      weatherImpact: null,
+      overallStats: {
+        totalRecords: 3,
+        trackingSince: '2026-02-01T00:00:00.000Z',
+        avgDepartureTime: '08:00',
+        currentTier: 'cold_start',
+        predictionAccuracy: 30,
+      },
+    };
+
+    it('인사이트를 반환한다', async () => {
+      mockPredictionEngine.getInsights!.mockResolvedValue(mockInsightsResult);
+
+      const result = await controller.getInsights(OWNER_ID, mockRequest(OWNER_ID));
+
+      expect(mockPredictionEngine.getInsights).toHaveBeenCalledWith(OWNER_ID);
+      expect(result).toEqual(mockInsightsResult);
+    });
+
+    it('다른 사용자의 인사이트 조회 시 ForbiddenException', async () => {
+      await expect(
+        controller.getInsights(OWNER_ID, mockRequest(OTHER_USER_ID)),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockPredictionEngine.getInsights).not.toHaveBeenCalled();
+    });
+
+    it('엔진 미주입 시 에러 응답 반환', async () => {
+      const ctrl = new BehaviorController(
+        trackBehaviorUseCase,
+        predictOptimalDepartureUseCase,
+        mockUserPatternRepo,
+        mockCommuteRecordRepo,
+        null,
+        null,
+      );
+
+      const result = await ctrl.getInsights(OWNER_ID, mockRequest(OWNER_ID));
+
+      expect(result).toEqual({ error: 'Prediction engine not available' });
+    });
+  });
+
+  describe('triggerAnalysis', () => {
+    it('분석을 트리거하고 결과를 반환한다', async () => {
+      mockEnhancedAnalysis.runFullAnalysis!.mockResolvedValue({
+        dayOfWeek: { segments: [], lastCalculated: '' },
+        weatherSensitivity: null,
+        seasonalTrend: null,
+      });
+
+      const result = await controller.triggerAnalysis(OWNER_ID, mockRequest(OWNER_ID));
+
+      expect(mockEnhancedAnalysis.runFullAnalysis).toHaveBeenCalledWith(OWNER_ID);
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('요일=yes');
+      expect(result.message).toContain('날씨=no');
+    });
+
+    it('다른 사용자의 분석 요청 시 ForbiddenException', async () => {
+      await expect(
+        controller.triggerAnalysis(OWNER_ID, mockRequest(OTHER_USER_ID)),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockEnhancedAnalysis.runFullAnalysis).not.toHaveBeenCalled();
+    });
+
+    it('서비스 미주입 시 에러 응답 반환', async () => {
+      const ctrl = new BehaviorController(
+        trackBehaviorUseCase,
+        predictOptimalDepartureUseCase,
+        mockUserPatternRepo,
+        mockCommuteRecordRepo,
+        null,
+        null,
+      );
+
+      const result = await ctrl.triggerAnalysis(OWNER_ID, mockRequest(OWNER_ID));
+
+      expect(result).toEqual({ success: false, message: 'Analysis service not available' });
     });
   });
 });

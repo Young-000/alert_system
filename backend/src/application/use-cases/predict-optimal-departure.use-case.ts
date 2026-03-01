@@ -1,7 +1,8 @@
-import { Injectable, Inject, Optional } from '@nestjs/common';
+import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
 import { IUserPatternRepository } from '../../domain/repositories/user-pattern.repository';
 import { IAlertRepository } from '../../domain/repositories/alert.repository';
 import { PatternType, DEFAULT_PATTERNS } from '../../domain/entities/user-pattern.entity';
+import { PredictionEngineService, PredictionResult } from '../services/prediction-engine.service';
 
 export interface DepartureAdjustment {
   reason: string;
@@ -28,6 +29,8 @@ export const USER_PATTERN_REPOSITORY = Symbol('USER_PATTERN_REPOSITORY');
 
 @Injectable()
 export class PredictOptimalDepartureUseCase {
+  private readonly logger = new Logger(PredictOptimalDepartureUseCase.name);
+
   // Weather impact in minutes (how much earlier to leave)
   private readonly WEATHER_IMPACT = {
     rain: 10,
@@ -43,9 +46,87 @@ export class PredictOptimalDepartureUseCase {
     @Optional()
     @Inject('ALERT_REPOSITORY')
     private readonly alertRepository: IAlertRepository | null,
+    @Optional()
+    @Inject(PredictionEngineService)
+    private readonly predictionEngine: PredictionEngineService | null,
   ) {}
 
   async execute(
+    userId: string,
+    alertId: string,
+    conditions?: CurrentConditions,
+  ): Promise<DeparturePrediction> {
+    // Try ML prediction engine first (if available)
+    if (this.predictionEngine) {
+      try {
+        const mlResult = await this.predictionEngine.predict(userId, {
+          weather: conditions?.weather,
+          temperature: conditions?.temperature,
+          transitDelayMinutes: conditions?.transitDelayMinutes,
+        });
+
+        return this.convertPredictionResult(mlResult, alertId);
+      } catch (error) {
+        this.logger.warn(`ML prediction failed, falling back to legacy: ${error}`);
+        // Fall through to legacy logic
+      }
+    }
+
+    // Legacy prediction logic (fallback)
+    return this.legacyPredict(userId, alertId, conditions);
+  }
+
+  /**
+   * Convert PredictionResult from ML engine to the existing DeparturePrediction shape.
+   * This keeps backward compatibility while internally using the new engine.
+   */
+  private convertPredictionResult(
+    result: PredictionResult,
+    _alertId: string,
+  ): DeparturePrediction {
+    const adjustments: DepartureAdjustment[] = result.factors
+      .filter(f => f.type !== 'base_pattern' && f.impact !== 0)
+      .map(f => ({
+        reason: f.label,
+        minutes: f.impact,
+      }));
+
+    const basePattern = result.factors.find(f => f.type === 'base_pattern');
+    const baseTime = basePattern
+      ? result.departureTime // When only base_pattern, departure=base
+      : this.removeFactorImpacts(result.departureTime, adjustments);
+
+    return {
+      baseTime,
+      recommendedTime: result.departureTime,
+      adjustments,
+      explanation: this.generateExplanation(adjustments),
+      confidence: result.confidence,
+    };
+  }
+
+  /**
+   * Reverse-calculate baseTime from recommendedTime by undoing adjustment impacts.
+   */
+  private removeFactorImpacts(
+    recommendedTime: string,
+    adjustments: DepartureAdjustment[],
+  ): string {
+    const [hours, minutes] = recommendedTime.split(':').map(Number);
+    let totalMinutes = hours * 60 + minutes;
+
+    // Undo adjustments to get base time
+    for (const adj of adjustments) {
+      totalMinutes -= adj.minutes;
+    }
+
+    totalMinutes = Math.max(0, Math.min(totalMinutes, 23 * 60 + 59));
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  }
+
+  private async legacyPredict(
     userId: string,
     alertId: string,
     conditions?: CurrentConditions,
