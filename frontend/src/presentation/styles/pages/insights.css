@@ -1,0 +1,554 @@
+/* insights.css — Regional Insights page styles */
+
+/* ========== Page Layout ========== */
+.insights-page {
+  padding-bottom: calc(var(--bottom-nav-height) + 24px);
+}
+
+.insights-header {
+  margin-bottom: 20px;
+}
+
+.insights-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.insights-subtitle {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+/* ========== Section Titles ========== */
+.insight-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+/* ========== Regions Section ========== */
+.insights-regions {
+  margin-top: 24px;
+}
+
+.insights-regions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.insights-regions-header .insight-section-title {
+  margin-bottom: 0;
+}
+
+.insights-sort-select {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.insights-sort-select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* ========== Region Card ========== */
+.insight-region-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.insight-region-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.insight-region-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+}
+
+.insight-region-card-header:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-lg);
+}
+
+.insight-region-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.insight-region-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ========== Confidence Badge ========== */
+.insight-confidence {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.insight-confidence--high {
+  color: var(--success);
+  background: var(--success-light);
+}
+
+.insight-confidence--medium {
+  color: var(--warning);
+  background: var(--warning-light);
+}
+
+.insight-confidence--low {
+  color: var(--ink-muted);
+  background: var(--bg-subtle);
+}
+
+/* ========== Stats Row ========== */
+.insight-region-card-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.insight-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.insight-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.insight-stat-label {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+/* ========== Trend Badge ========== */
+.insight-region-card-trend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.insight-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.insight-trend--improving {
+  color: #16a34a;
+  background: #f0fdf4;
+}
+
+.insight-trend--worsening {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.insight-trend--stable {
+  color: var(--ink-muted);
+  background: var(--bg-subtle);
+}
+
+.insight-trend-arrow {
+  font-size: 0.8rem;
+}
+
+/* ========== Expand Icon ========== */
+.insight-expand-icon {
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+  transition: transform 0.2s ease;
+}
+
+.insight-expand-icon--open {
+  transform: rotate(180deg);
+}
+
+/* ========== Card Detail (inline accordion) ========== */
+.insight-region-card-detail {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.insight-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg-subtle);
+}
+
+.insight-detail-row:last-child {
+  border-bottom: none;
+}
+
+.insight-detail-label {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.insight-detail-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ========== Detail Panel ========== */
+.insight-detail-panel {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.insight-detail-stats {
+  margin-bottom: 16px;
+}
+
+.insight-detail-trends {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.insight-trend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.insight-trend-row-label {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+/* ========== Region List ========== */
+.insights-region-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.insights-region-item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== Peak Hours Chart ========== */
+.insight-peak-hours {
+  margin-top: 16px;
+}
+
+.insight-peak-hours-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.insight-peak-hours-header .insight-section-title {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+.insight-peak-hours-total {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+.insight-peak-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100px;
+  padding: 0 2px;
+}
+
+.insight-peak-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.insight-peak-bar {
+  width: 100%;
+  min-width: 4px;
+  background: var(--primary-light);
+  border-radius: 2px 2px 0 0;
+  transition: height 0.3s ease;
+}
+
+.insight-peak-bar--peak {
+  background: var(--primary);
+}
+
+.insight-peak-label {
+  font-size: 0.55rem;
+  color: var(--ink-muted);
+  margin-top: 4px;
+  text-align: center;
+}
+
+.insight-peak-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.insight-peak-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+.insight-peak-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.insight-peak-legend-dot--peak {
+  background: var(--primary);
+}
+
+/* ========== My Comparison Section ========== */
+.insight-comparison {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.insight-comparison-region {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-bottom: 16px;
+}
+
+.insight-comparison-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.insight-comparison-empty-text {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.insight-comparison-error {
+  font-size: 0.85rem;
+  color: var(--error);
+  text-align: center;
+  padding: 16px 0;
+}
+
+.insight-comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.insight-comparison-bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.insight-comparison-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+.insight-comparison-bar-value {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.insight-comparison-bar-track {
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.insight-comparison-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.insight-comparison-bar-fill--user {
+  background: var(--primary);
+}
+
+.insight-comparison-bar-fill--region {
+  background: var(--ink-muted);
+  opacity: 0.5;
+}
+
+.insight-comparison-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.insight-diff--faster {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.insight-diff--slower {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.insight-comparison-diff-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.insight-comparison-diff-percent {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.insight-comparison-meta {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+/* ========== Skeleton States ========== */
+.insight-skeleton-card {
+  height: 120px;
+  margin-bottom: 12px;
+}
+
+.insight-skeleton-bar {
+  height: 16px;
+  width: 60%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.insight-skeleton-chart {
+  height: 100px;
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.insight-comparison-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+/* ========== Empty State ========== */
+.insights-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.insights-empty-icon {
+  font-size: 2.5rem;
+}
+
+.insights-empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.insights-empty-desc {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* ========== Error State ========== */
+.insights-error {
+  margin-bottom: 16px;
+}
+
+/* ========== Pagination Hint ========== */
+.insights-pagination-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  margin-top: 16px;
+}
+
+/* ========== Responsive ========== */
+@media (min-width: 640px) {
+  .insight-region-card-stats {
+    gap: 24px;
+  }
+
+  .insight-peak-chart {
+    height: 140px;
+  }
+
+  .insights-region-list {
+    gap: 16px;
+  }
+}

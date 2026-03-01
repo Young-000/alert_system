@@ -72,4 +72,12 @@ export const queryKeys = {
     byRoute: (routeId: string, timeSlot?: string) =>
       ['congestion', 'route', routeId, timeSlot ?? 'auto'] as const,
   },
+  insights: {
+    all: ['insights'] as const,
+    regions: (sortBy?: string) => ['insights', 'regions', sortBy ?? 'default'] as const,
+    regionDetail: (regionId: string) => ['insights', 'region', regionId] as const,
+    regionTrends: (regionId: string) => ['insights', 'trends', regionId] as const,
+    regionPeakHours: (regionId: string) => ['insights', 'peak-hours', regionId] as const,
+    myComparison: ['insights', 'me', 'comparison'] as const,
+  },
 } as const;

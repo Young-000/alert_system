@@ -66,10 +66,27 @@ function SettingsIcon({ active }: { active: boolean }) {
 }
 
 // Prefetch map for lazy-loaded pages
+function InsightsIcon({ active }: { active: boolean }) {
+  const s = active ? STROKE_ACTIVE : STROKE_INACTIVE;
+  const f = active ? 'var(--primary-light)' : 'none';
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={SW} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+      <circle cx="18" cy="10" r="2" fill={f} />
+      <circle cx="12" cy="4" r="2" fill={f} />
+      <circle cx="6" cy="14" r="2" fill={f} />
+    </svg>
+  );
+}
+
+// Prefetch map for lazy-loaded pages
 const PREFETCH_MAP: Record<string, () => Promise<unknown>> = {
   '/': () => import('../pages/home/HomePage'),
   '/routes': () => import('../pages/RouteSetupPage'),
   '/reports': () => import('../pages/report/ReportPage'),
+  '/insights': () => import('../pages/insights/InsightsPage'),
   '/alerts': () => import('../pages/AlertSettingsPage'),
   '/settings': () => import('../pages/SettingsPage'),
 };
@@ -92,6 +109,12 @@ const NAV_ITEMS: NavItem[] = [
     label: '리포트',
     matchPaths: ['/reports'],
     icon: (active) => <ReportIcon active={active} />,
+  },
+  {
+    path: '/insights',
+    label: '인사이트',
+    matchPaths: ['/insights'],
+    icon: (active) => <InsightsIcon active={active} />,
   },
   {
     path: '/alerts',
