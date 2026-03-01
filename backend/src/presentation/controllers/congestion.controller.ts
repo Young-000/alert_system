@@ -11,6 +11,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { CongestionService } from '@application/services/congestion/congestion.service';
 import { CongestionAggregationService } from '@application/services/congestion/congestion-aggregation.service';
 import {
@@ -82,6 +83,7 @@ export class CongestionController {
    */
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 1, ttl: 300000 } })
   async recalculate(): Promise<RecalculateResponseDto> {
     this.logger.log('Triggering full congestion recalculation');
 
