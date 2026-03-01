@@ -2,6 +2,13 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CommuteSection } from './CommuteSection';
 import type { TransitArrivalInfo } from './route-utils';
+import type { RouteCongestionResponse } from '@infrastructure/api/commute-api.client';
+
+// Mock the congestion query hook
+const mockUseRouteCongestion = vi.fn();
+vi.mock('@infrastructure/query/use-congestion-query', () => ({
+  useRouteCongestion: (...args: unknown[]) => mockUseRouteCongestion(...args),
+}));
 
 const mockRoute = {
   id: 'route-1',
@@ -69,6 +76,7 @@ function renderComponent(overrides = {}): ReturnType<typeof render> {
 describe('CommuteSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseRouteCongestion.mockReturnValue({ data: undefined, isLoading: false });
   });
 
   // --- With active route ---
@@ -257,5 +265,151 @@ describe('CommuteSection', () => {
     expect(screen.getByText('버스')).toBeInTheDocument();
     expect(screen.getByText('강남역 정류장')).toBeInTheDocument();
     expect(screen.getByText(/472 5분/)).toBeInTheDocument();
+  });
+
+  // --- Congestion integration ---
+
+  it('should show congestion chip next to transit item when data is available', () => {
+    const congestionData: RouteCongestionResponse = {
+      routeId: 'route-1',
+      routeName: '강남 출근길',
+      timeSlot: 'morning_rush',
+      timeSlotLabel: '오전 러시',
+      checkpoints: [
+        {
+          checkpointId: 'cp-2',
+          checkpointName: '강남역',
+          sequenceOrder: 2,
+          congestion: {
+            segmentKey: 'subway_gangnam_2',
+            avgWaitMinutes: 7.2,
+            avgDelayMinutes: 4.8,
+            congestionLevel: 'high',
+            confidence: 0.78,
+            sampleCount: 23,
+          },
+        },
+      ],
+      overallCongestion: 'high',
+      totalEstimatedDelay: 4.8,
+      lastCalculatedAt: new Date().toISOString(),
+    };
+    mockUseRouteCongestion.mockReturnValue({ data: congestionData, isLoading: false });
+
+    const transitInfos: TransitArrivalInfo[] = [
+      {
+        type: 'subway',
+        name: '강남역',
+        arrivals: [
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+        ],
+        isLoading: false,
+      },
+    ];
+
+    renderComponent({ transitInfos, lastTransitUpdate: Date.now() });
+
+    const congestionChip = screen.getByTestId('transit-congestion');
+    expect(congestionChip).toBeInTheDocument();
+    expect(screen.getByText('혼잡')).toBeInTheDocument();
+  });
+
+  it('should not show congestion chip when congestion data is undefined', () => {
+    mockUseRouteCongestion.mockReturnValue({ data: undefined, isLoading: false });
+
+    const transitInfos: TransitArrivalInfo[] = [
+      {
+        type: 'subway',
+        name: '강남역',
+        arrivals: [
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+        ],
+        isLoading: false,
+      },
+    ];
+
+    renderComponent({ transitInfos, lastTransitUpdate: Date.now() });
+
+    expect(screen.queryByTestId('transit-congestion')).not.toBeInTheDocument();
+  });
+
+  it('should not show congestion chip when checkpoint has no congestion data', () => {
+    const congestionData: RouteCongestionResponse = {
+      routeId: 'route-1',
+      routeName: '강남 출근길',
+      timeSlot: 'morning_rush',
+      timeSlotLabel: '오전 러시',
+      checkpoints: [
+        {
+          checkpointId: 'cp-2',
+          checkpointName: '강남역',
+          sequenceOrder: 2,
+          congestion: null,
+        },
+      ],
+      overallCongestion: 'low',
+      totalEstimatedDelay: 0,
+      lastCalculatedAt: new Date().toISOString(),
+    };
+    mockUseRouteCongestion.mockReturnValue({ data: congestionData, isLoading: false });
+
+    const transitInfos: TransitArrivalInfo[] = [
+      {
+        type: 'subway',
+        name: '강남역',
+        arrivals: [
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+        ],
+        isLoading: false,
+      },
+    ];
+
+    renderComponent({ transitInfos, lastTransitUpdate: Date.now() });
+
+    expect(screen.queryByTestId('transit-congestion')).not.toBeInTheDocument();
+  });
+
+  it('should show "수집 중" when sample count is below threshold', () => {
+    const congestionData: RouteCongestionResponse = {
+      routeId: 'route-1',
+      routeName: '강남 출근길',
+      timeSlot: 'morning_rush',
+      timeSlotLabel: '오전 러시',
+      checkpoints: [
+        {
+          checkpointId: 'cp-2',
+          checkpointName: '강남역',
+          sequenceOrder: 2,
+          congestion: {
+            segmentKey: 'subway_gangnam_2',
+            avgWaitMinutes: 5,
+            avgDelayMinutes: 2,
+            congestionLevel: 'moderate',
+            confidence: 0.3,
+            sampleCount: 2,
+          },
+        },
+      ],
+      overallCongestion: 'moderate',
+      totalEstimatedDelay: 2,
+      lastCalculatedAt: new Date().toISOString(),
+    };
+    mockUseRouteCongestion.mockReturnValue({ data: congestionData, isLoading: false });
+
+    const transitInfos: TransitArrivalInfo[] = [
+      {
+        type: 'subway',
+        name: '강남역',
+        arrivals: [
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+        ],
+        isLoading: false,
+      },
+    ];
+
+    renderComponent({ transitInfos, lastTransitUpdate: Date.now() });
+
+    expect(screen.getByTestId('transit-congestion')).toBeInTheDocument();
+    expect(screen.getByText('수집 중')).toBeInTheDocument();
   });
 });

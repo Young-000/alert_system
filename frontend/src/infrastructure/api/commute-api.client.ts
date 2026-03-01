@@ -396,6 +396,68 @@ export interface MilestonesResponse {
   earnedBadges: StreakBadgeInfo[];
 }
 
+// ========== Congestion Types ==========
+
+export type TimeSlot =
+  | 'early_morning'
+  | 'morning_rush'
+  | 'mid_morning'
+  | 'lunch'
+  | 'afternoon'
+  | 'evening_rush'
+  | 'evening'
+  | 'night';
+
+export type CongestionLevel = 'low' | 'moderate' | 'high' | 'severe';
+
+export interface CongestionSegment {
+  segmentKey: string;
+  checkpointName: string;
+  checkpointType: string;
+  lineInfo: string;
+  timeSlot: TimeSlot;
+  avgWaitMinutes: number;
+  avgDelayMinutes: number;
+  stdDevMinutes: number;
+  sampleCount: number;
+  congestionLevel: CongestionLevel;
+  confidence: number;
+  lastUpdatedAt: string;
+}
+
+export interface CongestionSegmentsResponse {
+  timeSlot: TimeSlot;
+  timeSlotLabel: string;
+  segments: CongestionSegment[];
+  totalCount: number;
+  lastCalculatedAt: string;
+}
+
+export interface RouteCongestionCheckpoint {
+  checkpointId: string;
+  checkpointName: string;
+  sequenceOrder: number;
+  congestion: {
+    segmentKey: string;
+    avgWaitMinutes: number;
+    avgDelayMinutes: number;
+    congestionLevel: CongestionLevel;
+    confidence: number;
+    sampleCount: number;
+  } | null;
+}
+
+export interface RouteCongestionResponse {
+  routeId: string;
+  routeName: string;
+  timeSlot: TimeSlot;
+  timeSlotLabel: string;
+  checkpoints: RouteCongestionCheckpoint[];
+  overallCongestion: CongestionLevel;
+  totalEstimatedDelay: number;
+  lastCalculatedAt: string;
+}
+
 // ========== Delay Status Types ==========
 
 export type OverallDelayStatus = 'normal' | 'minor_delay' | 'delayed' | 'severe_delay' | 'unavailable';
@@ -598,6 +660,33 @@ export class CommuteApiClient {
 
   async getRouteDelayStatus(routeId: string): Promise<DelayStatusResponse> {
     return this.apiClient.get<DelayStatusResponse>(`/routes/${routeId}/delay-status`);
+  }
+
+  // ========== Congestion APIs ==========
+
+  async getCongestionSegments(
+    timeSlot?: TimeSlot,
+    level?: CongestionLevel,
+    limit?: number,
+  ): Promise<CongestionSegmentsResponse> {
+    const params = new URLSearchParams();
+    if (timeSlot) params.set('timeSlot', timeSlot);
+    if (level) params.set('level', level);
+    if (limit) params.set('limit', String(limit));
+    const query = params.toString();
+    return this.apiClient.get<CongestionSegmentsResponse>(
+      `/congestion/segments${query ? `?${query}` : ''}`,
+    );
+  }
+
+  async getRouteCongestion(
+    routeId: string,
+    timeSlot?: TimeSlot,
+  ): Promise<RouteCongestionResponse> {
+    const query = timeSlot ? `?timeSlot=${timeSlot}` : '';
+    return this.apiClient.get<RouteCongestionResponse>(
+      `/congestion/routes/${routeId}${query}`,
+    );
   }
 }
 
