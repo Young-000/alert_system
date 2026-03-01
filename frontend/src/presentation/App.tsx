@@ -20,6 +20,7 @@ const MissionsPage = lazy(() => import('./pages/MissionsPage').then(m => ({ defa
 const MissionSettingsPage = lazy(() => import('./pages/missions/MissionSettingsPage').then(m => ({ default: m.MissionSettingsPage })));
 const ReportPage = lazy(() => import('./pages/report/ReportPage').then(m => ({ default: m.ReportPage })));
 const PatternAnalysisPage = lazy(() => import('./pages/patterns/PatternAnalysisPage').then(m => ({ default: m.PatternAnalysisPage })));
+const InsightsPage = lazy(() => import('./pages/insights/InsightsPage').then(m => ({ default: m.InsightsPage })));
 
 function PageLoader() {
   return (
@@ -41,6 +42,7 @@ function useIdlePreload(): void {
       import('./pages/SettingsPage').catch(() => {});
       import('./pages/MissionsPage').catch(() => {});
       import('./pages/report/ReportPage').catch(() => {});
+      import('./pages/insights/InsightsPage').catch(() => {});
     }, 3000);
     return () => clearTimeout(timer);
   }, []);
@@ -83,6 +85,7 @@ function App() {
             <Route path="/missions/settings" element={<MissionSettingsPage />} />
             <Route path="/reports" element={<ReportPage />} />
             <Route path="/patterns" element={<PatternAnalysisPage />} />
+            <Route path="/insights" element={<InsightsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

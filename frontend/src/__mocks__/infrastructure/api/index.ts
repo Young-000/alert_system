@@ -131,6 +131,87 @@ export interface BusStop {
   arsId: string;
 }
 
+// Regional Insights types
+export type InsightTrendDirection = 'improving' | 'stable' | 'worsening';
+export type InsightSortBy = 'userCount' | 'sessionCount' | 'avgDuration' | 'regionName';
+
+export interface RegionSummary {
+  regionId: string;
+  regionName: string;
+  avgDurationMinutes: number;
+  medianDurationMinutes: number;
+  userCount: number;
+  sessionCount: number;
+  weekTrend: number;
+  weekTrendDirection: InsightTrendDirection;
+  peakHour: number;
+  lastCalculatedAt: string;
+}
+
+export interface PaginationMeta {
+  total: number;
+  limit: number;
+  offset: number;
+  totalPages: number;
+}
+
+export interface RegionsListResponse {
+  regions: RegionSummary[];
+  meta: PaginationMeta;
+}
+
+export interface RegionDetail {
+  regionId: string;
+  regionName: string;
+  gridLat: number;
+  gridLng: number;
+  avgDurationMinutes: number;
+  medianDurationMinutes: number;
+  userCount: number;
+  sessionCount: number;
+  peakHourDistribution: Record<number, number>;
+  weekTrend: number;
+  weekTrendDirection: InsightTrendDirection;
+  monthTrend: number;
+  monthTrendDirection: InsightTrendDirection;
+  peakHour: number;
+  lastCalculatedAt: string;
+}
+
+export interface RegionTrend {
+  regionId: string;
+  regionName: string;
+  weekTrend: number;
+  weekTrendDirection: InsightTrendDirection;
+  monthTrend: number;
+  monthTrendDirection: InsightTrendDirection;
+  avgDurationMinutes: number;
+  lastCalculatedAt: string;
+}
+
+export interface PeakHoursData {
+  regionId: string;
+  regionName: string;
+  peakHourDistribution: Record<number, number>;
+  peakHour: number;
+  totalSessions: number;
+  lastCalculatedAt: string;
+}
+
+export interface MyComparison {
+  userId: string;
+  userAvgDurationMinutes: number;
+  userSessionCount: number;
+  regionId: string | null;
+  regionName: string;
+  regionAvgDurationMinutes: number;
+  regionMedianDurationMinutes: number;
+  regionUserCount: number;
+  diffMinutes: number;
+  diffPercent: number;
+  fasterThanRegion: boolean;
+}
+
 export const commuteApiClient = {
   getUserRoutes: vi.fn().mockResolvedValue([]),
   createRoute: vi.fn().mockResolvedValue({}),
@@ -191,6 +272,59 @@ export const commuteApiClient = {
     overallCongestion: 'low',
     totalEstimatedDelay: 0,
     lastCalculatedAt: new Date().toISOString(),
+  }),
+  // Regional Insights mocks
+  getRegions: vi.fn().mockResolvedValue({
+    regions: [],
+    meta: { total: 0, limit: 20, offset: 0, totalPages: 0 },
+  }),
+  getRegionById: vi.fn().mockResolvedValue({
+    regionId: 'region-1',
+    regionName: '강남/역삼 지역',
+    gridLat: 37.497,
+    gridLng: 127.028,
+    avgDurationMinutes: 42,
+    medianDurationMinutes: 40,
+    userCount: 12,
+    sessionCount: 156,
+    peakHourDistribution: { 7: 15, 8: 45, 9: 30, 17: 20, 18: 35, 19: 10 },
+    weekTrend: -3.2,
+    weekTrendDirection: 'improving',
+    monthTrend: -1.5,
+    monthTrendDirection: 'improving',
+    peakHour: 8,
+    lastCalculatedAt: new Date().toISOString(),
+  }),
+  getRegionTrends: vi.fn().mockResolvedValue({
+    regionId: 'region-1',
+    regionName: '강남/역삼 지역',
+    weekTrend: -3.2,
+    weekTrendDirection: 'improving',
+    monthTrend: -1.5,
+    monthTrendDirection: 'improving',
+    avgDurationMinutes: 42,
+    lastCalculatedAt: new Date().toISOString(),
+  }),
+  getRegionPeakHours: vi.fn().mockResolvedValue({
+    regionId: 'region-1',
+    regionName: '강남/역삼 지역',
+    peakHourDistribution: { 7: 15, 8: 45, 9: 30, 17: 20, 18: 35, 19: 10 },
+    peakHour: 8,
+    totalSessions: 155,
+    lastCalculatedAt: new Date().toISOString(),
+  }),
+  getMyComparison: vi.fn().mockResolvedValue({
+    userId: 'test-user-id',
+    userAvgDurationMinutes: 38,
+    userSessionCount: 15,
+    regionId: 'region-1',
+    regionName: '강남/역삼 지역',
+    regionAvgDurationMinutes: 42,
+    regionMedianDurationMinutes: 40,
+    regionUserCount: 12,
+    diffMinutes: -4,
+    diffPercent: -9.5,
+    fasterThanRegion: true,
   }),
   getWeeklyReport: vi.fn().mockResolvedValue({
     weekStartDate: '2026-02-17',

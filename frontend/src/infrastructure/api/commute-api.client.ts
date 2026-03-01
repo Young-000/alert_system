@@ -510,6 +510,89 @@ export interface DelayStatusResponse {
   alternatives: AlternativeSuggestionResponse[];
 }
 
+// ========== Regional Insights Types ==========
+
+export type InsightTrendDirection = 'improving' | 'stable' | 'worsening';
+
+export type InsightSortBy = 'userCount' | 'sessionCount' | 'avgDuration' | 'regionName';
+
+export interface RegionSummary {
+  regionId: string;
+  regionName: string;
+  avgDurationMinutes: number;
+  medianDurationMinutes: number;
+  userCount: number;
+  sessionCount: number;
+  weekTrend: number;
+  weekTrendDirection: InsightTrendDirection;
+  peakHour: number;
+  lastCalculatedAt: string;
+}
+
+export interface PaginationMeta {
+  total: number;
+  limit: number;
+  offset: number;
+  totalPages: number;
+}
+
+export interface RegionsListResponse {
+  regions: RegionSummary[];
+  meta: PaginationMeta;
+}
+
+export interface RegionDetail {
+  regionId: string;
+  regionName: string;
+  gridLat: number;
+  gridLng: number;
+  avgDurationMinutes: number;
+  medianDurationMinutes: number;
+  userCount: number;
+  sessionCount: number;
+  peakHourDistribution: Record<number, number>;
+  weekTrend: number;
+  weekTrendDirection: InsightTrendDirection;
+  monthTrend: number;
+  monthTrendDirection: InsightTrendDirection;
+  peakHour: number;
+  lastCalculatedAt: string;
+}
+
+export interface RegionTrend {
+  regionId: string;
+  regionName: string;
+  weekTrend: number;
+  weekTrendDirection: InsightTrendDirection;
+  monthTrend: number;
+  monthTrendDirection: InsightTrendDirection;
+  avgDurationMinutes: number;
+  lastCalculatedAt: string;
+}
+
+export interface PeakHoursData {
+  regionId: string;
+  regionName: string;
+  peakHourDistribution: Record<number, number>;
+  peakHour: number;
+  totalSessions: number;
+  lastCalculatedAt: string;
+}
+
+export interface MyComparison {
+  userId: string;
+  userAvgDurationMinutes: number;
+  userSessionCount: number;
+  regionId: string | null;
+  regionName: string;
+  regionAvgDurationMinutes: number;
+  regionMedianDurationMinutes: number;
+  regionUserCount: number;
+  diffMinutes: number;
+  diffPercent: number;
+  fasterThanRegion: boolean;
+}
+
 // ========== API Client ==========
 
 export class CommuteApiClient {
@@ -687,6 +770,43 @@ export class CommuteApiClient {
     return this.apiClient.get<RouteCongestionResponse>(
       `/congestion/routes/${routeId}${query}`,
     );
+  }
+
+  // ========== Regional Insights APIs ==========
+
+  async getRegions(
+    sortBy?: InsightSortBy,
+    limit?: number,
+    offset?: number,
+  ): Promise<RegionsListResponse> {
+    const params = new URLSearchParams();
+    if (sortBy) params.set('sortBy', sortBy);
+    if (limit != null) params.set('limit', String(limit));
+    if (offset != null) params.set('offset', String(offset));
+    const query = params.toString();
+    return this.apiClient.get<RegionsListResponse>(
+      `/insights/regions${query ? `?${query}` : ''}`,
+    );
+  }
+
+  async getRegionById(regionId: string): Promise<RegionDetail> {
+    return this.apiClient.get<RegionDetail>(`/insights/regions/${regionId}`);
+  }
+
+  async getRegionTrends(regionId: string): Promise<RegionTrend> {
+    return this.apiClient.get<RegionTrend>(
+      `/insights/regions/${regionId}/trends`,
+    );
+  }
+
+  async getRegionPeakHours(regionId: string): Promise<PeakHoursData> {
+    return this.apiClient.get<PeakHoursData>(
+      `/insights/regions/${regionId}/peak-hours`,
+    );
+  }
+
+  async getMyComparison(): Promise<MyComparison> {
+    return this.apiClient.get<MyComparison>('/insights/me/comparison');
   }
 }
 

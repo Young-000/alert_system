@@ -24,6 +24,7 @@ import { MissionModule } from './modules/mission.module';
 import { BriefingModule } from './modules/briefing.module';
 import { AlternativeRouteModule } from './modules/alternative-route.module';
 import { CongestionModule } from './modules/congestion.module';
+import { InsightsModule } from './modules/insights.module';
 import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { HealthController } from './controllers/health.controller';
 import { DevController } from './controllers/dev.controller';
@@ -62,6 +63,7 @@ const isDev = process.env.NODE_ENV !== 'production';
     BriefingModule,
     AlternativeRouteModule,
     CongestionModule,
+    InsightsModule,
   ],
   providers: [
     // 전역 JWT 인증 가드
