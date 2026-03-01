@@ -175,6 +175,23 @@ export const commuteApiClient = {
     segments: [],
     alternatives: [],
   }),
+  getCongestionSegments: vi.fn().mockResolvedValue({
+    timeSlot: 'morning_rush',
+    timeSlotLabel: '오전 러시 (07:00-09:00)',
+    segments: [],
+    totalCount: 0,
+    lastCalculatedAt: new Date().toISOString(),
+  }),
+  getRouteCongestion: vi.fn().mockResolvedValue({
+    routeId: 'route-1',
+    routeName: '강남 출근길',
+    timeSlot: 'morning_rush',
+    timeSlotLabel: '오전 러시',
+    checkpoints: [],
+    overallCongestion: 'low',
+    totalEstimatedDelay: 0,
+    lastCalculatedAt: new Date().toISOString(),
+  }),
   getWeeklyReport: vi.fn().mockResolvedValue({
     weekStartDate: '2026-02-17',
     weekEndDate: '2026-02-23',
@@ -664,6 +681,67 @@ export interface DelayStatusResponse {
   totalDelayMinutes: number;
   segments: DelaySegmentResponse[];
   alternatives: AlternativeSuggestionResponse[];
+}
+
+// Congestion types re-exported for tests
+export type TimeSlot =
+  | 'early_morning'
+  | 'morning_rush'
+  | 'mid_morning'
+  | 'lunch'
+  | 'afternoon'
+  | 'evening_rush'
+  | 'evening'
+  | 'night';
+
+export type CongestionLevel = 'low' | 'moderate' | 'high' | 'severe';
+
+export interface CongestionSegment {
+  segmentKey: string;
+  checkpointName: string;
+  checkpointType: string;
+  lineInfo: string;
+  timeSlot: TimeSlot;
+  avgWaitMinutes: number;
+  avgDelayMinutes: number;
+  stdDevMinutes: number;
+  sampleCount: number;
+  congestionLevel: CongestionLevel;
+  confidence: number;
+  lastUpdatedAt: string;
+}
+
+export interface CongestionSegmentsResponse {
+  timeSlot: TimeSlot;
+  timeSlotLabel: string;
+  segments: CongestionSegment[];
+  totalCount: number;
+  lastCalculatedAt: string;
+}
+
+export interface RouteCongestionCheckpoint {
+  checkpointId: string;
+  checkpointName: string;
+  sequenceOrder: number;
+  congestion: {
+    segmentKey: string;
+    avgWaitMinutes: number;
+    avgDelayMinutes: number;
+    congestionLevel: CongestionLevel;
+    confidence: number;
+    sampleCount: number;
+  } | null;
+}
+
+export interface RouteCongestionResponse {
+  routeId: string;
+  routeName: string;
+  timeSlot: TimeSlot;
+  timeSlotLabel: string;
+  checkpoints: RouteCongestionCheckpoint[];
+  overallCongestion: CongestionLevel;
+  totalEstimatedDelay: number;
+  lastCalculatedAt: string;
 }
 
 // Types needed by commute-api.client

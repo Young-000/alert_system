@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
+import type { RouteCongestionCheckpoint } from '@infrastructure/api/commute-api.client';
+import { useRouteCongestion } from '@infrastructure/query/use-congestion-query';
+import { CongestionChip } from '@presentation/components/CongestionChip';
 import type { TransitArrivalInfo } from './route-utils';
 
 interface CommuteSectionProps {
@@ -42,6 +45,17 @@ export function CommuteSection({
   onStartCommute,
 }: CommuteSectionProps): JSX.Element {
   const hasRoutes = routes.length > 0;
+
+  // Congestion data for the active route (silent fail — no spinner)
+  const { data: congestionData } = useRouteCongestion(activeRoute?.id);
+  const congestionByName = useMemo(() => {
+    if (!congestionData?.checkpoints) return new Map<string, RouteCongestionCheckpoint>();
+    const map = new Map<string, RouteCongestionCheckpoint>();
+    for (const cp of congestionData.checkpoints) {
+      map.set(cp.checkpointName, cp);
+    }
+    return map;
+  }, [congestionData]);
 
   // Refresh timestamp display every 10 seconds
   const [, setTick] = useState(0);
@@ -107,6 +121,7 @@ export function CommuteSection({
                 const firstArrival = info.arrivals[0];
                 const arrivalTime = firstArrival ? firstArrival.arrivalTime : -1;
                 const arrivingSoon = arrivalTime >= 0 && isArrivingSoon(arrivalTime);
+                const cpCongestion = congestionByName.get(info.name);
 
                 return (
                   <div
@@ -137,6 +152,15 @@ export function CommuteSection({
                       </span>
                     ) : (
                       <span className="today-transit-time muted">정보 없음</span>
+                    )}
+                    {cpCongestion?.congestion && (
+                      <span className="today-transit-congestion" data-testid="transit-congestion">
+                        <CongestionChip
+                          level={cpCongestion.congestion.congestionLevel}
+                          sampleCount={cpCongestion.congestion.sampleCount}
+                          size="sm"
+                        />
+                      </span>
                     )}
                   </div>
                 );
