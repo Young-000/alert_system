@@ -16,6 +16,7 @@ import { WeeklyReportCard } from './WeeklyReportCard';
 import { MissionQuickCard } from './MissionQuickCard';
 import { BriefingSection } from './BriefingSection';
 import { PatternInsightsCard } from './PatternInsightsCard';
+import { DelayAlertBanner } from './DelayAlertBanner';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -132,6 +133,8 @@ export function HomePage(): JSX.Element {
           }}
         />
       )}
+
+      {data.activeRoute && <DelayAlertBanner routeId={data.activeRoute.id} />}
 
       <CommuteSection
         routes={data.routes}
