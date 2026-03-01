@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { getAutoMode, useCommuteMode } from './use-commute-mode';
 
 describe('getAutoMode', () => {
@@ -32,10 +33,18 @@ describe('getAutoMode', () => {
 });
 
 describe('useCommuteMode', () => {
+  beforeEach(() => {
+    // Fix getHours() to return 10 (commute) regardless of timezone
+    vi.spyOn(Date.prototype, 'getHours').mockReturnValue(10);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('초기 모드는 시간 기반 자동 모드이다', () => {
     const { result } = renderHook(() => useCommuteMode());
-    const autoMode = getAutoMode();
-    expect(result.current.mode).toBe(autoMode);
+    expect(result.current.mode).toBe('commute');
   });
 
   it('isCommute와 isReturn이 mode와 일관된다', () => {
@@ -45,19 +54,16 @@ describe('useCommuteMode', () => {
     expect(isReturn).toBe(mode === 'return');
   });
 
-  it('토글하면 commute <-> return 전환된다', () => {
+  it('토글하면 commute → return 전환된다', () => {
     const { result } = renderHook(() => useCommuteMode());
-    const initialMode = result.current.mode;
+
+    expect(result.current.mode).toBe('commute');
 
     act(() => {
       result.current.toggleMode();
     });
 
-    if (initialMode === 'commute' || initialMode === 'night') {
-      expect(result.current.mode).toBe('return');
-    } else {
-      expect(result.current.mode).toBe('commute');
-    }
+    expect(result.current.mode).toBe('return');
   });
 
   it('두 번 토글하면 원래 모드로 돌아온다', () => {
@@ -67,13 +73,12 @@ describe('useCommuteMode', () => {
       result.current.toggleMode();
     });
 
-    const afterFirst = result.current.mode;
+    expect(result.current.mode).toBe('return');
 
     act(() => {
       result.current.toggleMode();
     });
 
-    // After two toggles, should be opposite of afterFirst
-    expect(result.current.mode).toBe(afterFirst === 'commute' ? 'return' : 'commute');
+    expect(result.current.mode).toBe('commute');
   });
 });

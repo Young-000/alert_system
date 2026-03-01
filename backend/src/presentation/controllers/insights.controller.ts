@@ -9,6 +9,7 @@ import {
   Logger,
   Request,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { InsightsService } from '@application/services/insights/insights.service';
 import { InsightsAggregationService } from '@application/services/insights/insights-aggregation.service';
 import {
@@ -106,6 +107,7 @@ export class InsightsController {
    */
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 1, ttl: 300000 } })
   async recalculate(): Promise<InsightsRecalculateResponseDto> {
     this.logger.log('Triggering full regional insights recalculation');
 
