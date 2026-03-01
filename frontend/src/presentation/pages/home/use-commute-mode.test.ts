@@ -34,19 +34,17 @@ describe('getAutoMode', () => {
 
 describe('useCommuteMode', () => {
   beforeEach(() => {
-    // Fix time to 10:00 KST (01:00 UTC) → commute mode
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-03-02T01:00:00Z'));
+    // Fix getHours() to return 10 (commute) regardless of timezone
+    vi.spyOn(Date.prototype, 'getHours').mockReturnValue(10);
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('초기 모드는 시간 기반 자동 모드이다', () => {
     const { result } = renderHook(() => useCommuteMode());
-    const autoMode = getAutoMode();
-    expect(result.current.mode).toBe(autoMode);
+    expect(result.current.mode).toBe('commute');
   });
 
   it('isCommute와 isReturn이 mode와 일관된다', () => {
@@ -56,7 +54,7 @@ describe('useCommuteMode', () => {
     expect(isReturn).toBe(mode === 'return');
   });
 
-  it('토글하면 commute <-> return 전환된다', () => {
+  it('토글하면 commute → return 전환된다', () => {
     const { result } = renderHook(() => useCommuteMode());
 
     expect(result.current.mode).toBe('commute');
