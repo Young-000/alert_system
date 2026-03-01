@@ -49,6 +49,10 @@ import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
 import { AlternativeMappingEntity } from './typeorm/alternative-mapping.entity';
 // Congestion entities
 import { SegmentCongestionEntity } from './typeorm/segment-congestion.entity';
+// Community entities
+import { CommunityTipEntity } from './typeorm/community-tip.entity';
+import { CommunityTipReportEntity } from './typeorm/community-tip-report.entity';
+import { CommunityTipHelpfulEntity } from './typeorm/community-tip-helpful.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -99,6 +103,10 @@ export function buildDataSourceOptions(): DataSourceOptions {
       AlternativeMappingEntity,
       // Congestion
       SegmentCongestionEntity,
+      // Community
+      CommunityTipEntity,
+      CommunityTipReportEntity,
+      CommunityTipHelpfulEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -163,6 +171,10 @@ export function buildDataSourceOptions(): DataSourceOptions {
     AlternativeMappingEntity,
     // Congestion
     SegmentCongestionEntity,
+    // Community
+    CommunityTipEntity,
+    CommunityTipReportEntity,
+    CommunityTipHelpfulEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {
