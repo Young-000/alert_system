@@ -53,7 +53,7 @@ export function useMarkHelpful() {
   return useMutation<HelpfulTipResponse, Error, string>({
     mutationFn: (tipId: string) => getCommuteApiClient().markHelpful(tipId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.community.all });
+      void qc.invalidateQueries({ queryKey: ['community', 'tips'] });
     },
   });
 }
@@ -64,7 +64,7 @@ export function useReportTip() {
   return useMutation<ReportTipResponse, Error, string>({
     mutationFn: (tipId: string) => getCommuteApiClient().reportTip(tipId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.community.all });
+      void qc.invalidateQueries({ queryKey: ['community', 'tips'] });
     },
   });
 }

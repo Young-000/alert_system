@@ -16,7 +16,7 @@ export function InsightsPage(): JSX.Element {
   const [sortBy, setSortBy] = useState<InsightSortBy>('userCount');
   const [expandedRegionId, setExpandedRegionId] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useRegions(sortBy);
+  const { data, isLoading, error, refetch } = useRegions(sortBy);
 
   const handleToggle = useCallback((regionId: string) => {
     setExpandedRegionId((prev) => (prev === regionId ? null : regionId));
@@ -64,7 +64,14 @@ export function InsightsPage(): JSX.Element {
 
         {error && (
           <div className="insights-error notice error" role="alert">
-            지역 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.
+            <p>지역 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.</p>
+            <button
+              type="button"
+              className="insights-retry-btn"
+              onClick={() => void refetch()}
+            >
+              다시 시도
+            </button>
           </div>
         )}
 
