@@ -2,6 +2,11 @@ export enum PatternType {
   DEPARTURE_TIME = 'departure_time',
   ROUTE_PREFERENCE = 'route_preference',
   NOTIFICATION_LEAD_TIME = 'notification_lead_time',
+  // P3-1: Enhanced pattern types
+  DAY_OF_WEEK_DEPARTURE = 'day_of_week_departure',
+  WEATHER_SENSITIVITY = 'weather_sensitivity',
+  SEASONAL_TREND = 'seasonal_trend',
+  ROUTE_SEGMENT_STATS = 'route_segment_stats',
 }
 
 export interface DepartureTimeValue {
@@ -23,7 +28,60 @@ export interface NotificationLeadTimeValue {
   maxMinutes: number;
 }
 
-export type PatternValue = DepartureTimeValue | RoutePreferenceValue | NotificationLeadTimeValue;
+// P3-1: Enhanced pattern value types
+export interface DayOfWeekDepartureValue {
+  segments: Array<{
+    dayOfWeek: number;       // 0=Sun, 1=Mon, ..., 6=Sat
+    avgMinutes: number;      // average departure in minutes since midnight
+    stdDevMinutes: number;
+    sampleCount: number;
+  }>;
+  lastCalculated: string;    // ISO date
+}
+
+export interface WeatherSensitivityValue {
+  rainCoefficient: number;       // minutes adjustment for rain
+  snowCoefficient: number;       // minutes adjustment for snow
+  temperatureCoefficient: number; // minutes per degree deviation
+  sampleCountRain: number;
+  sampleCountSnow: number;
+  sampleCountClear: number;
+  rSquared: number;              // model fit quality
+  lastCalculated: string;
+}
+
+export interface SeasonalTrendValue {
+  monthlyAverages: Array<{
+    month: number;               // 1-12
+    avgMinutes: number;
+    sampleCount: number;
+  }>;
+  trendDirection: 'earlier' | 'later' | 'stable';
+  trendMinutesPerMonth: number;
+  lastCalculated: string;
+}
+
+export interface RouteSegmentStatsValue {
+  routeId: string;
+  segments: Array<{
+    checkpointId: string;
+    checkpointName: string;
+    avgDuration: number;
+    stdDevDuration: number;
+    avgWaitTime: number;
+    sampleCount: number;
+  }>;
+  lastCalculated: string;
+}
+
+export type PatternValue =
+  | DepartureTimeValue
+  | RoutePreferenceValue
+  | NotificationLeadTimeValue
+  | DayOfWeekDepartureValue
+  | WeatherSensitivityValue
+  | SeasonalTrendValue
+  | RouteSegmentStatsValue;
 
 // Confidence levels based on sample count
 export const CONFIDENCE_LEVELS = {
