@@ -282,7 +282,7 @@ export class WidgetDataService {
 
   private async fetchSubwayArrival(
     stationId: string,
-    checkpointName: string,
+    _checkpointName: string,
     lineInfo?: string,
   ): Promise<WidgetSubwayDto | null> {
     if (!this.subwayApiClient || !this.subwayStationRepository) return null;

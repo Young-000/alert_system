@@ -26,13 +26,13 @@ export function RouteComparisonChart({
           const barWidth = ((route.averageTotalDuration || 0) / maxDuration) * 100;
 
           return (
-            <div
+            <button
               key={route.routeId}
+              type="button"
               className={`route-comparison-row ${selectedRouteId === route.routeId ? 'selected' : ''}`}
-              role="button"
-              tabIndex={0}
               onClick={() => onSelectRoute(route.routeId)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectRoute(route.routeId); } }}
+              aria-pressed={selectedRouteId === route.routeId}
+              aria-label={`${route.routeName}: 평균 ${route.averageTotalDuration}분, ${route.totalSessions}회 기록`}
             >
               <div className="route-comparison-info">
                 <span className={`route-badge ${route.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
@@ -56,7 +56,7 @@ export function RouteComparisonChart({
                   </span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

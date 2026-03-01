@@ -9,7 +9,7 @@ import { IAlertRepository } from '@domain/repositories/alert.repository';
 export class PostgresAlertRepository implements IAlertRepository {
   private repository: Repository<AlertEntity>;
 
-  constructor(@InjectDataSource() private dataSource: DataSource) {
+  constructor(@InjectDataSource() dataSource: DataSource) {
     this.repository = dataSource.getRepository(AlertEntity);
   }
 

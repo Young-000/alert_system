@@ -16,7 +16,6 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ManageSmartDepartureUseCase } from '@application/use-cases/manage-smart-departure.use-case';
 import { CalculateDepartureUseCase } from '@application/use-cases/calculate-departure.use-case';
-import { ScheduleDepartureAlertsUseCase } from '@application/use-cases/schedule-departure-alerts.use-case';
 import {
   CreateSmartDepartureSettingDto,
   UpdateSmartDepartureSettingDto,
@@ -34,7 +33,6 @@ export class SmartDepartureController {
   constructor(
     private readonly manageDeparture: ManageSmartDepartureUseCase,
     private readonly calculateDeparture: CalculateDepartureUseCase,
-    private readonly scheduleAlerts: ScheduleDepartureAlertsUseCase,
   ) {}
 
   /**

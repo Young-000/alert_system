@@ -4,7 +4,6 @@ import { PatternType, DEFAULT_PATTERNS } from '../../domain/entities/user-patter
 describe('PredictOptimalDepartureUseCase', () => {
   let useCase: PredictOptimalDepartureUseCase;
   let mockPatternRepository: any;
-  let mockPatternAnalysisService: any;
   let mockAlertRepository: any;
 
   beforeEach(() => {
@@ -18,10 +17,6 @@ describe('PredictOptimalDepartureUseCase', () => {
       deleteByUserId: jest.fn(),
     };
 
-    mockPatternAnalysisService = {
-      analyzeDeparturePattern: jest.fn(),
-    };
-
     mockAlertRepository = {
       save: jest.fn(),
       findById: jest.fn(),
@@ -32,7 +27,7 @@ describe('PredictOptimalDepartureUseCase', () => {
   });
 
   it('리포지토리가 없으면 기본 시간을 반환해야 한다', async () => {
-    useCase = new PredictOptimalDepartureUseCase(null, null, null);
+    useCase = new PredictOptimalDepartureUseCase(null, null);
 
     const result = await useCase.execute('user-1', 'alert-1');
 
@@ -53,7 +48,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('신뢰도 0.5 이상인 학습된 패턴을 사용해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      mockPatternAnalysisService,
       mockAlertRepository,
     );
 
@@ -78,7 +72,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('비 조건에서 출발 시간을 조정해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -106,7 +99,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('눈 조건에서 출발 시간을 조정해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -134,7 +126,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('5분 초과 대중교통 지연 시 출발 시간을 조정해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -161,7 +152,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('극한 온도에서 출발 시간을 조정해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -199,7 +189,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('5분 이하 대중교통 지연 시 조정하지 않아야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -224,7 +213,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('시간을 유효 범위(00:00~23:59)로 클램핑해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -251,7 +239,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('알림 스케줄 시간으로 대체(fallback)해야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 
@@ -278,7 +265,6 @@ describe('PredictOptimalDepartureUseCase', () => {
   it('여러 조건이 동시에 적용되어야 한다', async () => {
     useCase = new PredictOptimalDepartureUseCase(
       mockPatternRepository,
-      null,
       mockAlertRepository,
     );
 

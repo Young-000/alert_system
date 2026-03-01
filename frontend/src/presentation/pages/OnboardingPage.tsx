@@ -430,7 +430,14 @@ export function OnboardingPage(): JSX.Element {
 
       {/* Progress bar */}
       {step !== 'welcome' && step !== 'complete' && (
-        <div className="onboarding-progress">
+        <div
+          className="onboarding-progress"
+          role="progressbar"
+          aria-valuenow={step === 'commute-question' ? 33 : step === 'transport' ? 66 : 100}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="온보딩 진행률"
+        >
           <div
             className="progress-fill"
             style={{

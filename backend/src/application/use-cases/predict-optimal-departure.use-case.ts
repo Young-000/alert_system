@@ -1,5 +1,4 @@
 import { Injectable, Inject, Optional } from '@nestjs/common';
-import { PatternAnalysisService } from '../services/pattern-analysis.service';
 import { IUserPatternRepository } from '../../domain/repositories/user-pattern.repository';
 import { IAlertRepository } from '../../domain/repositories/alert.repository';
 import { PatternType, DEFAULT_PATTERNS } from '../../domain/entities/user-pattern.entity';
@@ -41,8 +40,6 @@ export class PredictOptimalDepartureUseCase {
     @Optional()
     @Inject(USER_PATTERN_REPOSITORY)
     private readonly patternRepository: IUserPatternRepository | null,
-    @Optional()
-    private readonly patternAnalysisService: PatternAnalysisService | null,
     @Optional()
     @Inject('ALERT_REPOSITORY')
     private readonly alertRepository: IAlertRepository | null,

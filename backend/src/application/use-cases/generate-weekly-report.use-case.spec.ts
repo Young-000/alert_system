@@ -6,7 +6,6 @@ describe('GenerateWeeklyReportUseCase', () => {
   let mockUserRepository: any;
   let mockSessionRepository: any;
   let mockSessionRepo: any;
-  let mockNotificationLogRepo: any;
   let mockSolapiService: any;
   let mockWebPushService: any;
 
@@ -75,11 +74,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       }),
     };
 
-    mockNotificationLogRepo = {
-      save: jest.fn(),
-      find: jest.fn(),
-    };
-
     mockSolapiService = {
       sendWeatherAlert: jest.fn(),
       sendTransitAlert: jest.fn(),
@@ -98,7 +92,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );
@@ -117,7 +110,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );
@@ -138,7 +130,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );
@@ -167,7 +158,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );
@@ -200,7 +190,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );
@@ -232,7 +221,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );
@@ -264,7 +252,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockSessionRepo,
       undefined,
       undefined,
-      undefined,
     );
 
     mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
@@ -287,7 +274,6 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockUserRepository,
       mockSessionRepository,
       mockSessionRepo,
-      mockNotificationLogRepo,
       mockSolapiService,
       mockWebPushService,
     );

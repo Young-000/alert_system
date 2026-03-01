@@ -1,4 +1,4 @@
-import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import {
   ICommuteSessionRepository,
   COMMUTE_SESSION_REPOSITORY,
@@ -23,8 +23,6 @@ import {
  */
 @Injectable()
 export class RecommendBestRouteUseCase {
-  private readonly logger = new Logger(RecommendBestRouteUseCase.name);
-
   // 점수 가중치
   private readonly WEIGHT_SPEED = 0.4;
   private readonly WEIGHT_RELIABILITY = 0.4;
