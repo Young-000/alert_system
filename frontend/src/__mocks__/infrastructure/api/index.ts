@@ -273,6 +273,35 @@ export const commuteApiClient = {
     totalEstimatedDelay: 0,
     lastCalculatedAt: new Date().toISOString(),
   }),
+  // Community mocks
+  getNeighborStats: vi.fn().mockResolvedValue({
+    routeId: 'route-1',
+    neighborCount: 23,
+    avgDurationMinutes: 42,
+    myAvgDurationMinutes: 38,
+    diffMinutes: -4,
+    dataStatus: 'sufficient',
+  }),
+  getCheckpointTips: vi.fn().mockResolvedValue({
+    tips: [],
+    total: 0,
+    page: 1,
+    limit: 20,
+    hasNext: false,
+  }),
+  createTip: vi.fn().mockResolvedValue({
+    id: 'tip-1',
+    content: '4번 출구가 빨라요',
+    createdAt: new Date().toISOString(),
+  }),
+  markHelpful: vi.fn().mockResolvedValue({
+    message: '도움이 됐어요',
+    helpfulCount: 1,
+    isHelpfulByMe: true,
+  }),
+  reportTip: vi.fn().mockResolvedValue({
+    message: '신고되었습니다',
+  }),
   // Regional Insights mocks
   getRegions: vi.fn().mockResolvedValue({
     regions: [],
@@ -887,4 +916,55 @@ export interface CreateCheckpointDto {
   linkedBusStopId?: string;
   lineInfo?: string;
   transportMode?: string;
+}
+
+// ========== Community Types ==========
+
+export type NeighborDataStatus = 'sufficient' | 'insufficient' | 'no_route';
+
+export interface NeighborStatsResponse {
+  routeId: string | null;
+  neighborCount: number;
+  avgDurationMinutes: number | null;
+  myAvgDurationMinutes: number | null;
+  diffMinutes: number | null;
+  dataStatus: NeighborDataStatus;
+}
+
+export interface CommunityTip {
+  id: string;
+  content: string;
+  helpfulCount: number;
+  createdAt: string;
+  isHelpfulByMe: boolean;
+  isReportedByMe: boolean;
+}
+
+export interface TipsListResponse {
+  tips: CommunityTip[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+}
+
+export interface CreateTipRequest {
+  checkpointKey: string;
+  content: string;
+}
+
+export interface CreateTipResponse {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ReportTipResponse {
+  message: string;
+}
+
+export interface HelpfulTipResponse {
+  message: string;
+  helpfulCount: number;
+  isHelpfulByMe: boolean;
 }

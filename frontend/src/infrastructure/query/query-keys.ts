@@ -80,4 +80,10 @@ export const queryKeys = {
     regionPeakHours: (regionId: string) => ['insights', 'peak-hours', regionId] as const,
     myComparison: ['insights', 'me', 'comparison'] as const,
   },
+  community: {
+    all: ['community'] as const,
+    neighbors: (routeId?: string) => ['community', 'neighbors', routeId ?? 'default'] as const,
+    tips: (checkpointKey: string, page?: number) =>
+      ['community', 'tips', checkpointKey, page ?? 1] as const,
+  },
 } as const;

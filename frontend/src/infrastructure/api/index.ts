@@ -58,6 +58,10 @@ export type {
   OverallDelayStatus, SegmentDelayStatus, AlternativeConfidence,
   DelaySegmentResponse, AlternativeStepResponse,
   AlternativeSuggestionResponse, DelayStatusResponse,
+  NeighborDataStatus, NeighborStatsResponse,
+  CommunityTip, TipsListResponse,
+  CreateTipRequest, CreateTipResponse,
+  ReportTipResponse, HelpfulTipResponse,
 } from './commute-api.client';
 export { BehaviorApiClient, getBehaviorApiClient } from './behavior-api.client';
 export type {

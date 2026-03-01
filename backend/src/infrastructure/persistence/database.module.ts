@@ -43,6 +43,10 @@ import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
 import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
 // Regional insights
 import { RegionalInsightEntity } from './typeorm/regional-insight.entity';
+// Community
+import { CommunityTipEntity } from './typeorm/community-tip.entity';
+import { CommunityTipReportEntity } from './typeorm/community-tip-report.entity';
+import { CommunityTipHelpfulEntity } from './typeorm/community-tip-helpful.entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -99,6 +103,10 @@ import { buildDataSourceOptions } from './database.config';
       LiveActivityTokenEntity,
       // Regional insights
       RegionalInsightEntity,
+      // Community
+      CommunityTipEntity,
+      CommunityTipReportEntity,
+      CommunityTipHelpfulEntity,
     ]),
   ],
   exports: [TypeOrmModule],
