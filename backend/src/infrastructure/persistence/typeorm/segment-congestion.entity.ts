@@ -55,7 +55,7 @@ export class SegmentCongestionEntity {
   @Column({ type: 'real', default: 0.3 })
   confidence: number;
 
-  @Column({ name: 'last_updated_at', type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'last_updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   lastUpdatedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

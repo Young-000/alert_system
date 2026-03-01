@@ -41,6 +41,8 @@ import { CommuteStreakOrmEntity } from './typeorm/commute-streak.orm-entity';
 import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
 // Live Activity entities
 import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
+// Regional insights
+import { RegionalInsightEntity } from './typeorm/regional-insight.entity';
 import { buildDataSourceOptions } from './database.config';
 
 @Global()
@@ -95,6 +97,8 @@ import { buildDataSourceOptions } from './database.config';
       StreakDailyLogOrmEntity,
       // Live Activity
       LiveActivityTokenEntity,
+      // Regional insights
+      RegionalInsightEntity,
     ]),
   ],
   exports: [TypeOrmModule],
