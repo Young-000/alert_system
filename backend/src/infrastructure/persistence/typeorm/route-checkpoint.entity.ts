@@ -33,6 +33,7 @@ export type TransportMode =
 @Entity('route_checkpoints', { schema: 'alert_system' })
 @Index(['routeId'])
 @Index(['routeId', 'sequenceOrder'])
+@Index('route_checkpoints_checkpoint_key_idx', ['checkpointKey'])
 export class RouteCheckpointEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -82,6 +83,10 @@ export class RouteCheckpointEntity {
   @ManyToOne(() => SubwayStationEntity, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'linked_station_id' })
   linkedStation?: SubwayStationEntity;
+
+  // Normalized key for neighbor matching (computed on route save)
+  @Column({ name: 'checkpoint_key', length: 200, nullable: true })
+  checkpointKey?: string;
 
   @OneToMany(() => CheckpointRecordEntity, (record) => record.checkpoint)
   records?: CheckpointRecordEntity[];

@@ -17,6 +17,7 @@ import { MissionQuickCard } from './MissionQuickCard';
 import { BriefingSection } from './BriefingSection';
 import { PatternInsightsCard } from './PatternInsightsCard';
 import { DelayAlertBanner } from './DelayAlertBanner';
+import { NeighborSection } from './NeighborSection';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -147,6 +148,8 @@ export function HomePage(): JSX.Element {
         isCommuteStarting={data.isCommuteStarting}
         onStartCommute={data.handleStartCommute}
       />
+
+      <NeighborSection routeId={data.activeRoute?.id} />
 
       <AlertSection nextAlert={data.nextAlert} />
 

@@ -510,6 +510,57 @@ export interface DelayStatusResponse {
   alternatives: AlternativeSuggestionResponse[];
 }
 
+// ========== Community Types ==========
+
+export type NeighborDataStatus = 'sufficient' | 'insufficient' | 'no_route';
+
+export interface NeighborStatsResponse {
+  routeId: string | null;
+  neighborCount: number;
+  avgDurationMinutes: number | null;
+  myAvgDurationMinutes: number | null;
+  diffMinutes: number | null;
+  dataStatus: NeighborDataStatus;
+}
+
+export interface CommunityTip {
+  id: string;
+  content: string;
+  helpfulCount: number;
+  createdAt: string;
+  isHelpfulByMe: boolean;
+  isReportedByMe: boolean;
+}
+
+export interface TipsListResponse {
+  tips: CommunityTip[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+}
+
+export interface CreateTipRequest {
+  checkpointKey: string;
+  content: string;
+}
+
+export interface CreateTipResponse {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ReportTipResponse {
+  message: string;
+}
+
+export interface HelpfulTipResponse {
+  message: string;
+  helpfulCount: number;
+  isHelpfulByMe: boolean;
+}
+
 // ========== Regional Insights Types ==========
 
 export type InsightTrendDirection = 'improving' | 'stable' | 'worsening';
@@ -807,6 +858,38 @@ export class CommuteApiClient {
 
   async getMyComparison(): Promise<MyComparison> {
     return this.apiClient.get<MyComparison>('/insights/me/comparison');
+  }
+
+  // ========== Community APIs ==========
+
+  async getNeighborStats(routeId?: string): Promise<NeighborStatsResponse> {
+    const query = routeId ? `?routeId=${encodeURIComponent(routeId)}` : '';
+    return this.apiClient.get<NeighborStatsResponse>(`/community/neighbors${query}`);
+  }
+
+  async getCheckpointTips(
+    checkpointKey: string,
+    page = 1,
+    limit = 20,
+  ): Promise<TipsListResponse> {
+    const params = new URLSearchParams({
+      checkpointKey,
+      page: String(page),
+      limit: String(limit),
+    });
+    return this.apiClient.get<TipsListResponse>(`/community/tips?${params.toString()}`);
+  }
+
+  async createTip(dto: CreateTipRequest): Promise<CreateTipResponse> {
+    return this.apiClient.post<CreateTipResponse>('/community/tips', dto);
+  }
+
+  async markHelpful(tipId: string): Promise<HelpfulTipResponse> {
+    return this.apiClient.post<HelpfulTipResponse>(`/community/tips/${tipId}/helpful`);
+  }
+
+  async reportTip(tipId: string): Promise<ReportTipResponse> {
+    return this.apiClient.post<ReportTipResponse>(`/community/tips/${tipId}/report`);
   }
 }
 
