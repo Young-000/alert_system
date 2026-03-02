@@ -7,7 +7,7 @@ export class DeleteAlertUseCase {
   constructor(
     @Inject('IAlertRepository') private alertRepository: IAlertRepository,
     @Inject('INotificationScheduler')
-    private notificationScheduler: INotificationScheduler
+    private notificationScheduler: INotificationScheduler,
   ) {}
 
   async execute(alertId: string): Promise<void> {

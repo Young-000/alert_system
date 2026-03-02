@@ -10,9 +10,10 @@ describe('AirQualityController', () => {
   const OWNER_ID = 'user-123';
   const OTHER_USER_ID = 'other-user';
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   const mockAirQuality = {
     pm10: 45,
@@ -29,9 +30,7 @@ describe('AirQualityController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AirQualityController],
-      providers: [
-        { provide: GetAirQualityUseCase, useValue: getAirQualityUseCase },
-      ],
+      providers: [{ provide: GetAirQualityUseCase, useValue: getAirQualityUseCase }],
     }).compile();
 
     controller = module.get<AirQualityController>(AirQualityController);
@@ -48,17 +47,17 @@ describe('AirQualityController', () => {
     });
 
     it('다른 사용자의 대기질 조회 시 ForbiddenException', async () => {
-      await expect(
-        controller.getByUser(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getByUser(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(getAirQualityUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('다른 사용자 접근 시 올바른 에러 메시지', async () => {
-      await expect(
-        controller.getByUser(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow('다른 사용자의 정보를 조회할 수 없습니다.');
+      await expect(controller.getByUser(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        '다른 사용자의 정보를 조회할 수 없습니다.',
+      );
     });
   });
 
@@ -76,9 +75,9 @@ describe('AirQualityController', () => {
     it('API 에러 시 전파', async () => {
       getAirQualityUseCase.executeByLocation.mockRejectedValue(new Error('API Error'));
 
-      await expect(
-        controller.getByLocation({ lat: 37.5665, lng: 126.978 } as any),
-      ).rejects.toThrow('API Error');
+      await expect(controller.getByLocation({ lat: 37.5665, lng: 126.978 } as any)).rejects.toThrow(
+        'API Error',
+      );
     });
   });
 });

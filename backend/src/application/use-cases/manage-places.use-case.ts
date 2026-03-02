@@ -27,21 +27,14 @@ export class ManagePlacesUseCase {
     const existing = await this.placeRepository.findByUserIdAndType(userId, dto.placeType);
     if (existing) {
       throw new ConflictException(
-        `이미 등록된 ${dto.placeType === 'home' ? '집' : '회사'} 장소가 있습니다.`
+        `이미 등록된 ${dto.placeType === 'home' ? '집' : '회사'} 장소가 있습니다.`,
       );
     }
 
-    const place = UserPlace.create(
-      userId,
-      dto.placeType,
-      dto.label,
-      dto.latitude,
-      dto.longitude,
-      {
-        address: dto.address,
-        radiusM: dto.radiusM,
-      }
-    );
+    const place = UserPlace.create(userId, dto.placeType, dto.label, dto.latitude, dto.longitude, {
+      address: dto.address,
+      radiusM: dto.radiusM,
+    });
 
     if (!place.isValidCoordinates()) {
       throw new BadRequestException('유효하지 않은 좌표입니다.');

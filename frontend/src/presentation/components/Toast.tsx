@@ -47,7 +47,7 @@ function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
       className={cn(
         'flex items-center gap-3 px-4 py-3.5',
         'bg-bg-card border border-border rounded-lg shadow-lg',
-        'animate-toast-slide relative overflow-hidden'
+        'animate-toast-slide relative overflow-hidden',
       )}
       role="alert"
       aria-live="polite"
@@ -56,7 +56,7 @@ function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
         className={cn(
           'w-6 h-6 rounded-full grid place-items-center',
           'text-[0.8rem] font-bold shrink-0',
-          ICON_STYLES[toast.type]
+          ICON_STYLES[toast.type],
         )}
         aria-hidden="true"
       >
@@ -71,7 +71,7 @@ function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
           'text-[1.2rem] text-ink-muted shrink-0',
           'transition-all duration-200',
           'hover:bg-bg-subtle hover:text-ink',
-          '-mr-2'
+          '-mr-2',
         )}
         onClick={() => onDismiss(toast.id)}
         aria-label="닫기"
@@ -83,7 +83,7 @@ function Toast({ toast, onDismiss }: ToastProps): JSX.Element {
         className={cn(
           'absolute bottom-0 left-0 h-[3px] w-full',
           'animate-toast-progress',
-          PROGRESS_STYLES[toast.type]
+          PROGRESS_STYLES[toast.type],
         )}
       />
     </div>
@@ -104,7 +104,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps): JSX.
         'fixed bottom-6 right-6',
         'flex flex-col gap-2.5',
         'z-[1003] max-w-[360px]',
-        'max-sm:left-4 max-sm:right-4 max-sm:bottom-4 max-sm:max-w-none'
+        'max-sm:left-4 max-sm:right-4 max-sm:bottom-4 max-sm:max-w-none',
       )}
       aria-label="알림 메시지"
     >
@@ -128,12 +128,15 @@ export function useToast() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const helpers = useMemo(() => ({
-    success: (message: string) => addToast('success', message),
-    error: (message: string) => addToast('error', message),
-    info: (message: string) => addToast('info', message),
-    warning: (message: string) => addToast('warning', message),
-  }), [addToast]);
+  const helpers = useMemo(
+    () => ({
+      success: (message: string) => addToast('success', message),
+      error: (message: string) => addToast('error', message),
+      info: (message: string) => addToast('info', message),
+      warning: (message: string) => addToast('warning', message),
+    }),
+    [addToast],
+  );
 
   return {
     toasts,

@@ -22,4 +22,3 @@ import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-a
   ],
 })
 export class AirQualityModule {}
-

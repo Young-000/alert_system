@@ -43,7 +43,7 @@ function DayOfWeekChart({ stats }: { stats: DayOfWeekStats[] }): JSX.Element {
     return <p className="report-empty-hint">요일별 데이터가 없어요</p>;
   }
 
-  const maxDuration = Math.max(...stats.map(s => s.averageDuration), 1);
+  const maxDuration = Math.max(...stats.map((s) => s.averageDuration), 1);
 
   return (
     <div className="report-dow-chart" role="img" aria-label="요일별 평균 소요시간">
@@ -56,9 +56,7 @@ function DayOfWeekChart({ stats }: { stats: DayOfWeekStats[] }): JSX.Element {
             key={day.dayOfWeek}
             className="report-dow-bar"
             aria-label={
-              hasData
-                ? `${day.dayName} 평균 ${day.averageDuration}분`
-                : `${day.dayName} 기록 없음`
+              hasData ? `${day.dayName} 평균 ${day.averageDuration}분` : `${day.dayName} 기록 없음`
             }
           >
             <div className="report-dow-bar-track">
@@ -68,9 +66,7 @@ function DayOfWeekChart({ stats }: { stats: DayOfWeekStats[] }): JSX.Element {
               />
             </div>
             <span className="report-dow-bar-label">{getDayLabel(day.dayOfWeek)}</span>
-            {hasData && (
-              <span className="report-dow-bar-value">{day.averageDuration}분</span>
-            )}
+            {hasData && <span className="report-dow-bar-value">{day.averageDuration}분</span>}
           </div>
         );
       })}
@@ -136,7 +132,9 @@ export function MonthlyTab(): JSX.Element {
     return (
       <div className="report-tab-content">
         <div className="report-card report-card--empty">
-          <p className="report-empty-icon" aria-hidden="true">&#128197;</p>
+          <p className="report-empty-icon" aria-hidden="true">
+            &#128197;
+          </p>
           <p className="report-empty-msg">최근 30일 기록이 없어요</p>
           <p className="report-empty-hint">출퇴근을 기록하면 월간 통계를 볼 수 있어요!</p>
         </div>
@@ -182,7 +180,9 @@ export function MonthlyTab(): JSX.Element {
           <h3 className="report-section-title">인사이트</h3>
           <ul className="report-insights" aria-label="월간 인사이트">
             {stats.insights.map((insight) => (
-              <li key={insight} className="report-insight">{insight}</li>
+              <li key={insight} className="report-insight">
+                {insight}
+              </li>
             ))}
           </ul>
         </div>

@@ -121,10 +121,9 @@ describe('ChallengeController', () => {
     it('도전 참여에 성공하면 챌린지 정보를 반환한다', async () => {
       manageChallengeUseCase.joinChallenge.mockResolvedValue(mockChallenge);
 
-      const result = await controller.joinChallenge(
-        mockRequest(USER_ID),
-        { templateId: 'tpl-time-30' },
-      );
+      const result = await controller.joinChallenge(mockRequest(USER_ID), {
+        templateId: 'tpl-time-30',
+      });
 
       expect(result.id).toBe('challenge-1');
       expect(result.templateId).toBe('tpl-time-30');
@@ -133,10 +132,7 @@ describe('ChallengeController', () => {
       expect(result.targetProgress).toBe(5);
       expect(typeof result.startedAt).toBe('string');
       expect(typeof result.deadlineAt).toBe('string');
-      expect(manageChallengeUseCase.joinChallenge).toHaveBeenCalledWith(
-        USER_ID,
-        'tpl-time-30',
-      );
+      expect(manageChallengeUseCase.joinChallenge).toHaveBeenCalledWith(USER_ID, 'tpl-time-30');
     });
 
     it('이미 참여 중인 챌린지에 참여하면 409 ConflictException을 던진다', async () => {
@@ -160,9 +156,7 @@ describe('ChallengeController', () => {
     });
 
     it('알 수 없는 에러는 그대로 전파한다', async () => {
-      manageChallengeUseCase.joinChallenge.mockRejectedValue(
-        new Error('DB connection error'),
-      );
+      manageChallengeUseCase.joinChallenge.mockRejectedValue(new Error('DB connection error'));
 
       await expect(
         controller.joinChallenge(mockRequest(USER_ID), { templateId: 'tpl-time-30' }),
@@ -209,16 +203,10 @@ describe('ChallengeController', () => {
     it('도전 포기에 성공하면 success: true를 반환한다', async () => {
       manageChallengeUseCase.abandonChallenge.mockResolvedValue(undefined);
 
-      const result = await controller.abandonChallenge(
-        mockRequest(USER_ID),
-        'challenge-1',
-      );
+      const result = await controller.abandonChallenge(mockRequest(USER_ID), 'challenge-1');
 
       expect(result).toEqual({ success: true });
-      expect(manageChallengeUseCase.abandonChallenge).toHaveBeenCalledWith(
-        USER_ID,
-        'challenge-1',
-      );
+      expect(manageChallengeUseCase.abandonChallenge).toHaveBeenCalledWith(USER_ID, 'challenge-1');
     });
 
     it('존재하지 않는 챌린지를 포기하면 에러를 전파한다', async () => {
@@ -275,11 +263,7 @@ describe('ChallengeController', () => {
 
       await controller.getChallengeHistory(mockRequest(USER_ID), '10', '5');
 
-      expect(manageChallengeUseCase.getChallengeHistory).toHaveBeenCalledWith(
-        USER_ID,
-        10,
-        5,
-      );
+      expect(manageChallengeUseCase.getChallengeHistory).toHaveBeenCalledWith(USER_ID, 10, 5);
     });
 
     it('limit과 offset이 없으면 기본값을 사용한다', async () => {
@@ -291,11 +275,7 @@ describe('ChallengeController', () => {
 
       await controller.getChallengeHistory(mockRequest(USER_ID));
 
-      expect(manageChallengeUseCase.getChallengeHistory).toHaveBeenCalledWith(
-        USER_ID,
-        20,
-        0,
-      );
+      expect(manageChallengeUseCase.getChallengeHistory).toHaveBeenCalledWith(USER_ID, 20, 0);
     });
   });
 

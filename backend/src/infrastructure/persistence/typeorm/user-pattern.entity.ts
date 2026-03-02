@@ -33,7 +33,7 @@ export class UserPatternEntity {
   @Column({ type: 'simple-json' })
   value: object;
 
-  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0.50 })
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0.5 })
   confidence: number;
 
   @Column({ name: 'sample_count', type: 'integer', default: 0 })

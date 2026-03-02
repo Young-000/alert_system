@@ -28,9 +28,7 @@ import {
   PredictionEngineService,
   PredictionResult,
 } from '@application/services/prediction-engine.service';
-import {
-  EnhancedPatternAnalysisService,
-} from '@application/services/enhanced-pattern-analysis.service';
+import { EnhancedPatternAnalysisService } from '@application/services/enhanced-pattern-analysis.service';
 import { BehaviorEventType } from '@domain/entities/behavior-event.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
@@ -141,7 +139,7 @@ export class BehaviorController {
     await this.trackBehaviorUseCase.trackNotificationOpened(
       dto.userId,
       dto.alertId,
-      dto.notificationId
+      dto.notificationId,
     );
 
     return { success: true };

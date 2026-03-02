@@ -28,9 +28,10 @@ describe('RouteController', () => {
     checkpoints: [],
   };
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   beforeEach(async () => {
     manageRouteUseCase = {
@@ -172,17 +173,17 @@ describe('RouteController', () => {
     it('다른 사용자의 경로 조회 시 ForbiddenException', async () => {
       manageRouteUseCase.getRouteById.mockResolvedValue(mockRouteOther as any);
 
-      await expect(
-        controller.getRoute('route-2', mockRequest(OWNER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getRoute('route-2', mockRequest(OWNER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('존재하지 않는 경로 조회 시 에러 전파', async () => {
       manageRouteUseCase.getRouteById.mockRejectedValue(new Error('Route not found'));
 
-      await expect(
-        controller.getRoute('non-existent', mockRequest(OWNER_ID)),
-      ).rejects.toThrow('Route not found');
+      await expect(controller.getRoute('non-existent', mockRequest(OWNER_ID))).rejects.toThrow(
+        'Route not found',
+      );
     });
   });
 
@@ -194,7 +195,11 @@ describe('RouteController', () => {
       manageRouteUseCase.getRouteById.mockResolvedValue(mockRoute as any);
       manageRouteUseCase.updateRoute.mockResolvedValue(updatedRoute as any);
 
-      const result = await controller.updateRoute('route-1', updateDto as any, mockRequest(OWNER_ID));
+      const result = await controller.updateRoute(
+        'route-1',
+        updateDto as any,
+        mockRequest(OWNER_ID),
+      );
 
       expect(manageRouteUseCase.getRouteById).toHaveBeenCalledWith('route-1');
       expect(manageRouteUseCase.updateRoute).toHaveBeenCalledWith('route-1', updateDto);
@@ -226,9 +231,9 @@ describe('RouteController', () => {
     it('다른 사용자의 경로 삭제 시 ForbiddenException', async () => {
       manageRouteUseCase.getRouteById.mockResolvedValue(mockRouteOther as any);
 
-      await expect(
-        controller.deleteRoute('route-2', mockRequest(OWNER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.deleteRoute('route-2', mockRequest(OWNER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(manageRouteUseCase.deleteRoute).not.toHaveBeenCalled();
     });
@@ -236,9 +241,9 @@ describe('RouteController', () => {
     it('다른 사용자의 경로 삭제 시 올바른 에러 메시지', async () => {
       manageRouteUseCase.getRouteById.mockResolvedValue(mockRouteOther as any);
 
-      await expect(
-        controller.deleteRoute('route-2', mockRequest(OWNER_ID)),
-      ).rejects.toThrow('다른 사용자의 경로를 삭제할 수 없습니다.');
+      await expect(controller.deleteRoute('route-2', mockRequest(OWNER_ID))).rejects.toThrow(
+        '다른 사용자의 경로를 삭제할 수 없습니다.',
+      );
     });
   });
 });

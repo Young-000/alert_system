@@ -60,7 +60,9 @@ describe('MilestoneModal', () => {
     rerender(<MilestoneModal {...defaultProps} milestone={{ type: '60d', label: '60일 연속' }} />);
     expect(screen.getByText('\u{1F4AA}')).toBeInTheDocument();
 
-    rerender(<MilestoneModal {...defaultProps} milestone={{ type: '100d', label: '100일 연속' }} />);
+    rerender(
+      <MilestoneModal {...defaultProps} milestone={{ type: '100d', label: '100일 연속' }} />,
+    );
     expect(screen.getByText('\u{1F947}')).toBeInTheDocument();
   });
 });

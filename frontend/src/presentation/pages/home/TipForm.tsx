@@ -42,9 +42,7 @@ export function TipForm({
   if (!isEligible) {
     return (
       <div className="tip-form">
-        <p className="tip-form-disabled-msg">
-          3회 이상 출퇴근 기록 후 팁을 남길 수 있어요
-        </p>
+        <p className="tip-form-disabled-msg">3회 이상 출퇴근 기록 후 팁을 남길 수 있어요</p>
       </div>
     );
   }
@@ -73,9 +71,7 @@ export function TipForm({
 
       <div className="tip-form-footer">
         <span className="tip-form-rate-limit">
-          {isRateLimited
-            ? `오늘은 팁을 ${MAX_DAILY_TIPS}개까지 남길 수 있어요`
-            : ''}
+          {isRateLimited ? `오늘은 팁을 ${MAX_DAILY_TIPS}개까지 남길 수 있어요` : ''}
         </span>
         <button
           type="button"

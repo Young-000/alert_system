@@ -14,9 +14,7 @@ describe('WeatherController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WeatherController],
-      providers: [
-        { provide: 'IWeatherApiClient', useValue: weatherApiClient },
-      ],
+      providers: [{ provide: 'IWeatherApiClient', useValue: weatherApiClient }],
     }).compile();
 
     controller = module.get<WeatherController>(WeatherController);

@@ -1,4 +1,7 @@
-import type { AlternativeSuggestionResponse, AlternativeStepResponse } from '@infrastructure/api/commute-api.client';
+import type {
+  AlternativeSuggestionResponse,
+  AlternativeStepResponse,
+} from '@infrastructure/api/commute-api.client';
 
 interface AlternativeCardProps {
   readonly alternative: AlternativeSuggestionResponse;
@@ -34,10 +37,7 @@ export function AlternativeCard({ alternative }: AlternativeCardProps): JSX.Elem
         <div className="alt-card-steps" role="list" aria-label="대안 경로 단계">
           {steps.map((step, idx) => (
             <div className="alt-step" role="listitem" key={idx}>
-              <span
-                className={`alt-step-icon alt-step-icon--${step.action}`}
-                aria-hidden="true"
-              >
+              <span className={`alt-step-icon alt-step-icon--${step.action}`} aria-hidden="true">
                 {STEP_ICONS[step.action]}
               </span>
               <span className="alt-step-text">
@@ -58,9 +58,7 @@ export function AlternativeCard({ alternative }: AlternativeCardProps): JSX.Elem
             신뢰도 {CONFIDENCE_LABELS[confidence] ?? confidence}
           </span>
         </span>
-        <span className="alt-card-total">
-          총 {totalDurationMinutes}분
-        </span>
+        <span className="alt-card-total">총 {totalDurationMinutes}분</span>
       </div>
     </div>
   );

@@ -28,8 +28,8 @@ export class CommunityService {
     // Find user's route (prefer specified routeId, otherwise preferred route)
     const route = routeId
       ? await this.routeRepo.findOne({ where: { id: routeId, userId } })
-      : await this.routeRepo.findOne({ where: { userId, isPreferred: true } })
-        ?? await this.routeRepo.findOne({ where: { userId }, order: { createdAt: 'DESC' } });
+      : ((await this.routeRepo.findOne({ where: { userId, isPreferred: true } })) ??
+        (await this.routeRepo.findOne({ where: { userId }, order: { createdAt: 'DESC' } })));
 
     if (!route) {
       return {
@@ -48,9 +48,7 @@ export class CommunityService {
       select: ['checkpointKey'],
     });
 
-    const myKeys = myCheckpoints
-      .map((c) => c.checkpointKey)
-      .filter((k): k is string => !!k);
+    const myKeys = myCheckpoints.map((c) => c.checkpointKey).filter((k): k is string => !!k);
 
     if (myKeys.length < 2) {
       return {
@@ -120,13 +118,9 @@ export class CommunityService {
       })
       .getRawOne<{ avgDuration: string | null }>();
 
-    const myAvg = myAvgResult?.avgDuration
-      ? Math.round(parseFloat(myAvgResult.avgDuration))
-      : null;
+    const myAvg = myAvgResult?.avgDuration ? Math.round(parseFloat(myAvgResult.avgDuration)) : null;
 
-    const diff = (neighborAvg !== null && myAvg !== null)
-      ? myAvg - neighborAvg
-      : null;
+    const diff = neighborAvg !== null && myAvg !== null ? myAvg - neighborAvg : null;
 
     return {
       routeId: route.id,

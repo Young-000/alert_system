@@ -52,29 +52,23 @@ export class SmartDepartureSetting {
       preAlerts?: number[];
     },
   ): SmartDepartureSetting {
-    const setting = new SmartDepartureSetting(
-      userId,
-      routeId,
-      departureType,
-      arrivalTarget,
-      {
-        prepTimeMinutes: options?.prepTimeMinutes ?? 30,
-        isEnabled: true,
-        activeDays: options?.activeDays ?? [1, 2, 3, 4, 5],
-        preAlerts: options?.preAlerts ?? [30, 10, 0],
-      },
-    );
+    const setting = new SmartDepartureSetting(userId, routeId, departureType, arrivalTarget, {
+      prepTimeMinutes: options?.prepTimeMinutes ?? 30,
+      isEnabled: true,
+      activeDays: options?.activeDays ?? [1, 2, 3, 4, 5],
+      preAlerts: options?.preAlerts ?? [30, 10, 0],
+    });
 
     if (!setting.isValidArrivalTarget()) {
       throw new Error(`Invalid arrivalTarget format: ${arrivalTarget}. Must be HH:mm`);
     }
     if (!setting.isValidPrepTime()) {
-      throw new Error(
-        `Invalid prepTimeMinutes: ${setting.prepTimeMinutes}. Must be 10-60`,
-      );
+      throw new Error(`Invalid prepTimeMinutes: ${setting.prepTimeMinutes}. Must be 10-60`);
     }
     if (!setting.isValidActiveDays()) {
-      throw new Error(`Invalid activeDays: ${JSON.stringify(setting.activeDays)}. Values must be 0-6`);
+      throw new Error(
+        `Invalid activeDays: ${JSON.stringify(setting.activeDays)}. Values must be 0-6`,
+      );
     }
 
     return setting;
@@ -129,11 +123,13 @@ export class SmartDepartureSetting {
   }
 
   isValidArrivalTarget(): boolean {
-    return /^\d{2}:\d{2}$/.test(this.arrivalTarget) &&
+    return (
+      /^\d{2}:\d{2}$/.test(this.arrivalTarget) &&
       (() => {
         const [h, m] = this.arrivalTarget.split(':').map(Number);
         return h >= 0 && h <= 23 && m >= 0 && m <= 59;
-      })();
+      })()
+    );
   }
 
   isValidPrepTime(): boolean {
@@ -141,7 +137,6 @@ export class SmartDepartureSetting {
   }
 
   isValidActiveDays(): boolean {
-    return this.activeDays.length > 0 &&
-      this.activeDays.every((d) => d >= 0 && d <= 6);
+    return this.activeDays.length > 0 && this.activeDays.every((d) => d >= 0 && d <= 6);
   }
 }

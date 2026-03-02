@@ -77,9 +77,7 @@ describe('BriefingAdviceService', () => {
 
   describe('기온별 옷차림 조언', () => {
     it('극한 추위 (-10도 이하)이면 패딩 필수 danger 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: -15 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: -15 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -89,9 +87,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('-10도 ~ 0도 사이면 두꺼운 외투 필수 warning 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: -5 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: -5 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -101,9 +97,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('0도 ~ 5도 사이면 코트 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 3 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 3 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -112,9 +106,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('5도 ~ 10도 사이면 자켓+니트 info 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 8 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 8 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -123,9 +115,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('10도 ~ 15도 사이면 가벼운 겉옷 info 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 12 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 12 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -134,9 +124,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('15도 ~ 20도 사이면 긴팔 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 18 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 18 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -144,9 +132,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('20도 ~ 25도 사이면 반팔+냉방 주의 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 22 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 22 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -155,9 +141,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('25도 ~ 28도 사이면 반팔+수분 섭취 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 27 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 27 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -166,9 +150,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('28도 ~ 33도 사이면 더위 주의 warning 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 30 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 30 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -177,9 +159,7 @@ describe('BriefingAdviceService', () => {
     });
 
     it('33도 이상이면 폭염 경보 danger 조언을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 36 }) }),
-      );
+      const result = service.generate(buildInput({ weather: buildWeather({ temperature: 36 }) }));
 
       const clothing = findAdviceByCategory(result.advices, 'clothing');
       expect(clothing).toBeDefined();
@@ -213,9 +193,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const tempAdvice = result.advices.find(
-        (a) => a.message.includes('일교차'),
-      );
+      const tempAdvice = result.advices.find((a) => a.message.includes('일교차'));
       expect(tempAdvice).toBeDefined();
       expect(tempAdvice!.severity).toBe('warning');
       expect(tempAdvice!.message).toContain('20도');
@@ -229,9 +207,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const tempAdvice = result.advices.find(
-        (a) => a.message.includes('일교차'),
-      );
+      const tempAdvice = result.advices.find((a) => a.message.includes('일교차'));
       expect(tempAdvice).toBeUndefined();
     });
 
@@ -242,9 +218,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const tempAdvice = result.advices.find(
-        (a) => a.message.includes('일교차'),
-      );
+      const tempAdvice = result.advices.find((a) => a.message.includes('일교차'));
       expect(tempAdvice).toBeUndefined();
     });
   });
@@ -490,9 +464,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const transit = result.advices.find(
-        (a) => a.category === 'transit' && a.icon === '🚇',
-      );
+      const transit = result.advices.find((a) => a.category === 'transit' && a.icon === '🚇');
       expect(transit).toBeDefined();
       expect(transit!.severity).toBe('warning');
       expect(transit!.message).toContain('강남역');
@@ -513,9 +485,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const transit = result.advices.find(
-        (a) => a.category === 'transit' && a.icon === '🚇',
-      );
+      const transit = result.advices.find((a) => a.category === 'transit' && a.icon === '🚇');
       expect(transit).toBeDefined();
       expect(transit!.severity).toBe('info');
       expect(transit!.message).toContain('7분 후');
@@ -535,9 +505,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const transit = result.advices.find(
-        (a) => a.category === 'transit' && a.icon === '🚌',
-      );
+      const transit = result.advices.find((a) => a.category === 'transit' && a.icon === '🚌');
       expect(transit).toBeDefined();
       expect(transit!.severity).toBe('warning');
       expect(transit!.message).toContain('146번');
@@ -558,9 +526,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const transit = result.advices.find(
-        (a) => a.category === 'transit' && a.icon === '🚌',
-      );
+      const transit = result.advices.find((a) => a.category === 'transit' && a.icon === '🚌');
       expect(transit).toBeDefined();
       expect(transit!.severity).toBe('info');
       expect(transit!.message).toContain('8분 후');
@@ -589,9 +555,7 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const departureAdvice = result.advices.find(
-        (a) => a.message.includes('출발까지'),
-      );
+      const departureAdvice = result.advices.find((a) => a.message.includes('출발까지'));
       expect(departureAdvice).toBeDefined();
       expect(departureAdvice!.severity).toBe('warning');
       expect(departureAdvice!.message).toContain('5분');
@@ -604,21 +568,15 @@ describe('BriefingAdviceService', () => {
         }),
       );
 
-      const delayAdvice = result.advices.find(
-        (a) => a.message.includes('교통 지연'),
-      );
+      const delayAdvice = result.advices.find((a) => a.message.includes('교통 지연'));
       expect(delayAdvice).toBeDefined();
       expect(delayAdvice!.severity).toBe('warning');
     });
 
     it('departure가 null이면 출발 조언을 반환하지 않는다', () => {
-      const result = service.generate(
-        buildInput({ departure: null }),
-      );
+      const result = service.generate(buildInput({ departure: null }));
 
-      const departureAdvice = result.advices.find(
-        (a) => a.message.includes('출발'),
-      );
+      const departureAdvice = result.advices.find((a) => a.message.includes('출발'));
       expect(departureAdvice).toBeUndefined();
     });
   });
@@ -702,17 +660,13 @@ describe('BriefingAdviceService', () => {
 
   describe('컨텍스트 라벨', () => {
     it('morning 컨텍스트이면 "출근 브리핑"을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ timeContext: 'morning' }),
-      );
+      const result = service.generate(buildInput({ timeContext: 'morning' }));
 
       expect(result.contextLabel).toBe('출근 브리핑');
     });
 
     it('evening 컨텍스트이면 "퇴근 브리핑"을 반환한다', () => {
-      const result = service.generate(
-        buildInput({ timeContext: 'evening' }),
-      );
+      const result = service.generate(buildInput({ timeContext: 'evening' }));
 
       expect(result.contextLabel).toBe('퇴근 브리핑');
     });
@@ -815,22 +769,16 @@ describe('BriefingAdviceService', () => {
       expect(findAdviceByCategory(atMinus10.advices, 'clothing')!.severity).toBe('danger');
 
       // 0도: > -10 && <= 0이므로 warning (두꺼운 외투)
-      const at0 = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 0 }) }),
-      );
+      const at0 = service.generate(buildInput({ weather: buildWeather({ temperature: 0 }) }));
       expect(findAdviceByCategory(at0.advices, 'clothing')!.severity).toBe('warning');
       expect(findAdviceByCategory(at0.advices, 'clothing')!.message).toContain('두꺼운 외투');
 
       // 5도: > 0 && <= 5이므로 warning (코트)
-      const at5 = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 5 }) }),
-      );
+      const at5 = service.generate(buildInput({ weather: buildWeather({ temperature: 5 }) }));
       expect(findAdviceByCategory(at5.advices, 'clothing')!.message).toContain('코트');
 
       // 33도: > 28 && <= 33이므로 warning (더위 주의)
-      const at33 = service.generate(
-        buildInput({ weather: buildWeather({ temperature: 33 }) }),
-      );
+      const at33 = service.generate(buildInput({ weather: buildWeather({ temperature: 33 }) }));
       expect(findAdviceByCategory(at33.advices, 'clothing')!.severity).toBe('warning');
     });
 

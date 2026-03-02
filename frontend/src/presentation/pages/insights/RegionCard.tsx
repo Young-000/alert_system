@@ -58,9 +58,7 @@ export function RegionCard({ region, isExpanded, onToggle }: RegionCardProps): J
 
         <div className="insight-region-card-stats">
           <div className="insight-stat">
-            <span className="insight-stat-value">
-              {Math.round(region.avgDurationMinutes)}분
-            </span>
+            <span className="insight-stat-value">{Math.round(region.avgDurationMinutes)}분</span>
             <span className="insight-stat-label">평균 소요</span>
           </div>
 

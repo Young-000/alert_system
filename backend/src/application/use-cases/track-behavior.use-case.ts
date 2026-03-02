@@ -83,7 +83,7 @@ export class TrackBehaviorUseCase {
         dto.userId,
         dto.alertId,
         dto.weatherCondition,
-        dto.transitDelayMinutes
+        dto.transitDelayMinutes,
       );
       await this.commuteRepository.save(record);
       this.logger.log(`Created commute record for user ${dto.userId}`);
@@ -98,7 +98,7 @@ export class TrackBehaviorUseCase {
   async trackNotificationOpened(
     userId: string,
     alertId: string,
-    notificationId?: string
+    notificationId?: string,
   ): Promise<void> {
     await this.trackEvent({
       userId,

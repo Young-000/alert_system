@@ -24,9 +24,7 @@ export class AlternativeSuggestionService {
     private readonly subwayApiClient: ISubwayApiClient,
   ) {}
 
-  async findAlternatives(
-    delayedSegments: DelaySegmentDto[],
-  ): Promise<AlternativeSuggestionDto[]> {
+  async findAlternatives(delayedSegments: DelaySegmentDto[]): Promise<AlternativeSuggestionDto[]> {
     const significantDelays = delayedSegments.filter(
       (seg) => seg.delayMinutes >= DELAY_THRESHOLD_FOR_ALTERNATIVE,
     );
@@ -69,26 +67,18 @@ export class AlternativeSuggestionService {
       let confidence: AlternativeConfidence = 'low';
 
       try {
-        const altArrivals = await this.subwayApiClient.getSubwayArrival(
-          alt.stationName,
-        );
-        const matchingArrivals = altArrivals.filter((a) =>
-          this.lineMatches(a.lineId, alt.line),
-        );
+        const altArrivals = await this.subwayApiClient.getSubwayArrival(alt.stationName);
+        const matchingArrivals = altArrivals.filter((a) => this.lineMatches(a.lineId, alt.line));
 
         if (matchingArrivals.length > 0) {
-          const shortestArrival = Math.min(
-            ...matchingArrivals.map((a) => a.arrivalTime),
-          );
+          const shortestArrival = Math.min(...matchingArrivals.map((a) => a.arrivalTime));
           altWaitMinutes = Math.ceil(shortestArrival / 60);
           confidence = 'high';
         } else {
           confidence = 'medium';
         }
       } catch {
-        this.logger.warn(
-          `Failed to fetch alternative arrival data for ${alt.stationName}`,
-        );
+        this.logger.warn(`Failed to fetch alternative arrival data for ${alt.stationName}`);
         confidence = 'low';
       }
 
@@ -143,9 +133,7 @@ export class AlternativeSuggestionService {
     const expectedLineIdAlt = `10${lineNum}`;
 
     return (
-      lineId === expectedLineId ||
-      lineId === expectedLineIdAlt ||
-      lineId.endsWith(String(lineNum))
+      lineId === expectedLineId || lineId === expectedLineIdAlt || lineId.endsWith(String(lineNum))
     );
   }
 }

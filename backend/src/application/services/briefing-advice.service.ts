@@ -247,9 +247,7 @@ export class BriefingAdviceService {
 
   private isRainyCondition(condition: string): boolean {
     const rainyKeywords = ['rain', 'drizzle', '비', '소나기', '이슬비'];
-    return rainyKeywords.some((keyword) =>
-      condition.toLowerCase().includes(keyword.toLowerCase()),
-    );
+    return rainyKeywords.some((keyword) => condition.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   // ─── Wind Advice ───
@@ -258,10 +256,7 @@ export class BriefingAdviceService {
     const advices: BriefingAdviceDto[] = [];
 
     // Check if feels-like differs significantly from actual temp
-    if (
-      weather.feelsLike != null &&
-      weather.temperature - weather.feelsLike >= 5
-    ) {
+    if (weather.feelsLike != null && weather.temperature - weather.feelsLike >= 5) {
       advices.push({
         category: 'wind',
         severity: 'warning',
@@ -408,10 +403,7 @@ export class BriefingAdviceService {
 
   // ─── Summary ───
 
-  private buildSummary(
-    advices: BriefingAdviceDto[],
-    weather: WidgetWeatherDto | null,
-  ): string {
+  private buildSummary(advices: BriefingAdviceDto[], weather: WidgetWeatherDto | null): string {
     // Use highest-severity advice message as summary
     if (advices.length > 0) {
       return advices[0].message;

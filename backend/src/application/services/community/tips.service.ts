@@ -8,9 +8,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { COMMUNITY_TIP_REPOSITORY, ICommunityTipRepository } from '@domain/repositories/community-tip.repository';
-import { COMMUNITY_TIP_REPORT_REPOSITORY, ICommunityTipReportRepository } from '@domain/repositories/community-tip-report.repository';
-import { COMMUNITY_TIP_HELPFUL_REPOSITORY, ICommunityTipHelpfulRepository } from '@domain/repositories/community-tip-helpful.repository';
+import {
+  COMMUNITY_TIP_REPOSITORY,
+  ICommunityTipRepository,
+} from '@domain/repositories/community-tip.repository';
+import {
+  COMMUNITY_TIP_REPORT_REPOSITORY,
+  ICommunityTipReportRepository,
+} from '@domain/repositories/community-tip-report.repository';
+import {
+  COMMUNITY_TIP_HELPFUL_REPOSITORY,
+  ICommunityTipHelpfulRepository,
+} from '@domain/repositories/community-tip-helpful.repository';
 import { CommunityTip, AUTO_HIDE_REPORT_THRESHOLD } from '@domain/entities/community-tip.entity';
 import { CommunityTipReport } from '@domain/entities/community-tip-report.entity';
 import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commute-session.entity';
@@ -101,10 +110,7 @@ export class TipsService {
    * Rate limit: 3/day per user.
    * Requires 3+ completed sessions.
    */
-  async createTip(
-    userId: string,
-    dto: CreateTipRequestDto,
-  ): Promise<CreateTipResponseDto> {
+  async createTip(userId: string, dto: CreateTipRequestDto): Promise<CreateTipResponseDto> {
     // Validate content
     const validationError = CommunityTip.validateContent(dto.content);
     if (validationError) {

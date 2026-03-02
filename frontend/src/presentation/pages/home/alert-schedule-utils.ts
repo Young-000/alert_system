@@ -4,7 +4,7 @@ export function computeNextAlert(
   alerts: Alert[],
   now?: Date,
 ): { time: string; label: string } | null {
-  const enabled = alerts.filter(a => a.enabled);
+  const enabled = alerts.filter((a) => a.enabled);
   if (enabled.length === 0) return null;
 
   const currentTime = now ?? new Date();
@@ -18,15 +18,21 @@ export function computeNextAlert(
     if (parts.length < 2) continue;
     const cronMin = isNaN(Number(parts[0])) ? 0 : Number(parts[0]);
     const hours = parts[1].includes(',')
-      ? parts[1].split(',').map(Number).filter(h => !isNaN(h))
-      : [Number(parts[1])].filter(h => !isNaN(h));
+      ? parts[1]
+          .split(',')
+          .map(Number)
+          .filter((h) => !isNaN(h))
+      : [Number(parts[1])].filter((h) => !isNaN(h));
 
     const label = alert.alertTypes.includes('weather') ? '날씨' : '교통';
 
     for (const h of hours) {
       const isToday = h > curH || (h === curH && cronMin > curM);
-      if (!best || (isToday && !best.isToday) ||
-          (isToday === best.isToday && (h < best.h || (h === best.h && cronMin < best.m)))) {
+      if (
+        !best ||
+        (isToday && !best.isToday) ||
+        (isToday === best.isToday && (h < best.h || (h === best.h && cronMin < best.m)))
+      ) {
         best = { h, m: cronMin, label, isToday };
       }
     }

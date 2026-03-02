@@ -7,7 +7,7 @@ import { timeToMinutes } from './statistics/descriptive-stats';
  * Features extracted per commute record for regression analysis.
  */
 export interface DayFeatures {
-  dayOfWeek: number;    // 0-6
+  dayOfWeek: number; // 0-6
   isWeekday: boolean;
   isMonday: boolean;
   isFriday: boolean;
@@ -30,11 +30,11 @@ export interface SessionFeatures {
  * Combined feature row for regression — one per commute record.
  */
 export interface CommuteFeatureRow {
-  departureMinutes: number;     // target variable: actual departure in minutes since midnight
+  departureMinutes: number; // target variable: actual departure in minutes since midnight
   dayOfWeek: number;
-  isWeekday: number;            // 0 or 1
-  isRaining: number;            // 0 or 1
-  isSnowing: number;            // 0 or 1
+  isWeekday: number; // 0 or 1
+  isRaining: number; // 0 or 1
+  isSnowing: number; // 0 or 1
   temperatureDeviation: number;
   commuteDate: Date;
 }
@@ -57,19 +57,14 @@ export class FeatureEngineeringService {
   /**
    * Extract weather features from a weather condition string.
    */
-  extractWeatherFeatures(
-    weatherCondition?: string,
-    temperature?: number,
-  ): WeatherFeatures {
+  extractWeatherFeatures(weatherCondition?: string, temperature?: number): WeatherFeatures {
     const condition = (weatherCondition ?? '').toLowerCase();
     const comfortableTemp = 15;
 
     return {
       isRaining: condition.includes('rain') || condition.includes('비'),
       isSnowing: condition.includes('snow') || condition.includes('눈'),
-      temperatureDeviation: temperature !== undefined
-        ? temperature - comfortableTemp
-        : 0,
+      temperatureDeviation: temperature !== undefined ? temperature - comfortableTemp : 0,
     };
   }
 
@@ -91,8 +86,8 @@ export class FeatureEngineeringService {
    */
   transformRecordsToFeatureRows(records: readonly CommuteRecord[]): CommuteFeatureRow[] {
     return records
-      .filter(r => r.actualDeparture)
-      .map(r => {
+      .filter((r) => r.actualDeparture)
+      .map((r) => {
         const departureTime = r.getActualDepartureTime()!;
         const dayFeatures = this.extractDayFeatures(r.commuteDate);
         const weatherFeatures = this.extractWeatherFeatures(r.weatherCondition);
@@ -160,8 +155,9 @@ export class FeatureEngineeringService {
       else clearCount++;
     }
 
-    const distinctConditions = [rainCount > 0, snowCount > 0, clearCount > 0]
-      .filter(Boolean).length;
+    const distinctConditions = [rainCount > 0, snowCount > 0, clearCount > 0].filter(
+      Boolean,
+    ).length;
 
     return {
       rainCount,

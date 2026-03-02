@@ -36,29 +36,20 @@ describe('ExportUserDataUseCase', () => {
     true,
   );
 
-  const testEvent = new BehaviorEvent(
-    'user-1',
-    BehaviorEventType.DEPARTURE_CONFIRMED,
-    {
-      id: 'event-1',
-      alertId: 'alert-1',
-      timestamp: new Date('2026-02-10T08:00:00Z'),
-      metadata: { source: 'push' },
-    },
-  );
+  const testEvent = new BehaviorEvent('user-1', BehaviorEventType.DEPARTURE_CONFIRMED, {
+    id: 'event-1',
+    alertId: 'alert-1',
+    timestamp: new Date('2026-02-10T08:00:00Z'),
+    metadata: { source: 'push' },
+  });
 
-  const testRecord = new CommuteRecord(
-    'user-1',
-    new Date('2026-02-10'),
-    CommuteType.MORNING,
-    {
-      id: 'record-1',
-      scheduledDeparture: '08:00',
-      actualDeparture: new Date('2026-02-10T08:05:00Z'),
-      weatherCondition: '맑음',
-      transitDelayMinutes: 3,
-    },
-  );
+  const testRecord = new CommuteRecord('user-1', new Date('2026-02-10'), CommuteType.MORNING, {
+    id: 'record-1',
+    scheduledDeparture: '08:00',
+    actualDeparture: new Date('2026-02-10T08:05:00Z'),
+    weatherCondition: '맑음',
+    transitDelayMinutes: 3,
+  });
 
   const testPattern = new UserPattern(
     'user-1',
@@ -173,13 +164,7 @@ describe('ExportUserDataUseCase', () => {
   });
 
   it('선택적 리포지토리가 없어도 정상 동작해야 한다', async () => {
-    useCase = new ExportUserDataUseCase(
-      mockUserRepository,
-      null,
-      null,
-      null,
-      null,
-    );
+    useCase = new ExportUserDataUseCase(mockUserRepository, null, null, null, null);
 
     mockUserRepository.findById.mockResolvedValue(testUser);
 
@@ -193,13 +178,7 @@ describe('ExportUserDataUseCase', () => {
   });
 
   it('알림 데이터를 올바른 형식으로 내보내야 한다', async () => {
-    useCase = new ExportUserDataUseCase(
-      mockUserRepository,
-      mockAlertRepository,
-      null,
-      null,
-      null,
-    );
+    useCase = new ExportUserDataUseCase(mockUserRepository, mockAlertRepository, null, null, null);
 
     mockUserRepository.findById.mockResolvedValue(testUser);
     mockAlertRepository.findByUserId.mockResolvedValue([testAlert]);
@@ -284,13 +263,7 @@ describe('ExportUserDataUseCase', () => {
   });
 
   it('사용자 위치 정보를 포함해서 내보내야 한다', async () => {
-    useCase = new ExportUserDataUseCase(
-      mockUserRepository,
-      null,
-      null,
-      null,
-      null,
-    );
+    useCase = new ExportUserDataUseCase(mockUserRepository, null, null, null, null);
 
     mockUserRepository.findById.mockResolvedValue(testUser);
 

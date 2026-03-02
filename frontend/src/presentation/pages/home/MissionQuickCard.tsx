@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
-import { useDailyStatusQuery, useWeeklyStatsQuery, useMissionStreakQuery } from '@infrastructure/query';
+import {
+  useDailyStatusQuery,
+  useWeeklyStatsQuery,
+  useMissionStreakQuery,
+} from '@infrastructure/query';
 
 export function MissionQuickCard(): JSX.Element | null {
   const { userId } = useAuth();
@@ -14,41 +18,32 @@ export function MissionQuickCard(): JSX.Element | null {
   const completedMissions = dailyStatus?.completedMissions ?? 0;
   const streakDay = streakData?.streakDay ?? dailyStatus?.streakDay ?? 0;
   const weeklyRate = weeklyStats?.completionRate ?? 0;
-  const progressPercent = totalMissions > 0
-    ? Math.round((completedMissions / totalMissions) * 100)
-    : 0;
+  const progressPercent =
+    totalMissions > 0 ? Math.round((completedMissions / totalMissions) * 100) : 0;
 
   if (totalMissions === 0) {
     return (
-      <Link
-        to="/missions/settings"
-        className="mission-quick-card"
-        aria-label="미션 설정하기"
-      >
+      <Link to="/missions/settings" className="mission-quick-card" aria-label="미션 설정하기">
         <div className="mission-quick-left">
           <span className="mission-quick-icon" aria-hidden="true">
             <MissionIconSvg />
           </span>
           <div className="mission-quick-info">
             <span className="mission-quick-title">미션</span>
-            <span className="mission-quick-detail">
-              미션을 설정해보세요!
-            </span>
+            <span className="mission-quick-detail">미션을 설정해보세요!</span>
           </div>
         </div>
         <div className="mission-quick-right">
-          <span className="mission-quick-arrow" aria-hidden="true">&rsaquo;</span>
+          <span className="mission-quick-arrow" aria-hidden="true">
+            &rsaquo;
+          </span>
         </div>
       </Link>
     );
   }
 
   return (
-    <Link
-      to="/missions"
-      className="mission-quick-card"
-      aria-label="오늘의 미션 체크하기"
-    >
+    <Link to="/missions" className="mission-quick-card" aria-label="오늘의 미션 체크하기">
       <div className="mission-quick-content">
         <div className="mission-quick-top">
           <div className="mission-quick-left">
@@ -75,7 +70,9 @@ export function MissionQuickCard(): JSX.Element | null {
           </div>
           <div className="mission-quick-right">
             <span className="mission-quick-cta">체크하기</span>
-            <span className="mission-quick-arrow" aria-hidden="true">&rsaquo;</span>
+            <span className="mission-quick-arrow" aria-hidden="true">
+              &rsaquo;
+            </span>
           </div>
         </div>
         <div
@@ -86,10 +83,7 @@ export function MissionQuickCard(): JSX.Element | null {
           aria-valuemax={100}
           aria-label={`미션 진행률 ${progressPercent}%`}
         >
-          <div
-            className="mission-quick-progress-fill"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="mission-quick-progress-fill" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
     </Link>

@@ -6,7 +6,7 @@ import { SubwayStation } from '@domain/entities/subway-station.entity';
 export class SearchSubwayStationsUseCase {
   constructor(
     @Inject('ISubwayStationRepository')
-    private subwayStationRepository: ISubwayStationRepository
+    private subwayStationRepository: ISubwayStationRepository,
   ) {}
 
   async execute(query: string, limit = 20): Promise<SubwayStation[]> {

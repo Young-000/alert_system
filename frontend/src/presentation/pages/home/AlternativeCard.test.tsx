@@ -56,7 +56,13 @@ describe('AlternativeCard', () => {
       <AlternativeCard
         alternative={makeAlternative({
           steps: [
-            { action: 'bus', from: '강남역 정류장', to: '판교역 정류장', line: '9003번', durationMinutes: 25 },
+            {
+              action: 'bus',
+              from: '강남역 정류장',
+              to: '판교역 정류장',
+              line: '9003번',
+              durationMinutes: 25,
+            },
           ],
         })}
       />,
@@ -100,9 +106,7 @@ describe('AlternativeCard', () => {
     render(
       <AlternativeCard
         alternative={makeAlternative({
-          steps: [
-            { action: 'walk', from: '현재 위치', durationMinutes: 3 },
-          ],
+          steps: [{ action: 'walk', from: '현재 위치', durationMinutes: 3 }],
         })}
       />,
     );

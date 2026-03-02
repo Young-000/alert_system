@@ -12,7 +12,9 @@ export class CachedAirQualityApiClient implements IAirQualityApiClient {
     private readonly cacheService: ApiCacheService,
     apiKey?: string,
   ) {
-    this.airQualityClient = new AirQualityApiClient(apiKey || process.env.AIR_QUALITY_API_KEY || '');
+    this.airQualityClient = new AirQualityApiClient(
+      apiKey || process.env.AIR_QUALITY_API_KEY || '',
+    );
   }
 
   async getAirQuality(lat: number, lng: number): Promise<AirQuality> {

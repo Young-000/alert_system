@@ -127,13 +127,13 @@ describe('CongestionAggregation - Bayesian Smoothing', () => {
     const cases: [number, string][] = [
       [0, 'low'],
       [1.9, 'low'],
-      [2, 'low'],        // exactly 2 is NOT > 2, so still low
+      [2, 'low'], // exactly 2 is NOT > 2, so still low
       [2.1, 'moderate'],
       [4.9, 'moderate'],
-      [5, 'moderate'],   // exactly 5 is NOT > 5, so still moderate
+      [5, 'moderate'], // exactly 5 is NOT > 5, so still moderate
       [5.1, 'high'],
       [9.9, 'high'],
-      [10, 'high'],      // exactly 10 is NOT > 10, so still high
+      [10, 'high'], // exactly 10 is NOT > 10, so still high
       [10.1, 'severe'],
       [20, 'severe'],
     ];

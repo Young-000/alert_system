@@ -40,10 +40,7 @@ import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
     {
       provide: 'ISubwayApiClient',
       useFactory: () => {
-        const apiKey =
-          process.env.SUBWAY_REALTIME_API_KEY ||
-          process.env.SUBWAY_API_KEY ||
-          '';
+        const apiKey = process.env.SUBWAY_REALTIME_API_KEY || process.env.SUBWAY_API_KEY || '';
         return new SubwayApiClient(apiKey);
       },
     },

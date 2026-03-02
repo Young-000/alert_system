@@ -6,9 +6,7 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import {
-  SmartDepartureSetting,
-} from '@domain/entities/smart-departure-setting.entity';
+import { SmartDepartureSetting } from '@domain/entities/smart-departure-setting.entity';
 import type { DepartureType } from '@domain/entities/smart-departure-setting.entity';
 import {
   ISmartDepartureSettingRepository,
@@ -124,25 +122,17 @@ export class ManageSmartDepartureUseCase {
     this.logger.log(`Deleted smart departure setting ${id} for user ${userId}`);
   }
 
-  async toggleSetting(
-    id: string,
-    userId: string,
-  ): Promise<SmartDepartureSettingResponseDto> {
+  async toggleSetting(id: string, userId: string): Promise<SmartDepartureSettingResponseDto> {
     const setting = await this.findAndVerifyOwnership(id, userId);
     const toggled = setting.toggleEnabled();
 
     await this.settingRepo.update(toggled);
-    this.logger.log(
-      `Toggled smart departure setting ${id}: isEnabled=${toggled.isEnabled}`,
-    );
+    this.logger.log(`Toggled smart departure setting ${id}: isEnabled=${toggled.isEnabled}`);
 
     return this.toResponseDto(toggled);
   }
 
-  private async findAndVerifyOwnership(
-    id: string,
-    userId: string,
-  ): Promise<SmartDepartureSetting> {
+  private async findAndVerifyOwnership(id: string, userId: string): Promise<SmartDepartureSetting> {
     const setting = await this.settingRepo.findById(id);
     if (!setting) {
       throw new NotFoundException(`스마트 출발 설정을 찾을 수 없습니다: ${id}`);

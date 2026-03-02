@@ -35,19 +35,19 @@ export interface LegacyWeatherVariables {
 // 날씨 알림 변수 (7개)
 export interface WeatherAlertVariables {
   userName: string;
-  date: string;           // "1월 31일 금요일"
-  currentTemp: string;    // "-2"
-  minTemp: string;        // "-5"
-  weather: string;        // "오전 맑음 → 오후 구름 → 저녁 맑음"
-  airQuality: string;     // "보통 (PM10 45㎍/㎥)"
+  date: string; // "1월 31일 금요일"
+  currentTemp: string; // "-2"
+  minTemp: string; // "-5"
+  weather: string; // "오전 맑음 → 오후 구름 → 저녁 맑음"
+  airQuality: string; // "보통 (PM10 45㎍/㎥)"
   tip: string;
 }
 
 // 교통 알림 변수 (4개)
 export interface TransitAlertVariables {
   userName: string;
-  subwayInfo: string;     // "• 강남역 (2호선) 3분\n• 역삼역 (2호선) 5분"
-  busInfo: string;        // "• 강남역정류장 - 146번 2분\n• 역삼역정류장 - 740번 5분"
+  subwayInfo: string; // "• 강남역 (2호선) 3분\n• 역삼역 (2호선) 5분"
+  busInfo: string; // "• 강남역정류장 - 146번 2분\n• 역삼역정류장 - 740번 5분"
   tip: string;
 }
 
@@ -67,10 +67,10 @@ export interface CombinedAlertVariables {
 // 주간 리포트 변수
 export interface WeeklyReportVariables {
   userName: string;
-  weekRange: string;      // "1/27~2/2"
-  totalCommutes: string;  // "8"
-  avgDuration: string;    // "42분"
-  bestDay: string;        // "수요일"
+  weekRange: string; // "1/27~2/2"
+  totalCommutes: string; // "8"
+  avgDuration: string; // "42분"
+  bestDay: string; // "수요일"
   tip: string;
 }
 
@@ -81,9 +81,21 @@ export const SOLAPI_SERVICE = Symbol('SOLAPI_SERVICE');
 export interface ISolapiService {
   sendAlimtalk(message: AlimtalkMessage): Promise<void>;
   sendLegacyWeatherAlert(to: string, variables: LegacyWeatherVariables): Promise<void>;
-  sendWeatherAlert(to: string, variables: WeatherAlertVariables, timeType: AlertTimeType): Promise<void>;
-  sendTransitAlert(to: string, variables: TransitAlertVariables, timeType: AlertTimeType): Promise<void>;
-  sendCombinedAlert(to: string, variables: CombinedAlertVariables, timeType: AlertTimeType): Promise<void>;
+  sendWeatherAlert(
+    to: string,
+    variables: WeatherAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void>;
+  sendTransitAlert(
+    to: string,
+    variables: TransitAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void>;
+  sendCombinedAlert(
+    to: string,
+    variables: CombinedAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void>;
   sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void>;
 }
 
@@ -132,7 +144,10 @@ export class SolapiService implements ISolapiService {
       this.logger.debug(`Response: ${JSON.stringify(response)}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Failed to send Alimtalk: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `Failed to send Alimtalk: ${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw error;
     }
   }
@@ -156,8 +171,13 @@ export class SolapiService implements ISolapiService {
   }
 
   // 날씨 알림
-  async sendWeatherAlert(to: string, variables: WeatherAlertVariables, timeType: AlertTimeType): Promise<void> {
-    const templateId = timeType === 'morning' ? TEMPLATE_IDS.WEATHER_MORNING : TEMPLATE_IDS.WEATHER_EVENING;
+  async sendWeatherAlert(
+    to: string,
+    variables: WeatherAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void> {
+    const templateId =
+      timeType === 'morning' ? TEMPLATE_IDS.WEATHER_MORNING : TEMPLATE_IDS.WEATHER_EVENING;
 
     const stringVariables: Record<string, string> = {
       userName: variables.userName,
@@ -173,8 +193,13 @@ export class SolapiService implements ISolapiService {
   }
 
   // 교통 알림
-  async sendTransitAlert(to: string, variables: TransitAlertVariables, timeType: AlertTimeType): Promise<void> {
-    const templateId = timeType === 'morning' ? TEMPLATE_IDS.TRANSIT_MORNING : TEMPLATE_IDS.TRANSIT_EVENING;
+  async sendTransitAlert(
+    to: string,
+    variables: TransitAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void> {
+    const templateId =
+      timeType === 'morning' ? TEMPLATE_IDS.TRANSIT_MORNING : TEMPLATE_IDS.TRANSIT_EVENING;
 
     const stringVariables: Record<string, string> = {
       userName: variables.userName,
@@ -187,8 +212,13 @@ export class SolapiService implements ISolapiService {
   }
 
   // 종합 알림 (날씨 + 교통)
-  async sendCombinedAlert(to: string, variables: CombinedAlertVariables, timeType: AlertTimeType): Promise<void> {
-    const templateId = timeType === 'morning' ? TEMPLATE_IDS.COMBINED_MORNING : TEMPLATE_IDS.COMBINED_EVENING;
+  async sendCombinedAlert(
+    to: string,
+    variables: CombinedAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void> {
+    const templateId =
+      timeType === 'morning' ? TEMPLATE_IDS.COMBINED_MORNING : TEMPLATE_IDS.COMBINED_EVENING;
 
     const stringVariables: Record<string, string> = {
       userName: variables.userName,
@@ -230,16 +260,34 @@ export class NoopSolapiService implements ISolapiService {
     this.logger.log(`[Noop Legacy Weather] to: ${to}, variables: ${JSON.stringify(variables)}`);
   }
 
-  async sendWeatherAlert(to: string, variables: WeatherAlertVariables, timeType: AlertTimeType): Promise<void> {
-    this.logger.log(`[Noop Weather ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+  async sendWeatherAlert(
+    to: string,
+    variables: WeatherAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void> {
+    this.logger.log(
+      `[Noop Weather ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`,
+    );
   }
 
-  async sendTransitAlert(to: string, variables: TransitAlertVariables, timeType: AlertTimeType): Promise<void> {
-    this.logger.log(`[Noop Transit ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+  async sendTransitAlert(
+    to: string,
+    variables: TransitAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void> {
+    this.logger.log(
+      `[Noop Transit ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`,
+    );
   }
 
-  async sendCombinedAlert(to: string, variables: CombinedAlertVariables, timeType: AlertTimeType): Promise<void> {
-    this.logger.log(`[Noop Combined ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+  async sendCombinedAlert(
+    to: string,
+    variables: CombinedAlertVariables,
+    timeType: AlertTimeType,
+  ): Promise<void> {
+    this.logger.log(
+      `[Noop Combined ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`,
+    );
   }
 
   async sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void> {

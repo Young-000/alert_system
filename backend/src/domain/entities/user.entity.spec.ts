@@ -11,7 +11,7 @@ describe('User', () => {
   });
 
   it('should create a user with optional location', () => {
-    const location = { address: 'Seoul', lat: 37.5665, lng: 126.9780 };
+    const location = { address: 'Seoul', lat: 37.5665, lng: 126.978 };
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, location);
 
     expect(user.location).toEqual(location);
@@ -26,10 +26,9 @@ describe('User', () => {
   it('should update user location', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678');
     const newLocation = { address: 'Busan', lat: 35.1796, lng: 129.0756 };
-    
+
     user.updateLocation(newLocation);
-    
+
     expect(user.location).toEqual(newLocation);
   });
 });
-

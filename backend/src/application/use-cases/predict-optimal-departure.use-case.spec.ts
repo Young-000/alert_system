@@ -1,4 +1,7 @@
-import { PredictOptimalDepartureUseCase, CurrentConditions } from './predict-optimal-departure.use-case';
+import {
+  PredictOptimalDepartureUseCase,
+  CurrentConditions,
+} from './predict-optimal-departure.use-case';
 import { PatternType, DEFAULT_PATTERNS } from '../../domain/entities/user-pattern.entity';
 
 describe('PredictOptimalDepartureUseCase', () => {

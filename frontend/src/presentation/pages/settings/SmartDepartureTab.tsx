@@ -8,6 +8,7 @@ import {
   useToggleSmartDepartureMutation,
 } from '@infrastructure/query';
 import type { SmartDepartureSetting, DepartureType } from '@infrastructure/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 const TYPE_LABELS: Record<DepartureType, string> = { commute: '출근', return: '퇴근' };
@@ -26,9 +27,7 @@ function SettingCard({
   onDelete: (id: string) => void;
   isDeleting: boolean;
 }) {
-  const activeDayLabels = setting.activeDays
-    .map((d) => DAY_LABELS[d])
-    .join(', ');
+  const activeDayLabels = setting.activeDays.map((d) => DAY_LABELS[d]).join(', ');
 
   return (
     <div className={`settings-departure-card ${!setting.isEnabled ? 'inactive' : ''}`}>
@@ -37,12 +36,8 @@ function SettingCard({
           {TYPE_ICONS[setting.departureType]}
         </span>
         <div className="settings-departure-info">
-          <span className="settings-departure-type">
-            {TYPE_LABELS[setting.departureType]}
-          </span>
-          <span className="settings-departure-target">
-            {setting.arrivalTarget} 도착 목표
-          </span>
+          <span className="settings-departure-type">{TYPE_LABELS[setting.departureType]}</span>
+          <span className="settings-departure-target">{setting.arrivalTarget} 도착 목표</span>
         </div>
         <button
           type="button"
@@ -66,6 +61,7 @@ function SettingCard({
         className="settings-delete-btn"
         onClick={() => onDelete(setting.id)}
         disabled={isDeleting}
+        aria-label={`${TYPE_LABELS[setting.departureType]} ${setting.arrivalTarget} 설정 삭제`}
       >
         삭제
       </button>
@@ -87,15 +83,18 @@ export function SmartDepartureTab(): JSX.Element {
   const [formTarget, setFormTarget] = useState('09:00');
   const [formPrep, setFormPrep] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const routeMap = new Map((routes ?? []).map((r) => [r.id, r.name]));
 
   const handleCreate = useCallback(async () => {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
-      alert('먼저 경로를 등록해주세요.');
+      setActionError('먼저 경로를 등록해주세요.');
       return;
     }
+    setActionError('');
     try {
       await createMutation.mutateAsync({
         routeId,
@@ -106,25 +105,33 @@ export function SmartDepartureTab(): JSX.Element {
       });
       setShowForm(false);
     } catch {
-      alert('스마트 출발 설정에 실패했습니다.');
+      setActionError('스마트 출발 설정에 실패했습니다.');
     }
   }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 스마트 출발 설정을 삭제하시겠습니까?')) return;
-    setDeletingId(id);
-    try {
-      await deleteMutation.mutateAsync(id);
-    } catch {
-      alert('삭제에 실패했습니다.');
-    } finally {
-      setDeletingId(null);
-    }
-  }, [deleteMutation]);
+  const handleDeleteConfirm = useCallback(
+    async () => {
+      if (!deleteConfirmId) return;
+      setDeletingId(deleteConfirmId);
+      setActionError('');
+      try {
+        await deleteMutation.mutateAsync(deleteConfirmId);
+        setDeleteConfirmId(null);
+      } catch {
+        setActionError('삭제에 실패했습니다.');
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deleteConfirmId, deleteMutation],
+  );
 
-  const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
-  }, [toggleMutation]);
+  const handleToggle = useCallback(
+    (id: string) => {
+      toggleMutation.mutate(id);
+    },
+    [toggleMutation],
+  );
 
   if (isLoading) {
     return (
@@ -142,11 +149,7 @@ export function SmartDepartureTab(): JSX.Element {
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">스마트 출발</h2>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setShowForm(!showForm)}
-          >
+          <button type="button" className="btn btn-sm" onClick={() => setShowForm(!showForm)}>
             {showForm ? '취소' : '+ 추가'}
           </button>
         </div>
@@ -177,7 +180,9 @@ export function SmartDepartureTab(): JSX.Element {
                   onChange={(e) => setFormRouteId(e.target.value)}
                 >
                   {routes.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -213,6 +218,12 @@ export function SmartDepartureTab(): JSX.Element {
           </div>
         )}
 
+        {actionError && (
+          <div className="notice error mb-3" role="alert" aria-live="assertive">
+            {actionError}
+          </div>
+        )}
+
         {!routes || routes.length === 0 ? (
           <div className="settings-empty">
             <span aria-hidden="true">🗺️</span>
@@ -231,13 +242,27 @@ export function SmartDepartureTab(): JSX.Element {
                 setting={setting}
                 routeName={routeMap.get(setting.routeId) ?? '알 수 없는 경로'}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={(id: string) => setDeleteConfirmId(id)}
                 isDeleting={deletingId === setting.id}
               />
             ))}
           </div>
         )}
       </section>
+
+      <ConfirmModal
+        open={deleteConfirmId !== null}
+        title="스마트 출발 삭제"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmVariant="danger"
+        isLoading={deletingId !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirmId(null)}
+      >
+        <p>이 스마트 출발 설정을 삭제하시겠습니까?</p>
+        <p className="muted">삭제된 설정은 복구할 수 없습니다.</p>
+      </ConfirmModal>
     </div>
   );
 }

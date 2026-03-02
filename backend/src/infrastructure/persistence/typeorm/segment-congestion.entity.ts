@@ -1,11 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  Index,
-  Unique,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index, Unique } from 'typeorm';
 
 @Entity('segment_congestion', { schema: 'alert_system' })
 @Unique('segment_congestion_segment_slot_unique', ['segmentKey', 'timeSlot'])
@@ -55,7 +48,7 @@ export class SegmentCongestionEntity {
   @Column({ type: 'real', default: 0.3 })
   confidence: number;
 
-  @Column({ name: 'last_updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'last_updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   lastUpdatedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

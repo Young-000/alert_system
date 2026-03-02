@@ -23,10 +23,7 @@ describe('CongestionController', () => {
       recalculateAll: mockRecalculateAll,
     } as unknown as CongestionAggregationService;
 
-    controller = new CongestionController(
-      mockCongestionService,
-      mockAggregationService,
-    );
+    controller = new CongestionController(mockCongestionService, mockAggregationService);
   });
 
   describe('GET /congestion/segments', () => {
@@ -122,16 +119,14 @@ describe('CongestionController', () => {
       };
       mockGetRouteCongestion.mockResolvedValue(mockResponse);
 
-      const mockReq = { user: { userId: 'user-123', email: 'test@test.com' } } as AuthenticatedRequest;
+      const mockReq = {
+        user: { userId: 'user-123', email: 'test@test.com' },
+      } as AuthenticatedRequest;
 
       const result = await controller.getRouteCongestion('route-123', 'morning_rush', mockReq);
 
       expect(result.routeId).toBe('route-123');
-      expect(mockGetRouteCongestion).toHaveBeenCalledWith(
-        'route-123',
-        'user-123',
-        'morning_rush',
-      );
+      expect(mockGetRouteCongestion).toHaveBeenCalledWith('route-123', 'user-123', 'morning_rush');
     });
   });
 

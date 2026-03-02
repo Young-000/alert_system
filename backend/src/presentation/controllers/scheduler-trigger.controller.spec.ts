@@ -55,25 +55,25 @@ describe('SchedulerTriggerController', () => {
     });
 
     it('시크릿 헤더 없이 호출 시 UnauthorizedException', async () => {
-      await expect(
-        controller.triggerNotification(mockPayload, undefined as any),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.triggerNotification(mockPayload, undefined as any)).rejects.toThrow(
+        UnauthorizedException,
+      );
 
       expect(sendNotificationUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('잘못된 시크릿으로 호출 시 UnauthorizedException', async () => {
-      await expect(
-        controller.triggerNotification(mockPayload, 'wrong-secret'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.triggerNotification(mockPayload, 'wrong-secret')).rejects.toThrow(
+        UnauthorizedException,
+      );
 
       expect(sendNotificationUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('시크릿 길이가 다를 때 UnauthorizedException (타이밍 세이프)', async () => {
-      await expect(
-        controller.triggerNotification(mockPayload, 'short'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.triggerNotification(mockPayload, 'short')).rejects.toThrow(
+        UnauthorizedException,
+      );
 
       expect(sendNotificationUseCase.execute).not.toHaveBeenCalled();
     });
@@ -92,23 +92,23 @@ describe('SchedulerTriggerController', () => {
       }).compile();
       const ctrl = module.get<SchedulerTriggerController>(SchedulerTriggerController);
 
-      await expect(
-        ctrl.triggerNotification(mockPayload, VALID_SECRET),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(ctrl.triggerNotification(mockPayload, VALID_SECRET)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('알림 발송 실패 시 에러 전파 (EventBridge 재시도용)', async () => {
       sendNotificationUseCase.execute.mockRejectedValue(new Error('Notification failed'));
 
-      await expect(
-        controller.triggerNotification(mockPayload, VALID_SECRET),
-      ).rejects.toThrow('Notification failed');
+      await expect(controller.triggerNotification(mockPayload, VALID_SECRET)).rejects.toThrow(
+        'Notification failed',
+      );
     });
 
     it('UnauthorizedException 에러 메시지 확인', async () => {
-      await expect(
-        controller.triggerNotification(mockPayload, 'wrong-secret'),
-      ).rejects.toThrow('Authentication failed');
+      await expect(controller.triggerNotification(mockPayload, 'wrong-secret')).rejects.toThrow(
+        'Authentication failed',
+      );
     });
   });
 
@@ -130,17 +130,17 @@ describe('SchedulerTriggerController', () => {
     });
 
     it('시크릿 헤더 없이 호출 시 UnauthorizedException', async () => {
-      await expect(
-        controller.triggerWeeklyReport(undefined as any),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.triggerWeeklyReport(undefined as any)).rejects.toThrow(
+        UnauthorizedException,
+      );
 
       expect(generateWeeklyReportUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('잘못된 시크릿으로 호출 시 UnauthorizedException', async () => {
-      await expect(
-        controller.triggerWeeklyReport('wrong-secret'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.triggerWeeklyReport('wrong-secret')).rejects.toThrow(
+        UnauthorizedException,
+      );
 
       expect(generateWeeklyReportUseCase.execute).not.toHaveBeenCalled();
     });
@@ -148,9 +148,7 @@ describe('SchedulerTriggerController', () => {
     it('주간 리포트 생성 실패 시 에러 전파', async () => {
       generateWeeklyReportUseCase.execute.mockRejectedValue(new Error('Report failed'));
 
-      await expect(
-        controller.triggerWeeklyReport(VALID_SECRET),
-      ).rejects.toThrow('Report failed');
+      await expect(controller.triggerWeeklyReport(VALID_SECRET)).rejects.toThrow('Report failed');
     });
   });
 

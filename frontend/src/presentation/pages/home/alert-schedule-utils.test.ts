@@ -66,7 +66,7 @@ describe('computeNextAlert', () => {
   it('prefers today alert over tomorrow alert', () => {
     const now = new Date(2026, 1, 17, 12, 0); // noon
     const alerts = [
-      buildAlert({ id: 'a1', schedule: '0 7 * * *' }),  // 7:00 (past today → tomorrow)
+      buildAlert({ id: 'a1', schedule: '0 7 * * *' }), // 7:00 (past today → tomorrow)
       buildAlert({ id: 'a2', schedule: '0 14 * * *' }), // 14:00 (future today)
     ];
     const result = computeNextAlert(alerts, now);

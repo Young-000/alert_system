@@ -65,8 +65,7 @@ export function useWizardNavigation(
     else if (step === 'routine') {
       if (wantsTransport) setStep('station');
       else setStep('type');
-    }
-    else if (step === 'confirm') setStep('routine');
+    } else if (step === 'confirm') setStep('routine');
   }, [step, wantsTransport]);
 
   const canProceed = useCallback((): boolean => {
@@ -113,7 +112,18 @@ export function useWizardNavigation(
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [step, deleteTarget, isSubmitting, success, wantsWeather, wantsTransport, transportTypes.length, selectedTransports.length, goNext, onSubmit]);
+  }, [
+    step,
+    deleteTarget,
+    isSubmitting,
+    success,
+    wantsWeather,
+    wantsTransport,
+    transportTypes.length,
+    selectedTransports.length,
+    goNext,
+    onSubmit,
+  ]);
 
   return {
     step,

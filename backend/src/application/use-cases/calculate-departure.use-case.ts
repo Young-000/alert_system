@@ -1,7 +1,5 @@
 import { Injectable, Inject, Logger, Optional } from '@nestjs/common';
-import {
-  SmartDepartureSnapshot,
-} from '@domain/entities/smart-departure-snapshot.entity';
+import { SmartDepartureSnapshot } from '@domain/entities/smart-departure-snapshot.entity';
 import {
   ISmartDepartureSettingRepository,
   SMART_DEPARTURE_SETTING_REPOSITORY,
@@ -75,9 +73,7 @@ export class CalculateDepartureUseCase {
         const snapshot = await this.calculateForSetting(setting, today);
         results.push(this.toSnapshotDto(snapshot));
       } catch (error) {
-        this.logger.error(
-          `Failed to calculate departure for setting ${setting.id}: ${error}`,
-        );
+        this.logger.error(`Failed to calculate departure for setting ${setting.id}: ${error}`);
       }
     }
 
@@ -92,10 +88,7 @@ export class CalculateDepartureUseCase {
     dateStr: string,
   ): Promise<SmartDepartureSnapshot> {
     // 1. Check existing snapshot
-    const existing = await this.snapshotRepo.findBySettingAndDate(
-      setting.id,
-      dateStr,
-    );
+    const existing = await this.snapshotRepo.findBySettingAndDate(setting.id, dateStr);
     if (existing && existing.isDeparted()) {
       return existing;
     }
@@ -105,20 +98,13 @@ export class CalculateDepartureUseCase {
     const baselineMin = route?.totalExpectedDuration ?? 30;
 
     // 3. Get history average
-    const historyAvgMin = await this.getHistoryAverage(
-      setting.userId,
-      setting.routeId,
-    );
+    const historyAvgMin = await this.getHistoryAverage(setting.userId, setting.routeId);
 
     // 4. Realtime adjustment (placeholder: 0 for now, to be fed by realtime API)
     const realtimeAdj = 0;
 
     // 5. Estimate travel time
-    const estimatedTravelMin = this.estimateTravelTime(
-      baselineMin,
-      historyAvgMin,
-      realtimeAdj,
-    );
+    const estimatedTravelMin = this.estimateTravelTime(baselineMin, historyAvgMin, realtimeAdj);
 
     // 6. Calculate optimal departure time
     const optimalDepartureAt = this.calculateOptimalDeparture(
@@ -202,10 +188,7 @@ export class CalculateDepartureUseCase {
     const now = new Date();
     const upcoming = snapshots
       .filter((s) => s.status === 'scheduled' || s.status === 'notified')
-      .sort(
-        (a, b) =>
-          a.optimalDepartureAt.getTime() - b.optimalDepartureAt.getTime(),
-      );
+      .sort((a, b) => a.optimalDepartureAt.getTime() - b.optimalDepartureAt.getTime());
 
     const relevant = upcoming.find((s) => s.optimalDepartureAt >= now) ?? upcoming[0];
     if (!relevant) return null;
@@ -243,10 +226,7 @@ export class CalculateDepartureUseCase {
       historyAvgMin * HISTORY_WEIGHT +
       (historyAvgMin + realtimeAdjustment) * REALTIME_WEIGHT;
 
-    return Math.min(
-      Math.max(Math.round(weighted), MIN_TRAVEL_MINUTES),
-      MAX_TRAVEL_MINUTES,
-    );
+    return Math.min(Math.max(Math.round(weighted), MIN_TRAVEL_MINUTES), MAX_TRAVEL_MINUTES);
   }
 
   /**
@@ -276,7 +256,7 @@ export class CalculateDepartureUseCase {
 
       this.logger.log(
         `Live Activity push-to-update triggered for user ${snapshot.userId}, ` +
-        `setting ${snapshot.settingId}: travel=${snapshot.estimatedTravelMin}min, delay=${hasTrafficDelay}`,
+          `setting ${snapshot.settingId}: travel=${snapshot.estimatedTravelMin}min, delay=${hasTrafficDelay}`,
       );
 
       // TODO: Query LiveActivityTokenEntity for active tokens matching userId/settingId
@@ -291,19 +271,12 @@ export class CalculateDepartureUseCase {
     }
   }
 
-  private async getHistoryAverage(
-    userId: string,
-    routeId: string,
-  ): Promise<number | null> {
+  private async getHistoryAverage(userId: string, routeId: string): Promise<number | null> {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - HISTORY_DAYS);
 
-    const sessions = await this.sessionRepo.findByUserIdInDateRange(
-      userId,
-      startDate,
-      endDate,
-    );
+    const sessions = await this.sessionRepo.findByUserIdInDateRange(userId, startDate, endDate);
 
     // Filter to completed sessions for the given route
     const relevantSessions = sessions.filter(
@@ -318,10 +291,7 @@ export class CalculateDepartureUseCase {
       return null;
     }
 
-    const sum = relevantSessions.reduce(
-      (acc, s) => acc + (s.totalDurationMinutes ?? 0),
-      0,
-    );
+    const sum = relevantSessions.reduce((acc, s) => acc + (s.totalDurationMinutes ?? 0), 0);
     return Math.round(sum / relevantSessions.length);
   }
 
@@ -340,9 +310,7 @@ export class CalculateDepartureUseCase {
 
     // Create arrival target as KST (UTC+9)
     // We build in UTC and offset by -9 hours to represent KST
-    const arrivalDate = new Date(
-      Date.UTC(year, month - 1, day, hour - 9, minute),
-    );
+    const arrivalDate = new Date(Date.UTC(year, month - 1, day, hour - 9, minute));
 
     const totalOffset = (estimatedTravelMin + prepTimeMinutes) * 60_000;
     return new Date(arrivalDate.getTime() - totalOffset);

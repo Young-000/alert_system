@@ -22,10 +22,7 @@ import { DelayStatusController } from '../controllers/delay-status.controller';
 import { CommuteModule } from './commute.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([AlternativeMappingEntity]),
-    CommuteModule,
-  ],
+  imports: [TypeOrmModule.forFeature([AlternativeMappingEntity]), CommuteModule],
   controllers: [DelayStatusController],
   providers: [
     // Repository
@@ -37,10 +34,7 @@ import { CommuteModule } from './commute.module';
     {
       provide: 'ISubwayApiClient',
       useFactory: () => {
-        const apiKey =
-          process.env.SUBWAY_REALTIME_API_KEY ||
-          process.env.SUBWAY_API_KEY ||
-          '';
+        const apiKey = process.env.SUBWAY_REALTIME_API_KEY || process.env.SUBWAY_API_KEY || '';
         return new SubwayApiClient(apiKey);
       },
     },
@@ -48,10 +42,6 @@ import { CommuteModule } from './commute.module';
     RouteDelayCheckService,
     AlternativeSuggestionService,
   ],
-  exports: [
-    ALTERNATIVE_MAPPING_REPOSITORY,
-    RouteDelayCheckService,
-    AlternativeSuggestionService,
-  ],
+  exports: [ALTERNATIVE_MAPPING_REPOSITORY, RouteDelayCheckService, AlternativeSuggestionService],
 })
 export class AlternativeRouteModule {}

@@ -37,7 +37,7 @@ export class BehaviorEvent {
       alertId?: string;
       timestamp?: Date;
       metadata?: BehaviorEventMetadata;
-    }
+    },
   ) {
     const now = options?.timestamp || new Date();
     const dayOfWeek = now.getDay();
@@ -56,7 +56,7 @@ export class BehaviorEvent {
   static createDepartureConfirmed(
     userId: string,
     alertId: string,
-    source: 'push' | 'app'
+    source: 'push' | 'app',
   ): BehaviorEvent {
     return new BehaviorEvent(userId, BehaviorEventType.DEPARTURE_CONFIRMED, {
       alertId,
@@ -67,7 +67,7 @@ export class BehaviorEvent {
   static createNotificationOpened(
     userId: string,
     alertId: string,
-    notificationId: string
+    notificationId: string,
   ): BehaviorEvent {
     return new BehaviorEvent(userId, BehaviorEventType.NOTIFICATION_OPENED, {
       alertId,

@@ -15,7 +15,7 @@ const mockAuthApiClient = authApiClient as Mocked<typeof authApiClient>;
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
-  ...await vi.importActual('react-router-dom'),
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
 }));
 
@@ -30,7 +30,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(screen.getByLabelText('이메일')).toBeInTheDocument();
@@ -40,7 +40,12 @@ describe('LoginPage', () => {
 
     it('로그인 성공 시 토큰을 저장하고 알림 페이지로 이동해야 한다', async () => {
       const mockResponse = {
-        user: { id: 'user-1', email: 'user@example.com', name: 'John Doe', phoneNumber: '01012345678' },
+        user: {
+          id: 'user-1',
+          email: 'user@example.com',
+          name: 'John Doe',
+          phoneNumber: '01012345678',
+        },
         accessToken: 'test-token',
       };
       mockAuthApiClient.login.mockResolvedValue(mockResponse);
@@ -48,7 +53,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       fireEvent.change(screen.getByLabelText('이메일'), {
@@ -79,7 +84,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       fireEvent.change(screen.getByLabelText('이메일'), {
@@ -91,7 +96,9 @@ describe('LoginPage', () => {
       fireEvent.click(screen.getByRole('button', { name: '로그인' }));
 
       await waitFor(() => {
-        expect(screen.getByRole('alert')).toHaveTextContent('이메일 또는 비밀번호가 일치하지 않습니다.');
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          '이메일 또는 비밀번호가 일치하지 않습니다.',
+        );
       });
     });
   });
@@ -101,7 +108,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // 회원가입 버튼 클릭
@@ -114,7 +121,12 @@ describe('LoginPage', () => {
 
     it('회원가입 폼을 제출할 수 있어야 한다', async () => {
       const mockResponse = {
-        user: { id: 'user-1', email: 'new@example.com', name: '홍길동', phoneNumber: '01098765432' },
+        user: {
+          id: 'user-1',
+          email: 'new@example.com',
+          name: '홍길동',
+          phoneNumber: '01098765432',
+        },
         accessToken: 'new-token',
       };
       mockAuthApiClient.register.mockResolvedValue(mockResponse);
@@ -122,7 +134,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // 회원가입 모드로 전환
@@ -147,7 +159,7 @@ describe('LoginPage', () => {
 
       // 폼 제출 (회원가입 모드에서 submit 버튼 찾기)
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
+      const submitButton = buttons.find((btn) => btn.getAttribute('type') === 'submit');
       fireEvent.click(submitButton!);
 
       await waitFor(() => {
@@ -166,7 +178,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // 회원가입 모드로 전환
@@ -190,7 +202,7 @@ describe('LoginPage', () => {
       });
 
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
+      const submitButton = buttons.find((btn) => btn.getAttribute('type') === 'submit');
       fireEvent.click(submitButton!);
 
       await waitFor(() => {
@@ -204,7 +216,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const passwordInput = screen.getByLabelText('비밀번호');
@@ -223,13 +235,13 @@ describe('LoginPage', () => {
 
     it('로딩 중에는 버튼이 비활성화되어야 한다', async () => {
       mockAuthApiClient.login.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 1000))
+        () => new Promise((resolve) => setTimeout(resolve, 1000)),
       );
 
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       fireEvent.change(screen.getByLabelText('이메일'), {
@@ -251,7 +263,7 @@ describe('LoginPage', () => {
       render(
         <MemoryRouter>
           <LoginPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // 로그인 실패

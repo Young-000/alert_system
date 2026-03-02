@@ -50,16 +50,14 @@ export function HomePage(): JSX.Element {
 
   return (
     <main className="page home-page">
-      <a href="#weather-hero" className="skip-link">본문으로 건너뛰기</a>
+      <a href="#weather-hero" className="skip-link">
+        본문으로 건너뛰기
+      </a>
 
       {data.loadError && (
         <div className="home-error-notice notice error" role="alert">
           {data.loadError}
-          <button
-            type="button"
-            className="btn btn-sm home-retry-btn"
-            onClick={data.retryLoad}
-          >
+          <button type="button" className="btn btn-sm home-retry-btn" onClick={data.retryLoad}>
             다시 시도
           </button>
         </div>
@@ -73,9 +71,7 @@ export function HomePage(): JSX.Element {
         <ModeBadge mode={mode} onToggle={toggleMode} />
       </header>
 
-      {data.streak != null && (
-        <StreakBadge streak={data.streak} />
-      )}
+      {data.streak != null && <StreakBadge streak={data.streak} />}
 
       <MissionQuickCard />
 
@@ -109,7 +105,9 @@ export function HomePage(): JSX.Element {
         />
       ) : data.weatherError ? (
         <section className="weather-hero" aria-label="날씨 오류">
-          <p className="muted" role="alert">{data.weatherError}</p>
+          <p className="muted" role="alert">
+            {data.weatherError}
+          </p>
         </section>
       ) : null}
 
@@ -119,21 +117,21 @@ export function HomePage(): JSX.Element {
         isLoading={data.weatherLoading}
       />
 
-      {data.departurePrediction && (
-        <DeparturePrediction prediction={data.departurePrediction} />
-      )}
+      {data.departurePrediction && <DeparturePrediction prediction={data.departurePrediction} />}
 
       <PatternInsightsCard />
 
-      {data.routeRecommendation && data.routeRecommendation.recommendation && !data.routeRecDismissed && (
-        <RouteRecommendation
-          recommendation={data.routeRecommendation}
-          onDismiss={() => {
-            data.setRouteRecDismissed(true);
-            sessionStorage.setItem('routeRecDismissed', 'true');
-          }}
-        />
-      )}
+      {data.routeRecommendation &&
+        data.routeRecommendation.recommendation &&
+        !data.routeRecDismissed && (
+          <RouteRecommendation
+            recommendation={data.routeRecommendation}
+            onDismiss={() => {
+              data.setRouteRecDismissed(true);
+              sessionStorage.setItem('routeRecDismissed', 'true');
+            }}
+          />
+        )}
 
       {data.activeRoute && <DelayAlertBanner routeId={data.activeRoute.id} />}
 

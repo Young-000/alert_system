@@ -121,7 +121,12 @@ describe('CreateAlertUseCase', () => {
 
     const result = await useCase.execute(dto);
 
-    expect(result.alertTypes).toEqual([AlertType.WEATHER, AlertType.AIR_QUALITY, AlertType.BUS, AlertType.SUBWAY]);
+    expect(result.alertTypes).toEqual([
+      AlertType.WEATHER,
+      AlertType.AIR_QUALITY,
+      AlertType.BUS,
+      AlertType.SUBWAY,
+    ]);
     expect(result.alertTypes).toHaveLength(4);
     expect(result.busStopId).toBe('bus-123');
     expect(result.subwayStationId).toBe('station-456');

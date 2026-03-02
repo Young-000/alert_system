@@ -9,16 +9,18 @@ describe('UpdateAlertUseCase', () => {
   let mockAlertRepository: jest.Mocked<IAlertRepository>;
   let mockNotificationScheduler: jest.Mocked<INotificationScheduler>;
 
-  const createMockAlert = (overrides: Partial<{
-    id: string;
-    userId: string;
-    name: string;
-    schedule: string;
-    alertTypes: AlertType[];
-    enabled: boolean;
-    busStopId: string;
-    subwayStationId: string;
-  }> = {}): Alert => {
+  const createMockAlert = (
+    overrides: Partial<{
+      id: string;
+      userId: string;
+      name: string;
+      schedule: string;
+      alertTypes: AlertType[];
+      enabled: boolean;
+      busStopId: string;
+      subwayStationId: string;
+    }> = {},
+  ): Alert => {
     const alert = new Alert(
       overrides.userId ?? 'user-1',
       overrides.name ?? '출근 알림',
@@ -50,10 +52,7 @@ describe('UpdateAlertUseCase', () => {
       cancelNotification: jest.fn(),
     };
 
-    useCase = new UpdateAlertUseCase(
-      mockAlertRepository,
-      mockNotificationScheduler,
-    );
+    useCase = new UpdateAlertUseCase(mockAlertRepository, mockNotificationScheduler);
   });
 
   describe('execute - 기본 업데이트', () => {
@@ -107,13 +106,13 @@ describe('UpdateAlertUseCase', () => {
     it('존재하지 않는 알림 업데이트 시 NotFoundException', async () => {
       mockAlertRepository.findById.mockResolvedValue(undefined);
 
-      await expect(
-        useCase.execute('non-existent', { name: '새 이름' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute('non-existent', { name: '새 이름' })).rejects.toThrow(
+        NotFoundException,
+      );
 
-      await expect(
-        useCase.execute('non-existent', { name: '새 이름' }),
-      ).rejects.toThrow('알림을 찾을 수 없습니다.');
+      await expect(useCase.execute('non-existent', { name: '새 이름' })).rejects.toThrow(
+        '알림을 찾을 수 없습니다.',
+      );
     });
   });
 
@@ -133,9 +132,7 @@ describe('UpdateAlertUseCase', () => {
 
       await useCase.execute('alert-1', { enabled: true });
 
-      expect(mockNotificationScheduler.scheduleNotification).toHaveBeenCalledWith(
-        existingAlert,
-      );
+      expect(mockNotificationScheduler.scheduleNotification).toHaveBeenCalledWith(existingAlert);
       expect(mockNotificationScheduler.cancelNotification).not.toHaveBeenCalled();
     });
 
@@ -146,9 +143,7 @@ describe('UpdateAlertUseCase', () => {
 
       await useCase.execute('alert-1', { enabled: false });
 
-      expect(mockNotificationScheduler.cancelNotification).toHaveBeenCalledWith(
-        'alert-1',
-      );
+      expect(mockNotificationScheduler.cancelNotification).toHaveBeenCalledWith('alert-1');
       expect(mockNotificationScheduler.scheduleNotification).not.toHaveBeenCalled();
     });
 
@@ -198,9 +193,7 @@ describe('UpdateAlertUseCase', () => {
         schedule: '0 7 * * 1-5',
       });
 
-      expect(mockNotificationScheduler.scheduleNotification).toHaveBeenCalledWith(
-        existingAlert,
-      );
+      expect(mockNotificationScheduler.scheduleNotification).toHaveBeenCalledWith(existingAlert);
     });
 
     it('비활성화 시 스케줄 변경은 무시 (취소만 수행)', async () => {
@@ -213,9 +206,7 @@ describe('UpdateAlertUseCase', () => {
         schedule: '0 7 * * 1-5',
       });
 
-      expect(mockNotificationScheduler.cancelNotification).toHaveBeenCalledWith(
-        'alert-1',
-      );
+      expect(mockNotificationScheduler.cancelNotification).toHaveBeenCalledWith('alert-1');
       expect(mockNotificationScheduler.scheduleNotification).not.toHaveBeenCalled();
     });
   });

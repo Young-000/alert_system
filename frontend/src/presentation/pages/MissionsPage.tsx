@@ -14,9 +14,9 @@ import '../styles/pages/missions.css';
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'] as const;
 
 const DAY_INDICATOR = {
-  full: '\u2705',    // check mark
+  full: '\u2705', // check mark
   partial: '\u25D0', // half circle
-  empty: '\u2B1C',   // white square
+  empty: '\u2B1C', // white square
 } as const;
 
 // ─── Helpers ────────────────────────────────────────
@@ -226,9 +226,7 @@ function WeeklyOverview({
       <div className="weekly-grid" role="list" aria-label="이번 주 달성 현황">
         {weekData.map((day, i) => (
           <div key={i} className="weekly-day" role="listitem">
-            <span className={`weekly-day-label ${day.isToday ? 'today' : ''}`}>
-              {day.label}
-            </span>
+            <span className={`weekly-day-label ${day.isToday ? 'today' : ''}`}>{day.label}</span>
             <span
               className={`weekly-day-indicator ${day.indicator.className} ${day.isToday ? 'today' : ''}`}
               aria-label={`${day.label}요일 ${day.indicator.className === 'full' ? '완료' : day.indicator.className === 'partial' ? '부분 달성' : '미달성'}`}
@@ -260,11 +258,7 @@ function EmptyState(): JSX.Element {
         <br />
         설정해보세요.
       </p>
-      <button
-        type="button"
-        className="btn-primary"
-        onClick={() => navigate('/missions/settings')}
-      >
+      <button type="button" className="btn-primary" onClick={() => navigate('/missions/settings')}>
         미션 설정하기
       </button>
     </div>
@@ -284,16 +278,11 @@ export function MissionsPage(): JSX.Element {
     refetch: refetchDaily,
   } = useDailyStatusQuery();
 
-  const {
-    data: weeklyStats,
-    isLoading: isWeeklyLoading,
-  } = useWeeklyStatsQuery();
+  const { data: weeklyStats, isLoading: isWeeklyLoading } = useWeeklyStatsQuery();
 
   const toggleMutation = useToggleCheckMutation();
 
-  const togglingId = toggleMutation.isPending
-    ? (toggleMutation.variables ?? null)
-    : null;
+  const togglingId = toggleMutation.isPending ? (toggleMutation.variables ?? null) : null;
 
   const handleToggle = useCallback(
     (missionId: string) => {
@@ -326,7 +315,9 @@ export function MissionsPage(): JSX.Element {
     return (
       <main className="page missions-page">
         <div className="mission-auth-required">
-          <span className="mission-auth-icon" aria-hidden="true">🔒</span>
+          <span className="mission-auth-icon" aria-hidden="true">
+            🔒
+          </span>
           <p>로그인이 필요한 기능이에요</p>
           <button type="button" className="btn-primary" onClick={() => navigate('/login')}>
             로그인
@@ -383,11 +374,7 @@ export function MissionsPage(): JSX.Element {
         </header>
         <div className="mission-error" role="alert">
           <p>데이터를 불러오는 데 실패했습니다.</p>
-          <button
-            type="button"
-            className="btn-retry"
-            onClick={() => void refetchDaily()}
-          >
+          <button type="button" className="btn-retry" onClick={() => void refetchDaily()}>
             다시 시도
           </button>
         </div>
@@ -471,7 +458,9 @@ export function MissionsPage(): JSX.Element {
           className="mission-manage-btn"
           onClick={() => navigate('/missions/settings')}
         >
-          <span className="mission-manage-icon" aria-hidden="true">⚙️</span>
+          <span className="mission-manage-icon" aria-hidden="true">
+            ⚙️
+          </span>
           미션 관리
         </button>
       </div>

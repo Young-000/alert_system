@@ -17,10 +17,7 @@ function getCachedLocation(): { latitude: number; longitude: number } | null {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
     const parsed = JSON.parse(stored);
-    if (
-      typeof parsed.latitude === 'number' &&
-      typeof parsed.longitude === 'number'
-    ) {
+    if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
       return { latitude: parsed.latitude, longitude: parsed.longitude };
     }
   } catch {

@@ -16,11 +16,7 @@ import { DailyCheckUseCase } from '@application/use-cases/daily-check.use-case';
 import { MissionStatsUseCase } from '@application/use-cases/mission-stats.use-case';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { getTodayKST } from '@domain/utils/kst-date';
-import {
-  CreateMissionDto,
-  UpdateMissionDto,
-  ReorderMissionDto,
-} from '../dto/mission.dto';
+import { CreateMissionDto, UpdateMissionDto, ReorderMissionDto } from '../dto/mission.dto';
 
 @Controller('missions')
 export class MissionController {
@@ -178,11 +174,7 @@ export class MissionController {
   }> {
     const userId = req.user.userId;
     this.logger.log(`User ${userId} reordering mission ${id} to ${dto.sortOrder}`);
-    const mission = await this.manageMissionUseCase.reorder(
-      id,
-      userId,
-      dto.sortOrder,
-    );
+    const mission = await this.manageMissionUseCase.reorder(id, userId, dto.sortOrder);
 
     return {
       id: mission.id,
@@ -272,11 +264,7 @@ export class MissionController {
     const todayKST = getTodayKST();
     this.logger.log(`User ${userId} toggling check for mission ${missionId}`);
 
-    const record = await this.dailyCheckUseCase.toggleCheck(
-      userId,
-      missionId,
-      todayKST,
-    );
+    const record = await this.dailyCheckUseCase.toggleCheck(userId, missionId, todayKST);
 
     return {
       missionId: record.missionId,
@@ -333,10 +321,7 @@ export class MissionController {
     const todayKST = getTodayKST();
     this.logger.log(`Getting weekly stats for user ${userId}`);
 
-    const stats = await this.missionStatsUseCase.getWeeklyStats(
-      userId,
-      todayKST,
-    );
+    const stats = await this.missionStatsUseCase.getWeeklyStats(userId, todayKST);
 
     return {
       totalCompleted: stats.totalCompleted,
@@ -372,10 +357,7 @@ export class MissionController {
     const todayKST = getTodayKST();
     this.logger.log(`Getting monthly stats for user ${userId}`);
 
-    const stats = await this.missionStatsUseCase.getMonthlyStats(
-      userId,
-      todayKST,
-    );
+    const stats = await this.missionStatsUseCase.getMonthlyStats(userId, todayKST);
 
     return {
       totalCompleted: stats.totalCompleted,

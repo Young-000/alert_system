@@ -67,19 +67,14 @@ describe.each(ICONS)('$name', ({ Component, defaultSize }) => {
 
 describe('ChevronIcon collapsible usage', () => {
   it('collapsible-chevron 클래스가 적용된다', () => {
-    const { container } = render(
-      <ChevronIcon size={16} className="collapsible-chevron" />,
-    );
+    const { container } = render(<ChevronIcon size={16} className="collapsible-chevron" />);
     const svg = container.querySelector('svg')!;
     expect(svg.classList.contains('collapsible-chevron')).toBe(true);
   });
 
   it('expanded 상태에서 collapsible-chevron--expanded 클래스가 적용된다', () => {
     const { container } = render(
-      <ChevronIcon
-        size={16}
-        className="collapsible-chevron collapsible-chevron--expanded"
-      />,
+      <ChevronIcon size={16} className="collapsible-chevron collapsible-chevron--expanded" />,
     );
     const svg = container.querySelector('svg')!;
     expect(svg.classList.contains('collapsible-chevron--expanded')).toBe(true);

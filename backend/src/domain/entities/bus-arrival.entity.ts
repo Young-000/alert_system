@@ -4,7 +4,6 @@ export class BusArrival {
     public readonly routeId: string,
     public readonly routeName: string,
     public readonly arrivalTime: number,
-    public readonly remainingStops: number
+    public readonly remainingStops: number,
   ) {}
 }
-

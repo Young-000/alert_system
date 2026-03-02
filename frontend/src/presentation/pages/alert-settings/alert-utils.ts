@@ -81,8 +81,14 @@ export function getNotificationTimes(
     const [h, m] = routine.leaveHome.split(':').map(Number);
     let notifyM = m - TRANSPORT_NOTIFY_OFFSET_MIN;
     let notifyH = h;
-    if (notifyM < 0) { notifyM += 60; notifyH -= 1; }
-    if (notifyH < 0) { notifyH = 0; notifyM = 0; }
+    if (notifyM < 0) {
+      notifyM += 60;
+      notifyH -= 1;
+    }
+    if (notifyH < 0) {
+      notifyH = 0;
+      notifyM = 0;
+    }
     times.push({
       time: `${String(notifyH).padStart(2, '0')}:${String(notifyM).padStart(2, '0')}`,
       content: `출근길 교통 (${selectedTransports.map((t) => t.name).join(', ')})`,
@@ -91,8 +97,14 @@ export function getNotificationTimes(
     const [wh, wm] = routine.leaveWork.split(':').map(Number);
     let workNotifyM = wm - TRANSPORT_NOTIFY_OFFSET_MIN;
     let workNotifyH = wh;
-    if (workNotifyM < 0) { workNotifyM += 60; workNotifyH -= 1; }
-    if (workNotifyH < 0) { workNotifyH = 0; workNotifyM = 0; }
+    if (workNotifyM < 0) {
+      workNotifyM += 60;
+      workNotifyH -= 1;
+    }
+    if (workNotifyH < 0) {
+      workNotifyH = 0;
+      workNotifyM = 0;
+    }
     times.push({
       time: `${String(workNotifyH).padStart(2, '0')}:${String(workNotifyM).padStart(2, '0')}`,
       content: '퇴근길 교통',

@@ -41,6 +41,10 @@ import { CommuteStreakOrmEntity } from './typeorm/commute-streak.orm-entity';
 import { StreakDailyLogOrmEntity } from './typeorm/streak-daily-log.orm-entity';
 // Live Activity entities
 import { LiveActivityTokenEntity } from './typeorm/live-activity-token.entity';
+// Alternative route
+import { AlternativeMappingEntity } from './typeorm/alternative-mapping.entity';
+// Congestion
+import { SegmentCongestionEntity } from './typeorm/segment-congestion.entity';
 // Regional insights
 import { RegionalInsightEntity } from './typeorm/regional-insight.entity';
 // Community
@@ -101,6 +105,10 @@ import { buildDataSourceOptions } from './database.config';
       StreakDailyLogOrmEntity,
       // Live Activity
       LiveActivityTokenEntity,
+      // Alternative route
+      AlternativeMappingEntity,
+      // Congestion
+      SegmentCongestionEntity,
       // Regional insights
       RegionalInsightEntity,
       // Community

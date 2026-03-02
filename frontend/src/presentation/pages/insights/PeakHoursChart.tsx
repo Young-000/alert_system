@@ -23,9 +23,7 @@ export function PeakHoursChart({
     <section className="insight-peak-hours" aria-label="시간대별 출퇴근 분포">
       <div className="insight-peak-hours-header">
         <h4 className="insight-section-title">시간대별 분포</h4>
-        <span className="insight-peak-hours-total">
-          총 {totalSessions}회 기록
-        </span>
+        <span className="insight-peak-hours-total">총 {totalSessions}회 기록</span>
       </div>
 
       <div className="insight-peak-chart" role="img" aria-label="시간대별 출퇴근 세션 분포 차트">
@@ -45,9 +43,7 @@ export function PeakHoursChart({
                 title={`${hour}시: ${count}회`}
                 role="presentation"
               />
-              {showLabel && (
-                <span className="insight-peak-label">{hour}</span>
-              )}
+              {showLabel && <span className="insight-peak-label">{hour}</span>}
             </div>
           );
         })}
@@ -55,7 +51,10 @@ export function PeakHoursChart({
 
       <div className="insight-peak-legend">
         <span className="insight-peak-legend-item">
-          <span className="insight-peak-legend-dot insight-peak-legend-dot--peak" aria-hidden="true" />
+          <span
+            className="insight-peak-legend-dot insight-peak-legend-dot--peak"
+            aria-hidden="true"
+          />
           피크 시간: {peakHour}시
         </span>
       </div>

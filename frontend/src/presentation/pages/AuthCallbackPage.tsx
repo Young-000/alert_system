@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
 import { notifyAuthChange } from '@presentation/hooks/useAuth';
 
+const ERROR_REDIRECT_DELAY_MS = 3000;
+const SUCCESS_REDIRECT_DELAY_MS = 500;
+
 function getCallbackParams(): URLSearchParams {
   // fragment hash 우선 (보안: query string은 서버 로그/referrer에 노출됨)
   const hash = window.location.hash.slice(1);
@@ -40,7 +43,7 @@ export function AuthCallbackPage(): JSX.Element {
           default:
             setErrorMessage('로그인 중 오류가 발생했습니다.');
         }
-        timerId = setTimeout(() => navigate('/login'), 3000);
+        timerId = setTimeout(() => navigate('/login'), ERROR_REDIRECT_DELAY_MS);
         return;
       }
 
@@ -58,11 +61,11 @@ export function AuthCallbackPage(): JSX.Element {
         notifyAuthChange();
 
         setStatus('success');
-        timerId = setTimeout(() => navigate('/alerts'), 500);
+        timerId = setTimeout(() => navigate('/alerts'), SUCCESS_REDIRECT_DELAY_MS);
       } else {
         setStatus('error');
         setErrorMessage('인증 정보가 올바르지 않습니다.');
-        timerId = setTimeout(() => navigate('/login'), 3000);
+        timerId = setTimeout(() => navigate('/login'), ERROR_REDIRECT_DELAY_MS);
       }
     };
 
@@ -73,7 +76,7 @@ export function AuthCallbackPage(): JSX.Element {
   return (
     <main className="page">
       <section className="card auth-card">
-        <div className="stack" style={{ textAlign: 'center' }}>
+        <div className="stack text-center">
           {status === 'processing' && (
             <>
               <span className="spinner spinner-lg" aria-hidden="true" />
@@ -82,14 +85,41 @@ export function AuthCallbackPage(): JSX.Element {
           )}
           {status === 'success' && (
             <>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--success)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
               <h2>로그인 성공!</h2>
               <p className="muted">잠시 후 알림 설정 페이지로 이동합니다.</p>
             </>
           )}
           {status === 'error' && (
             <>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--danger)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
               <h2>로그인 실패</h2>
               <p className="muted">{errorMessage}</p>
               <p className="muted">잠시 후 로그인 페이지로 이동합니다.</p>

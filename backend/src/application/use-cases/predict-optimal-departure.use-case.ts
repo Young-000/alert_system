@@ -80,18 +80,15 @@ export class PredictOptimalDepartureUseCase {
    * Convert PredictionResult from ML engine to the existing DeparturePrediction shape.
    * This keeps backward compatibility while internally using the new engine.
    */
-  private convertPredictionResult(
-    result: PredictionResult,
-    _alertId: string,
-  ): DeparturePrediction {
+  private convertPredictionResult(result: PredictionResult, _alertId: string): DeparturePrediction {
     const adjustments: DepartureAdjustment[] = result.factors
-      .filter(f => f.type !== 'base_pattern' && f.impact !== 0)
-      .map(f => ({
+      .filter((f) => f.type !== 'base_pattern' && f.impact !== 0)
+      .map((f) => ({
         reason: f.label,
         minutes: f.impact,
       }));
 
-    const basePattern = result.factors.find(f => f.type === 'base_pattern');
+    const basePattern = result.factors.find((f) => f.type === 'base_pattern');
     const baseTime = basePattern
       ? result.departureTime // When only base_pattern, departure=base
       : this.removeFactorImpacts(result.departureTime, adjustments);
@@ -108,10 +105,7 @@ export class PredictOptimalDepartureUseCase {
   /**
    * Reverse-calculate baseTime from recommendedTime by undoing adjustment impacts.
    */
-  private removeFactorImpacts(
-    recommendedTime: string,
-    adjustments: DepartureAdjustment[],
-  ): string {
+  private removeFactorImpacts(recommendedTime: string, adjustments: DepartureAdjustment[]): string {
     const [hours, minutes] = recommendedTime.split(':').map(Number);
     let totalMinutes = hours * 60 + minutes;
 
@@ -155,10 +149,7 @@ export class PredictOptimalDepartureUseCase {
     };
   }
 
-  private async getBaseDepartureTime(
-    userId: string,
-    alertId: string,
-  ): Promise<string> {
+  private async getBaseDepartureTime(userId: string, alertId: string): Promise<string> {
     // Try to get learned pattern first
     if (this.patternRepository) {
       const pattern = await this.patternRepository.findByUserIdAndType(
@@ -195,9 +186,7 @@ export class PredictOptimalDepartureUseCase {
     return DEFAULT_PATTERNS.departureTime.evening.weekday;
   }
 
-  private calculateAdjustments(
-    conditions?: CurrentConditions,
-  ): DepartureAdjustment[] {
+  private calculateAdjustments(conditions?: CurrentConditions): DepartureAdjustment[] {
     const adjustments: DepartureAdjustment[] = [];
 
     if (!conditions) return adjustments;
@@ -241,10 +230,7 @@ export class PredictOptimalDepartureUseCase {
     return adjustments;
   }
 
-  private applyAdjustments(
-    baseTime: string,
-    adjustments: DepartureAdjustment[],
-  ): string {
+  private applyAdjustments(baseTime: string, adjustments: DepartureAdjustment[]): string {
     const [hours, minutes] = baseTime.split(':').map(Number);
     let totalMinutes = hours * 60 + minutes;
 

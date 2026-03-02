@@ -39,22 +39,13 @@ export function ConfirmModal({
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
     >
-      <div
-        ref={trapRef}
-        className="confirm-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div ref={trapRef} className="confirm-modal" onClick={(e) => e.stopPropagation()}>
         <h2 id="confirm-modal-title" className="confirm-modal-title">
           {title}
         </h2>
         <div className="confirm-modal-body">{children}</div>
         <div className="confirm-modal-actions">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
+          <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isLoading}>
             {cancelText}
           </button>
           <button

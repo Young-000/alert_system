@@ -1,7 +1,4 @@
-import {
-  ManageChallengeUseCase,
-  ChallengeConflictError,
-} from './manage-challenge.use-case';
+import { ManageChallengeUseCase, ChallengeConflictError } from './manage-challenge.use-case';
 import { ChallengeRepository } from '@domain/repositories/challenge.repository';
 import { ChallengeTemplate } from '@domain/entities/challenge-template.entity';
 import { UserChallenge } from '@domain/entities/user-challenge.entity';
@@ -45,8 +42,7 @@ describe('ManageChallengeUseCase', () => {
       deadlineAt: Date;
     }> = {},
   ): UserChallenge => {
-    const deadline =
-      overrides.deadlineAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const deadline = overrides.deadlineAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     return new UserChallenge({
       id: overrides.id ?? 'challenge-1',
       userId: overrides.userId ?? userId,
@@ -98,9 +94,9 @@ describe('ManageChallengeUseCase', () => {
     it('존재하지 않는 템플릿이면 에러를 던진다', async () => {
       challengeRepo.findTemplateById.mockResolvedValue(null);
 
-      await expect(
-        useCase.joinChallenge(userId, 'non-existent'),
-      ).rejects.toThrow('챌린지 템플릿을 찾을 수 없습니다.');
+      await expect(useCase.joinChallenge(userId, 'non-existent')).rejects.toThrow(
+        '챌린지 템플릿을 찾을 수 없습니다.',
+      );
     });
 
     it('활성 챌린지가 3개면 ChallengeConflictError를 던진다', async () => {
@@ -108,12 +104,12 @@ describe('ManageChallengeUseCase', () => {
       challengeRepo.findTemplateById.mockResolvedValue(template);
       challengeRepo.countActiveChallenges.mockResolvedValue(3);
 
-      await expect(
-        useCase.joinChallenge(userId, 'time-under-40'),
-      ).rejects.toThrow(ChallengeConflictError);
-      await expect(
-        useCase.joinChallenge(userId, 'time-under-40'),
-      ).rejects.toThrow('동시에 최대 3개의 챌린지만 참여할 수 있습니다.');
+      await expect(useCase.joinChallenge(userId, 'time-under-40')).rejects.toThrow(
+        ChallengeConflictError,
+      );
+      await expect(useCase.joinChallenge(userId, 'time-under-40')).rejects.toThrow(
+        '동시에 최대 3개의 챌린지만 참여할 수 있습니다.',
+      );
     });
 
     it('이미 참여 중인 챌린지면 ChallengeConflictError를 던진다', async () => {
@@ -123,12 +119,12 @@ describe('ManageChallengeUseCase', () => {
       challengeRepo.countActiveChallenges.mockResolvedValue(1);
       challengeRepo.findActiveByUserAndTemplate.mockResolvedValue(existing);
 
-      await expect(
-        useCase.joinChallenge(userId, 'time-under-40'),
-      ).rejects.toThrow(ChallengeConflictError);
-      await expect(
-        useCase.joinChallenge(userId, 'time-under-40'),
-      ).rejects.toThrow('이미 참여 중인 챌린지입니다.');
+      await expect(useCase.joinChallenge(userId, 'time-under-40')).rejects.toThrow(
+        ChallengeConflictError,
+      );
+      await expect(useCase.joinChallenge(userId, 'time-under-40')).rejects.toThrow(
+        '이미 참여 중인 챌린지입니다.',
+      );
     });
   });
 
@@ -147,18 +143,18 @@ describe('ManageChallengeUseCase', () => {
     it('존재하지 않는 챌린지면 에러를 던진다', async () => {
       challengeRepo.findChallengeById.mockResolvedValue(null);
 
-      await expect(
-        useCase.abandonChallenge(userId, 'non-existent'),
-      ).rejects.toThrow('챌린지를 찾을 수 없습니다.');
+      await expect(useCase.abandonChallenge(userId, 'non-existent')).rejects.toThrow(
+        '챌린지를 찾을 수 없습니다.',
+      );
     });
 
     it('다른 사용자의 챌린지를 포기하려 하면 에러를 던진다', async () => {
       const challenge = makeActiveChallenge({ userId: 'other-user' });
       challengeRepo.findChallengeById.mockResolvedValue(challenge);
 
-      await expect(
-        useCase.abandonChallenge(userId, 'challenge-1'),
-      ).rejects.toThrow('본인의 챌린지만 포기할 수 있습니다.');
+      await expect(useCase.abandonChallenge(userId, 'challenge-1')).rejects.toThrow(
+        '본인의 챌린지만 포기할 수 있습니다.',
+      );
     });
   });
 
@@ -186,9 +182,7 @@ describe('ManageChallengeUseCase', () => {
         deadlineAt: pastDeadline,
       });
 
-      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([
-        expiredChallenge,
-      ]);
+      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([expiredChallenge]);
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -228,14 +222,8 @@ describe('ManageChallengeUseCase', () => {
         challengeId: 'old-challenge',
       });
 
-      challengeRepo.findAllTemplates.mockResolvedValue([
-        template1,
-        template2,
-        template3,
-      ]);
-      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([
-        activeChallenge,
-      ]);
+      challengeRepo.findAllTemplates.mockResolvedValue([template1, template2, template3]);
+      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([activeChallenge]);
       challengeRepo.findBadgesByUserId.mockResolvedValue([badge]);
 
       const result = await useCase.getTemplates(userId);

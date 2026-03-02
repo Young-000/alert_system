@@ -50,10 +50,7 @@ export class LiveActivityController {
     );
 
     // Deactivate any existing active tokens for this user (only one Live Activity at a time)
-    await this.tokenRepo.update(
-      { userId, isActive: true },
-      { isActive: false },
-    );
+    await this.tokenRepo.update({ userId, isActive: true }, { isActive: false });
 
     // Upsert: check if activityId already exists
     const existing = await this.tokenRepo.findOne({
@@ -98,15 +95,10 @@ export class LiveActivityController {
       `Deactivating Live Activity token for user ${userId}, activityId=${activityId}`,
     );
 
-    const result = await this.tokenRepo.update(
-      { activityId, userId },
-      { isActive: false },
-    );
+    const result = await this.tokenRepo.update({ activityId, userId }, { isActive: false });
 
     if (result.affected === 0) {
-      throw new NotFoundException(
-        `Live Activity token with activityId ${activityId} not found`,
-      );
+      throw new NotFoundException(`Live Activity token with activityId ${activityId} not found`);
     }
   }
 
@@ -131,9 +123,7 @@ export class LiveActivityController {
     return this.toResponseDto(token);
   }
 
-  private toResponseDto(
-    entity: LiveActivityTokenEntity,
-  ): LiveActivityTokenResponseDto {
+  private toResponseDto(entity: LiveActivityTokenEntity): LiveActivityTokenResponseDto {
     const dto = new LiveActivityTokenResponseDto();
     dto.id = entity.id;
     dto.activityId = entity.activityId;

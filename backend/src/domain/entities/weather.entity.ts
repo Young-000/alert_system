@@ -28,20 +28,20 @@ export class Weather {
   // 날씨 조건을 한글로 변환
   static conditionToKorean(condition: string): string {
     const conditionMap: Record<string, string> = {
-      'Clear': '맑음',
-      'Sunny': '맑음',
-      'Clouds': '구름많음',
-      'Cloudy': '흐림',
-      'Overcast': '흐림',
-      'Rain': '비',
-      'Drizzle': '이슬비',
-      'Thunderstorm': '뇌우',
-      'Snow': '눈',
-      'Mist': '안개',
-      'Fog': '안개',
-      'Haze': '연무',
-      'Dust': '먼지',
-      'Sand': '황사',
+      Clear: '맑음',
+      Sunny: '맑음',
+      Clouds: '구름많음',
+      Cloudy: '흐림',
+      Overcast: '흐림',
+      Rain: '비',
+      Drizzle: '이슬비',
+      Thunderstorm: '뇌우',
+      Snow: '눈',
+      Mist: '안개',
+      Fog: '안개',
+      Haze: '연무',
+      Dust: '먼지',
+      Sand: '황사',
     };
 
     for (const [key, value] of Object.entries(conditionMap)) {

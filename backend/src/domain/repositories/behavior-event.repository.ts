@@ -7,13 +7,9 @@ export interface IBehaviorEventRepository {
   findByUserIdAndType(
     userId: string,
     eventType: BehaviorEventType,
-    limit?: number
+    limit?: number,
   ): Promise<BehaviorEvent[]>;
-  findByUserIdInDateRange(
-    userId: string,
-    startDate: Date,
-    endDate: Date
-  ): Promise<BehaviorEvent[]>;
+  findByUserIdInDateRange(userId: string, startDate: Date, endDate: Date): Promise<BehaviorEvent[]>;
   countByUserIdAndType(userId: string, eventType: BehaviorEventType): Promise<number>;
   deleteOlderThan(cutoffDate: Date): Promise<number>;
   deleteByUserId(userId: string): Promise<number>;

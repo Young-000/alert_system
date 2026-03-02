@@ -1,9 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import {
-  SolapiService,
-  NoopSolapiService,
-  TEMPLATE_IDS,
-} from './solapi.service';
+import { SolapiService, NoopSolapiService, TEMPLATE_IDS } from './solapi.service';
 import type {
   WeatherAlertVariables,
   TransitAlertVariables,
@@ -305,27 +301,51 @@ describe('NoopSolapiService', () => {
 
   it('sendWeatherAlert 호출 시 예외 없이 완료한다', async () => {
     await expect(
-      service.sendWeatherAlert('01012345678', {
-        userName: 'test', date: '', currentTemp: '', minTemp: '',
-        weather: '', airQuality: '', tip: '',
-      }, 'morning'),
+      service.sendWeatherAlert(
+        '01012345678',
+        {
+          userName: 'test',
+          date: '',
+          currentTemp: '',
+          minTemp: '',
+          weather: '',
+          airQuality: '',
+          tip: '',
+        },
+        'morning',
+      ),
     ).resolves.not.toThrow();
   });
 
   it('sendCombinedAlert 호출 시 예외 없이 완료한다', async () => {
     await expect(
-      service.sendCombinedAlert('01012345678', {
-        userName: 'test', date: '', currentTemp: '', minTemp: '',
-        weather: '', airQuality: '', subwayInfo: '', busInfo: '', tip: '',
-      }, 'morning'),
+      service.sendCombinedAlert(
+        '01012345678',
+        {
+          userName: 'test',
+          date: '',
+          currentTemp: '',
+          minTemp: '',
+          weather: '',
+          airQuality: '',
+          subwayInfo: '',
+          busInfo: '',
+          tip: '',
+        },
+        'morning',
+      ),
     ).resolves.not.toThrow();
   });
 
   it('sendWeeklyReport 호출 시 예외 없이 완료한다', async () => {
     await expect(
       service.sendWeeklyReport('01012345678', {
-        userName: 'test', weekRange: '', totalCommutes: '',
-        avgDuration: '', bestDay: '', tip: '',
+        userName: 'test',
+        weekRange: '',
+        totalCommutes: '',
+        avgDuration: '',
+        bestDay: '',
+        tip: '',
       }),
     ).resolves.not.toThrow();
   });

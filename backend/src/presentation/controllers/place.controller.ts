@@ -25,17 +25,13 @@ import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request
 export class PlaceController {
   private readonly logger = new Logger(PlaceController.name);
 
-  constructor(
-    private readonly managePlacesUseCase: ManagePlacesUseCase,
-  ) {}
+  constructor(private readonly managePlacesUseCase: ManagePlacesUseCase) {}
 
   /**
    * 내 장소 목록 조회
    */
   @Get()
-  async getPlaces(
-    @Request() req: AuthenticatedRequest,
-  ): Promise<PlaceResponseDto[]> {
+  async getPlaces(@Request() req: AuthenticatedRequest): Promise<PlaceResponseDto[]> {
     return this.managePlacesUseCase.getPlacesByUserId(req.user.userId);
   }
 
@@ -48,9 +44,7 @@ export class PlaceController {
     @Body() dto: CreatePlaceDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<PlaceResponseDto> {
-    this.logger.log(
-      `Creating place for user ${req.user.userId}: ${dto.placeType} "${dto.label}"`
-    );
+    this.logger.log(`Creating place for user ${req.user.userId}: ${dto.placeType} "${dto.label}"`);
     return this.managePlacesUseCase.createPlace(req.user.userId, dto);
   }
 
@@ -72,10 +66,7 @@ export class PlaceController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePlace(
-    @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
-  ): Promise<void> {
+  async deletePlace(@Param('id') id: string, @Request() req: AuthenticatedRequest): Promise<void> {
     this.logger.log(`Deleting place ${id} for user ${req.user.userId}`);
     await this.managePlacesUseCase.deletePlace(id, req.user.userId);
   }

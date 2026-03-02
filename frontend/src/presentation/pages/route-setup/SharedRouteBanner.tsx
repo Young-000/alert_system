@@ -18,7 +18,7 @@ export function SharedRouteBanner({
       <div className="shared-route-info">
         <strong>공유 경로</strong>
         <span>{sharedRoute.name}</span>
-        <span className="muted">{sharedRoute.checkpoints.map(c => c.name).join(' → ')}</span>
+        <span className="muted">{sharedRoute.checkpoints.map((c) => c.name).join(' → ')}</span>
       </div>
       <div className="shared-route-actions">
         <button
@@ -29,11 +29,7 @@ export function SharedRouteBanner({
         >
           {isSaving ? '저장 중...' : '내 경로에 추가'}
         </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={onDismiss}
-        >
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onDismiss}>
           무시
         </button>
       </div>

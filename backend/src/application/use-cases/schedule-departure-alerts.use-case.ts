@@ -39,12 +39,9 @@ export class ScheduleDepartureAlertsUseCase {
     this.client = new SchedulerClient({ region });
 
     this.config = {
-      scheduleGroupName:
-        process.env.SCHEDULE_GROUP_NAME || 'alert-system-prod-alerts',
+      scheduleGroupName: process.env.SCHEDULE_GROUP_NAME || 'alert-system-prod-alerts',
       schedulerRoleArn: process.env.SCHEDULER_ROLE_ARN || '',
-      eventBusArn: accountId
-        ? `arn:aws:events:${region}:${accountId}:event-bus/default`
-        : '',
+      eventBusArn: accountId ? `arn:aws:events:${region}:${accountId}:event-bus/default` : '',
       dlqArn: process.env.SCHEDULER_DLQ_ARN || '',
       eventSource: 'alert-system.smart-departure',
     };
@@ -74,10 +71,7 @@ export class ScheduleDepartureAlertsUseCase {
 
     for (const preAlertMin of setting.preAlerts) {
       try {
-        const scheduleId = await this.createOneTimeSchedule(
-          snapshot,
-          preAlertMin,
-        );
+        const scheduleId = await this.createOneTimeSchedule(snapshot, preAlertMin);
         if (scheduleId) {
           scheduleIds.push(scheduleId);
         }
@@ -107,9 +101,7 @@ export class ScheduleDepartureAlertsUseCase {
       try {
         await this.deleteSchedule(scheduleId);
       } catch (error) {
-        this.logger.error(
-          `Failed to delete schedule ${scheduleId}: ${error}`,
-        );
+        this.logger.error(`Failed to delete schedule ${scheduleId}: ${error}`);
       }
     }
   }
@@ -135,9 +127,7 @@ export class ScheduleDepartureAlertsUseCase {
     snapshot: SmartDepartureSnapshot,
     preAlertMinutes: number,
   ): Promise<string | null> {
-    const alertTime = new Date(
-      snapshot.optimalDepartureAt.getTime() - preAlertMinutes * 60_000,
-    );
+    const alertTime = new Date(snapshot.optimalDepartureAt.getTime() - preAlertMinutes * 60_000);
 
     // Don't schedule if the time has already passed
     if (alertTime <= new Date()) {
@@ -185,17 +175,13 @@ export class ScheduleDepartureAlertsUseCase {
           MaximumRetryAttempts: 2,
           MaximumEventAgeInSeconds: 1800, // 30 minutes
         },
-        DeadLetterConfig: this.config.dlqArn
-          ? { Arn: this.config.dlqArn }
-          : undefined,
+        DeadLetterConfig: this.config.dlqArn ? { Arn: this.config.dlqArn } : undefined,
       },
       Description: `Smart departure pre-alert: ${preAlertMinutes}min before departure for user ${snapshot.userId}`,
     });
 
     await this.client.send(command);
-    this.logger.debug(
-      `Created one-time schedule ${scheduleName} at ${alertTime.toISOString()}`,
-    );
+    this.logger.debug(`Created one-time schedule ${scheduleName} at ${alertTime.toISOString()}`);
 
     return scheduleName;
   }

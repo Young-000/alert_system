@@ -11,7 +11,7 @@ export class AirQualityController {
   @Get('user/:userId')
   async getByUser(
     @Param('userId') userId: string,
-    @Request() req: AuthenticatedRequest
+    @Request() req: AuthenticatedRequest,
   ): Promise<AirQuality> {
     if (req.user.userId !== userId) {
       throw new ForbiddenException('다른 사용자의 정보를 조회할 수 없습니다.');
@@ -24,4 +24,3 @@ export class AirQualityController {
     return this.getAirQualityUseCase.executeByLocation(query.lat, query.lng);
   }
 }
-

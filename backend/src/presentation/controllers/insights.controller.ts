@@ -45,9 +45,10 @@ export class InsightsController {
     @Query('limit') limitStr?: string,
     @Query('offset') offsetStr?: string,
   ): Promise<RegionsListResponseDto> {
-    const validSortBy = sortBy && VALID_SORT_BY.includes(sortBy as InsightSortBy)
-      ? (sortBy as InsightSortBy)
-      : undefined;
+    const validSortBy =
+      sortBy && VALID_SORT_BY.includes(sortBy as InsightSortBy)
+        ? (sortBy as InsightSortBy)
+        : undefined;
 
     const limit = limitStr ? parseInt(limitStr, 10) : 20;
     const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
@@ -64,9 +65,7 @@ export class InsightsController {
    */
   @Public()
   @Get('regions/:regionId')
-  async getRegionDetail(
-    @Param('regionId') regionId: string,
-  ): Promise<RegionDetailDto> {
+  async getRegionDetail(@Param('regionId') regionId: string): Promise<RegionDetailDto> {
     return this.insightsService.getRegionById(regionId);
   }
 
@@ -75,9 +74,7 @@ export class InsightsController {
    */
   @Public()
   @Get('regions/:regionId/trends')
-  async getRegionTrends(
-    @Param('regionId') regionId: string,
-  ): Promise<RegionTrendDto> {
+  async getRegionTrends(@Param('regionId') regionId: string): Promise<RegionTrendDto> {
     return this.insightsService.getRegionTrends(regionId);
   }
 
@@ -86,9 +83,7 @@ export class InsightsController {
    */
   @Public()
   @Get('regions/:regionId/peak-hours')
-  async getRegionPeakHours(
-    @Param('regionId') regionId: string,
-  ): Promise<PeakHoursDto> {
+  async getRegionPeakHours(@Param('regionId') regionId: string): Promise<PeakHoursDto> {
     return this.insightsService.getRegionPeakHours(regionId);
   }
 
@@ -96,9 +91,7 @@ export class InsightsController {
    * Compare user's stats with their regional average (requires auth).
    */
   @Get('me/comparison')
-  async getMyComparison(
-    @Request() req: AuthenticatedRequest,
-  ): Promise<MyComparisonDto> {
+  async getMyComparison(@Request() req: AuthenticatedRequest): Promise<MyComparisonDto> {
     return this.insightsService.getMyComparison(req.user.userId);
   }
 

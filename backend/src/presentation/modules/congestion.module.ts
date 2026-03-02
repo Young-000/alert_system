@@ -42,10 +42,6 @@ import { CommuteModule } from './commute.module';
     CongestionAggregationService,
     CongestionService,
   ],
-  exports: [
-    SEGMENT_CONGESTION_REPOSITORY,
-    CongestionAggregationService,
-    CongestionService,
-  ],
+  exports: [SEGMENT_CONGESTION_REPOSITORY, CongestionAggregationService, CongestionService],
 })
 export class CongestionModule {}

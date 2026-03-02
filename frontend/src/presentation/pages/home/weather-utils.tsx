@@ -58,7 +58,8 @@ export function translateCondition(condition: string): string {
 export function getWeatherType(condition: string): WeatherType {
   const c = condition.toLowerCase();
   if (c.includes('clear') || c.includes('sunny') || c === '맑음') return 'sunny';
-  if (c.includes('cloud') || c === '구름많음' || c.includes('overcast') || c === '흐림') return 'cloudy';
+  if (c.includes('cloud') || c === '구름많음' || c.includes('overcast') || c === '흐림')
+    return 'cloudy';
   if (c.includes('rain') || c === '비' || c.includes('thunder') || c === '뇌우') return 'rainy';
   if (c.includes('snow') || c === '눈') return 'snowy';
   return 'default';
@@ -72,7 +73,7 @@ export function getWeatherChecklist(
   const type = getWeatherType(weather.condition);
 
   const maxRainProb = weather.forecast?.hourlyForecasts
-    ? Math.max(...weather.forecast.hourlyForecasts.map(h => h.rainProbability))
+    ? Math.max(...weather.forecast.hourlyForecasts.map((h) => h.rainProbability))
     : 0;
   if (type === 'rainy' || type === 'snowy' || maxRainProb >= RAIN_PROBABILITY_THRESHOLD) {
     items.push({ id: 'umbrella', emoji: '\u2614', label: '\uc6b0\uc0b0' });
@@ -89,7 +90,7 @@ export function getWeatherChecklist(
   }
   const tempMax = weather.forecast?.maxTemp;
   const tempMin = weather.forecast?.minTemp;
-  if (tempMax != null && tempMin != null && (tempMax - tempMin) >= TEMP_DIFF_THRESHOLD) {
+  if (tempMax != null && tempMin != null && tempMax - tempMin >= TEMP_DIFF_THRESHOLD) {
     items.push({ id: 'scarf', emoji: '\uD83E\uDDE3', label: '\uac89\uc637 (\uc77c\uad50\ucc28)' });
   }
   if (weather.humidity > HIGH_HUMIDITY_THRESHOLD) {
@@ -117,10 +118,13 @@ export function getCheckedItems(): Set<string> {
 }
 
 export function saveCheckedItems(checked: Set<string>): void {
-  localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify({
-    date: getTodayKey(),
-    checked: Array.from(checked),
-  }));
+  localStorage.setItem(
+    CHECKLIST_STORAGE_KEY,
+    JSON.stringify({
+      date: getTodayKey(),
+      checked: Array.from(checked),
+    }),
+  );
 }
 
 export function getGreeting(): string {
@@ -142,13 +146,22 @@ export function getGreeting(): string {
  */
 export function getModeGreeting(mode: 'commute' | 'return' | 'night'): string {
   switch (mode) {
-    case 'commute': return '좋은 아침이에요';
-    case 'return':  return '오늘도 수고했어요';
-    case 'night':   return '내일 출근 준비';
+    case 'commute':
+      return '좋은 아침이에요';
+    case 'return':
+      return '오늘도 수고했어요';
+    case 'night':
+      return '내일 출근 준비';
   }
 }
 
-export function WeatherIcon({ condition, size = 48 }: { condition: string; size?: number }): JSX.Element {
+export function WeatherIcon({
+  condition,
+  size = 48,
+}: {
+  condition: string;
+  size?: number;
+}): JSX.Element {
   const type = getWeatherType(condition);
   switch (type) {
     case 'sunny':
@@ -170,13 +183,23 @@ export function WeatherIcon({ condition, size = 48 }: { condition: string; size?
     case 'cloudy':
       return (
         <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <path d="M14 34a8 8 0 0 1-.5-16A10 10 0 0 1 33 20h1a6 6 0 0 1 0 12H14z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="2" />
+          <path
+            d="M14 34a8 8 0 0 1-.5-16A10 10 0 0 1 33 20h1a6 6 0 0 1 0 12H14z"
+            fill="#CBD5E1"
+            stroke="#94A3B8"
+            strokeWidth="2"
+          />
         </svg>
       );
     case 'rainy':
       return (
         <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <path d="M14 28a8 8 0 0 1-.5-16A10 10 0 0 1 33 14h1a6 6 0 0 1 0 12H14z" fill="#94A3B8" stroke="#64748B" strokeWidth="2" />
+          <path
+            d="M14 28a8 8 0 0 1-.5-16A10 10 0 0 1 33 14h1a6 6 0 0 1 0 12H14z"
+            fill="#94A3B8"
+            stroke="#64748B"
+            strokeWidth="2"
+          />
           <g stroke="#60A5FA" strokeWidth="2.5" strokeLinecap="round">
             <line x1="16" y1="34" x2="14" y2="40" />
             <line x1="24" y1="34" x2="22" y2="40" />
@@ -187,7 +210,12 @@ export function WeatherIcon({ condition, size = 48 }: { condition: string; size?
     case 'snowy':
       return (
         <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <path d="M14 28a8 8 0 0 1-.5-16A10 10 0 0 1 33 14h1a6 6 0 0 1 0 12H14z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="2" />
+          <path
+            d="M14 28a8 8 0 0 1-.5-16A10 10 0 0 1 33 14h1a6 6 0 0 1 0 12H14z"
+            fill="#CBD5E1"
+            stroke="#94A3B8"
+            strokeWidth="2"
+          />
           <g fill="#93C5FD">
             <circle cx="16" cy="37" r="2.5" />
             <circle cx="24" cy="37" r="2.5" />
@@ -199,17 +227,26 @@ export function WeatherIcon({ condition, size = 48 }: { condition: string; size?
       return (
         <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
           <circle cx="24" cy="18" r="8" fill="#FBBF24" opacity="0.7" />
-          <path d="M18 34a6 6 0 0 1-.4-12A8 8 0 0 1 32 24h.5a5 5 0 0 1 0 10H18z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="2" />
+          <path
+            d="M18 34a6 6 0 0 1-.4-12A8 8 0 0 1 32 24h.5a5 5 0 0 1 0 10H18z"
+            fill="#CBD5E1"
+            stroke="#94A3B8"
+            strokeWidth="2"
+          />
         </svg>
       );
   }
 }
 
-export function getWeatherAdvice(weather: WeatherData, airQuality: { label: string; className: string }): string {
+export function getWeatherAdvice(
+  weather: WeatherData,
+  airQuality: { label: string; className: string },
+): string {
   const type = getWeatherType(weather.condition);
   if (type === 'rainy') return '우산을 챙기세요';
   if (type === 'snowy') return '눈길 조심하세요';
-  if (airQuality.className === 'aqi-bad' || airQuality.className === 'aqi-very-bad') return '마스크를 챙기세요';
+  if (airQuality.className === 'aqi-bad' || airQuality.className === 'aqi-very-bad')
+    return '마스크를 챙기세요';
   if (weather.temperature < 0) return '방한용품을 챙기세요';
   if (weather.temperature > 33) return '더위에 주의하세요';
   if (type === 'sunny') return '쾌적한 날씨에요';

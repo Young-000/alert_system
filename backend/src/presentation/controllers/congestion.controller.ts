@@ -41,13 +41,13 @@ export class CongestionController {
     @Query('level') level?: string,
     @Query('limit') limitStr?: string,
   ): Promise<CongestionSegmentsResponseDto> {
-    const validTimeSlot = timeSlot && TIME_SLOTS.includes(timeSlot as TimeSlot)
-      ? (timeSlot as TimeSlot)
-      : undefined;
+    const validTimeSlot =
+      timeSlot && TIME_SLOTS.includes(timeSlot as TimeSlot) ? (timeSlot as TimeSlot) : undefined;
 
-    const validLevel = level && ['low', 'moderate', 'high', 'severe'].includes(level)
-      ? (level as CongestionLevel)
-      : undefined;
+    const validLevel =
+      level && ['low', 'moderate', 'high', 'severe'].includes(level)
+        ? (level as CongestionLevel)
+        : undefined;
 
     const limit = limitStr ? parseInt(limitStr, 10) : 50;
 
@@ -67,15 +67,10 @@ export class CongestionController {
     @Query('timeSlot') timeSlot: string | undefined,
     @Request() req: AuthenticatedRequest,
   ): Promise<RouteCongestionResponseDto> {
-    const validTimeSlot = timeSlot && TIME_SLOTS.includes(timeSlot as TimeSlot)
-      ? (timeSlot as TimeSlot)
-      : undefined;
+    const validTimeSlot =
+      timeSlot && TIME_SLOTS.includes(timeSlot as TimeSlot) ? (timeSlot as TimeSlot) : undefined;
 
-    return this.congestionService.getRouteCongestion(
-      routeId,
-      req.user.userId,
-      validTimeSlot,
-    );
+    return this.congestionService.getRouteCongestion(routeId, req.user.userId, validTimeSlot);
   }
 
   /**

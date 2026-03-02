@@ -28,7 +28,16 @@ export function TransportTypeStep({
       {savedRoutes.length > 0 && !showRouteImport && (
         <div className="route-import-banner">
           <span className="import-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
@@ -37,11 +46,7 @@ export function TransportTypeStep({
             <strong>저장된 경로에서 가져오기</strong>
             <span className="muted">기존 출퇴근 경로의 역/정류장을 사용해요</span>
           </div>
-          <button
-            type="button"
-            className="btn btn-outline btn-sm"
-            onClick={onShowRouteImport}
-          >
+          <button type="button" className="btn btn-outline btn-sm" onClick={onShowRouteImport}>
             선택
           </button>
         </div>
@@ -61,9 +66,9 @@ export function TransportTypeStep({
               &times;
             </button>
           </div>
-          {savedRoutes.map(route => {
-            const subwayStops = route.checkpoints.filter(c => c.checkpointType === 'subway');
-            const busStops = route.checkpoints.filter(c => c.checkpointType === 'bus_stop');
+          {savedRoutes.map((route) => {
+            const subwayStops = route.checkpoints.filter((c) => c.checkpointType === 'subway');
+            const busStops = route.checkpoints.filter((c) => c.checkpointType === 'bus_stop');
             if (subwayStops.length === 0 && busStops.length === 0) return null;
 
             return (
@@ -73,15 +78,17 @@ export function TransportTypeStep({
                 className="route-import-item"
                 onClick={() => onImportFromRoute(route)}
               >
-                <span className={`route-type-badge ${route.routeType === 'morning' ? 'morning' : 'evening'}`}>
+                <span
+                  className={`route-type-badge ${route.routeType === 'morning' ? 'morning' : 'evening'}`}
+                >
                   {route.routeType === 'morning' ? '출근' : '퇴근'}
                 </span>
                 <div className="route-import-info">
                   <span className="route-name">{route.name}</span>
                   <span className="route-stops">
-                    {subwayStops.map(s => s.name).join(', ')}
+                    {subwayStops.map((s) => s.name).join(', ')}
                     {subwayStops.length > 0 && busStops.length > 0 ? ' · ' : ''}
-                    {busStops.map(s => s.name).join(', ')}
+                    {busStops.map((s) => s.name).join(', ')}
                   </span>
                 </div>
                 <span className="route-action">사용 &rarr;</span>
@@ -106,7 +113,16 @@ export function TransportTypeStep({
           aria-label="지하철 선택"
         >
           <span className="choice-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="4" y="3" width="16" height="18" rx="2" />
               <line x1="4" y1="9" x2="20" y2="9" />
               <line x1="4" y1="15" x2="20" y2="15" />
@@ -124,7 +140,16 @@ export function TransportTypeStep({
           aria-label="버스 선택"
         >
           <span className="choice-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="3" y="3" width="18" height="14" rx="2" />
               <path d="M3 10h18" />
               <path d="M7 21l2-4" />

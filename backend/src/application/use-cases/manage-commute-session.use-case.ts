@@ -1,4 +1,10 @@
-import { Injectable, Inject, Optional, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Optional,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import {
   ICommuteSessionRepository,
   COMMUTE_SESSION_REPOSITORY,
@@ -89,7 +95,7 @@ export class ManageCommuteSessionUseCase {
 
     // Check if this checkpoint was already recorded
     const alreadyRecorded = session.checkpointRecords.some(
-      (r) => r.checkpointId === dto.checkpointId
+      (r) => r.checkpointId === dto.checkpointId,
     );
     if (alreadyRecorded) {
       throw new BadRequestException('Checkpoint already recorded for this session');
@@ -111,7 +117,7 @@ export class ManageCommuteSessionUseCase {
       {
         actualWaitTime: dto.actualWaitTime,
         notes: dto.notes,
-      }
+      },
     );
 
     const savedRecord = await this.checkpointRecordRepository.save(record);
@@ -268,7 +274,7 @@ export class ManageCommuteSessionUseCase {
   private toSessionResponseDto(
     session: CommuteSession,
     totalCheckpoints: number,
-    route?: { checkpoints: Array<{ id: string; name: string }> }
+    route?: { checkpoints: Array<{ id: string; name: string }> },
   ): SessionResponseDto {
     // Create checkpoint name map
     const checkpointNameMap = new Map<string, string>();
@@ -293,14 +299,14 @@ export class ManageCommuteSessionUseCase {
       pureMovementTime: session.getPureMovementTime(),
       waitTimePercentage: session.getWaitTimePercentage(),
       checkpointRecords: session.checkpointRecords.map((r) =>
-        this.toCheckpointRecordResponseDto(r, checkpointNameMap.get(r.checkpointId))
+        this.toCheckpointRecordResponseDto(r, checkpointNameMap.get(r.checkpointId)),
       ),
     };
   }
 
   private toCheckpointRecordResponseDto(
     record: CheckpointRecord,
-    checkpointName?: string
+    checkpointName?: string,
   ): CheckpointRecordResponseDto {
     return {
       id: record.id,

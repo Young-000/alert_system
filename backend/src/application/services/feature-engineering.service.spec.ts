@@ -121,10 +121,7 @@ describe('FeatureEngineeringService', () => {
   describe('transformRecordsToFeatureRows', () => {
     it('레코드를 특성 행으로 변환한다', () => {
       const monday = new Date('2026-03-02');
-      const records = [
-        createRecord(8, 10, monday, 'rain'),
-        createRecord(8, 20, monday, 'clear'),
-      ];
+      const records = [createRecord(8, 10, monday, 'rain'), createRecord(8, 20, monday, 'clear')];
 
       const rows = service.transformRecordsToFeatureRows(records);
 
@@ -171,10 +168,7 @@ describe('FeatureEngineeringService', () => {
   describe('buildWeatherRegressionData', () => {
     it('회귀 데이터를 구성한다', () => {
       const monday = new Date('2026-03-02');
-      const records = [
-        createRecord(8, 0, monday, 'clear'),
-        createRecord(7, 50, monday, 'rain'),
-      ];
+      const records = [createRecord(8, 0, monday, 'clear'), createRecord(7, 50, monday, 'rain')];
 
       const rows = service.transformRecordsToFeatureRows(records);
       const overallMean = 485; // 약 08:05
@@ -214,10 +208,7 @@ describe('FeatureEngineeringService', () => {
 
     it('한 종류만 있으면 distinctConditions는 1이다', () => {
       const monday = new Date('2026-03-02');
-      const records = [
-        createRecord(8, 0, monday, 'clear'),
-        createRecord(8, 5, monday, 'clear'),
-      ];
+      const records = [createRecord(8, 0, monday, 'clear'), createRecord(8, 5, monday, 'clear')];
 
       const rows = service.transformRecordsToFeatureRows(records);
       const variety = service.countWeatherVariety(rows);

@@ -37,9 +37,7 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
     const region = process.env.AWS_REGION || 'ap-northeast-2';
     const accountId = process.env.AWS_ACCOUNT_ID;
     if (!accountId) {
-      throw new Error(
-        'AWS_ACCOUNT_ID environment variable is required but not set',
-      );
+      throw new Error('AWS_ACCOUNT_ID environment variable is required but not set');
     }
 
     this.client = new SchedulerClient({ region });
@@ -59,8 +57,8 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
     if (!this.config.schedulerRoleArn) {
       this.logger.warn(
         'EventBridge Scheduler configuration incomplete. ' +
-        'Required: SCHEDULER_ROLE_ARN. ' +
-        'Schedules will not be created.',
+          'Required: SCHEDULER_ROLE_ARN. ' +
+          'Schedules will not be created.',
       );
       this.isConfigured = false;
     } else {
@@ -145,9 +143,7 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
           MaximumRetryAttempts: 3,
           MaximumEventAgeInSeconds: 3600, // 1시간
         },
-        DeadLetterConfig: this.config.dlqArn
-          ? { Arn: this.config.dlqArn }
-          : undefined,
+        DeadLetterConfig: this.config.dlqArn ? { Arn: this.config.dlqArn } : undefined,
       },
       Description: `Alert notification for user ${alert.userId} - ${alert.name}`,
     });
@@ -188,9 +184,7 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
           MaximumRetryAttempts: 3,
           MaximumEventAgeInSeconds: 3600,
         },
-        DeadLetterConfig: this.config.dlqArn
-          ? { Arn: this.config.dlqArn }
-          : undefined,
+        DeadLetterConfig: this.config.dlqArn ? { Arn: this.config.dlqArn } : undefined,
       },
     });
 

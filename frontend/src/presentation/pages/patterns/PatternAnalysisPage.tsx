@@ -49,7 +49,12 @@ function OverviewTab({
   const confidencePercent = Math.round(prediction.confidence * 100);
 
   return (
-    <div className="patterns-tab-content" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+    <div
+      className="patterns-tab-content"
+      role="tabpanel"
+      id="panel-overview"
+      aria-labelledby="tab-overview"
+    >
       <section className="patterns-section" aria-label="요약">
         <h2 className="patterns-section-title">출발 패턴 요약</h2>
         <div className="patterns-summary-grid">
@@ -78,7 +83,8 @@ function OverviewTab({
           <TierBadge tier={prediction.tier} />
           {prediction.dataStatus.nextTierName && (
             <p className="patterns-tier-next">
-              다음 수준: {prediction.dataStatus.nextTierName} ({prediction.dataStatus.nextTierAt}회 기록 필요)
+              다음 수준: {prediction.dataStatus.nextTierName} ({prediction.dataStatus.nextTierAt}회
+              기록 필요)
             </p>
           )}
         </div>
@@ -92,8 +98,11 @@ function OverviewTab({
               <li key={factor.type} className="patterns-factor-item">
                 <div className="patterns-factor-header">
                   <span className="patterns-factor-label">{factor.label}</span>
-                  <span className={`patterns-factor-impact ${factor.impact < 0 ? 'patterns-factor-impact--early' : 'patterns-factor-impact--late'}`}>
-                    {factor.impact > 0 ? '+' : ''}{factor.impact}분
+                  <span
+                    className={`patterns-factor-impact ${factor.impact < 0 ? 'patterns-factor-impact--early' : 'patterns-factor-impact--late'}`}
+                  >
+                    {factor.impact > 0 ? '+' : ''}
+                    {factor.impact}분
                   </span>
                 </div>
                 <p className="patterns-factor-desc">{factor.description}</p>
@@ -118,25 +127,30 @@ function ByDayTab({ insights }: { insights: InsightsResponse }): JSX.Element {
 
   if (segments.length === 0) {
     return (
-      <div className="patterns-tab-content" role="tabpanel" id="panel-by-day" aria-labelledby="tab-by-day">
+      <div
+        className="patterns-tab-content"
+        role="tabpanel"
+        id="panel-by-day"
+        aria-labelledby="tab-by-day"
+      >
         <p className="patterns-empty">요일별 데이터가 아직 충분하지 않습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="patterns-tab-content" role="tabpanel" id="panel-by-day" aria-labelledby="tab-by-day">
+    <div
+      className="patterns-tab-content"
+      role="tabpanel"
+      id="panel-by-day"
+      aria-labelledby="tab-by-day"
+    >
       <section className="patterns-section" aria-label="요일별 출발 시간">
         <h2 className="patterns-section-title">요일별 출발 시간</h2>
         <div className="patterns-chart" role="img" aria-label="요일별 출발 시간 차트">
           <div className="patterns-chart-bars">
             {segments.map((seg) => (
-              <DayBar
-                key={seg.dayOfWeek}
-                segment={seg}
-                avgMinutes={avgMinutes}
-                maxDev={maxDev}
-              />
+              <DayBar key={seg.dayOfWeek} segment={seg} avgMinutes={avgMinutes} maxDev={maxDev} />
             ))}
           </div>
           <div className="patterns-chart-baseline" aria-hidden="true">
@@ -152,7 +166,8 @@ function ByDayTab({ insights }: { insights: InsightsResponse }): JSX.Element {
             <div className="patterns-day-stat">
               <span className="patterns-day-stat-label">가장 일정한 요일</span>
               <span className="patterns-day-stat-value">
-                {insights.dayOfWeek.mostConsistentDay.dayName}요일 (편차 {insights.dayOfWeek.mostConsistentDay.stdDevMinutes}분)
+                {insights.dayOfWeek.mostConsistentDay.dayName}요일 (편차{' '}
+                {insights.dayOfWeek.mostConsistentDay.stdDevMinutes}분)
               </span>
             </div>
           )}
@@ -160,7 +175,8 @@ function ByDayTab({ insights }: { insights: InsightsResponse }): JSX.Element {
             <div className="patterns-day-stat">
               <span className="patterns-day-stat-label">가장 불규칙한 요일</span>
               <span className="patterns-day-stat-value">
-                {insights.dayOfWeek.mostVariableDay.dayName}요일 (편차 {insights.dayOfWeek.mostVariableDay.stdDevMinutes}분)
+                {insights.dayOfWeek.mostVariableDay.dayName}요일 (편차{' '}
+                {insights.dayOfWeek.mostVariableDay.stdDevMinutes}분)
               </span>
             </div>
           )}
@@ -191,7 +207,10 @@ function DayBar({
   if (isVariable) barClass = 'patterns-bar--variable';
 
   return (
-    <div className="patterns-bar-col" aria-label={`${segment.dayName}요일: ${minutesToTimeString(segment.avgMinutes)}, ${segment.sampleCount}회 기록`}>
+    <div
+      className="patterns-bar-col"
+      aria-label={`${segment.dayName}요일: ${minutesToTimeString(segment.avgMinutes)}, ${segment.sampleCount}회 기록`}
+    >
       <span className="patterns-bar-time">{minutesToTimeString(segment.avgMinutes)}</span>
       <div className="patterns-bar-container">
         <div
@@ -224,14 +243,26 @@ function WeatherTab({ insights }: { insights: InsightsResponse }): JSX.Element {
 
   if (!weather) {
     return (
-      <div className="patterns-tab-content" role="tabpanel" id="panel-weather" aria-labelledby="tab-weather">
-        <p className="patterns-empty">날씨 데이터가 아직 충분하지 않습니다. 더 많은 기록이 필요합니다.</p>
+      <div
+        className="patterns-tab-content"
+        role="tabpanel"
+        id="panel-weather"
+        aria-labelledby="tab-weather"
+      >
+        <p className="patterns-empty">
+          날씨 데이터가 아직 충분하지 않습니다. 더 많은 기록이 필요합니다.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="patterns-tab-content" role="tabpanel" id="panel-weather" aria-labelledby="tab-weather">
+    <div
+      className="patterns-tab-content"
+      role="tabpanel"
+      id="panel-weather"
+      aria-labelledby="tab-weather"
+    >
       <section className="patterns-section" aria-label="날씨 민감도">
         <h2 className="patterns-section-title">날씨 민감도</h2>
         <SensitivityBadge level={weather.level} />
@@ -242,29 +273,50 @@ function WeatherTab({ insights }: { insights: InsightsResponse }): JSX.Element {
         <ul className="patterns-weather-list">
           <li className="patterns-weather-item">
             <span className="patterns-weather-label">비</span>
-            <span className={`patterns-weather-impact ${weather.rainImpact < 0 ? 'patterns-weather-impact--early' : ''}`}>
-              {weather.rainImpact > 0 ? '+' : ''}{weather.rainImpact}분
+            <span
+              className={`patterns-weather-impact ${weather.rainImpact < 0 ? 'patterns-weather-impact--early' : ''}`}
+            >
+              {weather.rainImpact > 0 ? '+' : ''}
+              {weather.rainImpact}분
             </span>
             <span className="patterns-weather-desc">
-              {weather.rainImpact < 0 ? '일찍 출발' : weather.rainImpact > 0 ? '늦게 출발' : '영향 없음'}
+              {weather.rainImpact < 0
+                ? '일찍 출발'
+                : weather.rainImpact > 0
+                  ? '늦게 출발'
+                  : '영향 없음'}
             </span>
           </li>
           <li className="patterns-weather-item">
             <span className="patterns-weather-label">눈</span>
-            <span className={`patterns-weather-impact ${weather.snowImpact < 0 ? 'patterns-weather-impact--early' : ''}`}>
-              {weather.snowImpact > 0 ? '+' : ''}{weather.snowImpact}분
+            <span
+              className={`patterns-weather-impact ${weather.snowImpact < 0 ? 'patterns-weather-impact--early' : ''}`}
+            >
+              {weather.snowImpact > 0 ? '+' : ''}
+              {weather.snowImpact}분
             </span>
             <span className="patterns-weather-desc">
-              {weather.snowImpact < 0 ? '일찍 출발' : weather.snowImpact > 0 ? '늦게 출발' : '영향 없음'}
+              {weather.snowImpact < 0
+                ? '일찍 출발'
+                : weather.snowImpact > 0
+                  ? '늦게 출발'
+                  : '영향 없음'}
             </span>
           </li>
           <li className="patterns-weather-item">
             <span className="patterns-weather-label">기온 (5도당)</span>
-            <span className={`patterns-weather-impact ${weather.temperatureImpact < 0 ? 'patterns-weather-impact--early' : ''}`}>
-              {weather.temperatureImpact > 0 ? '+' : ''}{weather.temperatureImpact}분
+            <span
+              className={`patterns-weather-impact ${weather.temperatureImpact < 0 ? 'patterns-weather-impact--early' : ''}`}
+            >
+              {weather.temperatureImpact > 0 ? '+' : ''}
+              {weather.temperatureImpact}분
             </span>
             <span className="patterns-weather-desc">
-              {weather.temperatureImpact < 0 ? '기온 낮을수록 일찍' : weather.temperatureImpact > 0 ? '기온 높을수록 늦게' : '영향 없음'}
+              {weather.temperatureImpact < 0
+                ? '기온 낮을수록 일찍'
+                : weather.temperatureImpact > 0
+                  ? '기온 높을수록 늦게'
+                  : '영향 없음'}
             </span>
           </li>
         </ul>
@@ -341,26 +393,16 @@ export function PatternAnalysisPage(): JSX.Element {
             ))}
           </nav>
 
-          {activeTab === 'overview' && (
-            <OverviewTab prediction={prediction} insights={insights} />
-          )}
-          {activeTab === 'by-day' && (
-            <ByDayTab insights={insights} />
-          )}
-          {activeTab === 'weather' && (
-            <WeatherTab insights={insights} />
-          )}
+          {activeTab === 'overview' && <OverviewTab prediction={prediction} insights={insights} />}
+          {activeTab === 'by-day' && <ByDayTab insights={insights} />}
+          {activeTab === 'weather' && <WeatherTab insights={insights} />}
         </>
       )}
 
       {!isLoading && (!prediction || !insights) && (
         <div className="patterns-empty-state">
           <p>패턴 데이터를 불러올 수 없습니다.</p>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => navigate('/')}
-          >
+          <button type="button" className="btn btn-sm" onClick={() => navigate('/')}>
             홈으로 돌아가기
           </button>
         </div>

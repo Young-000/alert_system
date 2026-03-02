@@ -18,14 +18,14 @@ export async function isPushSupported(): Promise<boolean> {
 }
 
 export async function isPushSubscribed(): Promise<boolean> {
-  if (!await isPushSupported()) return false;
+  if (!(await isPushSupported())) return false;
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
   return sub !== null;
 }
 
 export async function subscribeToPush(): Promise<boolean> {
-  if (!await isPushSupported()) return false;
+  if (!(await isPushSupported())) return false;
 
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return false;
@@ -49,7 +49,7 @@ export async function subscribeToPush(): Promise<boolean> {
 }
 
 export async function unsubscribeFromPush(): Promise<boolean> {
-  if (!await isPushSupported()) return false;
+  if (!(await isPushSupported())) return false;
 
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();

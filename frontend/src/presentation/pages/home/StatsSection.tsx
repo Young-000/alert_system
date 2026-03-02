@@ -11,10 +11,7 @@ interface StatsSectionProps {
   onNavigateToRoutes: () => void;
 }
 
-function buildSummaryText(
-  commuteStats: CommuteStatsResponse | null,
-  hasStats: boolean,
-): string {
+function buildSummaryText(commuteStats: CommuteStatsResponse | null, hasStats: boolean): string {
   if (!hasStats) return '이번 주 출퇴근 기록 없음';
 
   const parts: string[] = [];
@@ -34,7 +31,8 @@ export function StatsSection({
   activeRouteId,
   onNavigateToRoutes,
 }: StatsSectionProps): JSX.Element {
-  const hasStats = commuteStats != null &&
+  const hasStats =
+    commuteStats != null &&
     (commuteStats.overallAverageDuration > 0 ||
       (commuteStats.recentSessions != null && commuteStats.recentSessions > 0));
 
@@ -68,20 +66,27 @@ export function StatsSection({
         </div>
 
         {/* Detail content (only visible when expanded) */}
-        <div id="stats-detail-content" className={`collapsible-content ${isExpanded ? 'collapsible-content--expanded' : ''}`}>
+        <div
+          id="stats-detail-content"
+          className={`collapsible-content ${isExpanded ? 'collapsible-content--expanded' : ''}`}
+        >
           <div className="home-stats-detail">
             {hasStats ? (
               <>
                 <div className="home-stats-row">
                   <div className="home-stat">
                     <span className="home-stat-value">
-                      {commuteStats.overallAverageDuration ? `${commuteStats.overallAverageDuration}분` : '-'}
+                      {commuteStats.overallAverageDuration
+                        ? `${commuteStats.overallAverageDuration}분`
+                        : '-'}
                     </span>
                     <span className="home-stat-label">평균</span>
                   </div>
                   <div className="home-stat">
                     <span className="home-stat-value">
-                      {commuteStats.recentSessions != null ? `${commuteStats.recentSessions}회` : '-'}
+                      {commuteStats.recentSessions != null
+                        ? `${commuteStats.recentSessions}회`
+                        : '-'}
                     </span>
                     <span className="home-stat-label">출퇴근</span>
                   </div>
@@ -89,12 +94,16 @@ export function StatsSection({
                 {commuteStats.insights && commuteStats.insights.length > 0 && (
                   <p className="home-insight">{commuteStats.insights[0]}</p>
                 )}
-                <Link to="/commute/dashboard" className="home-stats-link">자세히 보기</Link>
+                <Link to="/commute/dashboard" className="home-stats-link">
+                  자세히 보기
+                </Link>
               </>
             ) : (
               <div className="home-stats-empty">
                 <p>출퇴근 기록을 시작하면 통계를 볼 수 있어요</p>
-                <Link to="/commute/dashboard" className="home-stats-link">대시보드 보기</Link>
+                <Link to="/commute/dashboard" className="home-stats-link">
+                  대시보드 보기
+                </Link>
               </div>
             )}
           </div>
@@ -104,19 +113,22 @@ export function StatsSection({
       {/* Other routes - always visible regardless of collapse state */}
       {routes.length > 1 && (
         <section className="other-routes" aria-label="다른 경로 보기">
-          {routes.filter(r => r.id !== activeRouteId).slice(0, 2).map(route => (
-            <button
-              key={route.id}
-              type="button"
-              className="other-route-chip"
-              onClick={onNavigateToRoutes}
-            >
-              <span className="other-route-type">
-                {route.routeType === 'morning' ? '출근' : '퇴근'}
-              </span>
-              <span>{route.name} 보기</span>
-            </button>
-          ))}
+          {routes
+            .filter((r) => r.id !== activeRouteId)
+            .slice(0, 2)
+            .map((route) => (
+              <button
+                key={route.id}
+                type="button"
+                className="other-route-chip"
+                onClick={onNavigateToRoutes}
+              >
+                <span className="other-route-type">
+                  {route.routeType === 'morning' ? '출근' : '퇴근'}
+                </span>
+                <span>{route.name} 보기</span>
+              </button>
+            ))}
         </section>
       )}
     </>

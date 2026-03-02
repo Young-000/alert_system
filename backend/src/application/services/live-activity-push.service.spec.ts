@@ -156,11 +156,7 @@ describe('LiveActivityPushService', () => {
       };
 
       const dismissalDate = Math.floor(Date.now() / 1000) + 10;
-      const result = await service.sendEnd(
-        'push-token-abc123',
-        contentState,
-        dismissalDate,
-      );
+      const result = await service.sendEnd('push-token-abc123', contentState, dismissalDate);
 
       expect(result).toBe(true);
     });

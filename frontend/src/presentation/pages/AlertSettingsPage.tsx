@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
 import { AuthRequired } from '../components/AuthRequired';
-import {
-  alertApiClient,
-} from '@infrastructure/api';
+import { alertApiClient } from '@infrastructure/api';
 import type { AlertType, CreateAlertDto } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import {
@@ -47,7 +45,9 @@ export function AlertSettingsPage(): JSX.Element {
 
   // Ref to break circular dependency: handleSubmit needs wizard.setStep,
   // but wizard needs handleSubmit as onSubmit prop.
-  const wizardSetStepRef = useRef<(step: 'type' | 'transport' | 'station' | 'routine' | 'confirm') => void>(() => {});
+  const wizardSetStepRef = useRef<
+    (step: 'type' | 'transport' | 'station' | 'routine' | 'confirm') => void
+  >(() => {});
 
   // Alert CRUD operations
   const alertCrud = useAlertCrud(userId);
@@ -80,7 +80,13 @@ export function AlertSettingsPage(): JSX.Element {
   );
 
   const notificationTimes = useMemo(
-    () => getNotificationTimes(wantsWeather, wantsTransport, routine, transportSearch.selectedTransports),
+    () =>
+      getNotificationTimes(
+        wantsWeather,
+        wantsTransport,
+        routine,
+        transportSearch.selectedTransports,
+      ),
     [wantsWeather, wantsTransport, routine, transportSearch.selectedTransports],
   );
 
@@ -109,7 +115,11 @@ export function AlertSettingsPage(): JSX.Element {
     if (duplicate) {
       setDuplicateAlert(duplicate);
       const parts = duplicate.schedule.split(' ');
-      const hours = parts[1]?.split(',').map(h => `${h.padStart(2, '0')}:00`).join(', ') || '';
+      const hours =
+        parts[1]
+          ?.split(',')
+          .map((h) => `${h.padStart(2, '0')}:00`)
+          .join(', ') || '';
       setCrudError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
       return;
     }
@@ -214,8 +224,8 @@ export function AlertSettingsPage(): JSX.Element {
       transportSearch.setSelectedTransports(transports);
       setWantsTransport(true);
       setSelectedRouteId(route.id);
-      const hasSubway = transports.some(t => t.type === 'subway');
-      const hasBus = transports.some(t => t.type === 'bus');
+      const hasSubway = transports.some((t) => t.type === 'subway');
+      const hasBus = transports.some((t) => t.type === 'bus');
       const types: ('subway' | 'bus')[] = [];
       if (hasSubway) types.push('subway');
       if (hasBus) types.push('bus');
@@ -228,9 +238,7 @@ export function AlertSettingsPage(): JSX.Element {
   // Toggle transport type handler
   const toggleTransportType = (type: 'subway' | 'bus'): void => {
     setTransportTypes((prev) =>
-      prev.includes(type)
-        ? prev.filter((t) => t !== type)
-        : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
 
@@ -269,7 +277,21 @@ export function AlertSettingsPage(): JSX.Element {
     return (
       <AuthRequired
         pageTitle="알림"
-        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+        icon={
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        }
         description="알림을 설정하려면 먼저 로그인하세요"
       />
     );
@@ -285,7 +307,17 @@ export function AlertSettingsPage(): JSX.Element {
             className="notification-history-link"
             aria-label="알림 발송 기록 보기"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <path d="M12 8v4l3 3" />
               <circle cx="12" cy="12" r="10" />
             </svg>
@@ -327,95 +359,95 @@ export function AlertSettingsPage(): JSX.Element {
       )}
 
       {!alertCrud.isLoadingAlerts && shouldShowWizard && (
-      <div id="wizard-content" className="wizard-container">
-        <WizardStepIndicator
-          progress={progress}
-          wantsTransport={wantsTransport}
-          isConfirmStep={wizard.step === 'confirm'}
-        />
-
-        {/* Step: Type Selection */}
-        {wizard.step === 'type' && (
-          <TypeSelectionStep
-            wantsWeather={wantsWeather}
+        <div id="wizard-content" className="wizard-container">
+          <WizardStepIndicator
+            progress={progress}
             wantsTransport={wantsTransport}
+            isConfirmStep={wizard.step === 'confirm'}
+          />
+
+          {/* Step: Type Selection */}
+          {wizard.step === 'type' && (
+            <TypeSelectionStep
+              wantsWeather={wantsWeather}
+              wantsTransport={wantsTransport}
+              isSubmitting={alertCrud.isSubmitting}
+              userId={userId}
+              error={alertCrud.error}
+              success={alertCrud.success}
+              onToggleWeather={() => setWantsWeather(!wantsWeather)}
+              onToggleTransport={() => setWantsTransport(!wantsTransport)}
+              onQuickWeather={alertCrud.handleQuickWeatherAlert}
+              onClearError={() => alertCrud.setError('')}
+            />
+          )}
+
+          {/* Step: Transport Type */}
+          {wizard.step === 'transport' && (
+            <TransportTypeStep
+              transportTypes={transportTypes}
+              savedRoutes={alertCrud.savedRoutes}
+              showRouteImport={showRouteImport}
+              onToggleTransportType={toggleTransportType}
+              onShowRouteImport={() => setShowRouteImport(true)}
+              onHideRouteImport={() => setShowRouteImport(false)}
+              onImportFromRoute={importFromRoute}
+            />
+          )}
+
+          {/* Step: Station Search */}
+          {wizard.step === 'station' && (
+            <StationSearchStep
+              transportTypes={transportTypes}
+              searchQuery={transportSearch.searchQuery}
+              searchResults={transportSearch.searchResults}
+              selectedTransports={transportSearch.selectedTransports}
+              isSearching={transportSearch.isSearching}
+              groupedStations={transportSearch.groupedStations}
+              selectedStation={transportSearch.selectedStation}
+              savedRoutes={alertCrud.savedRoutes}
+              onSearchChange={transportSearch.setSearchQuery}
+              onToggleTransport={transportSearch.toggleTransport}
+              onSelectStation={transportSearch.setSelectedStation}
+            />
+          )}
+
+          {/* Step: Routine */}
+          {wizard.step === 'routine' && (
+            <RoutineStep
+              wantsWeather={wantsWeather}
+              wantsTransport={wantsTransport}
+              routine={routine}
+              notificationTimes={notificationTimes}
+              onRoutineChange={setRoutine}
+            />
+          )}
+
+          {/* Step: Confirm */}
+          {wizard.step === 'confirm' && (
+            <ConfirmStep
+              wantsWeather={wantsWeather}
+              selectedTransports={transportSearch.selectedTransports}
+              notificationTimes={notificationTimes}
+              error={alertCrud.error}
+              success={alertCrud.success}
+              duplicateAlert={alertCrud.duplicateAlert}
+              onEditDuplicate={handleEditDuplicate}
+              onChangeTime={handleChangeTime}
+            />
+          )}
+
+          {/* Navigation Buttons */}
+          <WizardNavButtons
+            step={wizard.step}
+            canProceed={wizard.canProceed()}
             isSubmitting={alertCrud.isSubmitting}
-            userId={userId}
-            error={alertCrud.error}
             success={alertCrud.success}
-            onToggleWeather={() => setWantsWeather(!wantsWeather)}
-            onToggleTransport={() => setWantsTransport(!wantsTransport)}
-            onQuickWeather={alertCrud.handleQuickWeatherAlert}
-            onClearError={() => alertCrud.setError('')}
+            onBack={wizard.goBack}
+            onNext={wizard.goNext}
+            onSubmit={handleSubmit}
           />
-        )}
-
-        {/* Step: Transport Type */}
-        {wizard.step === 'transport' && (
-          <TransportTypeStep
-            transportTypes={transportTypes}
-            savedRoutes={alertCrud.savedRoutes}
-            showRouteImport={showRouteImport}
-            onToggleTransportType={toggleTransportType}
-            onShowRouteImport={() => setShowRouteImport(true)}
-            onHideRouteImport={() => setShowRouteImport(false)}
-            onImportFromRoute={importFromRoute}
-          />
-        )}
-
-        {/* Step: Station Search */}
-        {wizard.step === 'station' && (
-          <StationSearchStep
-            transportTypes={transportTypes}
-            searchQuery={transportSearch.searchQuery}
-            searchResults={transportSearch.searchResults}
-            selectedTransports={transportSearch.selectedTransports}
-            isSearching={transportSearch.isSearching}
-            groupedStations={transportSearch.groupedStations}
-            selectedStation={transportSearch.selectedStation}
-            savedRoutes={alertCrud.savedRoutes}
-            onSearchChange={transportSearch.setSearchQuery}
-            onToggleTransport={transportSearch.toggleTransport}
-            onSelectStation={transportSearch.setSelectedStation}
-          />
-        )}
-
-        {/* Step: Routine */}
-        {wizard.step === 'routine' && (
-          <RoutineStep
-            wantsWeather={wantsWeather}
-            wantsTransport={wantsTransport}
-            routine={routine}
-            notificationTimes={notificationTimes}
-            onRoutineChange={setRoutine}
-          />
-        )}
-
-        {/* Step: Confirm */}
-        {wizard.step === 'confirm' && (
-          <ConfirmStep
-            wantsWeather={wantsWeather}
-            selectedTransports={transportSearch.selectedTransports}
-            notificationTimes={notificationTimes}
-            error={alertCrud.error}
-            success={alertCrud.success}
-            duplicateAlert={alertCrud.duplicateAlert}
-            onEditDuplicate={handleEditDuplicate}
-            onChangeTime={handleChangeTime}
-          />
-        )}
-
-        {/* Navigation Buttons */}
-        <WizardNavButtons
-          step={wizard.step}
-          canProceed={wizard.canProceed()}
-          isSubmitting={alertCrud.isSubmitting}
-          success={alertCrud.success}
-          onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSubmit={handleSubmit}
-        />
-      </div>
+        </div>
       )}
 
       {/* 빠른 알림 프리셋 - 위저드가 활성화되지 않은 경우에만 표시 */}

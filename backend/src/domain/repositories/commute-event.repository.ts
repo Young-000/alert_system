@@ -10,7 +10,7 @@ export interface ICommuteEventRepository {
     userId: string,
     placeId: string,
     eventType: CommuteEventType,
-    withinMs: number
+    withinMs: number,
   ): Promise<CommuteEvent | undefined>;
   markProcessed(id: string): Promise<void>;
   update(event: CommuteEvent): Promise<void>;

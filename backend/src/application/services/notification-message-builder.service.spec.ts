@@ -1,4 +1,7 @@
-import { NotificationMessageBuilderService, NotificationData } from './notification-message-builder.service';
+import {
+  NotificationMessageBuilderService,
+  NotificationData,
+} from './notification-message-builder.service';
 import { Weather, HourlyForecast, DailyForecast } from '@domain/entities/weather.entity';
 import { AirQuality } from '@domain/entities/air-quality.entity';
 import { BusArrival } from '@domain/entities/bus-arrival.entity';
@@ -15,15 +18,17 @@ describe('NotificationMessageBuilderService', () => {
 
   // ─── Helper factories ─────────────────────────
 
-  function buildWeather(overrides: Partial<{
-    location: string;
-    temperature: number;
-    condition: string;
-    humidity: number;
-    windSpeed: number;
-    feelsLike: number;
-    forecast: DailyForecast;
-  }> = {}): Weather {
+  function buildWeather(
+    overrides: Partial<{
+      location: string;
+      temperature: number;
+      condition: string;
+      humidity: number;
+      windSpeed: number;
+      feelsLike: number;
+      forecast: DailyForecast;
+    }> = {},
+  ): Weather {
     return new Weather(
       overrides.location ?? 'Seoul',
       overrides.temperature ?? 20,
@@ -43,7 +48,12 @@ describe('NotificationMessageBuilderService', () => {
     };
   }
 
-  function buildHourly(slot: string, conditionKr: string, rainProbability: number, temperature = 20): HourlyForecast {
+  function buildHourly(
+    slot: string,
+    conditionKr: string,
+    rainProbability: number,
+    temperature = 20,
+  ): HourlyForecast {
     return {
       time: '12:00',
       timeSlot: slot,
@@ -139,10 +149,7 @@ describe('NotificationMessageBuilderService', () => {
     it('includes rain probability for rainy slots', () => {
       const weather = buildWeather({
         forecast: buildForecast({
-          hourlyForecasts: [
-            buildHourly('오전', '맑음', 0),
-            buildHourly('오후', '비', 60),
-          ],
+          hourlyForecasts: [buildHourly('오전', '맑음', 0), buildHourly('오후', '비', 60)],
         }),
       });
       const result = service.buildWeatherString(weather);
@@ -152,9 +159,7 @@ describe('NotificationMessageBuilderService', () => {
     it('does not include rain probability for non-rainy slots even with >0 probability', () => {
       const weather = buildWeather({
         forecast: buildForecast({
-          hourlyForecasts: [
-            buildHourly('오전', '흐림', 30),
-          ],
+          hourlyForecasts: [buildHourly('오전', '흐림', 30)],
         }),
       });
       const result = service.buildWeatherString(weather);
@@ -192,44 +197,35 @@ describe('NotificationMessageBuilderService', () => {
       const forecasts = [buildHourly('오전', '맑음', 0)];
       const result = service.extractTimeSlotsWithRain(forecasts);
       expect(result).toHaveLength(3);
-      expect(result.map(r => r.slot)).toEqual(['오전', '오후', '저녁']);
+      expect(result.map((r) => r.slot)).toEqual(['오전', '오후', '저녁']);
     });
 
     it('fills missing slots with defaults', () => {
       const forecasts = [buildHourly('오후', '비', 70)];
       const result = service.extractTimeSlotsWithRain(forecasts);
-      const morning = result.find(r => r.slot === '오전')!;
+      const morning = result.find((r) => r.slot === '오전')!;
       expect(morning.weather).toBe('정보없음');
       expect(morning.rainProbability).toBe(0);
     });
 
     it('takes max rain probability for duplicated slots', () => {
-      const forecasts = [
-        buildHourly('오전', '맑음', 20, 15),
-        buildHourly('오전', '비', 80, 18),
-      ];
+      const forecasts = [buildHourly('오전', '맑음', 20, 15), buildHourly('오전', '비', 80, 18)];
       const result = service.extractTimeSlotsWithRain(forecasts);
-      const morning = result.find(r => r.slot === '오전')!;
+      const morning = result.find((r) => r.slot === '오전')!;
       expect(morning.rainProbability).toBe(80);
     });
 
     it('prefers rainy condition when merging duplicated slots', () => {
-      const forecasts = [
-        buildHourly('오전', '맑음', 10, 15),
-        buildHourly('오전', '비', 70, 18),
-      ];
+      const forecasts = [buildHourly('오전', '맑음', 10, 15), buildHourly('오전', '비', 70, 18)];
       const result = service.extractTimeSlotsWithRain(forecasts);
-      const morning = result.find(r => r.slot === '오전')!;
+      const morning = result.find((r) => r.slot === '오전')!;
       expect(morning.weather).toBe('비');
     });
 
     it('averages temperatures for duplicated slots', () => {
-      const forecasts = [
-        buildHourly('오전', '맑음', 0, 10),
-        buildHourly('오전', '맑음', 0, 20),
-      ];
+      const forecasts = [buildHourly('오전', '맑음', 0, 10), buildHourly('오전', '맑음', 0, 20)];
       const result = service.extractTimeSlotsWithRain(forecasts);
-      const morning = result.find(r => r.slot === '오전')!;
+      const morning = result.find((r) => r.slot === '오전')!;
       expect(morning.temperature).toBe(15);
     });
 
@@ -255,36 +251,50 @@ describe('NotificationMessageBuilderService', () => {
     });
 
     it('formats station name, line, and arrival time', () => {
-      const stations = [{
-        name: '강남',
-        line: '2호선',
-        arrivals: [new SubwayArrival('st-1', 'line-2', '상행', 180, '삼성')],
-      }];
+      const stations = [
+        {
+          name: '강남',
+          line: '2호선',
+          arrivals: [new SubwayArrival('st-1', 'line-2', '상행', 180, '삼성')],
+        },
+      ];
       expect(service.buildSubwayInfo(stations)).toBe('• 강남역 (2호선) 3분');
     });
 
     it('shows "곧 도착" for immediate arrivals', () => {
-      const stations = [{
-        name: '역삼',
-        line: '2호선',
-        arrivals: [new SubwayArrival('st-2', 'line-2', '하행', 30, '강남')],
-      }];
+      const stations = [
+        {
+          name: '역삼',
+          line: '2호선',
+          arrivals: [new SubwayArrival('st-2', 'line-2', '하행', 30, '강남')],
+        },
+      ];
       expect(service.buildSubwayInfo(stations)).toBe('• 역삼역 (2호선) 곧 도착');
     });
 
     it('shows "정보 없음" when station has no arrivals', () => {
-      const stations = [{
-        name: '삼성',
-        line: '2호선',
-        arrivals: [],
-      }];
+      const stations = [
+        {
+          name: '삼성',
+          line: '2호선',
+          arrivals: [],
+        },
+      ];
       expect(service.buildSubwayInfo(stations)).toBe('• 삼성역 (2호선) 정보 없음');
     });
 
     it('joins multiple stations with newline', () => {
       const stations = [
-        { name: '강남', line: '2호선', arrivals: [new SubwayArrival('st-1', 'l-2', '상행', 120, '삼성')] },
-        { name: '교대', line: '3호선', arrivals: [new SubwayArrival('st-2', 'l-3', '하행', 300, '남부터미널')] },
+        {
+          name: '강남',
+          line: '2호선',
+          arrivals: [new SubwayArrival('st-1', 'l-2', '상행', 120, '삼성')],
+        },
+        {
+          name: '교대',
+          line: '3호선',
+          arrivals: [new SubwayArrival('st-2', 'l-3', '하행', 300, '남부터미널')],
+        },
       ];
       const result = service.buildSubwayInfo(stations);
       expect(result).toContain('• 강남역 (2호선) 2분');
@@ -302,18 +312,22 @@ describe('NotificationMessageBuilderService', () => {
     });
 
     it('formats stop name, route name, and arrival time', () => {
-      const stops = [{
-        name: '강남역정류장',
-        arrivals: [new BusArrival('stop-1', 'route-1', '146', 240, 3)],
-      }];
+      const stops = [
+        {
+          name: '강남역정류장',
+          arrivals: [new BusArrival('stop-1', 'route-1', '146', 240, 3)],
+        },
+      ];
       expect(service.buildBusInfo(stops)).toBe('• 강남역정류장 - 146번 4분');
     });
 
     it('shows "정보 없음" when stop has no arrivals', () => {
-      const stops = [{
-        name: '역삼역정류장',
-        arrivals: [],
-      }];
+      const stops = [
+        {
+          name: '역삼역정류장',
+          arrivals: [],
+        },
+      ];
       expect(service.buildBusInfo(stops)).toBe('• 역삼역정류장 - 정보 없음');
     });
 
@@ -337,7 +351,9 @@ describe('NotificationMessageBuilderService', () => {
     });
 
     it('includes weather info', () => {
-      const data: NotificationData = { weather: buildWeather({ temperature: 15, condition: 'Clear' }) };
+      const data: NotificationData = {
+        weather: buildWeather({ temperature: 15, condition: 'Clear' }),
+      };
       const result = service.buildSummary(data);
       expect(result).toContain('15°');
       expect(result).toContain('맑음');
@@ -385,10 +401,7 @@ describe('NotificationMessageBuilderService', () => {
           forecast: buildForecast({
             minTemp: -5,
             maxTemp: 5,
-            hourlyForecasts: [
-              buildHourly('오전', '비', 80, -2),
-              buildHourly('오후', '비', 90, 0),
-            ],
+            hourlyForecasts: [buildHourly('오전', '비', 80, -2), buildHourly('오후', '비', 90, 0)],
           }),
         }),
         airQuality: buildAirQuality(),
@@ -465,7 +478,13 @@ describe('NotificationMessageBuilderService', () => {
   describe('generateTransitTip', () => {
     it('returns subway+bus tip when both have arrivals', () => {
       const data: NotificationData = {
-        subwayStations: [{ name: '강남', line: '2호선', arrivals: [new SubwayArrival('s1', 'l2', '상행', 120, '삼성')] }],
+        subwayStations: [
+          {
+            name: '강남',
+            line: '2호선',
+            arrivals: [new SubwayArrival('s1', 'l2', '상행', 120, '삼성')],
+          },
+        ],
         busStops: [{ name: '정류장A', arrivals: [new BusArrival('b1', 'r1', '146', 180, 3)] }],
       };
       expect(service.generateTransitTip(data)).toBe('지금 출발하면 딱 좋아요!');
@@ -473,7 +492,13 @@ describe('NotificationMessageBuilderService', () => {
 
     it('returns subway-only tip when only subway has arrivals', () => {
       const data: NotificationData = {
-        subwayStations: [{ name: '강남', line: '2호선', arrivals: [new SubwayArrival('s1', 'l2', '상행', 120, '삼성')] }],
+        subwayStations: [
+          {
+            name: '강남',
+            line: '2호선',
+            arrivals: [new SubwayArrival('s1', 'l2', '상행', 120, '삼성')],
+          },
+        ],
         busStops: [{ name: '정류장A', arrivals: [] }],
       };
       expect(service.generateTransitTip(data)).toBe('지하철 도착 정보 확인하세요.');
@@ -510,10 +535,7 @@ describe('NotificationMessageBuilderService', () => {
         forecast: buildForecast({
           maxTemp: 25,
           minTemp: 18,
-          hourlyForecasts: [
-            buildHourly('오전', '맑음', 0),
-            buildHourly('오후', '맑음', 0),
-          ],
+          hourlyForecasts: [buildHourly('오전', '맑음', 0), buildHourly('오후', '맑음', 0)],
         }),
       });
       expect(service.buildWeatherHighlights(weather)).toHaveLength(0);
@@ -522,15 +544,12 @@ describe('NotificationMessageBuilderService', () => {
     it('includes rain warning when probability >= 40%', () => {
       const weather = buildWeather({
         forecast: buildForecast({
-          hourlyForecasts: [
-            buildHourly('오전', '맑음', 10),
-            buildHourly('오후', '비', 60),
-          ],
+          hourlyForecasts: [buildHourly('오전', '맑음', 10), buildHourly('오후', '비', 60)],
         }),
       });
       const highlights = service.buildWeatherHighlights(weather);
-      expect(highlights.some(h => h.includes('비 예보'))).toBe(true);
-      expect(highlights.some(h => h.includes('우산'))).toBe(true);
+      expect(highlights.some((h) => h.includes('비 예보'))).toBe(true);
+      expect(highlights.some((h) => h.includes('우산'))).toBe(true);
     });
 
     it('includes temperature difference warning when >= 10', () => {
@@ -542,7 +561,7 @@ describe('NotificationMessageBuilderService', () => {
         }),
       });
       const highlights = service.buildWeatherHighlights(weather);
-      expect(highlights.some(h => h.includes('일교차'))).toBe(true);
+      expect(highlights.some((h) => h.includes('일교차'))).toBe(true);
     });
 
     it('includes freezing warning when minTemp <= 0', () => {
@@ -554,7 +573,7 @@ describe('NotificationMessageBuilderService', () => {
         }),
       });
       const highlights = service.buildWeatherHighlights(weather);
-      expect(highlights.some(h => h.includes('영하'))).toBe(true);
+      expect(highlights.some((h) => h.includes('영하'))).toBe(true);
     });
 
     it('includes heat warning when maxTemp >= 33', () => {
@@ -566,7 +585,7 @@ describe('NotificationMessageBuilderService', () => {
         }),
       });
       const highlights = service.buildWeatherHighlights(weather);
-      expect(highlights.some(h => h.includes('폭염'))).toBe(true);
+      expect(highlights.some((h) => h.includes('폭염'))).toBe(true);
     });
 
     it('includes mask warning for bad air quality', () => {
@@ -575,7 +594,7 @@ describe('NotificationMessageBuilderService', () => {
       });
       const aq = buildAirQuality('나쁨');
       const highlights = service.buildWeatherHighlights(weather, aq);
-      expect(highlights.some(h => h.includes('마스크'))).toBe(true);
+      expect(highlights.some((h) => h.includes('마스크'))).toBe(true);
     });
 
     it('includes mask warning for "매우나쁨" air quality', () => {
@@ -584,7 +603,7 @@ describe('NotificationMessageBuilderService', () => {
       });
       const aq = buildAirQuality('매우나쁨');
       const highlights = service.buildWeatherHighlights(weather, aq);
-      expect(highlights.some(h => h.includes('미세먼지'))).toBe(true);
+      expect(highlights.some((h) => h.includes('미세먼지'))).toBe(true);
     });
   });
 });

@@ -47,19 +47,25 @@ export function CommuteTrackingPage(): JSX.Element {
   // Load data: check for existing session or start new one
   useEffect(() => {
     let isMounted = true;
-    if (!userId) { setIsLoading(false); return; }
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
         // Check for in-progress session first
-        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; });
+        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => {
+          console.warn('Failed to check in-progress session:', err);
+          return null;
+        });
 
         if (inProgress && isMounted) {
           setSession(inProgress);
           // Load the route for this session
           const routes = await commuteApi.getUserRoutes(userId);
-          const matchingRoute = routes.find(r => r.id === inProgress.routeId);
+          const matchingRoute = routes.find((r) => r.id === inProgress.routeId);
           if (matchingRoute) setRoute(matchingRoute);
           return;
         }
@@ -67,7 +73,7 @@ export function CommuteTrackingPage(): JSX.Element {
         // No in-progress session: check if we have a routeId to start
         if (navRouteId && isMounted) {
           const routes = await commuteApi.getUserRoutes(userId);
-          const matchingRoute = routes.find(r => r.id === navRouteId);
+          const matchingRoute = routes.find((r) => r.id === navRouteId);
           if (matchingRoute) {
             setRoute(matchingRoute);
             // Auto-start session
@@ -83,7 +89,7 @@ export function CommuteTrackingPage(): JSX.Element {
         // PWA shortcut: auto-select route by mode (morning/evening)
         if (searchMode && (searchMode === 'morning' || searchMode === 'evening') && isMounted) {
           const routes = await commuteApi.getUserRoutes(userId);
-          const matchingRoute = routes.find(r => r.routeType === searchMode);
+          const matchingRoute = routes.find((r) => r.routeType === searchMode);
           if (matchingRoute) {
             setRoute(matchingRoute);
             const newSession = await commuteApi.startSession({
@@ -107,7 +113,9 @@ export function CommuteTrackingPage(): JSX.Element {
     };
 
     loadData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId, navigate, commuteApi, navRouteId, searchMode]);
 
   // Timer effect
@@ -180,26 +188,29 @@ export function CommuteTrackingPage(): JSX.Element {
     try {
       // Auto-record any unrecorded checkpoints (parallel for speed)
       if (route) {
-        const recordedIds = new Set(session.checkpointRecords.map(r => r.checkpointId));
-        const unrecorded = route.checkpoints.filter(cp => !recordedIds.has(cp.id));
+        const recordedIds = new Set(session.checkpointRecords.map((r) => r.checkpointId));
+        const unrecorded = route.checkpoints.filter((cp) => !recordedIds.has(cp.id));
 
         if (unrecorded.length > 0) {
-          await Promise.all(unrecorded.map(cp =>
-            commuteApi.recordCheckpoint({
-              sessionId: session.id,
-              checkpointId: cp.id,
-              actualWaitTime: 0,
-            })
-          ));
+          await Promise.all(
+            unrecorded.map((cp) =>
+              commuteApi.recordCheckpoint({
+                sessionId: session.id,
+                checkpointId: cp.id,
+                actualWaitTime: 0,
+              }),
+            ),
+          );
         }
       }
 
       const completed = await commuteApi.completeSession({ sessionId: session.id });
       setSession(completed);
     } catch (err) {
-      const message = err instanceof Error && err.message.includes('401')
-        ? '로그인이 만료되었습니다. 다시 로그인해주세요.'
-        : '기록 완료에 실패했습니다. 네트워크 연결을 확인해주세요.';
+      const message =
+        err instanceof Error && err.message.includes('401')
+          ? '로그인이 만료되었습니다. 다시 로그인해주세요.'
+          : '기록 완료에 실패했습니다. 네트워크 연결을 확인해주세요.';
       setError(message);
     } finally {
       setIsCompleting(false);
@@ -232,6 +243,40 @@ export function CommuteTrackingPage(): JSX.Element {
     );
   }
 
+  // Error state with no session — show error with navigation
+  if (!session && error) {
+    return (
+      <main className="page commute-page-v2">
+        <header className="commute-v2-header">
+          <button
+            type="button"
+            className="commute-v2-back"
+            onClick={() => navigate('/', { replace: true })}
+            aria-label="홈으로 돌아가기"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <span className="commute-v2-title">오류</span>
+          <span aria-hidden="true" />
+        </header>
+        <div className="commute-v2-error" role="alert" style={{ margin: '2rem 1rem' }}>
+          {error}
+        </div>
+        <div className="commute-v2-actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => navigate('/', { replace: true })}
+          >
+            홈으로 돌아가기
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   // Completed state
   if (session?.status === 'completed') {
     const durationMin = session.totalDurationMinutes || 0;
@@ -242,7 +287,16 @@ export function CommuteTrackingPage(): JSX.Element {
       <main className="page commute-page-v2">
         <div className="commute-v2-completed">
           <div className="completed-check-icon" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--success)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
@@ -264,7 +318,15 @@ export function CommuteTrackingPage(): JSX.Element {
           <button
             type="button"
             className="btn btn-primary completed-home-btn"
+            onClick={() => navigate('/commute/dashboard', { replace: true })}
+          >
+            통계 보기
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
             onClick={() => navigate('/', { replace: true })}
+            style={{ marginTop: '0.5rem' }}
           >
             홈으로
           </button>
@@ -286,7 +348,16 @@ export function CommuteTrackingPage(): JSX.Element {
           onClick={() => setShowCancelConfirm(true)}
           aria-label="세션 취소"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -297,11 +368,7 @@ export function CommuteTrackingPage(): JSX.Element {
       </header>
 
       {/* Route name */}
-      {route && (
-        <div className="commute-v2-route-badge">
-          {route.name}
-        </div>
-      )}
+      {route && <div className="commute-v2-route-badge">{route.name}</div>}
 
       {/* Big Timer */}
       <div className="commute-v2-timer">
@@ -316,12 +383,12 @@ export function CommuteTrackingPage(): JSX.Element {
       {route && route.checkpoints.length > 0 && session && (
         <div className="commute-timeline">
           {route.checkpoints.map((cp, i) => {
-            const record = session.checkpointRecords.find(r => r.checkpointId === cp.id);
+            const record = session.checkpointRecords.find((r) => r.checkpointId === cp.id);
             const isCompleted = !!record;
             const isLast = i === route.checkpoints.length - 1;
             // Current = first checkpoint that is not recorded
             const firstUnrecordedIdx = route.checkpoints.findIndex(
-              c => !session.checkpointRecords.find(r => r.checkpointId === c.id)
+              (c) => !session.checkpointRecords.find((r) => r.checkpointId === c.id),
             );
             const isCurrent = i === firstUnrecordedIdx;
 
@@ -354,9 +421,8 @@ export function CommuteTrackingPage(): JSX.Element {
           {error.includes('로그인') && (
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm ml-2"
               onClick={() => navigate('/login')}
-              style={{ marginLeft: '0.5rem' }}
             >
               로그인
             </button>

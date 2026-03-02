@@ -51,4 +51,3 @@ export class AlertApiClient {
     return this.apiClient.patch<Alert>(`/alerts/${id}`, dto);
   }
 }
-

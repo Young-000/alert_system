@@ -19,23 +19,15 @@ export type MonthlyStats = {
 
 @Injectable()
 export class MissionStatsUseCase {
-  constructor(
-    @Inject(MISSION_REPOSITORY) private readonly repo: IMissionRepository,
-  ) {}
+  constructor(@Inject(MISSION_REPOSITORY) private readonly repo: IMissionRepository) {}
 
-  async getWeeklyStats(
-    userId: string,
-    todayKST: string,
-  ): Promise<WeeklyStats> {
+  async getWeeklyStats(userId: string, todayKST: string): Promise<WeeklyStats> {
     const startDate = this.daysAgo(todayKST, 6);
     const scores = await this.repo.findScoreRange(userId, startDate, todayKST);
     return this.buildStats(scores);
   }
 
-  async getMonthlyStats(
-    userId: string,
-    todayKST: string,
-  ): Promise<MonthlyStats> {
+  async getMonthlyStats(userId: string, todayKST: string): Promise<MonthlyStats> {
     const startDate = this.daysAgo(todayKST, 29);
     const scores = await this.repo.findScoreRange(userId, startDate, todayKST);
     return this.buildStats(scores);
@@ -56,14 +48,9 @@ export class MissionStatsUseCase {
     }
 
     const totalMissions = scores.reduce((sum, s) => sum + s.totalMissions, 0);
-    const totalCompleted = scores.reduce(
-      (sum, s) => sum + s.completedMissions,
-      0,
-    );
+    const totalCompleted = scores.reduce((sum, s) => sum + s.completedMissions, 0);
     const completionRate =
-      totalMissions === 0
-        ? 0
-        : Math.round((totalCompleted / totalMissions) * 100);
+      totalMissions === 0 ? 0 : Math.round((totalCompleted / totalMissions) * 100);
 
     return {
       totalCompleted,

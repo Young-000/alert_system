@@ -58,14 +58,14 @@ describe('DataRetentionService', () => {
       const result = await service.cleanupBehaviorEvents();
 
       expect(result).toBe(15);
-      expect(mockBehaviorRepo.deleteOlderThan).toHaveBeenCalledWith(
-        expect.any(Date),
-      );
+      expect(mockBehaviorRepo.deleteOlderThan).toHaveBeenCalledWith(expect.any(Date));
 
       // Verify the cutoff date is approximately correct (90 days ago)
       const calledDate = mockBehaviorRepo.deleteOlderThan.mock.calls[0][0];
       const expectedDate = new Date();
-      expectedDate.setDate(expectedDate.getDate() - DEFAULT_PRIVACY_SETTINGS.retention.behaviorEventsMaxDays);
+      expectedDate.setDate(
+        expectedDate.getDate() - DEFAULT_PRIVACY_SETTINGS.retention.behaviorEventsMaxDays,
+      );
       // Within 1 second tolerance
       expect(Math.abs(calledDate.getTime() - expectedDate.getTime())).toBeLessThan(1000);
     });
@@ -108,7 +108,9 @@ describe('DataRetentionService', () => {
       expect(result).toBe(20);
       const calledDate = mockCommuteRepo.deleteOlderThan.mock.calls[0][0];
       const expectedDate = new Date();
-      expectedDate.setDate(expectedDate.getDate() - DEFAULT_PRIVACY_SETTINGS.retention.commuteRecordsMaxDays);
+      expectedDate.setDate(
+        expectedDate.getDate() - DEFAULT_PRIVACY_SETTINGS.retention.commuteRecordsMaxDays,
+      );
       expect(Math.abs(calledDate.getTime() - expectedDate.getTime())).toBeLessThan(1000);
     });
 

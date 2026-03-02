@@ -34,9 +34,7 @@ export function linearRegression(
   }
 
   // Add intercept column if requested
-  const augX = addIntercept
-    ? X.map(row => [1, ...row])
-    : X.map(row => [...row]);
+  const augX = addIntercept ? X.map((row) => [1, ...row]) : X.map((row) => [...row]);
 
   const p = augX[0].length;
 
@@ -106,10 +104,7 @@ function transpose(A: readonly (readonly number[])[]): number[][] {
   return result;
 }
 
-function matMul(
-  A: readonly (readonly number[])[],
-  B: readonly (readonly number[])[],
-): number[][] {
+function matMul(A: readonly (readonly number[])[], B: readonly (readonly number[])[]): number[][] {
   const aRows = A.length;
   const aCols = A[0].length;
   const bCols = B[0].length;
@@ -128,11 +123,8 @@ function matMul(
   return result;
 }
 
-function matVecMul(
-  A: readonly (readonly number[])[],
-  v: readonly number[],
-): number[] {
-  return A.map(row => row.reduce((sum, val, j) => sum + val * v[j], 0));
+function matVecMul(A: readonly (readonly number[])[], v: readonly number[]): number[] {
+  return A.map((row) => row.reduce((sum, val, j) => sum + val * v[j], 0));
 }
 
 /**
@@ -174,10 +166,7 @@ function invert2x2(A: readonly (readonly number[])[]): number[][] | null {
 function invert3x3(A: readonly (readonly number[])[]): number[][] | null {
   const [[a, b, c], [d, e, f], [g, h, i]] = A;
 
-  const det =
-    a * (e * i - f * h) -
-    b * (d * i - f * g) +
-    c * (d * h - e * g);
+  const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
 
   if (Math.abs(det) < 1e-12) return null;
 
@@ -235,5 +224,5 @@ function invertGaussJordan(A: readonly (readonly number[])[]): number[][] | null
   }
 
   // Extract inverse from augmented matrix
-  return aug.map(row => row.slice(n));
+  return aug.map((row) => row.slice(n));
 }

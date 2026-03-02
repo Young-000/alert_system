@@ -41,9 +41,7 @@ describe('DevController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DevController],
-      providers: [
-        { provide: getDataSourceToken(), useValue: mockDataSource },
-      ],
+      providers: [{ provide: getDataSourceToken(), useValue: mockDataSource }],
     }).compile();
 
     controller = module.get<DevController>(DevController);

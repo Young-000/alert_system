@@ -26,10 +26,7 @@ describe('SearchBusStopsUseCase', () => {
       const result = await useCase.execute('강남역');
 
       expect(result).toEqual(mockBusStops);
-      expect(mockBusStopApiClient.searchBusStops).toHaveBeenCalledWith(
-        '강남역',
-        20,
-      );
+      expect(mockBusStopApiClient.searchBusStops).toHaveBeenCalledWith('강남역', 20);
     });
 
     it('1글자 검색어는 빈 배열 반환', async () => {
@@ -59,10 +56,7 @@ describe('SearchBusStopsUseCase', () => {
       const result = await useCase.execute('  강남역  ');
 
       expect(result).toEqual(mockBusStops);
-      expect(mockBusStopApiClient.searchBusStops).toHaveBeenCalledWith(
-        '강남역',
-        20,
-      );
+      expect(mockBusStopApiClient.searchBusStops).toHaveBeenCalledWith('강남역', 20);
     });
 
     it('커스텀 limit 파라미터 전달', async () => {
@@ -71,16 +65,11 @@ describe('SearchBusStopsUseCase', () => {
       const result = await useCase.execute('강남역', 5);
 
       expect(result).toHaveLength(1);
-      expect(mockBusStopApiClient.searchBusStops).toHaveBeenCalledWith(
-        '강남역',
-        5,
-      );
+      expect(mockBusStopApiClient.searchBusStops).toHaveBeenCalledWith('강남역', 5);
     });
 
     it('API 에러 발생 시 예외 전파', async () => {
-      mockBusStopApiClient.searchBusStops.mockRejectedValue(
-        new Error('API Error'),
-      );
+      mockBusStopApiClient.searchBusStops.mockRejectedValue(new Error('API Error'));
 
       await expect(useCase.execute('강남역')).rejects.toThrow('API Error');
     });

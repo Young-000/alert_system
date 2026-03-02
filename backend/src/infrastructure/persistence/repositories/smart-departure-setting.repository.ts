@@ -7,9 +7,7 @@ import { SmartDepartureSetting } from '@domain/entities/smart-departure-setting.
 import type { DepartureType } from '@domain/entities/smart-departure-setting.entity';
 
 @Injectable()
-export class SmartDepartureSettingRepositoryImpl
-  implements ISmartDepartureSettingRepository
-{
+export class SmartDepartureSettingRepositoryImpl implements ISmartDepartureSettingRepository {
   constructor(
     @InjectRepository(SmartDepartureSettingEntity)
     private readonly repo: Repository<SmartDepartureSettingEntity>,
@@ -115,6 +113,9 @@ export class SmartDepartureSettingRepositoryImpl
 
   private parseIntArray(value: string): number[] {
     if (!value || value === '') return [];
-    return value.split(',').map((v) => parseInt(v.trim(), 10)).filter((n) => !isNaN(n));
+    return value
+      .split(',')
+      .map((v) => parseInt(v.trim(), 10))
+      .filter((n) => !isNaN(n));
   }
 }

@@ -34,9 +34,10 @@ describe('CommuteController', () => {
     checkpoints: [],
   };
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   beforeEach(async () => {
     manageSessionUseCase = {
@@ -64,7 +65,13 @@ describe('CommuteController', () => {
         { provide: GetCommuteStatsUseCase, useValue: getStatsUseCase },
         { provide: GetWeeklyReportUseCase, useValue: getWeeklyReportUseCase },
         { provide: GetStreakUseCase, useValue: { execute: jest.fn(), getMilestones: jest.fn() } },
-        { provide: UpdateStreakUseCase, useValue: { recordCompletion: jest.fn().mockResolvedValue(null), updateSettings: jest.fn() } },
+        {
+          provide: UpdateStreakUseCase,
+          useValue: {
+            recordCompletion: jest.fn().mockResolvedValue(null),
+            updateSettings: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -164,9 +171,9 @@ describe('CommuteController', () => {
     it('다른 사용자의 세션 취소 시 ForbiddenException', async () => {
       manageSessionUseCase.getSessionById.mockResolvedValue(mockSessionOther as any);
 
-      await expect(
-        controller.cancelSession('session-2', mockRequest(OWNER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.cancelSession('session-2', mockRequest(OWNER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(manageSessionUseCase.cancelSession).not.toHaveBeenCalled();
     });
@@ -185,9 +192,9 @@ describe('CommuteController', () => {
     it('다른 사용자의 세션 조회 시 ForbiddenException', async () => {
       manageSessionUseCase.getSessionById.mockResolvedValue(mockSessionOther as any);
 
-      await expect(
-        controller.getSession('session-2', mockRequest(OWNER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getSession('session-2', mockRequest(OWNER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -227,7 +234,12 @@ describe('CommuteController', () => {
     it('자신의 통근 기록 조회 성공 (기본 limit/offset)', async () => {
       manageSessionUseCase.getHistory.mockResolvedValue(mockHistory as any);
 
-      const result = await controller.getHistory(OWNER_ID, undefined, undefined, mockRequest(OWNER_ID));
+      const result = await controller.getHistory(
+        OWNER_ID,
+        undefined,
+        undefined,
+        mockRequest(OWNER_ID),
+      );
 
       expect(manageSessionUseCase.getHistory).toHaveBeenCalledWith(OWNER_ID, 20, 0);
       expect(result).toEqual(mockHistory);

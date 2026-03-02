@@ -19,10 +19,14 @@ export class SubwayApiClient {
   constructor(private apiClient: ApiClient) {}
 
   async searchStations(query: string): Promise<SubwayStation[]> {
-    return this.apiClient.get<SubwayStation[]>(`/subway/stations?query=${encodeURIComponent(query)}`);
+    return this.apiClient.get<SubwayStation[]>(
+      `/subway/stations?query=${encodeURIComponent(query)}`,
+    );
   }
 
   async getArrival(stationName: string): Promise<SubwayArrival[]> {
-    return this.apiClient.get<SubwayArrival[]>(`/subway/arrival/${encodeURIComponent(stationName)}`);
+    return this.apiClient.get<SubwayArrival[]>(
+      `/subway/arrival/${encodeURIComponent(stationName)}`,
+    );
   }
 }

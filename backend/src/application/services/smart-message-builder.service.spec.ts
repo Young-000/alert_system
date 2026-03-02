@@ -15,9 +15,7 @@ describe('SmartMessageBuilder', () => {
     ...overrides,
   });
 
-  const createRecommendation = (
-    overrides?: Partial<Recommendation>,
-  ): Recommendation => ({
+  const createRecommendation = (overrides?: Partial<Recommendation>): Recommendation => ({
     ruleId: 'rule-1',
     ruleName: '테스트',
     category: RuleCategory.WEATHER,

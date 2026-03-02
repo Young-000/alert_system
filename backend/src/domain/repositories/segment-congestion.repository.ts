@@ -1,4 +1,8 @@
-import { SegmentCongestion, TimeSlot, CongestionLevel } from '@domain/entities/segment-congestion.entity';
+import {
+  SegmentCongestion,
+  TimeSlot,
+  CongestionLevel,
+} from '@domain/entities/segment-congestion.entity';
 
 export interface ISegmentCongestionRepository {
   findBySegmentKeyAndTimeSlot(
@@ -11,10 +15,7 @@ export interface ISegmentCongestionRepository {
     options?: { level?: CongestionLevel; limit?: number },
   ): Promise<SegmentCongestion[]>;
 
-  findBySegmentKeys(
-    segmentKeys: string[],
-    timeSlot?: TimeSlot,
-  ): Promise<SegmentCongestion[]>;
+  findBySegmentKeys(segmentKeys: string[], timeSlot?: TimeSlot): Promise<SegmentCongestion[]>;
 
   save(congestion: SegmentCongestion): Promise<SegmentCongestion>;
 

@@ -111,9 +111,13 @@ function RouteQuickSelect({
   }
 
   const routeStops: { route: RouteResponse; stop: TransportItem }[] = [];
-  savedRoutes.forEach(route => {
-    const firstSubway = route.checkpoints.find(c => c.checkpointType === 'subway' && c.linkedStationId);
-    const firstBus = route.checkpoints.find(c => c.checkpointType === 'bus_stop' && c.linkedBusStopId);
+  savedRoutes.forEach((route) => {
+    const firstSubway = route.checkpoints.find(
+      (c) => c.checkpointType === 'subway' && c.linkedStationId,
+    );
+    const firstBus = route.checkpoints.find(
+      (c) => c.checkpointType === 'bus_stop' && c.linkedBusStopId,
+    );
 
     if (transportTypes.includes('subway') && firstSubway && firstSubway.linkedStationId) {
       routeStops.push({
@@ -144,10 +148,20 @@ function RouteQuickSelect({
   return (
     <div className="quick-select-section quick-select-highlighted">
       <p className="quick-select-label">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--warning)" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="var(--warning)"
+          stroke="var(--warning)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-        {' '}내 경로에서 추천
+        </svg>{' '}
+        내 경로에서 추천
       </p>
       <div className="quick-select-list">
         {routeStops.slice(0, 3).map(({ route, stop }) => (
@@ -157,7 +171,9 @@ function RouteQuickSelect({
             className="quick-select-btn"
             onClick={() => onToggleTransport(stop)}
           >
-            <span className="qs-icon" aria-hidden="true">{stop.type === 'subway' ? '지하철' : '버스'}</span>
+            <span className="qs-icon" aria-hidden="true">
+              {stop.type === 'subway' ? '지하철' : '버스'}
+            </span>
             <span className="qs-name">{stop.name}</span>
             <span className="qs-route">{route.name}</span>
           </button>
@@ -196,7 +212,7 @@ function LineSelection({
       <div className="line-grid" role="radiogroup" aria-label="노선 선택">
         {selectedStation.lines.map((line) => {
           const isSelected = selectedTransports.some(
-            (t) => t.id === line.id && t.type === line.type
+            (t) => t.id === line.id && t.type === line.type,
           );
           return (
             <button
@@ -248,7 +264,16 @@ function SearchSection({
     <>
       <div className="search-box">
         <span className="search-icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -271,7 +296,9 @@ function SearchSection({
       </div>
 
       {/* 지하철만 선택 시: 역 그룹 먼저 표시 */}
-      {groupedStations.length > 0 && transportTypes.length === 1 && transportTypes[0] === 'subway' ? (
+      {groupedStations.length > 0 &&
+      transportTypes.length === 1 &&
+      transportTypes[0] === 'subway' ? (
         <div className="search-results station-groups" role="listbox" aria-label="역 검색 결과">
           {groupedStations.map((station) => (
             <button
@@ -289,7 +316,16 @@ function SearchSection({
               }}
             >
               <span className="result-icon" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <rect x="4" y="3" width="16" height="18" rx="2" />
                   <line x1="4" y1="9" x2="20" y2="9" />
                   <line x1="4" y1="15" x2="20" y2="15" />
@@ -301,7 +337,16 @@ function SearchSection({
                 <span className="muted line-count">{station.lines.length}개 노선</span>
               </div>
               <span className="arrow-icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </span>
@@ -312,7 +357,7 @@ function SearchSection({
         <div className="search-results" role="listbox" aria-label="검색 결과">
           {searchResults.map((item) => {
             const isSelected = selectedTransports.some(
-              (t) => t.id === item.id && t.type === item.type
+              (t) => t.id === item.id && t.type === item.type,
             );
             return (
               <button
@@ -325,14 +370,32 @@ function SearchSection({
               >
                 <span className="result-icon" aria-hidden="true">
                   {item.type === 'subway' ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <rect x="4" y="3" width="16" height="18" rx="2" />
                       <line x1="4" y1="9" x2="20" y2="9" />
                       <line x1="4" y1="15" x2="20" y2="15" />
                       <line x1="10" y1="3" x2="10" y2="21" />
                     </svg>
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <rect x="3" y="3" width="18" height="14" rx="2" />
                       <path d="M3 10h18" />
                       <path d="M7 21l2-4" />
@@ -344,7 +407,11 @@ function SearchSection({
                   <strong>{item.name}</strong>
                   <span className="muted">{item.detail}</span>
                 </div>
-                {isSelected && <span className="check-icon" aria-hidden="true">✓</span>}
+                {isSelected && (
+                  <span className="check-icon" aria-hidden="true">
+                    ✓
+                  </span>
+                )}
               </button>
             );
           })}
@@ -352,14 +419,29 @@ function SearchSection({
       ) : searchQuery.length >= 2 && !isSearching ? (
         <div className="empty-state" role="status">
           <span className="empty-icon" aria-hidden="true">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </span>
           <p className="empty-title">검색 결과가 없습니다</p>
           <p className="empty-desc">
-            &quot;{searchQuery}&quot;에 해당하는 {transportTypes.includes('subway') && transportTypes.includes('bus') ? '역/정류장' : transportTypes.includes('subway') ? '역' : '정류장'}을 찾을 수 없어요.
+            &quot;{searchQuery}&quot;에 해당하는{' '}
+            {transportTypes.includes('subway') && transportTypes.includes('bus')
+              ? '역/정류장'
+              : transportTypes.includes('subway')
+                ? '역'
+                : '정류장'}
+            을 찾을 수 없어요.
             <br />
             다른 이름으로 검색해보세요.
           </p>

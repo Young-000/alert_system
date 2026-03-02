@@ -30,8 +30,7 @@ export const queryKeys = {
   },
   weeklyReport: {
     all: ['weeklyReport'] as const,
-    byUser: (userId: string, weekOffset: number) =>
-      ['weeklyReport', userId, weekOffset] as const,
+    byUser: (userId: string, weekOffset: number) => ['weeklyReport', userId, weekOffset] as const,
   },
   places: {
     all: ['places'] as const,

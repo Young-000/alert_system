@@ -43,9 +43,7 @@ describe('GetUserUseCase', () => {
     it('존재하지 않는 사용자 ID로 조회 시 NotFoundException 발생', async () => {
       mockUserRepository.findById.mockResolvedValue(undefined);
 
-      await expect(useCase.execute('non-existent-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(useCase.execute('non-existent-id')).rejects.toThrow(NotFoundException);
       await expect(useCase.execute('non-existent-id')).rejects.toThrow(
         '사용자를 찾을 수 없습니다.',
       );

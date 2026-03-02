@@ -1,4 +1,16 @@
-import { Controller, Post, Body, Get, Param, Delete, Patch, Inject, Request, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Delete,
+  Patch,
+  Inject,
+  Request,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAlertUseCase } from '@application/use-cases/create-alert.use-case';
 import { DeleteAlertUseCase } from '@application/use-cases/delete-alert.use-case';
 import { UpdateAlertUseCase } from '@application/use-cases/update-alert.use-case';
@@ -13,7 +25,7 @@ export class AlertController {
     private createAlertUseCase: CreateAlertUseCase,
     private deleteAlertUseCase: DeleteAlertUseCase,
     private updateAlertUseCase: UpdateAlertUseCase,
-    @Inject('IAlertRepository') private alertRepository: IAlertRepository
+    @Inject('IAlertRepository') private alertRepository: IAlertRepository,
   ) {}
 
   @Post()
@@ -48,7 +60,11 @@ export class AlertController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto, @Request() req: AuthenticatedRequest) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateAlertDto: UpdateAlertDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     const alert = await this.alertRepository.findById(id);
     if (!alert) {
       throw new NotFoundException('알림을 찾을 수 없습니다.');

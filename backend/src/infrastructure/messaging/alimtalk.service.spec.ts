@@ -40,24 +40,25 @@ describe('AlimtalkService', () => {
 
     it('알림톡 발송 성공', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: {
-            resultCode: 0,
-            resultMessage: 'SUCCESS',
-            isSuccessful: true,
-          },
-          message: {
-            requestId: 'test-request-id',
-            sendResults: [
-              {
-                recipientSeq: 1,
-                recipientNo: '01098765432',
-                resultCode: 0,
-                resultMessage: 'SUCCESS',
-              },
-            ],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: {
+              resultCode: 0,
+              resultMessage: 'SUCCESS',
+              isSuccessful: true,
+            },
+            message: {
+              requestId: 'test-request-id',
+              sendResults: [
+                {
+                  recipientSeq: 1,
+                  recipientNo: '01098765432',
+                  resultCode: 0,
+                  resultMessage: 'SUCCESS',
+                },
+              ],
+            },
+          }),
       });
 
       await service.sendAlimtalk(mockMessage);
@@ -82,63 +83,70 @@ describe('AlimtalkService', () => {
 
     it('알림톡 API 실패 시 예외 발생', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: {
-            resultCode: -1000,
-            resultMessage: 'Invalid sender key',
-            isSuccessful: false,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: {
+              resultCode: -1000,
+              resultMessage: 'Invalid sender key',
+              isSuccessful: false,
+            },
+          }),
       });
 
-      await expect(service.sendAlimtalk(mockMessage)).rejects.toThrow('Alimtalk failed: Invalid sender key');
+      await expect(service.sendAlimtalk(mockMessage)).rejects.toThrow(
+        'Alimtalk failed: Invalid sender key',
+      );
     });
 
     it('수신자 발송 실패 시 예외 발생', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: {
-            resultCode: 0,
-            resultMessage: 'SUCCESS',
-            isSuccessful: true,
-          },
-          message: {
-            requestId: 'test-request-id',
-            sendResults: [
-              {
-                recipientSeq: 1,
-                recipientNo: '01098765432',
-                resultCode: -1001,
-                resultMessage: 'Invalid phone number',
-              },
-            ],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: {
+              resultCode: 0,
+              resultMessage: 'SUCCESS',
+              isSuccessful: true,
+            },
+            message: {
+              requestId: 'test-request-id',
+              sendResults: [
+                {
+                  recipientSeq: 1,
+                  recipientNo: '01098765432',
+                  resultCode: -1001,
+                  resultMessage: 'Invalid phone number',
+                },
+              ],
+            },
+          }),
       });
 
-      await expect(service.sendAlimtalk(mockMessage)).rejects.toThrow('Alimtalk send failed: Invalid phone number');
+      await expect(service.sendAlimtalk(mockMessage)).rejects.toThrow(
+        'Alimtalk send failed: Invalid phone number',
+      );
     });
 
     it('빈 변수로 알림톡 발송', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: {
-            resultCode: 0,
-            resultMessage: 'SUCCESS',
-            isSuccessful: true,
-          },
-          message: {
-            requestId: 'test-request-id',
-            sendResults: [
-              {
-                recipientSeq: 1,
-                recipientNo: '01098765432',
-                resultCode: 0,
-                resultMessage: 'SUCCESS',
-              },
-            ],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: {
+              resultCode: 0,
+              resultMessage: 'SUCCESS',
+              isSuccessful: true,
+            },
+            message: {
+              requestId: 'test-request-id',
+              sendResults: [
+                {
+                  recipientSeq: 1,
+                  recipientNo: '01098765432',
+                  resultCode: 0,
+                  resultMessage: 'SUCCESS',
+                },
+              ],
+            },
+          }),
       });
 
       const emptyMessage: AlimtalkMessage = {
@@ -154,13 +162,21 @@ describe('AlimtalkService', () => {
 
     it('전화번호 하이픈 제거', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: { resultCode: 0, resultMessage: 'SUCCESS', isSuccessful: true },
-          message: {
-            requestId: 'test',
-            sendResults: [{ recipientSeq: 1, recipientNo: '01098765432', resultCode: 0, resultMessage: 'SUCCESS' }],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: { resultCode: 0, resultMessage: 'SUCCESS', isSuccessful: true },
+            message: {
+              requestId: 'test',
+              sendResults: [
+                {
+                  recipientSeq: 1,
+                  recipientNo: '01098765432',
+                  resultCode: 0,
+                  resultMessage: 'SUCCESS',
+                },
+              ],
+            },
+          }),
       });
 
       await service.sendAlimtalk({
@@ -177,13 +193,14 @@ describe('AlimtalkService', () => {
   describe('sendSMS', () => {
     it('SMS 발송 성공', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: {
-            resultCode: 0,
-            resultMessage: 'SUCCESS',
-            isSuccessful: true,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: {
+              resultCode: 0,
+              resultMessage: 'SUCCESS',
+              isSuccessful: true,
+            },
+          }),
       });
 
       await service.sendSMS('01098765432', '테스트 메시지입니다.');
@@ -207,18 +224,19 @@ describe('AlimtalkService', () => {
 
     it('SMS 발송 실패 시 예외 전파', async () => {
       mockFetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          header: {
-            resultCode: -1000,
-            resultMessage: 'SMS Send Failed',
-            isSuccessful: false,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            header: {
+              resultCode: -1000,
+              resultMessage: 'SMS Send Failed',
+              isSuccessful: false,
+            },
+          }),
       });
 
-      await expect(
-        service.sendSMS('01098765432', '테스트'),
-      ).rejects.toThrow('SMS failed: SMS Send Failed');
+      await expect(service.sendSMS('01098765432', '테스트')).rejects.toThrow(
+        'SMS failed: SMS Send Failed',
+      );
     });
   });
 
@@ -272,8 +290,6 @@ describe('NoopAlimtalkService', () => {
   });
 
   it('SMS 발송 시 예외 없이 완료', async () => {
-    await expect(
-      service.sendSMS('01012345678', '테스트'),
-    ).resolves.not.toThrow();
+    await expect(service.sendSMS('01012345678', '테스트')).resolves.not.toThrow();
   });
 });

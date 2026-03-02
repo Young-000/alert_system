@@ -92,13 +92,13 @@ describe('getWeatherChecklist', () => {
   it('returns umbrella for rainy condition', () => {
     const weather = buildWeather({ condition: 'rain' });
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'umbrella')).toBe(true);
+    expect(items.some((i) => i.id === 'umbrella')).toBe(true);
   });
 
   it('returns umbrella for snowy condition', () => {
     const weather = buildWeather({ condition: 'snow' });
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'umbrella')).toBe(true);
+    expect(items.some((i) => i.id === 'umbrella')).toBe(true);
   });
 
   it('returns umbrella when rain probability is high', () => {
@@ -108,36 +108,41 @@ describe('getWeatherChecklist', () => {
         maxTemp: 25,
         minTemp: 15,
         hourlyForecasts: [
-          { timeSlot: '오전', conditionKr: '맑음', rainProbability: RAIN_PROBABILITY_THRESHOLD, temperature: 20 },
+          {
+            timeSlot: '오전',
+            conditionKr: '맑음',
+            rainProbability: RAIN_PROBABILITY_THRESHOLD,
+            temperature: 20,
+          },
         ],
       },
     } as Partial<WeatherData>);
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'umbrella')).toBe(true);
+    expect(items.some((i) => i.id === 'umbrella')).toBe(true);
   });
 
   it('returns mask for bad air quality', () => {
     const weather = buildWeather();
     const items = getWeatherChecklist(weather, badAir);
-    expect(items.some(i => i.id === 'mask')).toBe(true);
+    expect(items.some((i) => i.id === 'mask')).toBe(true);
   });
 
   it('returns mask for very bad air quality', () => {
     const weather = buildWeather();
     const items = getWeatherChecklist(weather, veryBadAir);
-    expect(items.some(i => i.id === 'mask')).toBe(true);
+    expect(items.some((i) => i.id === 'mask')).toBe(true);
   });
 
   it('returns coat for cold temperature', () => {
     const weather = buildWeather({ temperature: COLD_TEMP_THRESHOLD - 1 });
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'coat')).toBe(true);
+    expect(items.some((i) => i.id === 'coat')).toBe(true);
   });
 
   it('returns sunscreen for hot temperature', () => {
     const weather = buildWeather({ temperature: HOT_TEMP_THRESHOLD + 1 });
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'sun')).toBe(true);
+    expect(items.some((i) => i.id === 'sun')).toBe(true);
   });
 
   it('returns scarf for large temperature difference', () => {
@@ -150,13 +155,13 @@ describe('getWeatherChecklist', () => {
       },
     } as Partial<WeatherData>);
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'scarf')).toBe(true);
+    expect(items.some((i) => i.id === 'scarf')).toBe(true);
   });
 
   it('returns spare clothes for high humidity', () => {
     const weather = buildWeather({ humidity: HIGH_HUMIDITY_THRESHOLD + 1 });
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'spare')).toBe(true);
+    expect(items.some((i) => i.id === 'spare')).toBe(true);
   });
 
   it('returns empty list for sunny mild day with good air', () => {
@@ -179,7 +184,7 @@ describe('getWeatherChecklist', () => {
       },
     } as Partial<WeatherData>);
     const items = getWeatherChecklist(weather, badAir);
-    const ids = items.map(i => i.id);
+    const ids = items.map((i) => i.id);
     expect(ids).toContain('umbrella');
     expect(ids).toContain('mask');
     expect(ids).toContain('coat');
@@ -190,7 +195,7 @@ describe('getWeatherChecklist', () => {
   it('does not return scarf when forecast is missing', () => {
     const weather = buildWeather({ forecast: undefined });
     const items = getWeatherChecklist(weather, goodAir);
-    expect(items.some(i => i.id === 'scarf')).toBe(false);
+    expect(items.some((i) => i.id === 'scarf')).toBe(false);
   });
 });
 

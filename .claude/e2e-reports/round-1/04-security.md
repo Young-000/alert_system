@@ -1,7 +1,7 @@
 # 04. Security Audit Report
 
-**Date**: 2026-02-28
-**Branch**: `main`
+**Date**: 2026-03-03
+**Branch**: `feature/e2e-auto-review-20260303`
 **Status**: PASS (with advisories)
 
 ---
@@ -12,21 +12,21 @@
 |---|----------|:------:|---------|
 | 1 | Hardcoded Secrets | PASS | No secrets in production code |
 | 2 | .env in .gitignore | PASS | Tracked files contain only public values |
-| 3 | XSS vectors | PASS | 0 instances in production code |
+| 3 | XSS vectors | PASS | 0 instances of unsafe HTML rendering or dynamic code execution |
 | 4 | SQL Injection | PASS | TypeORM parameterized queries only |
 | 5 | JWT Configuration | PASS | 7d expiry, env-var secret, ignoreExpiration=false |
 | 6 | CORS Configuration | PASS | Explicit allowlist + Vercel pattern regex |
 | 7 | Password Hashing | PASS | bcrypt with 12 salt rounds |
-| 8 | Rate Limiting | PASS | Global 60/min + auth 3-5/min |
+| 8 | Rate Limiting | PASS | Global 60/min + auth 3-5/min + per-route throttles |
 | 9 | Helmet (Security Headers) | PASS | CSP + standard headers configured |
 | 10 | Exception Filter | PASS | Stack traces hidden from responses |
 | 11 | Scheduler Auth | PASS | timingSafeEqual for secret comparison |
 | 12 | Public Endpoints | PASS | All @Public() routes appropriately scoped |
 | 13 | TypeORM synchronize | PASS | Dual-condition guard (non-prod + explicit flag) |
-| 14 | npm audit (Frontend) | WARN | 0 critical, 2 high, 4 moderate |
-| 15 | npm audit (Backend) | WARN | 1 critical, 14 high, 9 moderate |
+| 14 | npm audit (Frontend) | WARN | 0 critical, 3 high, 3 moderate (all dev deps) |
+| 15 | npm audit (Backend) | IMPROVED | 0 critical (was 2), 28 high, 7 moderate (mostly dev deps) |
 
-**Fixes applied: 0 | Advisories: 3**
+**Fixes applied: 0 code fixes | npm audit fix: critical vulns resolved | Advisories: 3**
 
 ---
 
@@ -34,13 +34,14 @@
 
 **Result: PASS**
 
-Searched all `.ts` and `.tsx` files for patterns: `password|secret|api_key|apiKey` with actual string values (8+ characters).
+Searched all `.ts` and `.tsx` files for patterns: `api_key|api_secret|password|secret_key|access_token|private_key` with actual string values.
 
 **Findings:**
 - All matches are in **test files only** (`.spec.ts`, `.test.ts`, `.test.tsx`, `e2e-spec.ts`)
 - Test files use dummy values: `password123`, `SecurePass123!`, `my-scheduler-secret`, `test-api-key`
 - Production code reads all secrets from environment variables via `ConfigService` or `process.env`
 - Solapi template IDs (e.g., `KA01TP260131155222525E6X1O8FUzNm`) are hardcoded in `solapi.service.ts` -- these are **public identifiers**, not secrets
+- CLAUDE.md contains Solapi API Key (`NCSUDCVMRTFLTHIY`), PF ID, Template ID, and AWS Account ID -- these are documentation references; API Secret is stored in AWS SSM
 
 **Files checked:**
 - `backend/src/**/*.ts` -- 0 hardcoded secrets
@@ -69,11 +70,9 @@ Searched all `.ts` and `.tsx` files for patterns: `password|secret|api_key|apiKe
 | `backend/.env` | NO | YES (DB URL, JWT Secret) |
 | `backend/.env.example` | YES | NO (placeholders only) |
 | `frontend/.env` | NO | N/A |
-| `frontend/.env.local` | NO | YES (Vercel OIDC) |
+| `frontend/.env.local` | NO | N/A |
 | `frontend/.env.production` | YES | NO |
 | `frontend/.env.test` | YES | NO |
-| `frontend/.env.example` | NO | NO |
-| `mobile/.env` | NO | N/A |
 | `mobile/.env.example` | YES | NO |
 
 **`frontend/.env.production` contents (tracked):**
@@ -84,15 +83,16 @@ VITE_VAPID_PUBLIC_KEY=BI2vHyzoB3o...
 
 Both values are intentionally public: the CloudFront URL is a public API endpoint, and the VAPID **public** key is designed to be shared with browsers for push subscription. No actual secrets are exposed.
 
-> **Advisory**: Consider moving these to Vercel environment variables to prevent future accidental additions to this tracked file.
-
 ---
 
 ## 3. XSS Vulnerabilities
 
 **Result: PASS**
 
-Checked for unsafe HTML rendering APIs, dynamic code execution functions, and direct DOM manipulation. **0 instances found in production code.**
+Checked for unsafe patterns in frontend and backend source code:
+- React's unsafe HTML rendering API -- **0 instances** in entire codebase
+- Dynamic code execution patterns -- **0 instances** in frontend source
+- Direct DOM write operations -- **0 instances**
 
 Backend CSP headers restrict `scriptSrc` to `'self'` only, providing defense-in-depth against XSS.
 
@@ -104,18 +104,23 @@ Backend CSP headers restrict `scriptSrc` to `'self'` only, providing defense-in-
 
 Backend uses TypeORM exclusively. All database access patterns reviewed:
 
-**QueryBuilder usage** (`notification-history.controller.ts`):
+**QueryBuilder usage** (parameterized, safe):
 ```typescript
-// Parameterized -- safe
+// notification-history.controller.ts
 .where('log.userId = :userId', { userId: req.user.userId })
 .andWhere("log.sentAt >= NOW() - INTERVAL '1 day' * :days", { days: daysNum })
+
+// community.service.ts, congestion-aggregation.service.ts, insights.service.ts
+// All use :param parameterized syntax
 ```
 
-**Repository patterns:**
-- All `createQueryBuilder` calls use `:param` syntax (parameterized queries)
-- Standard TypeORM methods (`find`, `findOne`, `save`, `delete`) used elsewhere
-- No string concatenation in SQL queries
-- No raw `query()` calls with user-supplied strings
+**Raw queries** (only in seed script):
+```typescript
+// sample-data.seed.ts -- uses parameterized $1 placeholders
+await queryRunner.query(`DELETE FROM alert_system.users WHERE id = $1`, [SAMPLE_USER.id]);
+```
+
+All raw queries use positional parameters (`$1`, `$2`) with values array -- safe from injection.
 
 ---
 
@@ -132,17 +137,7 @@ Backend uses TypeORM exclusively. All database access patterns reviewed:
 | `ignoreExpiration` | `false` | Expired tokens rejected |
 | Token extraction | `fromAuthHeaderAsBearerToken()` | Standard Bearer pattern |
 | Validation | DB lookup by `payload.sub` | Prevents deleted-user access |
-
-**File**: `backend/src/presentation/modules/auth.module.ts`
-```typescript
-JwtModule.registerAsync({
-  useFactory: (configService: ConfigService) => {
-    const secret = configService.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('JWT_SECRET environment variable is required');
-    return { secret, signOptions: { expiresIn: '7d' } };
-  },
-});
-```
+| Token storage | localStorage (frontend) | Intentional design decision (documented) |
 
 ---
 
@@ -153,10 +148,11 @@ JwtModule.registerAsync({
 **File**: `backend/src/main.ts`
 
 - Explicit allowlist of origins (no wildcard `*`)
-- Vercel preview URLs restricted to project-specific subdomain pattern
+- Vercel preview URLs restricted to project-specific subdomain pattern: `/^https:\/\/frontend-xi-two-52(-[a-z0-9]+)?\.vercel\.app$/`
 - Blocked origins logged with `logger.warn`
 - `credentials: true`
 - Explicit `allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']`
+- `CORS_ORIGIN` env var for additional origins
 
 ---
 
@@ -165,8 +161,9 @@ JwtModule.registerAsync({
 **Result: PASS**
 
 **File**: `backend/src/application/use-cases/create-user.use-case.ts`
-- bcrypt with `BCRYPT_SALT_ROUNDS = 12`
-- Password stored as hash only, never in plaintext
+- bcrypt with `BCRYPT_SALT_ROUNDS = 12` (industry standard)
+- Password stored as hash only (`passwordHash` column), never in plaintext
+- Login: `bcrypt.compare(dto.password, user.passwordHash)` in `login.use-case.ts`
 
 ---
 
@@ -174,11 +171,14 @@ JwtModule.registerAsync({
 
 **Result: PASS**
 
-| Scope | Limit | TTL |
-|-------|-------|-----|
-| Global (ThrottlerGuard) | 60 req | 60 sec |
-| `POST /auth/register` | 3 req | 60 sec |
-| `POST /auth/login` | 5 req | 60 sec |
+| Scope | Limit | TTL | File |
+|-------|-------|-----|------|
+| Global (ThrottlerGuard) | 60 req | 60 sec | `app.module.ts` |
+| `POST /auth/register` | 3 req | 60 sec | `auth.controller.ts` |
+| `POST /auth/login` | 5 req | 60 sec | `auth.controller.ts` |
+| `POST /insights/recalculate` | 1 req | 300 sec | `insights.controller.ts` |
+| `POST /congestion/recalculate` | 1 req | 300 sec | `congestion.controller.ts` |
+| Community tip creation | 3/day | per user | `tips.service.ts` |
 
 Both `ThrottlerGuard` and `JwtAuthGuard` registered as `APP_GUARD` -- applied globally.
 
@@ -189,8 +189,8 @@ Both `ThrottlerGuard` and `JwtAuthGuard` registered as `APP_GUARD` -- applied gl
 **Result: PASS**
 
 **File**: `backend/src/main.ts`
-- CSP configured: defaultSrc self, scriptSrc self, styleSrc self+unsafe-inline, imgSrc self+data+https
-- crossOriginEmbedderPolicy: false (PWA compatibility)
+- CSP configured: `defaultSrc: ['self']`, `scriptSrc: ['self']`, `styleSrc: ['self', 'unsafe-inline']`, `imgSrc: ['self', 'data:', 'https:']`
+- `crossOriginEmbedderPolicy: false` (PWA compatibility)
 - All standard Helmet headers active (X-Content-Type-Options, X-Frame-Options, HSTS, etc.)
 
 ---
@@ -200,7 +200,7 @@ Both `ThrottlerGuard` and `JwtAuthGuard` registered as `APP_GUARD` -- applied gl
 **Result: PASS**
 
 **File**: `backend/src/presentation/filters/http-exception.filter.ts`
-- 500+ errors: stack trace logged server-side only; client receives generic message
+- 500+ errors: stack trace logged server-side only; client receives generic `"Internal server error"` message
 - 4xx errors: NestJS error response forwarded (no stack trace)
 - All responses include `statusCode`, `message`, `path` -- no internal details leaked
 
@@ -240,7 +240,13 @@ All `@Public()` decorated routes reviewed:
 | `GET /weather/current` | Weather API proxy | Low | Public data |
 | `GET /subway/*` | Subway API proxy | Low | Public data |
 | `GET /bus/*` | Bus API proxy | Low | Public data |
+| `GET /insights/regions` | Region stats | Low | Aggregated data only |
+| `GET /insights/regions/:id` | Region detail | Low | Aggregated data only |
+| `GET /insights/regions/:id/trends` | Region trends | Low | Aggregated data only |
+| `GET /insights/regions/:id/peak-hours` | Peak hours | Low | Aggregated data only |
 | `* /dev/*` | Dev endpoints | N/A | Excluded in production module + runtime guard |
+
+New since last review: Insights region endpoints (`GET /insights/regions*`) are properly public -- they expose only aggregated community statistics, no personal data.
 
 DevController has dual protection:
 1. `app.module.ts`: excluded from module when `NODE_ENV === 'production'`
@@ -267,26 +273,24 @@ Production is safe: `synchronize` requires both `NODE_ENV !== 'production'` AND 
 | Severity | Count | Notable Packages |
 |----------|:-----:|-----------------|
 | Critical | 0 | -- |
-| High | 2 | minimatch (ReDoS), rollup (path traversal) |
-| Moderate | 4 | ajv (ReDoS), esbuild (dev server access) |
+| High | 3 | minimatch (ReDoS), rollup (path traversal), serialize-javascript (RCE) |
+| Moderate | 3 | ajv (ReDoS), esbuild (dev server access) |
 | Low | 0 | -- |
 
-All high/moderate vulnerabilities are in **dev/build dependencies**. They do not affect production runtime bundles.
+All vulnerabilities are in **dev/build dependencies** (eslint, vite, workbox-build). They do not affect production runtime bundles.
 
 ### Backend
 
-| Severity | Count | Notable Packages |
-|----------|:-----:|-----------------|
-| Critical | 1 | `fast-xml-parser` (via @aws-sdk/client-scheduler) |
-| High | 14 | @nestjs/cli, @typescript-eslint/*, sqlite3, tar, glob |
-| Moderate | 9 | ajv, inquirer, etc. |
-| Low | 20 | AWS SDK internal dependencies |
+| Severity | Count | Notable Packages | Change |
+|----------|:-----:|-----------------|--------|
+| Critical | **0** | -- | **Fixed (was 2)** |
+| High | 28 | @nestjs/cli, minimatch, glob, tar, sqlite3 | Dev deps |
+| Moderate | 7 | ajv, js-yaml, lodash, bn.js | Dev deps |
+| Low | 20 | AWS SDK internal, inquirer, tmp | Dev deps |
 
-**Critical: `fast-xml-parser`** is a transitive dependency of `@aws-sdk/client-scheduler`. Since the AWS SDK uses this internally (not with user-supplied XML), **practical risk is low**.
+**Improvement**: `fast-xml-parser` critical vulnerability resolved via `npm audit fix` (updated `@aws-sdk/xml-builder` to patched version). Previously had 2 critical, now 0.
 
-Most high-severity vulnerabilities are in **dev dependencies** (`@nestjs/cli`, `@typescript-eslint/*`, `sqlite3`) and do not run in production.
-
-> **Advisory**: Monitor for AWS SDK patch. Run periodic `npm audit fix` for dev dependency updates.
+Remaining high/moderate vulnerabilities are in **dev dependencies** (`@nestjs/cli`, `@typescript-eslint/*`, `sqlite3`, `eslint`) and do not run in production. Fixing these requires major version upgrades of `@nestjs/cli` (v10 -> v11) or `@typescript-eslint/parser`.
 
 ---
 
@@ -300,17 +304,22 @@ Most high-severity vulnerabilities are in **dev dependencies** (`@nestjs/cli`, `
 | bcrypt 12 rounds | Active | `create-user.use-case.ts` |
 | Secrets in AWS SSM | Active | `/alert-system/prod/*` |
 | CloudFront HTTPS | Active | `d1qgl3ij2xig8k.cloudfront.net` |
+| Global JWT Auth Guard | Active | `app.module.ts` |
+| Global Rate Limit Guard | Active | `app.module.ts` |
+| Community privacy (aggregated only) | Active | `community.controller.ts` |
 
 ---
 
 ## Fixes Applied
 
-**0 fixes** -- No actionable security vulnerabilities requiring code changes were found.
+**npm audit fix**: Resolved 2 critical `fast-xml-parser` vulnerabilities in backend (via `@aws-sdk/xml-builder` update).
+
+**Code fixes: 0** -- No actionable security vulnerabilities requiring code changes were found.
 
 ---
 
 ## Advisories (Non-blocking)
 
-1. **[Low]** `frontend/.env.production` is tracked in git. Contains only public values, but consider moving to Vercel env vars.
-2. **[Low]** Backend `fast-xml-parser` critical vulnerability via `@aws-sdk/client-scheduler`. Practical risk is low. Monitor for SDK update.
-3. **[Low]** 16 high-severity dev dependency vulnerabilities across FE and BE. Do not affect production. Resolve via periodic `npm audit fix`.
+1. **[Low]** `frontend/.env.production` is tracked in git. Contains only public values (CloudFront URL + VAPID public key), but consider moving to Vercel env vars for cleanliness.
+2. **[Low]** 31 high-severity dev dependency vulnerabilities across FE and BE. Do not affect production. Resolve when upgrading `@nestjs/cli` to v11 and `eslint` to v9.
+3. **[Info]** CLAUDE.md contains Solapi API Key in documentation. While the API Secret is safely stored in AWS SSM, the API Key is exposed in a tracked file. Practical risk is low (key alone cannot send messages), but consider redacting from docs.

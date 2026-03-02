@@ -29,12 +29,12 @@ describe('RouteAnalytics Entity', () => {
 
   const mockConditionAnalysis: ConditionAnalysis = {
     byWeather: {
-      '맑음': { avgDuration: 40, count: 5 },
-      '비': { avgDuration: 50, count: 3 },
+      맑음: { avgDuration: 40, count: 5 },
+      비: { avgDuration: 50, count: 3 },
     },
     byDayOfWeek: {
-      '월요일': { avgDuration: 45, count: 4 },
-      '화요일': { avgDuration: 42, count: 3 },
+      월요일: { avgDuration: 45, count: 4 },
+      화요일: { avgDuration: 42, count: 3 },
     },
     byTimeSlot: {
       '출근 시간 (6-9시)': { avgDuration: 48, count: 6 },

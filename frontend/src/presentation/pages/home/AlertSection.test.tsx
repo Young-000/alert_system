@@ -2,11 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AlertSection } from './AlertSection';
 
-function renderComponent(nextAlert: { time: string; label: string } | null = null): ReturnType<typeof render> {
+function renderComponent(
+  nextAlert: { time: string; label: string } | null = null,
+): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
       <AlertSection nextAlert={nextAlert} />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -33,13 +35,17 @@ describe('AlertSection', () => {
   it('should show alert setup CTA when no next alert', () => {
     renderComponent(null);
 
-    expect(screen.getByText('알림을 설정하면 출발 전 날씨와 교통 정보를 알려드려요')).toBeInTheDocument();
+    expect(
+      screen.getByText('알림을 설정하면 출발 전 날씨와 교통 정보를 알려드려요'),
+    ).toBeInTheDocument();
   });
 
   it('should link to alerts page in CTA', () => {
     renderComponent(null);
 
-    const link = screen.getByText('알림을 설정하면 출발 전 날씨와 교통 정보를 알려드려요').closest('a');
+    const link = screen
+      .getByText('알림을 설정하면 출발 전 날씨와 교통 정보를 알려드려요')
+      .closest('a');
     expect(link).toHaveAttribute('href', '/alerts');
   });
 

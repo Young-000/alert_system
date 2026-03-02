@@ -45,7 +45,7 @@ export class CommuteEventRepositoryImpl implements ICommuteEventRepository {
     userId: string,
     placeId: string,
     eventType: CommuteEventType,
-    withinMs: number
+    withinMs: number,
   ): Promise<CommuteEvent | undefined> {
     const cutoff = new Date(Date.now() - withinMs);
     const entity = await this.eventRepository.findOne({
@@ -102,7 +102,7 @@ export class CommuteEventRepositoryImpl implements ICommuteEventRepository {
         source: entity.source as CommuteEventSource,
         isProcessed: entity.isProcessed,
         createdAt: entity.createdAt,
-      }
+      },
     );
   }
 }

@@ -68,7 +68,7 @@ describe('KST Date Utilities', () => {
     it('weekOffset=0이면 이번 주 월~일을 반환한다', () => {
       const { weekStart, weekEnd } = getWeekBounds(today, 0);
       expect(weekStart).toBe('2026-02-16'); // Monday
-      expect(weekEnd).toBe('2026-02-22');   // Sunday
+      expect(weekEnd).toBe('2026-02-22'); // Sunday
     });
 
     it('weekOffset=1이면 지난주 월~일을 반환한다', () => {

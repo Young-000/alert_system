@@ -23,8 +23,12 @@ export class GenerateWeeklyReportUseCase {
 
   constructor(
     @Inject('IUserRepository') private userRepository: IUserRepository,
-    @Optional() @Inject(COMMUTE_SESSION_REPOSITORY) private sessionRepository?: ICommuteSessionRepository,
-    @Optional() @InjectRepository(CommuteSessionEntity) private sessionRepo?: Repository<CommuteSessionEntity>,
+    @Optional()
+    @Inject(COMMUTE_SESSION_REPOSITORY)
+    private sessionRepository?: ICommuteSessionRepository,
+    @Optional()
+    @InjectRepository(CommuteSessionEntity)
+    private sessionRepo?: Repository<CommuteSessionEntity>,
     @Optional() @Inject(SOLAPI_SERVICE) private solapiService?: ISolapiService,
     @Optional() @Inject(WEB_PUSH_SERVICE) private webPushService?: IWebPushService,
   ) {}
@@ -48,7 +52,10 @@ export class GenerateWeeklyReportUseCase {
     for (const userId of activeUserIds) {
       try {
         const user = userMap.get(userId);
-        if (!user) { skipped++; continue; }
+        if (!user) {
+          skipped++;
+          continue;
+        }
         const didSend = await this.generateAndSendReport(user, weekAgo, now);
         if (didSend) {
           sent++;
@@ -76,7 +83,7 @@ export class GenerateWeeklyReportUseCase {
       .andWhere('session.startedAt <= :endDate', { endDate })
       .getRawMany<{ userId: string }>();
 
-    return result.map(r => r.userId);
+    return result.map((r) => r.userId);
   }
 
   private async generateAndSendReport(
@@ -91,7 +98,7 @@ export class GenerateWeeklyReportUseCase {
       ? await this.sessionRepository.findByUserIdInDateRange(userId, weekStart, weekEnd)
       : [];
 
-    const completedSessions = sessions.filter(s => {
+    const completedSessions = sessions.filter((s) => {
       const status = s.status.toString();
       return status === 'completed' || status === 'COMPLETED';
     });
@@ -100,12 +107,13 @@ export class GenerateWeeklyReportUseCase {
     // Calculate stats
     const totalCommutes = completedSessions.length;
     const durations = completedSessions
-      .map(s => s.totalDurationMinutes)
+      .map((s) => s.totalDurationMinutes)
       .filter((d): d is number => d != null && d > 0);
 
-    const avgDuration = durations.length > 0
-      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
-      : 0;
+    const avgDuration =
+      durations.length > 0
+        ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+        : 0;
 
     // Find best day (shortest average commute)
     const dayStats = new Map<number, { total: number; count: number }>();
@@ -151,12 +159,14 @@ export class GenerateWeeklyReportUseCase {
     if (this.webPushService) {
       const title = `📊 주간 출퇴근 리포트`;
       const body = `${weekRange} | ${totalCommutes}회 출퇴근, 평균 ${avgDuration}분. ${tip}`;
-      await this.webPushService.sendToUser(userId, title, body, '/dashboard').catch(
-        err => this.logger.warn(`Web push failed for weekly report: ${err}`),
-      );
+      await this.webPushService
+        .sendToUser(userId, title, body, '/dashboard')
+        .catch((err) => this.logger.warn(`Web push failed for weekly report: ${err}`));
     }
 
-    this.logger.log(`Weekly report sent for user ${userId}: ${totalCommutes} commutes, avg ${avgDuration}min`);
+    this.logger.log(
+      `Weekly report sent for user ${userId}: ${totalCommutes} commutes, avg ${avgDuration}min`,
+    );
     return true;
   }
 

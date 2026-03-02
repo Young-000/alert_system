@@ -58,10 +58,7 @@ describe('LiveActivityController', () => {
         updatedAt: new Date(),
       } as any);
 
-      const result = await controller.register(
-        mockRequest(OWNER_ID),
-        registerDto as any,
-      );
+      const result = await controller.register(mockRequest(OWNER_ID), registerDto as any);
 
       expect(result).toEqual({
         id: 'token-uuid-1',
@@ -98,10 +95,7 @@ describe('LiveActivityController', () => {
       tokenRepo.findOne.mockResolvedValue(existing as any);
       tokenRepo.save.mockResolvedValue(existing as any);
 
-      const result = await controller.register(
-        mockRequest(OWNER_ID),
-        registerDto as any,
-      );
+      const result = await controller.register(mockRequest(OWNER_ID), registerDto as any);
 
       expect(result).toEqual({
         id: 'existing-token-1',
@@ -131,10 +125,7 @@ describe('LiveActivityController', () => {
         updatedAt: new Date(),
       } as any);
 
-      const result = await controller.register(
-        mockRequest(OWNER_ID),
-        dtoWithoutSetting as any,
-      );
+      const result = await controller.register(mockRequest(OWNER_ID), dtoWithoutSetting as any);
 
       expect(result.registered).toBe(true);
       expect(tokenRepo.save).toHaveBeenCalledWith(
@@ -181,9 +172,9 @@ describe('LiveActivityController', () => {
     it('존재하지 않는 activityId면 NotFoundException', async () => {
       tokenRepo.update.mockResolvedValue({ affected: 0 } as any);
 
-      await expect(
-        controller.deactivate('non-existent', mockRequest(OWNER_ID)),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.deactivate('non-existent', mockRequest(OWNER_ID))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('다른 사용자의 토큰은 비활성화 불가', async () => {

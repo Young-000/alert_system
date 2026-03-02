@@ -49,4 +49,3 @@ export class User {
     this.updatedAt = new Date();
   }
 }
-

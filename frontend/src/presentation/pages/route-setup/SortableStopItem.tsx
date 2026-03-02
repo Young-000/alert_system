@@ -16,14 +16,9 @@ export const SortableStopItem = memo(function SortableStopItem({
   onRemove,
   transferInfo,
 }: SortableStopItemProps): JSX.Element {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: stop.uniqueKey });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: stop.uniqueKey,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -44,22 +39,63 @@ export const SortableStopItem = memo(function SortableStopItem({
         {...attributes}
         {...listeners}
       >
-        <span className="drag-handle-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span>
+        <span className="drag-handle-icon" aria-hidden="true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </span>
       </button>
       <div className="sortable-stop-content">
         <span className="stop-icon" aria-hidden="true">
           {stop.transportMode === 'subway' ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="4" y="3" width="16" height="18" rx="2" />
+              <line x1="4" y1="9" x2="20" y2="9" />
+              <line x1="4" y1="15" x2="20" y2="15" />
+              <line x1="10" y1="3" x2="10" y2="21" />
+            </svg>
           ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="14" rx="2" />
+              <path d="M3 10h18" />
+              <path d="M7 21l2-4" />
+              <path d="M17 21l-2-4" />
+            </svg>
           )}
         </span>
         <div className="stop-info">
           <span className="stop-name">{stop.name}</span>
           {stop.line && <span className="stop-line">{stop.line}</span>}
-          {transferInfo && (
-            <span className="transfer-badge">{transferInfo}</span>
-          )}
+          {transferInfo && <span className="transfer-badge">{transferInfo}</span>}
         </div>
       </div>
       <button

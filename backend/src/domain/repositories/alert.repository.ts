@@ -37,4 +37,3 @@ export class AlertRepository implements IAlertRepository {
     this.alerts.delete(id);
   }
 }
-

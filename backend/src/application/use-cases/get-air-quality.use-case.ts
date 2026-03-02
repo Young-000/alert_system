@@ -7,7 +7,7 @@ import { IUserRepository } from '@domain/repositories/user.repository';
 export class GetAirQualityUseCase {
   constructor(
     @Inject('IAirQualityApiClient') private airQualityApiClient: IAirQualityApiClient,
-    @Inject('IUserRepository') private userRepository: IUserRepository
+    @Inject('IUserRepository') private userRepository: IUserRepository,
   ) {}
 
   async execute(userId: string): Promise<AirQuality> {
@@ -19,14 +19,10 @@ export class GetAirQualityUseCase {
       throw new NotFoundException('사용자 위치 정보가 설정되지 않았습니다.');
     }
 
-    return this.airQualityApiClient.getAirQuality(
-      user.location.lat,
-      user.location.lng
-    );
+    return this.airQualityApiClient.getAirQuality(user.location.lat, user.location.lng);
   }
 
   async executeByLocation(lat: number, lng: number): Promise<AirQuality> {
     return this.airQualityApiClient.getAirQuality(lat, lng);
   }
 }
-

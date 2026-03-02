@@ -8,6 +8,6 @@ export function useAlertsQuery(userId: string) {
     queryKey: queryKeys.alerts.byUser(userId),
     queryFn: () => alertApiClient.getAlertsByUser(userId),
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000,  // 2분 — 알림은 자주 변경될 수 있음
+    staleTime: 2 * 60 * 1000, // 2분 — 알림은 자주 변경될 수 있음
   });
 }

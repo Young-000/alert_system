@@ -64,8 +64,8 @@ describe('GetWeeklyReportUseCase', () => {
       createSession(new Date('2026-02-17T08:00:00+09:00'), 50),
     ];
     mockSessionRepo.findByUserIdInDateRange
-      .mockResolvedValueOnce(sessions)   // current week
-      .mockResolvedValueOnce([]);        // previous week
+      .mockResolvedValueOnce(sessions) // current week
+      .mockResolvedValueOnce([]); // previous week
 
     const result = await useCase.execute('user-1', 0);
 
@@ -124,12 +124,8 @@ describe('GetWeeklyReportUseCase', () => {
   });
 
   it('전주 대비 비교가 올바르게 계산된다', async () => {
-    const currentSessions = [
-      createSession(new Date('2026-02-16T08:00:00+09:00'), 45),
-    ];
-    const previousSessions = [
-      createSession(new Date('2026-02-09T08:00:00+09:00'), 50),
-    ];
+    const currentSessions = [createSession(new Date('2026-02-16T08:00:00+09:00'), 45)];
+    const previousSessions = [createSession(new Date('2026-02-09T08:00:00+09:00'), 50)];
     mockSessionRepo.findByUserIdInDateRange
       .mockResolvedValueOnce(currentSessions)
       .mockResolvedValueOnce(previousSessions);

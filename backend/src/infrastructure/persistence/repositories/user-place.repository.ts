@@ -86,7 +86,7 @@ export class UserPlaceRepositoryImpl implements IUserPlaceRepository {
         isActive: entity.isActive,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-      }
+      },
     );
   }
 }

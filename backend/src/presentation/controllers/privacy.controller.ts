@@ -10,7 +10,10 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ExportUserDataUseCase, ExportedUserData } from '../../application/use-cases/export-user-data.use-case';
+import {
+  ExportUserDataUseCase,
+  ExportedUserData,
+} from '../../application/use-cases/export-user-data.use-case';
 import { DataRetentionService } from '../../application/services/data-retention.service';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 

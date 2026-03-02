@@ -11,13 +11,7 @@ describe('CachedWeatherApiClient', () => {
   let mockCacheService: jest.Mocked<ApiCacheService>;
   let mockWeatherClient: jest.Mocked<WeatherApiClient>;
 
-  const mockWeather = new Weather(
-    '서울 강남구',
-    15.5,
-    '맑음',
-    60,
-    3.5,
-  );
+  const mockWeather = new Weather('서울 강남구', 15.5, '맑음', 60, 3.5);
 
   const mockCachedData = {
     id: 1,

@@ -11,16 +11,21 @@ describe('AnalyticsController', () => {
   const OWNER_ID = 'user-123';
   const OTHER_USER_ID = 'other-user';
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
-  const createMockAnalytics = (routeId: string, routeName: string, opts: Partial<{
-    totalTrips: number;
-    score: number;
-    reliability: number;
-    average: number;
-  }> = {}): RouteAnalytics => {
+  const createMockAnalytics = (
+    routeId: string,
+    routeName: string,
+    opts: Partial<{
+      totalTrips: number;
+      score: number;
+      reliability: number;
+      average: number;
+    }> = {},
+  ): RouteAnalytics => {
     return new RouteAnalytics(routeId, routeName, {
       totalTrips: opts.totalTrips ?? 10,
       lastTripDate: new Date('2026-02-15'),
@@ -66,9 +71,7 @@ describe('AnalyticsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AnalyticsController],
-      providers: [
-        { provide: CalculateRouteAnalyticsUseCase, useValue: calculateAnalyticsUseCase },
-      ],
+      providers: [{ provide: CalculateRouteAnalyticsUseCase, useValue: calculateAnalyticsUseCase }],
     }).compile();
 
     controller = module.get<AnalyticsController>(AnalyticsController);
@@ -90,9 +93,9 @@ describe('AnalyticsController', () => {
     it('다른 사용자의 경로 분석 조회 시 ForbiddenException', async () => {
       calculateAnalyticsUseCase.executeForUser.mockResolvedValue([]); // route-1이 없음
 
-      await expect(
-        controller.getRouteAnalytics('route-1', mockRequest(OWNER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getRouteAnalytics('route-1', mockRequest(OWNER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('응답 DTO 변환이 올바른지 확인', async () => {
@@ -179,19 +182,16 @@ describe('AnalyticsController', () => {
         },
       } as any);
 
-      const result = await controller.compareRoutes(
-        'route-1,route-2',
-        mockRequest(OWNER_ID),
-      );
+      const result = await controller.compareRoutes('route-1,route-2', mockRequest(OWNER_ID));
 
       expect(result.routes).toHaveLength(2);
       expect(result.winner.fastest).toBe('route-1');
     });
 
     it('1개 경로만 제공 시 에러', async () => {
-      await expect(
-        controller.compareRoutes('route-1', mockRequest(OWNER_ID)),
-      ).rejects.toThrow('비교할 경로를 2개 이상 선택해주세요.');
+      await expect(controller.compareRoutes('route-1', mockRequest(OWNER_ID))).rejects.toThrow(
+        '비교할 경로를 2개 이상 선택해주세요.',
+      );
     });
 
     it('6개 이상 경로 제공 시 에러', async () => {
@@ -230,11 +230,7 @@ describe('AnalyticsController', () => {
       const analytics = createMockAnalytics('route-1', '경로 A', { score: 90 });
       calculateAnalyticsUseCase.executeForUser.mockResolvedValue([analytics]);
 
-      await controller.getRecommendedRoutes(
-        OWNER_ID,
-        '1',
-        mockRequest(OWNER_ID),
-      );
+      await controller.getRecommendedRoutes(OWNER_ID, '1', mockRequest(OWNER_ID));
 
       expect(calculateAnalyticsUseCase.executeForUser).toHaveBeenCalledWith(OWNER_ID);
     });
@@ -279,9 +275,9 @@ describe('AnalyticsController', () => {
     });
 
     it('다른 사용자의 요약 조회 시 ForbiddenException', async () => {
-      await expect(
-        controller.getSummary(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getSummary(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(calculateAnalyticsUseCase.executeForUser).not.toHaveBeenCalled();
     });

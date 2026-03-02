@@ -28,13 +28,13 @@ export interface IPatternAnalysisService {
   analyzeDeparturePattern(
     userId: string,
     commuteType: CommuteType,
-    isWeekday: boolean
+    isWeekday: boolean,
   ): Promise<DepartureTimePattern>;
   updatePatternFromRecord(record: CommuteRecord): Promise<void>;
   getOrCreatePattern(
     userId: string,
     patternType: PatternType,
-    isWeekday?: boolean
+    isWeekday?: boolean,
   ): Promise<UserPattern>;
 }
 
@@ -57,7 +57,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
   async analyzeDeparturePattern(
     userId: string,
     commuteType: CommuteType,
-    isWeekday: boolean
+    isWeekday: boolean,
   ): Promise<DepartureTimePattern> {
     // Get recent commute records
     const records = await this.getRecentRecords(userId, commuteType, isWeekday);
@@ -75,8 +75,8 @@ export class PatternAnalysisService implements IPatternAnalysisService {
 
     // Calculate weighted moving average
     const times = records
-      .filter(r => r.actualDeparture)
-      .map(r => this.timeToMinutes(r.getActualDepartureTime()!));
+      .filter((r) => r.actualDeparture)
+      .map((r) => this.timeToMinutes(r.getActualDepartureTime()!));
 
     const weightedAvg = this.calculateWeightedAverage(times);
     const stdDev = this.calculateStdDev(times, weightedAvg);
@@ -102,30 +102,32 @@ export class PatternAnalysisService implements IPatternAnalysisService {
       record.userId,
       PatternType.DEPARTURE_TIME,
       undefined,
-      isWeekday
+      isWeekday,
     );
 
     const newPattern = await this.analyzeDeparturePattern(
       record.userId,
       record.commuteType,
-      isWeekday
+      isWeekday,
     );
 
     const patternValue: DepartureTimeValue = {
       averageTime: newPattern.averageTime,
       stdDevMinutes: newPattern.stdDevMinutes,
       earliestTime: this.minutesToTime(
-        this.timeToMinutes(newPattern.averageTime) - newPattern.stdDevMinutes * 2
+        this.timeToMinutes(newPattern.averageTime) - newPattern.stdDevMinutes * 2,
       ),
       latestTime: this.minutesToTime(
-        this.timeToMinutes(newPattern.averageTime) + newPattern.stdDevMinutes * 2
+        this.timeToMinutes(newPattern.averageTime) + newPattern.stdDevMinutes * 2,
       ),
     };
 
     if (existingPattern) {
       const updated = existingPattern.withUpdatedValue(patternValue, newPattern.sampleCount);
       await this.patternRepository.save(updated);
-      this.logger.log(`Updated departure pattern for user ${record.userId}: ${newPattern.averageTime}`);
+      this.logger.log(
+        `Updated departure pattern for user ${record.userId}: ${newPattern.averageTime}`,
+      );
     } else {
       const newUserPattern = new UserPattern(
         record.userId,
@@ -135,17 +137,19 @@ export class PatternAnalysisService implements IPatternAnalysisService {
           isWeekday,
           confidence: newPattern.confidence,
           sampleCount: newPattern.sampleCount,
-        }
+        },
       );
       await this.patternRepository.save(newUserPattern);
-      this.logger.log(`Created departure pattern for user ${record.userId}: ${newPattern.averageTime}`);
+      this.logger.log(
+        `Created departure pattern for user ${record.userId}: ${newPattern.averageTime}`,
+      );
     }
   }
 
   async getOrCreatePattern(
     userId: string,
     patternType: PatternType,
-    isWeekday?: boolean
+    isWeekday?: boolean,
   ): Promise<UserPattern> {
     if (!this.patternRepository) {
       return this.createDefaultPattern(userId, patternType, isWeekday);
@@ -155,7 +159,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
       userId,
       patternType,
       undefined,
-      isWeekday
+      isWeekday,
     );
 
     if (existing) {
@@ -168,7 +172,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
   private async getRecentRecords(
     userId: string,
     commuteType: CommuteType,
-    isWeekday: boolean
+    isWeekday: boolean,
   ): Promise<CommuteRecord[]> {
     if (!this.commuteRepository) {
       return [];
@@ -177,7 +181,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
     const records = await this.commuteRepository.findByUserIdAndType(userId, commuteType, 30);
 
     // Filter by weekday/weekend
-    return records.filter(r => {
+    return records.filter((r) => {
       const day = r.commuteDate.getDay();
       const recordIsWeekday = day >= 1 && day <= 5;
       return recordIsWeekday === isWeekday;
@@ -203,7 +207,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
   private calculateStdDev(values: number[], mean: number): number {
     if (values.length < 2) return 15; // default
 
-    const squaredDiffs = values.map(v => Math.pow(v - mean, 2));
+    const squaredDiffs = values.map((v) => Math.pow(v - mean, 2));
     const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
     return Math.sqrt(avgSquaredDiff);
   }
@@ -232,7 +236,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
   private createDefaultPattern(
     userId: string,
     patternType: PatternType,
-    isWeekday?: boolean
+    isWeekday?: boolean,
   ): UserPattern {
     let value: DepartureTimeValue | NotificationLeadTimeValue;
 

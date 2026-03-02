@@ -47,8 +47,7 @@ export class SubwayApiClient implements ISubwayApiClient {
         );
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`지하철 도착 정보를 가져오는데 실패했습니다: ${message}`);
     }
   }

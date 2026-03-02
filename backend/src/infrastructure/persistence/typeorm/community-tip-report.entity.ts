@@ -30,6 +30,6 @@ export class CommunityTipReportEntity {
   @JoinColumn({ name: 'reporter_id' })
   reporter?: UserEntity;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

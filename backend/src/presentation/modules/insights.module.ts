@@ -40,10 +40,6 @@ import { InsightsController } from '../controllers/insights.controller';
     InsightsAggregationService,
     InsightsService,
   ],
-  exports: [
-    REGIONAL_INSIGHT_REPOSITORY,
-    InsightsAggregationService,
-    InsightsService,
-  ],
+  exports: [REGIONAL_INSIGHT_REPOSITORY, InsightsAggregationService, InsightsService],
 })
 export class InsightsModule {}

@@ -51,7 +51,9 @@ export function MilestoneModal({
         className="confirm-modal milestone-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="milestone-modal-icon" aria-hidden="true">{icon}</div>
+        <div className="milestone-modal-icon" aria-hidden="true">
+          {icon}
+        </div>
         <h2 id="milestone-modal-title" className="milestone-modal-title">
           {milestone.label} 달성!
         </h2>

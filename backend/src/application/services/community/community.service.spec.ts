@@ -55,8 +55,7 @@ describe('CommunityService', () => {
     });
 
     it('routeId 미지정 시 preferred 경로를 먼저 찾는다', async () => {
-      mockRouteRepo.findOne
-        .mockResolvedValueOnce({ id: 'preferred-route', userId: 'user-1' });
+      mockRouteRepo.findOne.mockResolvedValueOnce({ id: 'preferred-route', userId: 'user-1' });
       mockCheckpointRepo.find.mockResolvedValue([]);
 
       await service.getNeighborStats('user-1');
@@ -68,9 +67,7 @@ describe('CommunityService', () => {
 
     it('checkpoint key가 2개 미만이면 insufficient를 반환한다', async () => {
       mockRouteRepo.findOne.mockResolvedValue({ id: 'route-1' });
-      mockCheckpointRepo.find.mockResolvedValue([
-        { checkpointKey: 'station:1' },
-      ]);
+      mockCheckpointRepo.find.mockResolvedValue([{ checkpointKey: 'station:1' }]);
 
       const result = await service.getNeighborStats('user-1', 'route-1');
 
@@ -202,10 +199,7 @@ describe('CommunityService', () => {
 // Helper: mock QueryBuilder for getRawMany (neighbor detection)
 function createMockQueryBuilder(rawResults: unknown[]): Record<string, jest.Mock> {
   const qb: Record<string, jest.Mock> = {};
-  const methods = [
-    'innerJoin', 'select', 'addSelect', 'where', 'andWhere',
-    'groupBy', 'having',
-  ];
+  const methods = ['innerJoin', 'select', 'addSelect', 'where', 'andWhere', 'groupBy', 'having'];
   for (const m of methods) {
     qb[m] = jest.fn().mockReturnValue(qb);
   }

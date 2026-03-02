@@ -75,7 +75,7 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
 
   async findPreferredByUserId(
     userId: string,
-    routeType: RouteType
+    routeType: RouteType,
   ): Promise<CommuteRoute | undefined> {
     const entity = await this.routeRepository.findOne({
       where: { userId, routeType, isPreferred: true },
@@ -141,17 +141,22 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
       .sort((a, b) => a.sequenceOrder - b.sequenceOrder)
       .map(
         (cpEntity) =>
-          new RouteCheckpoint(cpEntity.sequenceOrder, cpEntity.name, cpEntity.checkpointType as CheckpointType, {
-            id: cpEntity.id,
-            routeId: cpEntity.routeId,
-            linkedStationId: cpEntity.linkedStationId,
-            linkedBusStopId: cpEntity.linkedBusStopId,
-            lineInfo: cpEntity.lineInfo,
-            expectedDurationToNext: cpEntity.expectedDurationToNext,
-            expectedWaitTime: cpEntity.expectedWaitTime,
-            transportMode: cpEntity.transportMode as TransportMode,
-            createdAt: cpEntity.createdAt,
-          })
+          new RouteCheckpoint(
+            cpEntity.sequenceOrder,
+            cpEntity.name,
+            cpEntity.checkpointType as CheckpointType,
+            {
+              id: cpEntity.id,
+              routeId: cpEntity.routeId,
+              linkedStationId: cpEntity.linkedStationId,
+              linkedBusStopId: cpEntity.linkedBusStopId,
+              lineInfo: cpEntity.lineInfo,
+              expectedDurationToNext: cpEntity.expectedDurationToNext,
+              expectedWaitTime: cpEntity.expectedWaitTime,
+              transportMode: cpEntity.transportMode as TransportMode,
+              createdAt: cpEntity.createdAt,
+            },
+          ),
       );
 
     return new CommuteRoute(entity.userId, entity.name, entity.routeType as RouteType, {

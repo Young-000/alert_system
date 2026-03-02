@@ -17,7 +17,12 @@ export class RecommendationBuilder {
     return new RecommendationBuilder();
   }
 
-  fromRule(ruleId: string, ruleName: string, category: RuleCategory, priority: RulePriority): RecommendationBuilder {
+  fromRule(
+    ruleId: string,
+    ruleName: string,
+    category: RuleCategory,
+    priority: RulePriority,
+  ): RecommendationBuilder {
     this.recommendation.ruleId = ruleId;
     this.recommendation.ruleName = ruleName;
     this.recommendation.category = category;
@@ -61,7 +66,10 @@ export function sortRecommendationsByPriority(recommendations: Recommendation[])
   return [...recommendations].sort((a, b) => b.priority - a.priority);
 }
 
-export function getTopRecommendations(recommendations: Recommendation[], limit: number = 3): Recommendation[] {
+export function getTopRecommendations(
+  recommendations: Recommendation[],
+  limit: number = 3,
+): Recommendation[] {
   return sortRecommendationsByPriority(recommendations).slice(0, limit);
 }
 

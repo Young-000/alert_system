@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsIn,
-  IsOptional,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsIn, IsOptional, IsUUID } from 'class-validator';
 
 // ----- Request DTOs -----
 

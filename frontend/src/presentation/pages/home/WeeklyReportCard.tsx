@@ -34,9 +34,7 @@ function renderEmpty(): JSX.Element {
       <div className="weekly-report-header">
         <h2 className="weekly-report-title">주간 리포트</h2>
       </div>
-      <p className="weekly-report-empty-msg">
-        이번 주 기록이 아직 없어요. 출퇴근을 기록해보세요!
-      </p>
+      <p className="weekly-report-empty-msg">이번 주 기록이 아직 없어요. 출퇴근을 기록해보세요!</p>
     </section>
   );
 }
@@ -58,7 +56,9 @@ export function WeeklyReportCard({
         <div className="weekly-report-header">
           <h2 className="weekly-report-title">주간 리포트</h2>
         </div>
-        <p className="weekly-report-empty-msg" role="alert">{error}</p>
+        <p className="weekly-report-empty-msg" role="alert">
+          {error}
+        </p>
         {onRetry && (
           <button type="button" className="btn btn-sm home-retry-btn" onClick={onRetry}>
             다시 시도
@@ -122,7 +122,9 @@ export function WeeklyReportCard({
 
       {/* Streak progress line */}
       <div className="weekly-report-streak">
-        <span className={`weekly-report-streak-text ${streakGoalMet ? 'weekly-report-streak--met' : ''}`}>
+        <span
+          className={`weekly-report-streak-text ${streakGoalMet ? 'weekly-report-streak--met' : ''}`}
+        >
           기록 {report.streakWeeklyCount}일 / 목표 {report.streakWeeklyGoal}일
           {streakGoalMet && <span aria-label="목표 달성"> &#10003;</span>}
         </span>
@@ -160,14 +162,22 @@ export function WeeklyReportCard({
           <div className="weekly-report-highlights">
             {report.bestDay && (
               <div className="weekly-report-highlight weekly-report-highlight--best">
-                <span className="weekly-report-highlight-icon" aria-hidden="true">&#9733;</span>
-                <span>최고: {report.bestDay.dayName} {report.bestDay.averageDuration}분</span>
+                <span className="weekly-report-highlight-icon" aria-hidden="true">
+                  &#9733;
+                </span>
+                <span>
+                  최고: {report.bestDay.dayName} {report.bestDay.averageDuration}분
+                </span>
               </div>
             )}
             {report.worstDay && report.worstDay.date !== report.bestDay?.date && (
               <div className="weekly-report-highlight weekly-report-highlight--worst">
-                <span className="weekly-report-highlight-icon" aria-hidden="true">&#9675;</span>
-                <span>최저: {report.worstDay.dayName} {report.worstDay.averageDuration}분</span>
+                <span className="weekly-report-highlight-icon" aria-hidden="true">
+                  &#9675;
+                </span>
+                <span>
+                  최저: {report.worstDay.dayName} {report.worstDay.averageDuration}분
+                </span>
               </div>
             )}
           </div>
@@ -189,16 +199,12 @@ export function WeeklyReportCard({
 
         {/* Insufficient data notice */}
         {report.totalRecordedDays > 0 && report.totalRecordedDays < 3 && (
-          <p className="weekly-report-notice">
-            데이터가 부족해 정확도가 낮을 수 있어요
-          </p>
+          <p className="weekly-report-notice">데이터가 부족해 정확도가 낮을 수 있어요</p>
         )}
 
         {/* First report notice */}
         {report.trend === null && report.totalSessions > 0 && (
-          <p className="weekly-report-notice">
-            이번 주가 첫 리포트예요!
-          </p>
+          <p className="weekly-report-notice">이번 주가 첫 리포트예요!</p>
         )}
       </div>
     </section>

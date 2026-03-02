@@ -13,7 +13,7 @@ describe('Grid Utility', () => {
     });
 
     it('정확히 그리드 경계에 있으면 그대로 반환한다', () => {
-      expect(snapToGridFloor(37.50)).toBeCloseTo(37.50, 2);
+      expect(snapToGridFloor(37.5)).toBeCloseTo(37.5, 2);
     });
 
     it('음수 좌표를 처리한다', () => {
@@ -25,7 +25,7 @@ describe('Grid Utility', () => {
     });
 
     it('소수점 이하 작은 값을 처리한다', () => {
-      expect(snapToGridFloor(37.001)).toBeCloseTo(37.00, 2);
+      expect(snapToGridFloor(37.001)).toBeCloseTo(37.0, 2);
     });
   });
 
@@ -35,7 +35,7 @@ describe('Grid Utility', () => {
     });
 
     it('정확히 그리드 경계에서 셀 중심을 반환한다', () => {
-      expect(snapToGridCenter(37.50)).toBeCloseTo(37.505, 3);
+      expect(snapToGridCenter(37.5)).toBeCloseTo(37.505, 3);
     });
   });
 
@@ -45,7 +45,7 @@ describe('Grid Utility', () => {
     });
 
     it('정확한 좌표로 그리드 키를 생성한다', () => {
-      expect(toGridKey(37.50, 127.00)).toBe('grid_37.50_127.00');
+      expect(toGridKey(37.5, 127.0)).toBe('grid_37.50_127.00');
     });
 
     it('음수 좌표로 그리드 키를 생성한다', () => {
@@ -58,7 +58,7 @@ describe('Grid Utility', () => {
     });
 
     it('인접 셀의 좌표는 다른 키를 반환한다', () => {
-      expect(toGridKey(37.56, 127.00)).not.toBe(toGridKey(37.57, 127.00));
+      expect(toGridKey(37.56, 127.0)).not.toBe(toGridKey(37.57, 127.0));
     });
   });
 
@@ -95,8 +95,9 @@ describe('Grid Utility', () => {
 
   describe('mostCommonName', () => {
     it('가장 많이 등장하는 이름을 반환한다', () => {
-      expect(mostCommonName(['신도림역', '강남역', '신도림역', '신도림역', '강남역']))
-        .toBe('신도림역');
+      expect(mostCommonName(['신도림역', '강남역', '신도림역', '신도림역', '강남역'])).toBe(
+        '신도림역',
+      );
     });
 
     it('단일 이름은 그대로 반환한다', () => {

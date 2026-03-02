@@ -28,10 +28,27 @@ const mockPrediction = {
   tier: 'day_aware' as const,
   departureRange: { early: '07:55', late: '08:15' },
   contributingFactors: [
-    { type: 'day_of_week', label: '월요일 패턴', impact: -3, description: '월요일은 평균보다 3분 일찍 출발', confidence: 0.8 },
-    { type: 'weather', label: '비 영향', impact: -8, description: '비 올 때 일찍 출발', confidence: 0.65 },
+    {
+      type: 'day_of_week',
+      label: '월요일 패턴',
+      impact: -3,
+      description: '월요일은 평균보다 3분 일찍 출발',
+      confidence: 0.8,
+    },
+    {
+      type: 'weather',
+      label: '비 영향',
+      impact: -8,
+      description: '비 올 때 일찍 출발',
+      confidence: 0.65,
+    },
   ],
-  dataStatus: { totalRecords: 15, tier: 'day_aware' as const, nextTierAt: 20, nextTierName: 'weather_aware' },
+  dataStatus: {
+    totalRecords: 15,
+    tier: 'day_aware' as const,
+    nextTierAt: 20,
+    nextTierName: 'weather_aware',
+  },
 };
 
 const mockInsights = {

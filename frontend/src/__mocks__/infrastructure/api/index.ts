@@ -84,9 +84,20 @@ export const behaviorApiClient = {
     tier: 'day_aware',
     departureRange: { early: '07:55', late: '08:15' },
     contributingFactors: [
-      { type: 'day_of_week', label: '월요일 패턴', impact: -3, description: '월요일은 평균보다 3분 일찍 출발', confidence: 0.8 },
+      {
+        type: 'day_of_week',
+        label: '월요일 패턴',
+        impact: -3,
+        description: '월요일은 평균보다 3분 일찍 출발',
+        confidence: 0.8,
+      },
     ],
-    dataStatus: { totalRecords: 15, tier: 'day_aware', nextTierAt: 20, nextTierName: 'weather_aware' },
+    dataStatus: {
+      totalRecords: 15,
+      tier: 'day_aware',
+      nextTierAt: 20,
+      nextTierName: 'weather_aware',
+    },
   }),
   getInsights: vi.fn().mockResolvedValue({
     dayOfWeek: {
@@ -796,7 +807,12 @@ export interface UserPattern {
 }
 
 // Delay Status types re-exported for tests
-export type OverallDelayStatus = 'normal' | 'minor_delay' | 'delayed' | 'severe_delay' | 'unavailable';
+export type OverallDelayStatus =
+  | 'normal'
+  | 'minor_delay'
+  | 'delayed'
+  | 'severe_delay'
+  | 'unavailable';
 export type SegmentDelayStatus = 'normal' | 'delayed' | 'severe_delay' | 'unavailable';
 export type AlternativeConfidence = 'high' | 'medium' | 'low';
 

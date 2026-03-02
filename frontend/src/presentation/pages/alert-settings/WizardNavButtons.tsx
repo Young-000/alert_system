@@ -29,12 +29,7 @@ export function WizardNavButtons({
         )}
 
         {step !== 'confirm' ? (
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onNext}
-            disabled={!canProceed}
-          >
+          <button type="button" className="btn btn-primary" onClick={onNext} disabled={!canProceed}>
             다음 &rarr;
           </button>
         ) : (

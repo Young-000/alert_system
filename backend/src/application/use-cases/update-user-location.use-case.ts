@@ -3,9 +3,7 @@ import { IUserRepository } from '@domain/repositories/user.repository';
 import { UserLocation } from '@domain/entities/user.entity';
 
 export class UpdateUserLocationUseCase {
-  constructor(
-    @Inject('IUserRepository') private userRepository: IUserRepository
-  ) {}
+  constructor(@Inject('IUserRepository') private userRepository: IUserRepository) {}
 
   async execute(userId: string, location: UserLocation) {
     const user = await this.userRepository.findById(userId);

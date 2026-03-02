@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { NotificationRuleEntity } from '../typeorm/notification-rule.entity';
 import { INotificationRuleRepository } from '@domain/repositories/notification-rule.repository';
-import { NotificationRule, RuleCategory, RulePriority } from '@domain/entities/notification-rule.entity';
+import {
+  NotificationRule,
+  RuleCategory,
+  RulePriority,
+} from '@domain/entities/notification-rule.entity';
 import { RuleCondition } from '@domain/entities/rule-condition.entity';
 
 @Injectable()
@@ -27,7 +31,7 @@ export class PostgresNotificationRuleRepository implements INotificationRuleRepo
     const entities = await this.repository.find({
       order: { priority: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByCategories(categories: RuleCategory[]): Promise<NotificationRule[]> {
@@ -38,7 +42,7 @@ export class PostgresNotificationRuleRepository implements INotificationRuleRepo
       },
       order: { priority: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findSystemRules(): Promise<NotificationRule[]> {
@@ -46,7 +50,7 @@ export class PostgresNotificationRuleRepository implements INotificationRuleRepo
       where: { isSystemRule: true },
       order: { priority: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserId(userId: string): Promise<NotificationRule[]> {
@@ -54,7 +58,7 @@ export class PostgresNotificationRuleRepository implements INotificationRuleRepo
       where: { userId },
       order: { priority: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findEnabledRules(): Promise<NotificationRule[]> {
@@ -62,7 +66,7 @@ export class PostgresNotificationRuleRepository implements INotificationRuleRepo
       where: { enabled: true },
       order: { priority: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async delete(id: string): Promise<void> {
@@ -97,7 +101,7 @@ export class PostgresNotificationRuleRepository implements INotificationRuleRepo
         userId: entity.userId,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-      }
+      },
     );
   }
 }

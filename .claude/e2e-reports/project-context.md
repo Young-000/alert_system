@@ -1,7 +1,7 @@
 # Project Context — Alert System
 
-Generated: 2026-02-28
-Branch: `feature/e2e-full-20260228`
+Generated: 2026-03-03
+Branch: `feature/e2e-auto-review-20260303`
 
 ---
 
@@ -12,7 +12,7 @@ Branch: `feature/e2e-full-20260228`
 | **프로젝트명** | Alert System |
 | **설명** | 출근/퇴근 시 날씨, 미세먼지, 버스/지하철 도착시간 통합 알림 시스템 |
 | **구조** | Monorepo (frontend + backend) |
-| **Git 브랜치** | `feature/e2e-full-20260228` (base: `main`) |
+| **Git 브랜치** | `feature/e2e-auto-review-20260303` (base: `main`) |
 
 ---
 
@@ -99,12 +99,19 @@ Branch: `feature/e2e-full-20260228`
 | **Client** | @supabase/supabase-js (frontend) |
 | **Dev fallback** | SQLite (USE_SQLITE=true) |
 
-### 주요 테이블
+### 주요 테이블/엔티티 (~35개)
 - `users`, `alerts`, `subway_stations`, `push_subscriptions`
 - `commute_routes`, `commute_sessions`, `route_checkpoints`, `checkpoint_records`
 - `user_badges`, `user_challenges`, `challenge_templates`
 - `missions`, `daily_mission_records`, `mission_scores`
 - `air_quality_cache`, `weather_cache`, `bus_arrival_cache`, `subway_arrival_cache`
+- `community_tips`, `community_tip_reports`, `privacy_settings`
+- `segment_congestion`, `regional_insights`, `route_analytics`
+- `alternative_mappings`, `recommendations`
+- `notification_rules`, `notification_contexts`, `rule_conditions`
+- `behavior_events`, `commute_events`, `commute_records`, `commute_streaks`
+- `smart_departure_settings`, `smart_departure_snapshots`
+- `live_activity_tokens`, `user_patterns`, `user_places`
 - `api_call_log`
 
 ---
@@ -113,18 +120,37 @@ Branch: `feature/e2e-full-20260228`
 
 | # | 카테고리 | 활성화 | 근거 |
 |---|----------|:------:|------|
-| 1 | **Code Quality** | YES | Frontend + Backend 소스코드 존재 |
-| 2 | **Testing** | YES | Vitest (FE) + Jest (BE) 설정 존재 |
-| 3 | **Build & Lint** | YES | tsc + eslint + vite build / nest build |
+| 1 | **Build** | YES | tsc + vite build (FE), tsc + nest build (BE) |
+| 2 | **Lint** | YES | ESLint + TypeScript ESLint (FE + BE) |
+| 3 | **Test** | YES | Vitest (FE) + Jest (BE) 설정 존재 |
 | 4 | **Security** | YES | JWT auth, Helmet, Throttler, SSM Parameters |
-| 5 | **Performance** | YES | PWA, React Query, Tailwind |
-| 6 | **Accessibility** | YES | React frontend with user-facing UI |
-| 7 | **UI/UX** | YES | 배포 URL 존재 (Vercel) |
-| 8 | **Database** | YES | Supabase PostgreSQL (alert_system 스키마) |
-| 9 | **API** | YES | NestJS REST API (CloudFront) |
-| 10 | **Infrastructure** | YES | AWS ECS + CloudFront + EventBridge + SSM |
+| 5 | **Code Quality** | YES | Frontend + Backend 소스코드 존재 |
+| 6 | **Performance** | YES | PWA, React Query, Tailwind, lazy loading |
+| 7 | **Accessibility** | YES | React frontend with user-facing UI |
+| 8 | **UI/UX** | YES | 배포 URL 존재 (Vercel) |
+| 9 | **User Flow** | YES | 17+ pages, 핵심 사용자 플로우 다수 |
+| 10 | **Database** | YES | Supabase PostgreSQL (alert_system 스키마, ~35 엔티티) |
 
 **활성 카테고리: 10/10**
+
+---
+
+## Previous Review Status
+
+| Round | 날짜 | 수정 | 핵심 |
+|-------|------|------|------|
+| Round 1 | 2026-02-13 | 71건 | 최초 점검 (quality 39, a11y 16, perf 6 등) |
+| Round 2 | 2026-02-13 | 0건 | 재검증 (회귀 없음 확인) |
+| Round 3 | 2026-02-13 | 25건 | PWA 캐시 수정 + 추가 점검 |
+| Round 4 | 2026-02-13 | 7건 | 코드 품질 + 최종 검증 |
+| Round 5 | 2026-02-28 | 31건 | Phase 2-3 완료 후 종합 점검 (1,373 tests, 10/10) |
+| **총계** | | **134건** | |
+
+### Latest Auto-Review (2026-03-02 08:00)
+- FE: typecheck 0 errors, build ~168KB gzip, 594 tests passed
+- BE: typecheck 0 errors, build success, 1,348 tests passed (10 skipped)
+- 수정 3건: rate limiting, query invalidation, retry button
+- 미해결 7건 (모두 권고사항, 수정 불필요)
 
 ---
 
@@ -132,5 +158,6 @@ Branch: `feature/e2e-full-20260228`
 
 | 영역 | 결과 |
 |------|------|
-| Backend | 837 tests passed |
-| Frontend | 394 tests passed |
+| Frontend | 594 tests passed (46 suites) |
+| Backend | 1,348 tests passed (101 suites, 10 skipped) |
+| **Total** | **1,942 tests** |

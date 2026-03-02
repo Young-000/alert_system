@@ -19,9 +19,10 @@ describe('BehaviorController', () => {
   const OWNER_ID = 'user-123';
   const OTHER_USER_ID = 'other-user';
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   beforeEach(async () => {
     trackBehaviorUseCase = {
@@ -101,9 +102,9 @@ describe('BehaviorController', () => {
     it('다른 사용자의 행동 기록 시 ForbiddenException', async () => {
       const dto = { userId: OWNER_ID, eventType: 'notification_received' };
 
-      await expect(
-        controller.trackEvent(dto, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.trackEvent(dto, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(trackBehaviorUseCase.trackEvent).not.toHaveBeenCalled();
     });
@@ -195,9 +196,7 @@ describe('BehaviorController', () => {
 
   describe('getUserPatterns', () => {
     it('사용자 패턴 조회 성공', async () => {
-      const mockPatterns = [
-        { id: 'p-1', userId: OWNER_ID, confidence: 0.8 },
-      ];
+      const mockPatterns = [{ id: 'p-1', userId: OWNER_ID, confidence: 0.8 }];
       mockUserPatternRepo.findByUserId.mockResolvedValue(mockPatterns);
 
       const result = await controller.getUserPatterns(OWNER_ID, mockRequest(OWNER_ID));
@@ -217,9 +216,7 @@ describe('BehaviorController', () => {
     it('패턴 리포지토리 미주입 시 폴백 응답 반환', async () => {
       const module = await Test.createTestingModule({
         controllers: [BehaviorController],
-        providers: [
-          { provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase },
-        ],
+        providers: [{ provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase }],
       }).compile();
       const ctrl = module.get<BehaviorController>(BehaviorController);
 
@@ -260,9 +257,7 @@ describe('BehaviorController', () => {
     it('통근 기록 리포지토리 미주입 시 폴백 응답 반환', async () => {
       const module = await Test.createTestingModule({
         controllers: [BehaviorController],
-        providers: [
-          { provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase },
-        ],
+        providers: [{ provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase }],
       }).compile();
       const ctrl = module.get<BehaviorController>(BehaviorController);
 
@@ -304,16 +299,12 @@ describe('BehaviorController', () => {
         mockRequest(OWNER_ID),
       );
 
-      expect(mockPredictUseCase.execute).toHaveBeenCalledWith(
-        OWNER_ID,
-        'alert-1',
-        {
-          weather: '맑음',
-          transitDelayMinutes: 5,
-          isRaining: false,
-          temperature: 20,
-        },
-      );
+      expect(mockPredictUseCase.execute).toHaveBeenCalledWith(OWNER_ID, 'alert-1', {
+        weather: '맑음',
+        transitDelayMinutes: 5,
+        isRaining: false,
+        temperature: 20,
+      });
       expect(result).toEqual(mockPrediction);
     });
 
@@ -340,11 +331,7 @@ describe('BehaviorController', () => {
         mockRequest(OWNER_ID),
       );
 
-      expect(mockPredictUseCase.execute).toHaveBeenCalledWith(
-        OWNER_ID,
-        'alert-1',
-        {},
-      );
+      expect(mockPredictUseCase.execute).toHaveBeenCalledWith(OWNER_ID, 'alert-1', {});
     });
 
     it('다른 사용자의 예측 조회 시 ForbiddenException', async () => {
@@ -364,9 +351,7 @@ describe('BehaviorController', () => {
     it('예측 서비스 미주입 시 에러 응답 반환', async () => {
       const module = await Test.createTestingModule({
         controllers: [BehaviorController],
-        providers: [
-          { provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase },
-        ],
+        providers: [{ provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase }],
       }).compile();
       const ctrl = module.get<BehaviorController>(BehaviorController);
 
@@ -432,9 +417,7 @@ describe('BehaviorController', () => {
     it('리포지토리 미주입 시 빈 배열로 동작', async () => {
       const module = await Test.createTestingModule({
         controllers: [BehaviorController],
-        providers: [
-          { provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase },
-        ],
+        providers: [{ provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase }],
       }).compile();
       const ctrl = module.get<BehaviorController>(BehaviorController);
 
@@ -455,7 +438,15 @@ describe('BehaviorController', () => {
       departureRange: { early: '07:55', late: '08:25' },
       confidence: 0.75,
       tier: 'basic' as const,
-      factors: [{ type: 'base_pattern' as const, label: '기본 패턴', impact: 0, description: '5개 기록 기반', confidence: 0.6 }],
+      factors: [
+        {
+          type: 'base_pattern' as const,
+          label: '기본 패턴',
+          impact: 0,
+          description: '5개 기록 기반',
+          confidence: 0.6,
+        },
+      ],
       insights: [],
       dataStatus: { totalRecords: 5, recordsUsed: 5, nextTierAt: 10, nextTierName: 'day_aware' },
     };
@@ -464,7 +455,12 @@ describe('BehaviorController', () => {
       mockPredictionEngine.predict!.mockResolvedValue(mockPredictionResult);
 
       const result = await controller.getPrediction(
-        OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OWNER_ID),
+        OWNER_ID,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        mockRequest(OWNER_ID),
       );
 
       expect(mockPredictionEngine.predict).toHaveBeenCalledWith(OWNER_ID, {});
@@ -475,7 +471,12 @@ describe('BehaviorController', () => {
       mockPredictionEngine.predict!.mockResolvedValue(mockPredictionResult);
 
       await controller.getPrediction(
-        OWNER_ID, 'rain', '15', '10', '2026-03-02', mockRequest(OWNER_ID),
+        OWNER_ID,
+        'rain',
+        '15',
+        '10',
+        '2026-03-02',
+        mockRequest(OWNER_ID),
       );
 
       expect(mockPredictionEngine.predict).toHaveBeenCalledWith(OWNER_ID, {
@@ -489,7 +490,12 @@ describe('BehaviorController', () => {
     it('다른 사용자의 예측 조회 시 ForbiddenException', async () => {
       await expect(
         controller.getPrediction(
-          OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OTHER_USER_ID),
+          OWNER_ID,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          mockRequest(OTHER_USER_ID),
         ),
       ).rejects.toThrow(ForbiddenException);
 
@@ -507,7 +513,12 @@ describe('BehaviorController', () => {
       );
 
       const result = await ctrl.getPrediction(
-        OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OWNER_ID),
+        OWNER_ID,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        mockRequest(OWNER_ID),
       );
 
       expect(result).toEqual({ error: 'Prediction engine not available' });
@@ -537,9 +548,9 @@ describe('BehaviorController', () => {
     });
 
     it('다른 사용자의 인사이트 조회 시 ForbiddenException', async () => {
-      await expect(
-        controller.getInsights(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getInsights(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(mockPredictionEngine.getInsights).not.toHaveBeenCalled();
     });

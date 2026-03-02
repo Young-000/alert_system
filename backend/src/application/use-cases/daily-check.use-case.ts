@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { IMissionRepository } from '@domain/repositories/mission.repository';
 import { Mission } from '@domain/entities/mission.entity';
 import { DailyMissionRecord } from '@domain/entities/daily-mission-record.entity';
@@ -24,9 +19,7 @@ export type DailyStatus = {
 
 @Injectable()
 export class DailyCheckUseCase {
-  constructor(
-    @Inject(MISSION_REPOSITORY) private readonly repo: IMissionRepository,
-  ) {}
+  constructor(@Inject(MISSION_REPOSITORY) private readonly repo: IMissionRepository) {}
 
   async getDailyStatus(userId: string, date: string): Promise<DailyStatus> {
     const [allMissions, records, existingScore] = await Promise.all([
@@ -43,21 +36,13 @@ export class DailyCheckUseCase {
       record: recordMap.get(mission.id) ?? null,
     }));
 
-    const commuteMissions = withRecords.filter(
-      (m) => m.mission.missionType === 'commute',
-    );
-    const returnMissions = withRecords.filter(
-      (m) => m.mission.missionType === 'return',
-    );
+    const commuteMissions = withRecords.filter((m) => m.mission.missionType === 'commute');
+    const returnMissions = withRecords.filter((m) => m.mission.missionType === 'return');
 
     const totalMissions = activeMissions.length;
-    const completedMissions = withRecords.filter(
-      (m) => m.record?.isCompleted,
-    ).length;
+    const completedMissions = withRecords.filter((m) => m.record?.isCompleted).length;
     const completionRate =
-      totalMissions === 0
-        ? 0
-        : Math.round((completedMissions / totalMissions) * 100);
+      totalMissions === 0 ? 0 : Math.round((completedMissions / totalMissions) * 100);
 
     let streakDay: number;
     if (existingScore) {
@@ -74,11 +59,7 @@ export class DailyCheckUseCase {
     };
   }
 
-  async toggleCheck(
-    userId: string,
-    missionId: string,
-    date: string,
-  ): Promise<DailyMissionRecord> {
+  async toggleCheck(userId: string, missionId: string, date: string): Promise<DailyMissionRecord> {
     const mission = await this.repo.findById(missionId);
     if (!mission) {
       throw new NotFoundException('미션을 찾을 수 없습니다');
@@ -100,17 +81,11 @@ export class DailyCheckUseCase {
     return saved;
   }
 
-  async getDailyScore(
-    userId: string,
-    date: string,
-  ): Promise<MissionScore | null> {
+  async getDailyScore(userId: string, date: string): Promise<MissionScore | null> {
     return this.repo.findScore(userId, date);
   }
 
-  private async recalculateScore(
-    userId: string,
-    date: string,
-  ): Promise<MissionScore> {
+  private async recalculateScore(userId: string, date: string): Promise<MissionScore> {
     const [allMissions, records, previousStreak] = await Promise.all([
       this.repo.findByUserId(userId),
       this.repo.findDailyRecords(userId, date),

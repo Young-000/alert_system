@@ -7,9 +7,7 @@ import { GoogleProfile } from '@infrastructure/auth/google.strategy';
 export class GoogleOAuthUseCase {
   private readonly logger = new Logger(GoogleOAuthUseCase.name);
 
-  constructor(
-    @Inject('IUserRepository') private userRepository: IUserRepository,
-  ) {}
+  constructor(@Inject('IUserRepository') private userRepository: IUserRepository) {}
 
   async execute(googleProfile: GoogleProfile): Promise<User> {
     const { googleId, email, name } = googleProfile;
@@ -27,7 +25,7 @@ export class GoogleOAuthUseCase {
       // 기존 이메일 계정에 Google ID 연동
       this.logger.log(`Linking Google ID to existing email account: ${email}`);
       await this.userRepository.updateGoogleId(user.id, googleId);
-      return await this.userRepository.findById(user.id) as User;
+      return (await this.userRepository.findById(user.id)) as User;
     }
 
     // 3. 새 사용자 생성 (Google 로그인으로 신규 가입)

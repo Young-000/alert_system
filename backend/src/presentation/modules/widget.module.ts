@@ -40,10 +40,7 @@ import { BriefingAdviceService } from '@application/services/briefing-advice.ser
     {
       provide: 'ISubwayApiClient',
       useFactory: () => {
-        const apiKey =
-          process.env.SUBWAY_REALTIME_API_KEY ||
-          process.env.SUBWAY_API_KEY ||
-          '';
+        const apiKey = process.env.SUBWAY_REALTIME_API_KEY || process.env.SUBWAY_API_KEY || '';
         return new SubwayApiClient(apiKey);
       },
     },

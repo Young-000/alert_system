@@ -11,11 +11,7 @@ interface AuthRequiredProps {
   description: string;
 }
 
-export function AuthRequired({
-  pageTitle,
-  icon,
-  description,
-}: AuthRequiredProps): JSX.Element {
+export function AuthRequired({ pageTitle, icon, description }: AuthRequiredProps): JSX.Element {
   return (
     <main className="page">
       <PageHeader title={pageTitle} sticky={false} />
@@ -25,7 +21,9 @@ export function AuthRequired({
         </span>
         <h2>로그인이 필요해요</h2>
         <p>{description}</p>
-        <Link to="/login" className="btn btn-primary">로그인</Link>
+        <Link to="/login" className="btn btn-primary">
+          로그인
+        </Link>
       </div>
     </main>
   );

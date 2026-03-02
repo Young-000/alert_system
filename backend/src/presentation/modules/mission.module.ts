@@ -10,7 +10,10 @@ import { MissionScoreEntity } from '@infrastructure/persistence/typeorm/mission-
 import { MissionRepositoryImpl } from '@infrastructure/persistence/mission.repository.impl';
 
 // Use Cases
-import { ManageMissionUseCase, MISSION_REPOSITORY } from '@application/use-cases/manage-mission.use-case';
+import {
+  ManageMissionUseCase,
+  MISSION_REPOSITORY,
+} from '@application/use-cases/manage-mission.use-case';
 import { DailyCheckUseCase } from '@application/use-cases/daily-check.use-case';
 import { MissionStatsUseCase } from '@application/use-cases/mission-stats.use-case';
 
@@ -19,11 +22,7 @@ import { MissionController } from '../controllers/mission.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      MissionEntity,
-      DailyMissionRecordEntity,
-      MissionScoreEntity,
-    ]),
+    TypeOrmModule.forFeature([MissionEntity, DailyMissionRecordEntity, MissionScoreEntity]),
   ],
   controllers: [MissionController],
   providers: [
@@ -37,11 +36,6 @@ import { MissionController } from '../controllers/mission.controller';
     DailyCheckUseCase,
     MissionStatsUseCase,
   ],
-  exports: [
-    MISSION_REPOSITORY,
-    ManageMissionUseCase,
-    DailyCheckUseCase,
-    MissionStatsUseCase,
-  ],
+  exports: [MISSION_REPOSITORY, ManageMissionUseCase, DailyCheckUseCase, MissionStatsUseCase],
 })
 export class MissionModule {}

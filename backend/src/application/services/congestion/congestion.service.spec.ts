@@ -2,7 +2,12 @@ import { CongestionService } from './congestion.service';
 import { SegmentCongestion, TimeSlot } from '@domain/entities/segment-congestion.entity';
 import { ISegmentCongestionRepository } from '@domain/repositories/segment-congestion.repository';
 import { ICommuteRouteRepository } from '@domain/repositories/commute-route.repository';
-import { CommuteRoute, RouteType, CheckpointType, RouteCheckpoint } from '@domain/entities/commute-route.entity';
+import {
+  CommuteRoute,
+  RouteType,
+  CheckpointType,
+  RouteCheckpoint,
+} from '@domain/entities/commute-route.entity';
 
 describe('CongestionService', () => {
   let service: CongestionService;
@@ -32,10 +37,7 @@ describe('CongestionService', () => {
       deleteByUserId: jest.fn(),
     };
 
-    service = new CongestionService(
-      mockCongestionRepo,
-      mockRouteRepo,
-    );
+    service = new CongestionService(mockCongestionRepo, mockRouteRepo);
   });
 
   describe('getSegments', () => {
@@ -72,10 +74,10 @@ describe('CongestionService', () => {
         limit: 10,
       });
 
-      expect(mockCongestionRepo.findByTimeSlot).toHaveBeenCalledWith(
-        'morning_rush',
-        { level: 'high', limit: 10 },
-      );
+      expect(mockCongestionRepo.findByTimeSlot).toHaveBeenCalledWith('morning_rush', {
+        level: 'high',
+        limit: 10,
+      });
     });
   });
 

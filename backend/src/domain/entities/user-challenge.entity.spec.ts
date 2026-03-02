@@ -32,27 +32,23 @@ describe('UserChallenge', () => {
     });
 
     it('userId가 빈 문자열이면 에러를 던진다', () => {
-      expect(() =>
-        UserChallenge.create('', 'template-1', 3, 14),
-      ).toThrow('userId is required');
+      expect(() => UserChallenge.create('', 'template-1', 3, 14)).toThrow('userId is required');
     });
 
     it('templateId가 빈 문자열이면 에러를 던진다', () => {
-      expect(() =>
-        UserChallenge.create('user-1', '', 3, 14),
-      ).toThrow('templateId is required');
+      expect(() => UserChallenge.create('user-1', '', 3, 14)).toThrow('templateId is required');
     });
 
     it('targetProgress가 0이면 에러를 던진다', () => {
-      expect(() =>
-        UserChallenge.create('user-1', 'template-1', 0, 14),
-      ).toThrow('targetProgress must be greater than 0');
+      expect(() => UserChallenge.create('user-1', 'template-1', 0, 14)).toThrow(
+        'targetProgress must be greater than 0',
+      );
     });
 
     it('durationDays가 0이면 에러를 던진다', () => {
-      expect(() =>
-        UserChallenge.create('user-1', 'template-1', 3, 0),
-      ).toThrow('durationDays must be greater than 0');
+      expect(() => UserChallenge.create('user-1', 'template-1', 3, 0)).toThrow(
+        'durationDays must be greater than 0',
+      );
     });
   });
 
@@ -143,9 +139,7 @@ describe('UserChallenge', () => {
         status: 'completed',
       });
 
-      expect(() => challenge.abandon()).toThrow(
-        'Cannot abandon completed challenge',
-      );
+      expect(() => challenge.abandon()).toThrow('Cannot abandon completed challenge');
     });
 
     it('원본 인스턴스는 변경되지 않는다 (불변성)', () => {

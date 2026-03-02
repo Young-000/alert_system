@@ -61,34 +61,22 @@ export class LiveActivityToken {
   }
 
   deactivate(): LiveActivityToken {
-    return new LiveActivityToken(
-      this.userId,
-      this.activityId,
-      this.pushToken,
-      this.mode,
-      {
-        id: this.id,
-        settingId: this.settingId,
-        isActive: false,
-        createdAt: this.createdAt,
-        updatedAt: new Date(),
-      },
-    );
+    return new LiveActivityToken(this.userId, this.activityId, this.pushToken, this.mode, {
+      id: this.id,
+      settingId: this.settingId,
+      isActive: false,
+      createdAt: this.createdAt,
+      updatedAt: new Date(),
+    });
   }
 
   updatePushToken(newToken: string): LiveActivityToken {
-    return new LiveActivityToken(
-      this.userId,
-      this.activityId,
-      newToken,
-      this.mode,
-      {
-        id: this.id,
-        settingId: this.settingId,
-        isActive: this.isActive,
-        createdAt: this.createdAt,
-        updatedAt: new Date(),
-      },
-    );
+    return new LiveActivityToken(this.userId, this.activityId, newToken, this.mode, {
+      id: this.id,
+      settingId: this.settingId,
+      isActive: this.isActive,
+      createdAt: this.createdAt,
+      updatedAt: new Date(),
+    });
   }
 }

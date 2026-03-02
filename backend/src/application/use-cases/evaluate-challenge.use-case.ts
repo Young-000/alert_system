@@ -2,10 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ChallengeRepository } from '@domain/repositories/challenge.repository';
 import { ChallengeTemplate } from '@domain/entities/challenge-template.entity';
 import { UserBadge } from '@domain/entities/user-badge.entity';
-import {
-  SessionCompletionData,
-  ChallengeUpdate,
-} from '@application/dto/challenge.dto';
+import { SessionCompletionData, ChallengeUpdate } from '@application/dto/challenge.dto';
 
 @Injectable()
 export class EvaluateChallengeUseCase {
@@ -14,12 +11,8 @@ export class EvaluateChallengeUseCase {
     private readonly challengeRepo: ChallengeRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    sessionData: SessionCompletionData,
-  ): Promise<ChallengeUpdate[]> {
-    const activeChallenges =
-      await this.challengeRepo.findActiveChallengesByUserId(userId);
+  async execute(userId: string, sessionData: SessionCompletionData): Promise<ChallengeUpdate[]> {
+    const activeChallenges = await this.challengeRepo.findActiveChallengesByUserId(userId);
     if (activeChallenges.length === 0) return [];
 
     const updates: ChallengeUpdate[] = [];
@@ -32,9 +25,7 @@ export class EvaluateChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = await this.challengeRepo.findTemplateById(challenge.challengeTemplateId);
       if (!template) continue;
 
       const shouldIncrement = this.evaluateCondition(template, sessionData);
@@ -46,11 +37,10 @@ export class EvaluateChallengeUseCase {
       // If completed, award badge
       let badgeEarned: UserBadge | null = null;
       if (updated.status === 'completed') {
-        const existingBadge =
-          await this.challengeRepo.findBadgeByUserAndBadgeId(
-            userId,
-            template.badgeId,
-          );
+        const existingBadge = await this.challengeRepo.findBadgeByUserAndBadgeId(
+          userId,
+          template.badgeId,
+        );
         if (!existingBadge) {
           badgeEarned = UserBadge.create(
             userId,
@@ -84,10 +74,7 @@ export class EvaluateChallengeUseCase {
     return updates;
   }
 
-  private evaluateCondition(
-    template: ChallengeTemplate,
-    data: SessionCompletionData,
-  ): boolean {
+  private evaluateCondition(template: ChallengeTemplate, data: SessionCompletionData): boolean {
     switch (template.conditionType) {
       case 'duration_under':
         return (
@@ -95,10 +82,7 @@ export class EvaluateChallengeUseCase {
           data.totalDurationMinutes < template.conditionValue
         );
       case 'consecutive_days':
-        return (
-          data.currentStreak !== undefined &&
-          data.currentStreak >= template.conditionValue
-        );
+        return data.currentStreak !== undefined && data.currentStreak >= template.conditionValue;
       case 'weekly_count':
         return (
           data.weeklySessionCount !== undefined &&

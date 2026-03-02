@@ -15,6 +15,4 @@ export interface ISmartDepartureSettingRepository {
   delete(id: string): Promise<void>;
 }
 
-export const SMART_DEPARTURE_SETTING_REPOSITORY = Symbol(
-  'ISmartDepartureSettingRepository',
-);
+export const SMART_DEPARTURE_SETTING_REPOSITORY = Symbol('ISmartDepartureSettingRepository');

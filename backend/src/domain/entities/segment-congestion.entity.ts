@@ -130,8 +130,7 @@ export class SegmentCongestion {
    * Check if this congestion data is stale (>30 days old).
    */
   isStale(): boolean {
-    const daysSinceUpdate =
-      (Date.now() - this.lastUpdatedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceUpdate = (Date.now() - this.lastUpdatedAt.getTime()) / (1000 * 60 * 60 * 24);
     return daysSinceUpdate > STALE_THRESHOLD_DAYS;
   }
 

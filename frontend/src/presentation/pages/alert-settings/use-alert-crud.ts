@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  alertApiClient,
-} from '@infrastructure/api';
+import { alertApiClient } from '@infrastructure/api';
 import type { Alert, AlertType, CreateAlertDto } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
@@ -83,25 +81,35 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     const parts = schedule.split(' ');
     if (parts.length < 5) return schedule;
     const minute = parts[0];
-    const hours = parts[1].split(',').map(h => parseInt(h, 10)).filter(h => !isNaN(h)).sort((a, b) => a - b);
+    const hours = parts[1]
+      .split(',')
+      .map((h) => parseInt(h, 10))
+      .filter((h) => !isNaN(h))
+      .sort((a, b) => a - b);
     return `${minute} ${hours.join(',')} ${parts.slice(2).join(' ')}`;
   }, []);
 
-  const checkDuplicateAlert = useCallback((schedule: string, alertTypes: AlertType[]): Alert | null => {
-    const normalizedNew = normalizeSchedule(schedule);
-    const newTypes = [...alertTypes].sort();
+  const checkDuplicateAlert = useCallback(
+    (schedule: string, alertTypes: AlertType[]): Alert | null => {
+      const normalizedNew = normalizeSchedule(schedule);
+      const newTypes = [...alertTypes].sort();
 
-    return alerts.find(existing => {
-      const normalizedExisting = normalizeSchedule(existing.schedule);
-      if (normalizedNew !== normalizedExisting) return false;
+      return (
+        alerts.find((existing) => {
+          const normalizedExisting = normalizeSchedule(existing.schedule);
+          if (normalizedNew !== normalizedExisting) return false;
 
-      const existingTypes = [...existing.alertTypes].sort();
-      const sameTypes = existingTypes.length === newTypes.length &&
-        existingTypes.every((t, i) => t === newTypes[i]);
+          const existingTypes = [...existing.alertTypes].sort();
+          const sameTypes =
+            existingTypes.length === newTypes.length &&
+            existingTypes.every((t, i) => t === newTypes[i]);
 
-      return sameTypes;
-    }) || null;
-  }, [alerts, normalizeSchedule]);
+          return sameTypes;
+        }) || null
+      );
+    },
+    [alerts, normalizeSchedule],
+  );
 
   const handleDeleteClick = (alert: Alert): void => {
     setDeleteTarget({ id: alert.id, name: alert.name });
@@ -165,15 +173,15 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
 
   const handleToggleAlert = async (alert: Alert): Promise<void> => {
     if (togglingIds.has(alert.id)) return;
-    setTogglingIds(prev => new Set(prev).add(alert.id));
-    setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
+    setTogglingIds((prev) => new Set(prev).add(alert.id));
+    setAlerts((prev) => prev.map((a) => (a.id === alert.id ? { ...a, enabled: !a.enabled } : a)));
     try {
       await alertApiClient.toggleAlert(alert.id);
     } catch {
-      setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
+      setAlerts((prev) => prev.map((a) => (a.id === alert.id ? { ...a, enabled: !a.enabled } : a)));
       setError('알림 상태 변경에 실패했습니다.');
     } finally {
-      setTogglingIds(prev => {
+      setTogglingIds((prev) => {
         const next = new Set(prev);
         next.delete(alert.id);
         return next;
@@ -190,7 +198,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       return;
     }
 
-    const existingAlert = alerts.find(a => a.name === '아침 날씨 알림');
+    const existingAlert = alerts.find((a) => a.name === '아침 날씨 알림');
     if (existingAlert) {
       setError('이미 아침 날씨 알림이 설정되어 있습니다.');
       setTimeout(() => {

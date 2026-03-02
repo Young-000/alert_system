@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -68,9 +62,7 @@ export class NotificationHistoryController {
     }
 
     const total = success + fallback + failed;
-    const successRate = total === 0
-      ? 100
-      : Math.round((success / total) * 1000) / 10;
+    const successRate = total === 0 ? 100 : Math.round((success / total) * 1000) / 10;
 
     return { total, success, fallback, failed, successRate };
   }

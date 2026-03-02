@@ -38,10 +38,7 @@ export class PostgresSubwayStationRepository implements ISubwayStationRepository
       });
     }
 
-    const entities = await queryBuilder
-      .orderBy('station.name', 'ASC')
-      .limit(limit)
-      .getMany();
+    const entities = await queryBuilder.orderBy('station.name', 'ASC').limit(limit).getMany();
 
     return entities.map((entity) => this.toDomain(entity));
   }

@@ -121,12 +121,12 @@ export function buildDataSourceOptions(): DataSourceOptions {
   const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_PROJECT2_DB_URL;
   const hasUrl = Boolean(databaseUrl);
   // Detect Supabase from URL, SUPABASE_URL env, or DATABASE_HOST (for pooler connections)
-  const isSupabase = Boolean(process.env.SUPABASE_URL) ||
-                     Boolean(databaseUrl?.includes('supabase.co')) ||
-                     Boolean(process.env.DATABASE_HOST?.includes('supabase.com'));
+  const isSupabase =
+    Boolean(process.env.SUPABASE_URL) ||
+    Boolean(databaseUrl?.includes('supabase.co')) ||
+    Boolean(process.env.DATABASE_HOST?.includes('supabase.com'));
   const synchronize =
-    process.env.NODE_ENV !== 'production' &&
-    process.env.DB_SYNCHRONIZE === 'true';
+    process.env.NODE_ENV !== 'production' && process.env.DB_SYNCHRONIZE === 'true';
 
   const allEntities = [
     UserEntity,
@@ -216,7 +216,9 @@ export function buildDataSourceOptions(): DataSourceOptions {
   const existingExtra = (sslOptions as { extra?: Record<string, unknown> }).extra || {};
 
   const dbLogger = new Logger('DatabaseConfig');
-  dbLogger.log(`Database config: pool=${poolSize}, logging=${logging.join(',')}, ssl=${isSupabase}`);
+  dbLogger.log(
+    `Database config: pool=${poolSize}, logging=${logging.join(',')}, ssl=${isSupabase}`,
+  );
 
   return {
     ...baseOptions,

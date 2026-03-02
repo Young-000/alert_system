@@ -58,7 +58,7 @@ function renderComponent(overrides = {}): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
       <StatsSection {...defaultProps} {...overrides} />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 

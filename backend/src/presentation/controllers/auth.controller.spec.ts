@@ -100,7 +100,9 @@ describe('AuthController', () => {
     });
 
     it('잘못된 자격 증명 시 에러 전파', async () => {
-      loginUseCase.execute.mockRejectedValue(new Error('이메일 또는 비밀번호가 올바르지 않습니다.'));
+      loginUseCase.execute.mockRejectedValue(
+        new Error('이메일 또는 비밀번호가 올바르지 않습니다.'),
+      );
 
       await expect(controller.login(loginDto)).rejects.toThrow(
         '이메일 또는 비밀번호가 올바르지 않습니다.',
@@ -208,9 +210,7 @@ describe('AuthController', () => {
 
       expect(googleOAuthUseCase.execute).toHaveBeenCalledWith(mockReq.user);
       expect(authService.generateToken).toHaveBeenCalledWith(mockUser);
-      expect(mockRes.redirect).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/callback#'),
-      );
+      expect(mockRes.redirect).toHaveBeenCalledWith(expect.stringContaining('/auth/callback#'));
     });
 
     it('Google OAuth 콜백 에러 시 에러 리다이렉트', async () => {

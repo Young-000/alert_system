@@ -16,13 +16,13 @@
 import { clamp } from './descriptive-stats';
 
 export interface BayesianPrior {
-  mu: number;       // prior mean (e.g., 480 = 08:00 in minutes)
-  sigma: number;    // prior standard deviation (e.g., 15 minutes)
+  mu: number; // prior mean (e.g., 480 = 08:00 in minutes)
+  sigma: number; // prior standard deviation (e.g., 15 minutes)
 }
 
 export interface BayesianPosterior {
-  mu: number;       // posterior mean
-  sigma: number;    // posterior standard deviation
+  mu: number; // posterior mean
+  sigma: number; // posterior standard deviation
   confidence: number; // data-driven confidence [0.3, 0.95]
   sampleCount: number;
 }
@@ -30,7 +30,7 @@ export interface BayesianPosterior {
 export interface ConfidenceInterval {
   lower: number;
   upper: number;
-  level: number;    // e.g., 0.95 for 95% CI
+  level: number; // e.g., 0.95 for 95% CI
 }
 
 /**
@@ -69,16 +69,15 @@ export function updatePosterior(
   // Estimate observation noise from sample std dev if not given
   const sigma = likelihoodSigma ?? Math.max(estimateSigma(observations), 5);
 
-  const priorPrecision = 1 / (prior.sigma ** 2);
-  const likelihoodPrecision = n / (sigma ** 2);
+  const priorPrecision = 1 / prior.sigma ** 2;
+  const likelihoodPrecision = n / sigma ** 2;
   const dataSum = observations.reduce((s, x) => s + x, 0);
 
   // Posterior precision = prior precision + likelihood precision
   const posteriorPrecision = priorPrecision + likelihoodPrecision;
 
   // Posterior mean
-  const posteriorMu =
-    (prior.mu * priorPrecision + dataSum * (1 / (sigma ** 2))) / posteriorPrecision;
+  const posteriorMu = (prior.mu * priorPrecision + dataSum * (1 / sigma ** 2)) / posteriorPrecision;
 
   // Posterior variance & std dev
   const posteriorSigma = Math.sqrt(1 / posteriorPrecision);
@@ -102,10 +101,7 @@ export function updatePosterior(
  *   95% -> z = 1.960
  *   99% -> z = 2.576
  */
-export function credibleInterval(
-  posterior: BayesianPosterior,
-  level = 0.95,
-): ConfidenceInterval {
+export function credibleInterval(posterior: BayesianPosterior, level = 0.95): ConfidenceInterval {
   const zScores: Record<string, number> = {
     '0.9': 1.645,
     '0.95': 1.96,

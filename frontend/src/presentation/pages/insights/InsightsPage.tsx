@@ -26,9 +26,7 @@ export function InsightsPage(): JSX.Element {
     <main className="page insights-page">
       <header className="insights-header">
         <h1 className="insights-title">지역별 출퇴근 인사이트</h1>
-        <p className="insights-subtitle">
-          지역별 출퇴근 패턴과 트렌드를 확인하세요
-        </p>
+        <p className="insights-subtitle">지역별 출퇴근 패턴과 트렌드를 확인하세요</p>
       </header>
 
       <MyComparisonSection />
@@ -65,11 +63,7 @@ export function InsightsPage(): JSX.Element {
         {error && (
           <div className="insights-error notice error" role="alert">
             <p>지역 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.</p>
-            <button
-              type="button"
-              className="insights-retry-btn"
-              onClick={() => void refetch()}
-            >
+            <button type="button" className="insights-retry-btn" onClick={() => void refetch()}>
               다시 시도
             </button>
           </div>
@@ -77,7 +71,9 @@ export function InsightsPage(): JSX.Element {
 
         {!isLoading && !error && data && data.regions.length === 0 && (
           <div className="insights-empty">
-            <p className="insights-empty-icon" aria-hidden="true">&#128202;</p>
+            <p className="insights-empty-icon" aria-hidden="true">
+              &#128202;
+            </p>
             <p className="insights-empty-title">아직 지역 데이터가 없어요</p>
             <p className="insights-empty-desc">
               더 많은 사용자가 출퇴근을 기록하면 지역별 인사이트가 표시됩니다
@@ -96,9 +92,7 @@ export function InsightsPage(): JSX.Element {
                     isExpanded={isExpanded}
                     onToggle={() => handleToggle(region.regionId)}
                   />
-                  {isExpanded && (
-                    <RegionDetailPanel regionId={region.regionId} />
-                  )}
+                  {isExpanded && <RegionDetailPanel regionId={region.regionId} />}
                 </div>
               );
             })}

@@ -53,7 +53,9 @@ export function WeeklyTab(): JSX.Element {
     return (
       <div className="report-tab-content">
         <div className="report-card report-card--empty">
-          <p className="report-empty-icon" aria-hidden="true">&#128202;</p>
+          <p className="report-empty-icon" aria-hidden="true">
+            &#128202;
+          </p>
           <p className="report-empty-msg">이번 주 기록이 아직 없어요</p>
           <p className="report-empty-hint">출퇴근을 기록하면 주간 리포트가 생성돼요!</p>
         </div>
@@ -62,9 +64,10 @@ export function WeeklyTab(): JSX.Element {
   }
 
   const streakGoalMet = report.streakWeeklyCount >= report.streakWeeklyGoal;
-  const streakPercent = report.streakWeeklyGoal > 0
-    ? Math.min(100, Math.round((report.streakWeeklyCount / report.streakWeeklyGoal) * 100))
-    : 0;
+  const streakPercent =
+    report.streakWeeklyGoal > 0
+      ? Math.min(100, Math.round((report.streakWeeklyCount / report.streakWeeklyGoal) * 100))
+      : 0;
 
   return (
     <div className="report-tab-content" aria-label={`${report.weekLabel} 주간 리포트`}>
@@ -136,7 +139,9 @@ export function WeeklyTab(): JSX.Element {
           <div className="report-highlights">
             {report.bestDay && (
               <div className="report-highlight report-highlight--best">
-                <span className="report-highlight-icon" aria-hidden="true">&#9733;</span>
+                <span className="report-highlight-icon" aria-hidden="true">
+                  &#9733;
+                </span>
                 <div>
                   <span className="report-highlight-label">최고</span>
                   <span className="report-highlight-value">
@@ -147,7 +152,9 @@ export function WeeklyTab(): JSX.Element {
             )}
             {report.worstDay && report.worstDay.date !== report.bestDay?.date && (
               <div className="report-highlight report-highlight--worst">
-                <span className="report-highlight-icon" aria-hidden="true">&#9675;</span>
+                <span className="report-highlight-icon" aria-hidden="true">
+                  &#9675;
+                </span>
                 <div>
                   <span className="report-highlight-label">최저</span>
                   <span className="report-highlight-value">
@@ -183,7 +190,9 @@ export function WeeklyTab(): JSX.Element {
           <h3 className="report-section-title">인사이트</h3>
           <ul className="report-insights" aria-label="주간 인사이트">
             {report.insights.map((insight) => (
-              <li key={insight} className="report-insight">{insight}</li>
+              <li key={insight} className="report-insight">
+                {insight}
+              </li>
             ))}
           </ul>
         </div>
@@ -191,9 +200,7 @@ export function WeeklyTab(): JSX.Element {
 
       {/* Notices */}
       {report.totalRecordedDays > 0 && report.totalRecordedDays < 3 && (
-        <p className="report-notice">
-          데이터가 부족해 정확도가 낮을 수 있어요
-        </p>
+        <p className="report-notice">데이터가 부족해 정확도가 낮을 수 있어요</p>
       )}
       {report.trend === null && report.totalSessions > 0 && (
         <p className="report-notice">이번 주가 첫 리포트예요!</p>

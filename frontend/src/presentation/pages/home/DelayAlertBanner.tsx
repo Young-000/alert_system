@@ -12,11 +12,14 @@ interface DelayAlertBannerProps {
   readonly routeId: string;
 }
 
-const STATUS_CONFIG: Record<OverallDelayStatus, {
-  icon: string;
-  title: string;
-  show: boolean;
-}> = {
+const STATUS_CONFIG: Record<
+  OverallDelayStatus,
+  {
+    icon: string;
+    title: string;
+    show: boolean;
+  }
+> = {
   normal: { icon: '', title: '', show: false },
   minor_delay: { icon: '\u{26A0}\u{FE0F}', title: '경미한 지연', show: true },
   delayed: { icon: '\u{1F6A8}', title: '지연 발생', show: true },
@@ -38,7 +41,7 @@ function formatDelaySubtitle(totalDelayMinutes: number, status: OverallDelayStat
 }
 
 function getDelayedSegments(segments: readonly DelaySegmentResponse[]): DelaySegmentResponse[] {
-  return segments.filter(s => s.status !== 'normal');
+  return segments.filter((s) => s.status !== 'normal');
 }
 
 export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Element | null {
@@ -62,7 +65,9 @@ export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Elemen
       data-testid="delay-alert-banner"
     >
       <div className="delay-banner-header">
-        <span className="delay-banner-icon" aria-hidden="true">{config.icon}</span>
+        <span className="delay-banner-icon" aria-hidden="true">
+          {config.icon}
+        </span>
         <div className="delay-banner-content">
           <h3 className="delay-banner-title">{config.title}</h3>
           <p className="delay-banner-subtitle">
@@ -73,7 +78,7 @@ export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Elemen
           <button
             type="button"
             className="delay-banner-toggle"
-            onClick={() => setExpanded(prev => !prev)}
+            onClick={() => setExpanded((prev) => !prev)}
             aria-expanded={expanded}
             aria-label={expanded ? '지연 상세 접기' : '지연 상세 펼치기'}
           >
@@ -83,17 +88,13 @@ export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Elemen
       </div>
 
       {hasDetails && (
-        <div
-          className="delay-banner-details"
-          data-expanded={expanded}
-          aria-hidden={!expanded}
-        >
+        <div className="delay-banner-details" data-expanded={expanded} aria-hidden={!expanded}>
           <div className="delay-banner-details-inner">
             {delayedSegments.length > 0 && (
               <>
                 <p className="delay-section-label">영향 구간</p>
                 <ul className="delay-segments" data-testid="delay-segments">
-                  {delayedSegments.map(segment => (
+                  {delayedSegments.map((segment) => (
                     <li className="delay-segment" key={segment.checkpointId}>
                       <div className="delay-segment-info">
                         <span className="delay-segment-name">{segment.checkpointName}</span>
@@ -116,7 +117,7 @@ export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Elemen
             {hasAlternatives && (
               <>
                 <p className="delay-section-label">대안 경로</p>
-                {data.alternatives.map(alt => (
+                {data.alternatives.map((alt) => (
                   <AlternativeCard key={alt.id} alternative={alt} />
                 ))}
               </>

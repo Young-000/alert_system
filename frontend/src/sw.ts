@@ -2,11 +2,7 @@
 import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
-import {
-  StaleWhileRevalidate,
-  CacheFirst,
-  NetworkFirst,
-} from 'workbox-strategies';
+import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 declare const self: ServiceWorkerGlobalScope;
@@ -53,9 +49,7 @@ registerRoute(
     url.pathname.startsWith('/api/bus/stops/search'),
   new StaleWhileRevalidate({
     cacheName: 'api-cache',
-    plugins: [
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 5 }),
-    ],
+    plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 5 })],
   }),
 );
 
@@ -70,7 +64,12 @@ self.addEventListener('message', (event) => {
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  let data: { title: string; body: string; url?: string; actions?: Array<{ action: string; title: string; url: string }> };
+  let data: {
+    title: string;
+    body: string;
+    url?: string;
+    actions?: Array<{ action: string; title: string; url: string }>;
+  };
   try {
     data = event.data.json();
   } catch {
@@ -87,14 +86,12 @@ self.addEventListener('push', (event) => {
 
   // Add action buttons if provided (e.g., delay alerts with "대안 경로 보기")
   if (data.actions?.length) {
-    options.actions = data.actions.map(a => ({
+    options.actions = data.actions.map((a) => ({
       action: a.action,
       title: a.title,
     }));
     // Store action URLs in data for click handling
-    options.data.actionUrls = Object.fromEntries(
-      data.actions.map(a => [a.action, a.url]),
-    );
+    options.data.actionUrls = Object.fromEntries(data.actions.map((a) => [a.action, a.url]));
   }
 
   event.waitUntil(self.registration.showNotification(data.title, options));

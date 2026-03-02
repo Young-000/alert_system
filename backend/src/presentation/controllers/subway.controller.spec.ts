@@ -49,9 +49,7 @@ describe('SubwayController', () => {
 
   describe('getArrival', () => {
     it('지하철 도착 정보 조회 성공', async () => {
-      const mockArrivals = [
-        { trainLineNm: '2호선', arvlMsg2: '3분 후 도착' },
-      ];
+      const mockArrivals = [{ trainLineNm: '2호선', arvlMsg2: '3분 후 도착' }];
       subwayApiClient.getSubwayArrival.mockResolvedValue(mockArrivals as any);
 
       const result = await controller.getArrival('강남');

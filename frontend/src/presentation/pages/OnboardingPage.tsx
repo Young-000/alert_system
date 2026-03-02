@@ -57,7 +57,13 @@ export function OnboardingPage(): JSX.Element {
 
   // Go to next step
   const goNext = () => {
-    const steps: OnboardingStep[] = ['welcome', 'commute-question', 'transport', 'duration', 'complete'];
+    const steps: OnboardingStep[] = [
+      'welcome',
+      'commute-question',
+      'transport',
+      'duration',
+      'complete',
+    ];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1) {
       setStep(steps[currentIndex + 1]);
@@ -66,7 +72,13 @@ export function OnboardingPage(): JSX.Element {
 
   // Go to previous step
   const goBack = () => {
-    const steps: OnboardingStep[] = ['welcome', 'commute-question', 'transport', 'duration', 'complete'];
+    const steps: OnboardingStep[] = [
+      'welcome',
+      'commute-question',
+      'transport',
+      'duration',
+      'complete',
+    ];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       setStep(steps[currentIndex - 1]);
@@ -149,7 +161,7 @@ export function OnboardingPage(): JSX.Element {
           checkpointType: 'home' as const,
           expectedDurationToNext: totalDuration,
           expectedWaitTime: 0,
-          transportMode: mode === 'car' ? 'taxi' as const : 'walk' as const,
+          transportMode: mode === 'car' ? ('taxi' as const) : ('walk' as const),
         },
         {
           sequenceOrder: 2,
@@ -176,10 +188,10 @@ export function OnboardingPage(): JSX.Element {
       {
         sequenceOrder: 2,
         name: mode === 'bus' ? '버스 정류장' : '지하철역',
-        checkpointType: mode === 'bus' ? 'bus_stop' as const : 'subway' as const,
+        checkpointType: mode === 'bus' ? ('bus_stop' as const) : ('subway' as const),
         expectedDurationToNext: remainDuration,
         expectedWaitTime: 5,
-        transportMode: mode === 'bus' ? 'bus' as const : 'subway' as const,
+        transportMode: mode === 'bus' ? ('bus' as const) : ('subway' as const),
       },
       {
         sequenceOrder: 3,
@@ -208,24 +220,78 @@ export function OnboardingPage(): JSX.Element {
         {step === 'welcome' && (
           <section className="onboarding-step welcome-step">
             <div className="welcome-icon" aria-hidden="true">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
             </div>
             <h1>환영합니다{userName ? `, ${userName}님` : ''}!</h1>
             <p className="welcome-desc">
-              출퇴근 메이트가 여러분의 출퇴근을 도와드릴게요.<br />
+              출퇴근 메이트가 여러분의 출퇴근을 도와드릴게요.
+              <br />
               간단한 설정으로 시작해볼까요?
             </p>
             <div className="welcome-features">
               <div className="feature-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
                 <span>출퇴근 시간 기록</span>
               </div>
               <div className="feature-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
                 <span>통계 및 분석</span>
               </div>
               <div className="feature-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="6" />
+                  <circle cx="12" cy="12" r="2" />
+                </svg>
                 <span>최적 경로 추천</span>
               </div>
             </div>
@@ -251,7 +317,19 @@ export function OnboardingPage(): JSX.Element {
                 className="option-card"
                 onClick={() => handleCommuteAnswer(true)}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
                 <span className="option-label">네, 있어요</span>
                 <span className="option-desc">매일 출퇴근해요</span>
               </button>
@@ -260,7 +338,20 @@ export function OnboardingPage(): JSX.Element {
                 className="option-card"
                 onClick={() => handleCommuteAnswer(false)}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
                 <span className="option-label">아니요</span>
                 <span className="option-desc">재택 또는 불규칙해요</span>
               </button>
@@ -347,7 +438,11 @@ export function OnboardingPage(): JSX.Element {
               </div>
             </div>
 
-            {error && <div className="notice error" role="alert">{error}</div>}
+            {error && (
+              <div className="notice error" role="alert">
+                {error}
+              </div>
+            )}
 
             <div className="step-actions">
               <button type="button" className="btn btn-ghost" onClick={goBack}>
@@ -369,17 +464,31 @@ export function OnboardingPage(): JSX.Element {
         {step === 'complete' && (
           <section className="onboarding-step complete-step">
             <div className="complete-icon" aria-hidden="true">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
             </div>
             <h2>설정 완료!</h2>
             {data.hasCommute ? (
               <p className="complete-desc">
-                출퇴근 경로가 생성되었어요.<br />
+                출퇴근 경로가 생성되었어요.
+                <br />
                 이제 알림을 설정하면 매일 아침 날씨와 교통 정보를 받아볼 수 있어요!
               </p>
             ) : (
               <p className="complete-desc">
-                언제든 경로를 설정할 수 있어요.<br />
+                언제든 경로를 설정할 수 있어요.
+                <br />
                 스톱워치 모드로 바로 시작해보세요!
               </p>
             )}
@@ -388,7 +497,20 @@ export function OnboardingPage(): JSX.Element {
             {data.hasCommute && (
               <div className="alert-recommend-banner">
                 <div className="recommend-content">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--primary)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
                   <div className="recommend-text">
                     <strong>출근 전 알림 받기</strong>
                     <span>날씨·교통 알림을 카카오톡으로 받아보세요</span>

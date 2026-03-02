@@ -7,7 +7,7 @@ describe('HomePage', () => {
     render(
       <TestProviders>
         <HomePage />
-      </TestProviders>
+      </TestProviders>,
     );
     const elements = screen.getAllByText('출퇴근 메이트');
     expect(elements.length).toBeGreaterThan(0);

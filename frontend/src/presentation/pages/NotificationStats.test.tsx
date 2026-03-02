@@ -36,17 +36,13 @@ describe('NotificationStats', () => {
       successRate: 100,
     };
 
-    const { container } = render(
-      <NotificationStats stats={emptyStats} isLoading={false} />,
-    );
+    const { container } = render(<NotificationStats stats={emptyStats} isLoading={false} />);
 
     expect(container.innerHTML).toBe('');
   });
 
   it('stats가 null이고 로딩이 아니면 아무것도 렌더링하지 않는다', () => {
-    const { container } = render(
-      <NotificationStats stats={null} isLoading={false} />,
-    );
+    const { container } = render(<NotificationStats stats={null} isLoading={false} />);
 
     expect(container.innerHTML).toBe('');
   });

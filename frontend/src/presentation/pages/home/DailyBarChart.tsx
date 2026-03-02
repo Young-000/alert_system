@@ -42,8 +42,8 @@ export function DailyBarChart({
   const safeMax = maxDuration > 0 ? maxDuration : 1;
 
   const chartLabel = dailyStats
-    .filter(d => d.sessionCount > 0)
-    .map(d => `${getShortDayName(d.dayName)} ${d.averageDuration}분`)
+    .filter((d) => d.sessionCount > 0)
+    .map((d) => `${getShortDayName(d.dayName)} ${d.averageDuration}분`)
     .join(', ');
 
   return (
@@ -53,9 +53,8 @@ export function DailyBarChart({
       aria-label={`일별 소요시간: ${chartLabel || '데이터 없음'}`}
     >
       {dailyStats.map((day) => {
-        const widthPercent = day.sessionCount > 0
-          ? Math.round((day.averageDuration / safeMax) * 100)
-          : 0;
+        const widthPercent =
+          day.sessionCount > 0 ? Math.round((day.averageDuration / safeMax) * 100) : 0;
         const modifier = getBarModifier(day.date, day.sessionCount, bestDayDate, worstDayDate);
         const badge = getDayBadge(day.date, bestDayDate, worstDayDate);
 
@@ -69,9 +68,7 @@ export function DailyBarChart({
                 : `${day.dayName} 기록 없음`
             }
           >
-            <span className="daily-bar__label">
-              {getShortDayName(day.dayName)}
-            </span>
+            <span className="daily-bar__label">{getShortDayName(day.dayName)}</span>
             <div className="daily-bar__track">
               <div
                 className={`daily-bar__fill ${modifier}`}
@@ -84,7 +81,8 @@ export function DailyBarChart({
                   {day.averageDuration}분
                   {badge && (
                     <span className="daily-bar__badge" aria-hidden="true">
-                      {' '}{badge}
+                      {' '}
+                      {badge}
                     </span>
                   )}
                 </>

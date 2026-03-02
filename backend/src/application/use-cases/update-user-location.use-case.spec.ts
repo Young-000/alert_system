@@ -37,7 +37,7 @@ describe('UpdateUserLocationUseCase', () => {
     userRepository.findById.mockResolvedValue(undefined);
 
     await expect(
-      useCase.execute('missing-id', { address: 'Seoul', lat: 0, lng: 0 })
+      useCase.execute('missing-id', { address: 'Seoul', lat: 0, lng: 0 }),
     ).rejects.toThrow('사용자를 찾을 수 없습니다.');
   });
 });

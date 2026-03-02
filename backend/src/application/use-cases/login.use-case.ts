@@ -11,9 +11,7 @@ export interface LoginResult {
 
 @Injectable()
 export class LoginUseCase {
-  constructor(
-    @Inject('IUserRepository') private userRepository: IUserRepository,
-  ) {}
+  constructor(@Inject('IUserRepository') private userRepository: IUserRepository) {}
 
   async execute(dto: LoginDto): Promise<User> {
     const user = await this.userRepository.findByEmail(dto.email);

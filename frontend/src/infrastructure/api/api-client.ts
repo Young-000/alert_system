@@ -18,9 +18,7 @@ export class ApiClient {
   private baseURL: string;
   private maxRetries = MAX_RETRIES;
 
-  constructor(
-    baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
-  ) {
+  constructor(baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000') {
     this.baseURL = baseURL;
   }
 
@@ -66,7 +64,7 @@ export class ApiClient {
       }
 
       const text = await response.text();
-      return text ? JSON.parse(text) as T : undefined as T;
+      return text ? (JSON.parse(text) as T) : (undefined as T);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -90,7 +88,7 @@ export class ApiClient {
           throw error;
         }
 
-        await new Promise(resolve => setTimeout(resolve, RETRY_BASE_DELAY_MS * (attempt + 1)));
+        await new Promise((resolve) => setTimeout(resolve, RETRY_BASE_DELAY_MS * (attempt + 1)));
       }
     }
 

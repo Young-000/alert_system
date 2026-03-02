@@ -8,8 +8,8 @@ export function useBriefingQuery(lat: number, lng: number, enabled: boolean) {
     queryKey: queryKeys.briefing.byLocation(lat, lng),
     queryFn: () => briefingApiClient.getBriefing(lat, lng),
     enabled,
-    staleTime: 10 * 60 * 1000,      // 10min — same cadence as weather
+    staleTime: 10 * 60 * 1000, // 10min — same cadence as weather
     refetchOnWindowFocus: true,
-    retry: 1,                         // graceful fallback on backend unavailability
+    retry: 1, // graceful fallback on backend unavailability
   });
 }

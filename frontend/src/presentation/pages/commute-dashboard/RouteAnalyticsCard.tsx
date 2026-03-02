@@ -16,7 +16,10 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
   return (
     <div className={`analytics-card ${analytics.isRecommended ? 'recommended' : ''}`}>
       <div className="analytics-card-header">
-        <span className={`route-badge ${analytics.routeName.includes('출근') ? 'morning' : 'evening'}`} aria-hidden="true">
+        <span
+          className={`route-badge ${analytics.routeName.includes('출근') ? 'morning' : 'evening'}`}
+          aria-hidden="true"
+        >
           {analytics.routeName.includes('출근') ? '출' : '퇴'}
         </span>
         <div className="analytics-title-area">
@@ -54,7 +57,9 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
           </div>
           <div className="analytics-detail-row">
             <span className="detail-label">범위</span>
-            <span className="detail-value">{analytics.duration.min}-{analytics.duration.max}분</span>
+            <span className="detail-value">
+              {analytics.duration.min}-{analytics.duration.max}분
+            </span>
           </div>
           <div className="analytics-detail-row">
             <span className="detail-label">편차</span>
@@ -75,14 +80,20 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
           <div className="factor-bar">
             <span className="factor-label">일관성</span>
             <div className="factor-track">
-              <div className="factor-fill" style={{ width: `${analytics.scoreFactors.reliability}%` }} />
+              <div
+                className="factor-fill"
+                style={{ width: `${analytics.scoreFactors.reliability}%` }}
+              />
             </div>
             <span className="factor-value">{analytics.scoreFactors.reliability}</span>
           </div>
           <div className="factor-bar">
             <span className="factor-label">편의</span>
             <div className="factor-track">
-              <div className="factor-fill" style={{ width: `${analytics.scoreFactors.comfort}%` }} />
+              <div
+                className="factor-fill"
+                style={{ width: `${analytics.scoreFactors.comfort}%` }}
+              />
             </div>
             <span className="factor-value">{analytics.scoreFactors.comfort}</span>
           </div>
@@ -92,7 +103,25 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
 
       {analytics.isRecommended && (
         <div className="recommended-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{verticalAlign: 'middle', marginRight: '4px'}}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            style={{ verticalAlign: 'middle', marginRight: '4px' }}
+          >
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg>
           추천
         </div>
       )}

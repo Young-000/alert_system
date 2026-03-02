@@ -54,7 +54,9 @@ describe('StreakBadge', () => {
   });
 
   it('new 상태에서 온보딩 메시지를 표시한다', () => {
-    render(<StreakBadge streak={makeStreak({ streakStatus: 'new', currentStreak: 0, bestStreak: 0 })} />);
+    render(
+      <StreakBadge streak={makeStreak({ streakStatus: 'new', currentStreak: 0, bestStreak: 0 })} />,
+    );
     expect(screen.getByText('첫 기록을 시작하세요')).toBeInTheDocument();
   });
 

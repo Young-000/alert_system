@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryColumn,
-  CreateDateColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, PrimaryColumn, CreateDateColumn, Index } from 'typeorm';
 
 @Entity('challenge_templates', { schema: 'alert_system' })
 @Index(['category'])

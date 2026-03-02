@@ -50,7 +50,7 @@ export class CommuteSessionRepositoryImpl implements ICommuteSessionRepository {
   async findByUserIdAndStatus(
     userId: string,
     status: SessionStatus,
-    limit = 50
+    limit = 50,
   ): Promise<CommuteSession[]> {
     const entities = await this.sessionRepository.find({
       where: { userId, status },
@@ -72,7 +72,7 @@ export class CommuteSessionRepositoryImpl implements ICommuteSessionRepository {
   async findByUserIdInDateRange(
     userId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<CommuteSession[]> {
     const entities = await this.sessionRepository.find({
       where: {
@@ -158,7 +158,7 @@ export class CommuteSessionRepositoryImpl implements ICommuteSessionRepository {
           waitDelayMinutes: r.waitDelayMinutes,
           notes: r.notes,
           createdAt: r.createdAt,
-        })
+        }),
     );
 
     return new CommuteSession(entity.userId, entity.routeId, {

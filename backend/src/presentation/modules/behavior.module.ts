@@ -10,12 +10,18 @@ import { CommuteRecordRepositoryImpl } from '@infrastructure/persistence/reposit
 import { BEHAVIOR_EVENT_REPOSITORY } from '@domain/repositories/behavior-event.repository';
 import { USER_PATTERN_REPOSITORY } from '@domain/repositories/user-pattern.repository';
 import { COMMUTE_RECORD_REPOSITORY } from '@domain/repositories/commute-record.repository';
-import { PatternAnalysisService, PATTERN_ANALYSIS_SERVICE } from '@application/services/pattern-analysis.service';
+import {
+  PatternAnalysisService,
+  PATTERN_ANALYSIS_SERVICE,
+} from '@application/services/pattern-analysis.service';
 import { FeatureEngineeringService } from '@application/services/feature-engineering.service';
 import { EnhancedPatternAnalysisService } from '@application/services/enhanced-pattern-analysis.service';
 import { PredictionEngineService } from '@application/services/prediction-engine.service';
 import { TrackBehaviorUseCase } from '@application/use-cases/track-behavior.use-case';
-import { PredictOptimalDepartureUseCase, USER_PATTERN_REPOSITORY as PREDICT_USER_PATTERN_REPO } from '@application/use-cases/predict-optimal-departure.use-case';
+import {
+  PredictOptimalDepartureUseCase,
+  USER_PATTERN_REPOSITORY as PREDICT_USER_PATTERN_REPO,
+} from '@application/use-cases/predict-optimal-departure.use-case';
 import { AlertEntity } from '@infrastructure/persistence/typeorm/alert.entity';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 

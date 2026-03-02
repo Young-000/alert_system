@@ -38,9 +38,8 @@ export function useFocusTrap(options: UseFocusTrapOptions): RefObject<HTMLDivEle
       }
 
       if (e.key === 'Tab' && containerRef.current) {
-        const focusableElements = containerRef.current.querySelectorAll<HTMLElement>(
-          FOCUSABLE_SELECTOR,
-        );
+        const focusableElements =
+          containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
 
         if (focusableElements.length === 0) {
           e.preventDefault();

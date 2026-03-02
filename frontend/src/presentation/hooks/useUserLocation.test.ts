@@ -44,7 +44,7 @@ describe('useUserLocation', () => {
   });
 
   it('should use cached location from localStorage on mount', () => {
-    const cached = { latitude: 37.3945, longitude: 127.1110 };
+    const cached = { latitude: 37.3945, longitude: 127.111 };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
 
     const { result } = renderHook(() => useUserLocation());
@@ -96,7 +96,7 @@ describe('useUserLocation', () => {
   });
 
   it('should keep cached location when geolocation fails', () => {
-    const cached = { latitude: 37.3945, longitude: 127.1110 };
+    const cached = { latitude: 37.3945, longitude: 127.111 };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
 
     mockGetCurrentPosition.mockImplementation(

@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  subwayApiClient,
-  busApiClient,
-} from '@infrastructure/api';
+import { subwayApiClient, busApiClient } from '@infrastructure/api';
 import type { SubwayStation, BusStop } from '@infrastructure/api';
 import type { TransportItem, GroupedStation } from './types';
 import { SEARCH_DEBOUNCE_MS, MAX_SEARCH_RESULTS } from './types';
@@ -79,14 +76,18 @@ export function useTransportSearch(
 
           if (transportTypes.includes('subway') && !transportTypes.includes('bus')) {
             const stationMap = new Map<string, TransportItem[]>();
-            results.filter(r => r.type === 'subway').forEach(item => {
-              const existing = stationMap.get(item.name) || [];
-              stationMap.set(item.name, [...existing, item]);
-            });
-            const grouped: GroupedStation[] = Array.from(stationMap.entries()).map(([name, lines]) => ({
-              name,
-              lines,
-            }));
+            results
+              .filter((r) => r.type === 'subway')
+              .forEach((item) => {
+                const existing = stationMap.get(item.name) || [];
+                stationMap.set(item.name, [...existing, item]);
+              });
+            const grouped: GroupedStation[] = Array.from(stationMap.entries()).map(
+              ([name, lines]) => ({
+                name,
+                lines,
+              }),
+            );
             setGroupedStations(grouped);
           } else {
             setGroupedStations([]);

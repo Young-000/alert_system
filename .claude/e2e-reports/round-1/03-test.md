@@ -1,7 +1,7 @@
 # 03 — Test Results
 
-**Date**: 2026-02-28
-**Branch**: `main`
+**Date**: 2026-03-03
+**Branch**: `feature/e2e-auto-review-20260303`
 
 ---
 
@@ -9,22 +9,22 @@
 
 | Area | Suites | Tests | Passed | Failed | Skipped |
 |------|-------:|------:|-------:|-------:|--------:|
-| **Frontend** | 35 | 480 | 480 | 0 | 0 |
-| **Backend** | 78 | 902 | 892 | 0 | 10 |
-| **Total** | 113 | 1,382 | 1,372 | 0 | 10 |
+| **Frontend** | 48 | 607 | 607 | 0 | 0 |
+| **Backend** | 101 | 1,358 | 1,348 | 0 | 10 |
+| **Total** | 149 | 1,965 | 1,955 | 0 | 10 |
 
-**Result: ALL TESTS PASS (0 failures, 2 fixes applied)**
+**Result: ALL TESTS PASS (0 failures, 0 fixes needed)**
 
 ---
 
 ## Frontend (Vitest 4.0.18)
 
-**Command**: `cd frontend && npx vitest run`
+**Command**: `cd frontend && npm test -- --run`
 
 ```
-Test Files:  35 passed (35)
-Tests:       480 passed (480)
-Duration:    6.96s
+Test Files:  48 passed (48)
+Tests:       607 passed (607)
+Duration:    11.11s
 ```
 
 No failures. No skipped tests. No time-dependent issues.
@@ -36,9 +36,9 @@ No failures. No skipped tests. No time-dependent issues.
 **Command**: `cd backend && npm test`
 
 ```
-Test Suites: 3 skipped, 75 passed, 75 of 78 total
-Tests:       10 skipped, 892 passed, 902 total
-Duration:    ~12.6s
+Test Suites: 3 skipped, 101 passed, 101 of 104 total
+Tests:       10 skipped, 1,348 passed, 1,358 total
+Duration:    ~35.9s
 ```
 
 ### Skipped Suites (3) — intentional, env-gated
@@ -49,31 +49,14 @@ Duration:    ~12.6s
 | `infrastructure/persistence/postgres-alert.repository.spec.ts` | `RUN_DB_TESTS=true` | Requires live PostgreSQL |
 | `infrastructure/persistence/postgres-user.repository.spec.ts` | `RUN_DB_TESTS=true` | Requires live PostgreSQL |
 
----
+### Note: Worker Exit Warning
 
-## Fixes Applied (2)
+```
+A worker process has failed to exit gracefully and has been force exited.
+This is likely caused by tests leaking due to improper teardown.
+```
 
-### Fix 1: `predict-optimal-departure.use-case.spec.ts`
-
-**Problem**: Test file passed 3 constructor arguments but the source class only accepts 2. The `patternAnalysisService` parameter was removed from the source during a previous refactoring, but the spec was not updated.
-
-**Error**: `TS2554: Expected 2 arguments, but got 3.` (7 locations)
-
-**Changes**:
-- Removed `mockPatternAnalysisService` variable declaration and mock setup
-- Changed `new PredictOptimalDepartureUseCase(null, null, null)` to `(null, null)`
-- Changed `new PredictOptimalDepartureUseCase(repo, analysisService, alertRepo)` to `(repo, alertRepo)` at 6 call sites
-
-### Fix 2: `generate-weekly-report.use-case.spec.ts`
-
-**Problem**: Test file passed 6 constructor arguments but the source class only accepts 5. The `notificationLogRepo` parameter was removed from the source during a previous refactoring, but the spec was not updated.
-
-**Error**: `TS2554: Expected 1-5 arguments, but got 6.` (7 locations)
-
-**Changes**:
-- Removed `mockNotificationLogRepo` variable declaration and mock setup
-- Removed `mockNotificationLogRepo` from all 6 `new GenerateWeeklyReportUseCase(...)` calls
-- Updated the "without services" test from 6 `undefined` args to 5
+This warning appears at the end of the Jest run but does not cause any test failures. It indicates a timer or open handle is not properly cleaned up in one of the test suites. Not blocking.
 
 ---
 
@@ -88,10 +71,16 @@ Duration:    ~12.6s
 
 ## Test Growth
 
-| Metric | Previous (2026-02-12) | Current (2026-02-28) | Delta |
-|--------|----------------------:|---------------------:|------:|
-| FE Suites | 8 | 35 | +27 |
-| FE Tests | 25 | 480 | +455 |
-| BE Suites | 27 | 75 | +48 |
-| BE Tests | 194 | 892 | +698 |
-| **Total Tests** | **219** | **1,372** | **+1,153** |
+| Metric | Round 5 (2026-02-28) | Previous Auto (2026-03-02) | Current (2026-03-03) | Delta (vs R5) |
+|--------|---------------------:|---------------------------:|---------------------:|--------------:|
+| FE Suites | 35 | 46 | 48 | +13 |
+| FE Tests | 480 | 594 | 607 | +127 |
+| BE Suites | 75 | 101 | 101 | +26 |
+| BE Tests | 892 | 1,348 | 1,348 | +456 |
+| **Total Tests** | **1,372** | **1,942** | **1,955** | **+583** |
+
+---
+
+## Fixes Applied
+
+None required. All 1,955 tests pass without modification.

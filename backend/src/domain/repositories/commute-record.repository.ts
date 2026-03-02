@@ -7,13 +7,9 @@ export interface ICommuteRecordRepository {
   findByUserIdAndType(
     userId: string,
     commuteType: CommuteType,
-    limit?: number
+    limit?: number,
   ): Promise<CommuteRecord[]>;
-  findByUserIdInDateRange(
-    userId: string,
-    startDate: Date,
-    endDate: Date
-  ): Promise<CommuteRecord[]>;
+  findByUserIdInDateRange(userId: string, startDate: Date, endDate: Date): Promise<CommuteRecord[]>;
   findRecentByUserId(userId: string, days: number): Promise<CommuteRecord[]>;
   countByUserId(userId: string): Promise<number>;
   deleteOlderThan(cutoffDate: Date): Promise<number>;

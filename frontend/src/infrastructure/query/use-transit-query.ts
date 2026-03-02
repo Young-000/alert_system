@@ -9,9 +9,7 @@ import { queryKeys } from './query-keys';
  * Extracts subway stations and bus stops from route checkpoints,
  * then queries arrival APIs in parallel.
  */
-export async function fetchTransitArrivals(
-  route: RouteResponse,
-): Promise<TransitArrivalInfo[]> {
+export async function fetchTransitArrivals(route: RouteResponse): Promise<TransitArrivalInfo[]> {
   const subwayStations = new Set<string>();
   const busStopIds = new Set<string>();
 
@@ -34,9 +32,20 @@ export async function fetchTransitArrivals(
   const subwayPromises = stationNames.map(async (name): Promise<TransitArrivalInfo> => {
     try {
       const arrivals = await subwayApiClient.getArrival(name);
-      return { type: 'subway', name: `${name}역`, arrivals: arrivals.slice(0, 3), isLoading: false };
+      return {
+        type: 'subway',
+        name: `${name}역`,
+        arrivals: arrivals.slice(0, 3),
+        isLoading: false,
+      };
     } catch {
-      return { type: 'subway', name: `${name}역`, arrivals: [], isLoading: false, error: '조회 실패' };
+      return {
+        type: 'subway',
+        name: `${name}역`,
+        arrivals: [],
+        isLoading: false,
+        error: '조회 실패',
+      };
     }
   });
 
@@ -44,9 +53,20 @@ export async function fetchTransitArrivals(
   const busPromises = stopIds.map(async (id): Promise<TransitArrivalInfo> => {
     try {
       const arrivals = await busApiClient.getArrival(id);
-      return { type: 'bus', name: `정류장 ${id}`, arrivals: arrivals.slice(0, 3), isLoading: false };
+      return {
+        type: 'bus',
+        name: `정류장 ${id}`,
+        arrivals: arrivals.slice(0, 3),
+        isLoading: false,
+      };
     } catch {
-      return { type: 'bus', name: `정류장 ${id}`, arrivals: [], isLoading: false, error: '조회 실패' };
+      return {
+        type: 'bus',
+        name: `정류장 ${id}`,
+        arrivals: [],
+        isLoading: false,
+        error: '조회 실패',
+      };
     }
   });
 

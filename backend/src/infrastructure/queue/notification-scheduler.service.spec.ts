@@ -35,16 +35,16 @@ describe('NotificationSchedulerService', () => {
         repeat: expect.objectContaining({
           pattern: '0 8 * * *',
         }),
-      })
+      }),
     );
   });
 
   it('should cancel scheduled notification', async () => {
     const alert = new Alert('user-id', '출근 알림', '0 8 * * *', [AlertType.WEATHER]);
     (queue.add as jest.Mock).mockResolvedValue({ id: 'job-id' });
-    (queue.getRepeatableJobs as jest.Mock) = jest.fn().mockResolvedValue([
-      { id: `alert-${alert.id}`, key: `alert-${alert.id}` },
-    ]);
+    (queue.getRepeatableJobs as jest.Mock) = jest
+      .fn()
+      .mockResolvedValue([{ id: `alert-${alert.id}`, key: `alert-${alert.id}` }]);
     (queue.removeRepeatableByKey as jest.Mock) = jest.fn().mockResolvedValue(undefined);
     await service.scheduleNotification(alert);
 
@@ -53,4 +53,3 @@ describe('NotificationSchedulerService', () => {
     expect(queue.removeRepeatableByKey).toHaveBeenCalled();
   });
 });
-

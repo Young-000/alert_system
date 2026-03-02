@@ -26,9 +26,10 @@ describe('UserController', () => {
     OWNER_ID,
   );
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   beforeEach(async () => {
     createUserUseCase = { execute: jest.fn() } as any;
@@ -93,17 +94,17 @@ describe('UserController', () => {
     });
 
     it('다른 사용자의 정보 조회 시 ForbiddenException', async () => {
-      await expect(
-        controller.findOne(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.findOne(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(getUserUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('다른 사용자 접근 시 올바른 에러 메시지', async () => {
-      await expect(
-        controller.findOne(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow('다른 사용자의 정보를 조회할 수 없습니다.');
+      await expect(controller.findOne(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        '다른 사용자의 정보를 조회할 수 없습니다.',
+      );
     });
   });
 

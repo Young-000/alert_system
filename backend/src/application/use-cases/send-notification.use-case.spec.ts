@@ -99,7 +99,7 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
     const alert = new Alert(user.id, '비활성 알림', '0 8 * * *', [AlertType.WEATHER]);
     alert.disable();
@@ -134,7 +134,7 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
     const alert = new Alert(user.id, '알림', '0 8 * * *', [AlertType.WEATHER]);
     const weather = new Weather('Seoul', 15, 'Clear', 60, 10);
@@ -152,7 +152,7 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
     const alert = new Alert(user.id, '출근 알림', '0 8 * * *', [AlertType.WEATHER]);
     const weather = new Weather('Seoul', 15, 'Clear', 60, 10);
@@ -164,7 +164,7 @@ describe('SendNotificationUseCase', () => {
 
     await useCase.execute(alert.id);
 
-    expect(weatherApiClient.getWeatherWithForecast).toHaveBeenCalledWith(37.5665, 126.9780);
+    expect(weatherApiClient.getWeatherWithForecast).toHaveBeenCalledWith(37.5665, 126.978);
     expect(solapiService.sendWeatherAlert).toHaveBeenCalled();
   });
 
@@ -172,9 +172,12 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
-    const alert = new Alert(user.id, '미세먼지 알림', '0 8 * * *', [AlertType.WEATHER, AlertType.AIR_QUALITY]);
+    const alert = new Alert(user.id, '미세먼지 알림', '0 8 * * *', [
+      AlertType.WEATHER,
+      AlertType.AIR_QUALITY,
+    ]);
     const weather = new Weather('Seoul', 15, 'Clear', 60, 10);
     const airQuality = new AirQuality('서울', 45, 22, 65, '보통');
 
@@ -186,7 +189,7 @@ describe('SendNotificationUseCase', () => {
 
     await useCase.execute(alert.id);
 
-    expect(airQualityApiClient.getAirQuality).toHaveBeenCalledWith(37.5665, 126.9780);
+    expect(airQualityApiClient.getAirQuality).toHaveBeenCalledWith(37.5665, 126.978);
     expect(solapiService.sendWeatherAlert).toHaveBeenCalled();
   });
 
@@ -194,13 +197,18 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
-    const alert = new Alert(user.id, '지하철 알림', '0 8 * * *', [AlertType.SUBWAY], undefined, 'station-456');
+    const alert = new Alert(
+      user.id,
+      '지하철 알림',
+      '0 8 * * *',
+      [AlertType.SUBWAY],
+      undefined,
+      'station-456',
+    );
     const station = new SubwayStation('강남', '2', 'station-456');
-    const subwayArrivals = [
-      new SubwayArrival('강남', '2', '외선', 180, '성수'),
-    ];
+    const subwayArrivals = [new SubwayArrival('강남', '2', '외선', 180, '성수')];
 
     alertRepository.findById.mockResolvedValue(alert);
     userRepository.findById.mockResolvedValue(user);
@@ -219,12 +227,10 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
     const alert = new Alert(user.id, '버스 알림', '0 8 * * *', [AlertType.BUS], 'bus-stop-123');
-    const busArrivals = [
-      new BusArrival('bus-stop-123', 'route-1', '146', 300, 5),
-    ];
+    const busArrivals = [new BusArrival('bus-stop-123', 'route-1', '146', 300, 5)];
 
     alertRepository.findById.mockResolvedValue(alert);
     userRepository.findById.mockResolvedValue(user);
@@ -241,7 +247,7 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
     const alert = new Alert(
       user.id,
@@ -273,9 +279,16 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
-    const alert = new Alert(user.id, '알림', '0 8 * * *', [AlertType.WEATHER, AlertType.SUBWAY], undefined, 'station-456');
+    const alert = new Alert(
+      user.id,
+      '알림',
+      '0 8 * * *',
+      [AlertType.WEATHER, AlertType.SUBWAY],
+      undefined,
+      'station-456',
+    );
     const station = new SubwayStation('강남', '2', 'station-456');
     const subwayArrivals = [new SubwayArrival('강남', '2', '외선', 180, '성수')];
 
@@ -296,9 +309,16 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
-    const alert = new Alert(user.id, '지하철 알림', '0 8 * * *', [AlertType.SUBWAY], undefined, 'invalid-station');
+    const alert = new Alert(
+      user.id,
+      '지하철 알림',
+      '0 8 * * *',
+      [AlertType.SUBWAY],
+      undefined,
+      'invalid-station',
+    );
 
     alertRepository.findById.mockResolvedValue(alert);
     userRepository.findById.mockResolvedValue(user);
@@ -314,7 +334,7 @@ describe('SendNotificationUseCase', () => {
     const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
       address: 'Seoul',
       lat: 37.5665,
-      lng: 126.9780,
+      lng: 126.978,
     });
     const alert = new Alert(user.id, '버스 알림', '0 8 * * *', [AlertType.BUS]); // no busStopId
 

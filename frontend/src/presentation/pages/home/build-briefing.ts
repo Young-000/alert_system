@@ -82,11 +82,12 @@ export function buildBriefing(params: {
   const sub = buildSubLine(transitInfos, routeName);
 
   // Context label
-  const contextLabel = context === 'morning'
-    ? '출근 브리핑'
-    : context === 'evening'
-      ? '퇴근 브리핑'
-      : '내일 출근 브리핑';
+  const contextLabel =
+    context === 'morning'
+      ? '출근 브리핑'
+      : context === 'evening'
+        ? '퇴근 브리핑'
+        : '내일 출근 브리핑';
 
   // Aria label: full readable text
   const ariaLabel = `${contextLabel}. ${main}. ${sub}`;
@@ -97,10 +98,7 @@ export function buildBriefing(params: {
 /**
  * Builds the sub-line from transit arrivals, falling back to route name.
  */
-function buildSubLine(
-  transitInfos: TransitArrivalInfo[],
-  routeName: string,
-): string {
+function buildSubLine(transitInfos: TransitArrivalInfo[], routeName: string): string {
   // Find the first transit with actual arrival data
   for (const info of transitInfos) {
     if (info.isLoading || info.error) continue;
@@ -109,9 +107,7 @@ function buildSubLine(
 
     const typeName = info.type === 'subway' ? '' : '';
     const name = info.name;
-    const timeText = arrival.arrivalTime > 0
-      ? `${arrival.arrivalTime}분 후 도착`
-      : '곧 도착';
+    const timeText = arrival.arrivalTime > 0 ? `${arrival.arrivalTime}분 후 도착` : '곧 도착';
 
     return `${typeName}${name} ${timeText}`.trim();
   }

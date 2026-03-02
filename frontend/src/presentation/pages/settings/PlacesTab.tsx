@@ -7,6 +7,7 @@ import {
   useTogglePlaceMutation,
 } from '@infrastructure/query';
 import type { Place, PlaceType } from '@infrastructure/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const PLACE_ICONS: Record<PlaceType, string> = { home: '🏠', work: '🏢' };
 const PLACE_LABELS: Record<PlaceType, string> = { home: '집', work: '직장' };
@@ -35,9 +36,7 @@ function PlaceCard({
               {PLACE_LABELS[place.placeType as PlaceType] ?? place.placeType}
             </span>
           </div>
-          {place.address && (
-            <p className="settings-place-address">{place.address}</p>
-          )}
+          {place.address && <p className="settings-place-address">{place.address}</p>}
           <span className="settings-place-radius">반경 {place.radiusM}m</span>
         </div>
       </div>
@@ -76,9 +75,12 @@ export function PlacesTab(): JSX.Element {
   const [formLabel, setFormLabel] = useState('');
   const [formAddress, setFormAddress] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const handleCreate = useCallback(async () => {
     if (!formLabel.trim()) return;
+    setActionError('');
     try {
       await createMutation.mutateAsync({
         placeType: formType,
@@ -91,25 +93,33 @@ export function PlacesTab(): JSX.Element {
       setFormAddress('');
       setShowForm(false);
     } catch {
-      alert('장소 등록에 실패했습니다.');
+      setActionError('장소 등록에 실패했습니다.');
     }
   }, [formLabel, formType, formAddress, createMutation]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 장소를 삭제하시겠습니까?')) return;
-    setDeletingId(id);
-    try {
-      await deleteMutation.mutateAsync(id);
-    } catch {
-      alert('장소 삭제에 실패했습니다.');
-    } finally {
-      setDeletingId(null);
-    }
-  }, [deleteMutation]);
+  const handleDeleteConfirm = useCallback(
+    async () => {
+      if (!deleteConfirmId) return;
+      setDeletingId(deleteConfirmId);
+      setActionError('');
+      try {
+        await deleteMutation.mutateAsync(deleteConfirmId);
+        setDeleteConfirmId(null);
+      } catch {
+        setActionError('장소 삭제에 실패했습니다.');
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deleteConfirmId, deleteMutation],
+  );
 
-  const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
-  }, [toggleMutation]);
+  const handleToggle = useCallback(
+    (id: string) => {
+      toggleMutation.mutate(id);
+    },
+    [toggleMutation],
+  );
 
   if (isLoading) {
     return (
@@ -127,18 +137,12 @@ export function PlacesTab(): JSX.Element {
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">내 장소</h2>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setShowForm(!showForm)}
-          >
+          <button type="button" className="btn btn-sm" onClick={() => setShowForm(!showForm)}>
             {showForm ? '취소' : '+ 추가'}
           </button>
         </div>
 
-        <p className="settings-section-desc">
-          집과 직장을 등록하면 출퇴근 자동 감지에 사용됩니다.
-        </p>
+        <p className="settings-section-desc">집과 직장을 등록하면 출퇴근 자동 감지에 사용됩니다.</p>
 
         {showForm && (
           <div className="settings-place-form">
@@ -186,6 +190,12 @@ export function PlacesTab(): JSX.Element {
           </div>
         )}
 
+        {actionError && (
+          <div className="notice error mb-3" role="alert" aria-live="assertive">
+            {actionError}
+          </div>
+        )}
+
         {!places || places.length === 0 ? (
           <div className="settings-empty">
             <span aria-hidden="true">📍</span>
@@ -198,13 +208,27 @@ export function PlacesTab(): JSX.Element {
                 key={place.id}
                 place={place}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={(id: string) => setDeleteConfirmId(id)}
                 isDeleting={deletingId === place.id}
               />
             ))}
           </div>
         )}
       </section>
+
+      <ConfirmModal
+        open={deleteConfirmId !== null}
+        title="장소 삭제"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmVariant="danger"
+        isLoading={deletingId !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirmId(null)}
+      >
+        <p>이 장소를 삭제하시겠습니까?</p>
+        <p className="muted">삭제된 장소는 복구할 수 없습니다.</p>
+      </ConfirmModal>
     </div>
   );
 }

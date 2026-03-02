@@ -3,13 +3,7 @@ import { UserBadge } from './user-badge.entity';
 describe('UserBadge', () => {
   describe('create', () => {
     it('유효한 파라미터로 배지를 생성하면 모든 필드가 올바르게 설정된다', () => {
-      const badge = UserBadge.create(
-        'user-1',
-        'lightning',
-        '번개',
-        '⚡',
-        'challenge-uuid-1',
-      );
+      const badge = UserBadge.create('user-1', 'lightning', '번개', '⚡', 'challenge-uuid-1');
 
       expect(badge.userId).toBe('user-1');
       expect(badge.badgeId).toBe('lightning');
@@ -22,27 +16,27 @@ describe('UserBadge', () => {
     });
 
     it('userId가 빈 문자열이면 에러를 던진다', () => {
-      expect(() =>
-        UserBadge.create('', 'lightning', '번개', '⚡', 'challenge-1'),
-      ).toThrow('userId is required');
+      expect(() => UserBadge.create('', 'lightning', '번개', '⚡', 'challenge-1')).toThrow(
+        'userId is required',
+      );
     });
 
     it('userId가 공백만 있으면 에러를 던진다', () => {
-      expect(() =>
-        UserBadge.create('   ', 'lightning', '번개', '⚡', 'challenge-1'),
-      ).toThrow('userId is required');
+      expect(() => UserBadge.create('   ', 'lightning', '번개', '⚡', 'challenge-1')).toThrow(
+        'userId is required',
+      );
     });
 
     it('badgeId가 빈 문자열이면 에러를 던진다', () => {
-      expect(() =>
-        UserBadge.create('user-1', '', '번개', '⚡', 'challenge-1'),
-      ).toThrow('badgeId is required');
+      expect(() => UserBadge.create('user-1', '', '번개', '⚡', 'challenge-1')).toThrow(
+        'badgeId is required',
+      );
     });
 
     it('challengeId가 빈 문자열이면 에러를 던진다', () => {
-      expect(() =>
-        UserBadge.create('user-1', 'lightning', '번개', '⚡', ''),
-      ).toThrow('challengeId is required');
+      expect(() => UserBadge.create('user-1', 'lightning', '번개', '⚡', '')).toThrow(
+        'challengeId is required',
+      );
     });
   });
 

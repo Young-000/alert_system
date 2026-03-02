@@ -73,9 +73,7 @@ interface RouteComparisonResponseDto {
 export class AnalyticsController {
   private readonly logger = new Logger(AnalyticsController.name);
 
-  constructor(
-    private readonly calculateAnalyticsUseCase: CalculateRouteAnalyticsUseCase,
-  ) {}
+  constructor(private readonly calculateAnalyticsUseCase: CalculateRouteAnalyticsUseCase) {}
 
   /**
    * 특정 경로의 분석 데이터 조회
@@ -220,16 +218,17 @@ export class AnalyticsController {
     }
 
     const totalTrips = analyticsArray.reduce((sum, a) => sum + a.totalTrips, 0);
-    const averageScore = analyticsArray.reduce((sum, a) => sum + a.score, 0) / analyticsArray.length;
+    const averageScore =
+      analyticsArray.reduce((sum, a) => sum + a.score, 0) / analyticsArray.length;
 
     // 최고 점수 경로
     const bestRoute = analyticsArray.reduce((best, current) =>
-      current.score > best.score ? current : best
+      current.score > best.score ? current : best,
     );
 
     // 가장 많이 사용한 경로
     const mostUsedRoute = analyticsArray.reduce((most, current) =>
-      current.totalTrips > most.totalTrips ? current : most
+      current.totalTrips > most.totalTrips ? current : most,
     );
 
     // 인사이트 생성
@@ -292,28 +291,26 @@ export class AnalyticsController {
     // 가장 빠른 경로 vs 가장 느린 경로
     if (routesWithData.length >= 2) {
       const fastest = routesWithData.reduce((f, c) =>
-        c.duration.average < f.duration.average ? c : f
+        c.duration.average < f.duration.average ? c : f,
       );
       const slowest = routesWithData.reduce((s, c) =>
-        c.duration.average > s.duration.average ? c : s
+        c.duration.average > s.duration.average ? c : s,
       );
 
       const timeDiff = Math.round(slowest.duration.average - fastest.duration.average);
       if (timeDiff >= 5) {
         insights.push(
-          `"${fastest.routeName}"이 "${slowest.routeName}"보다 평균 ${timeDiff}분 빨라요.`
+          `"${fastest.routeName}"이 "${slowest.routeName}"보다 평균 ${timeDiff}분 빨라요.`,
         );
       }
     }
 
     // 가장 일관된 경로
     const mostReliable = routesWithData.reduce((r, c) =>
-      c.scoreFactors.reliability > r.scoreFactors.reliability ? c : r
+      c.scoreFactors.reliability > r.scoreFactors.reliability ? c : r,
     );
     if (mostReliable.scoreFactors.reliability >= 80) {
-      insights.push(
-        `"${mostReliable.routeName}"은 ${mostReliable.getVariabilityText()} 경로예요.`
-      );
+      insights.push(`"${mostReliable.routeName}"은 ${mostReliable.getVariabilityText()} 경로예요.`);
     }
 
     // 가장 느린 구간 찾기
@@ -321,7 +318,7 @@ export class AnalyticsController {
       const slowest = analytics.getSlowestSegment();
       if (slowest && slowest.averageDuration >= 15) {
         insights.push(
-          `"${analytics.routeName}"에서 "${slowest.checkpointName}" 구간이 가장 오래 걸려요 (평균 ${Math.round(slowest.averageDuration)}분).`
+          `"${analytics.routeName}"에서 "${slowest.checkpointName}" 구간이 가장 오래 걸려요 (평균 ${Math.round(slowest.averageDuration)}분).`,
         );
       }
     }
@@ -330,9 +327,7 @@ export class AnalyticsController {
     const lowScoreRoutes = routesWithData.filter((a) => a.score < 60);
     if (lowScoreRoutes.length > 0) {
       const worst = lowScoreRoutes[0];
-      insights.push(
-        `"${worst.routeName}"은 개선이 필요해요. 다른 경로를 고려해보세요.`
-      );
+      insights.push(`"${worst.routeName}"은 개선이 필요해요. 다른 경로를 고려해보세요.`);
     }
 
     return insights.slice(0, 5);

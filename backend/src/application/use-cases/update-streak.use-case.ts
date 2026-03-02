@@ -83,7 +83,12 @@ export class UpdateStreakUseCase {
   async updateSettings(
     userId: string,
     dto: UpdateStreakSettingsDto,
-  ): Promise<{ success: boolean; weeklyGoal: number; excludeWeekends: boolean; reminderEnabled: boolean }> {
+  ): Promise<{
+    success: boolean;
+    weeklyGoal: number;
+    excludeWeekends: boolean;
+    reminderEnabled: boolean;
+  }> {
     if (!this.streakRepository) {
       throw new Error('Streak repository not available');
     }

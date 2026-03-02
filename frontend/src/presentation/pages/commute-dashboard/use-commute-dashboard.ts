@@ -66,14 +66,21 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
 
   const retryLoad = useCallback((): void => {
     setLoadError('');
-    setRetryKey(k => k + 1);
+    setRetryKey((k) => k + 1);
   }, []);
 
   // Handle URL tab parameter first (highest priority) -- validate tab is actually visible
   useEffect(() => {
     const urlTab = searchParams.get('tab');
     if (!urlTab) return;
-    const validTabs: TabId[] = ['overview', 'routes', 'history', 'stopwatch', 'analytics', 'behavior'];
+    const validTabs: TabId[] = [
+      'overview',
+      'routes',
+      'history',
+      'stopwatch',
+      'analytics',
+      'behavior',
+    ];
     if (!validTabs.includes(urlTab as TabId)) return;
     // 'behavior' tab requires hasEnoughData -- if not available yet, fall back to overview
     if (urlTab === 'behavior' && !behaviorAnalytics?.hasEnoughData) {
@@ -120,25 +127,38 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
 
         // A-4: Load route comparison if 2+ routes
         if (statsData.routeStats.length >= 2) {
-          const routeIds = statsData.routeStats.map(r => r.routeId);
-          commuteApi.compareRoutes(routeIds)
-            .then(comparison => { if (isMounted) setRouteComparison(comparison); })
-            .catch(() => { if (isMounted) setComparisonError('비교 데이터를 불러올 수 없습니다'); });
+          const routeIds = statsData.routeStats.map((r) => r.routeId);
+          commuteApi
+            .compareRoutes(routeIds)
+            .then((comparison) => {
+              if (isMounted) setRouteComparison(comparison);
+            })
+            .catch(() => {
+              if (isMounted) setComparisonError('비교 데이터를 불러올 수 없습니다');
+            });
         }
 
         // A-2: Load behavior data
         const behaviorApi = getBehaviorApiClient();
-        behaviorApi.getAnalytics(userId)
-          .then(analytics => {
+        behaviorApi
+          .getAnalytics(userId)
+          .then((analytics) => {
             if (!isMounted) return;
             setBehaviorAnalytics(analytics);
             if (analytics.hasEnoughData) {
-              behaviorApi.getPatterns(userId)
-                .then(patterns => { if (isMounted) setBehaviorPatterns(patterns); })
-                .catch(() => { if (isMounted) setBehaviorError('패턴 분석에 실패했습니다'); });
+              behaviorApi
+                .getPatterns(userId)
+                .then((patterns) => {
+                  if (isMounted) setBehaviorPatterns(patterns);
+                })
+                .catch(() => {
+                  if (isMounted) setBehaviorError('패턴 분석에 실패했습니다');
+                });
             }
           })
-          .catch(() => { if (isMounted) setBehaviorError('패턴 분석에 실패했습니다'); });
+          .catch(() => {
+            if (isMounted) setBehaviorError('패턴 분석에 실패했습니다');
+          });
       } catch {
         if (isMounted) setLoadError('대시보드 데이터를 불러올 수 없습니다.');
       } finally {

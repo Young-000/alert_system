@@ -33,7 +33,7 @@ function renderSettingsPage(): ReturnType<typeof render> {
   return render(
     <TestProviders>
       <SettingsPage />
-    </TestProviders>
+    </TestProviders>,
   );
 }
 
