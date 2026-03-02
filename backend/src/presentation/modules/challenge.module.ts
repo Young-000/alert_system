@@ -21,11 +21,7 @@ import { ChallengeController } from '../controllers/challenge.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      ChallengeTemplateEntity,
-      UserChallengeEntity,
-      UserBadgeEntity,
-    ]),
+    TypeOrmModule.forFeature([ChallengeTemplateEntity, UserChallengeEntity, UserBadgeEntity]),
   ],
   controllers: [ChallengeController],
   providers: [
@@ -40,10 +36,6 @@ import { ChallengeController } from '../controllers/challenge.controller';
     // Seed Service
     ChallengeSeedService,
   ],
-  exports: [
-    'CHALLENGE_REPOSITORY',
-    EvaluateChallengeUseCase,
-    ManageChallengeUseCase,
-  ],
+  exports: ['CHALLENGE_REPOSITORY', EvaluateChallengeUseCase, ManageChallengeUseCase],
 })
 export class ChallengeModule {}

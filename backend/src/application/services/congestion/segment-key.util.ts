@@ -15,9 +15,7 @@ export function normalizeSegmentKey(checkpoint: {
 }): string {
   // Priority 1: linked station ID
   if (checkpoint.linkedStationId) {
-    const lineInfoSuffix = checkpoint.lineInfo
-      ? `_${normalizeLineInfo(checkpoint.lineInfo)}`
-      : '';
+    const lineInfoSuffix = checkpoint.lineInfo ? `_${normalizeLineInfo(checkpoint.lineInfo)}` : '';
     return `station_${checkpoint.linkedStationId}${lineInfoSuffix}`;
   }
 
@@ -28,9 +26,7 @@ export function normalizeSegmentKey(checkpoint: {
 
   // Priority 3: normalized name + lineInfo
   const normalizedName = normalizeName(checkpoint.name);
-  const lineInfoSuffix = checkpoint.lineInfo
-    ? `_${normalizeLineInfo(checkpoint.lineInfo)}`
-    : '';
+  const lineInfoSuffix = checkpoint.lineInfo ? `_${normalizeLineInfo(checkpoint.lineInfo)}` : '';
   return `name_${normalizedName}${lineInfoSuffix}`;
 }
 
@@ -61,8 +57,5 @@ function normalizeName(name: string): string {
  * Normalize line info for consistent keys.
  */
 function normalizeLineInfo(lineInfo: string): string {
-  return lineInfo
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '');
+  return lineInfo.toLowerCase().trim().replace(/\s+/g, '');
 }

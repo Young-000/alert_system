@@ -1,5 +1,9 @@
 import { IsBoolean, IsInt, IsOptional, Max, Min } from 'class-validator';
-import type { MilestoneType, StreakStatus, NextMilestoneInfo } from '@domain/entities/commute-streak.entity';
+import type {
+  MilestoneType,
+  StreakStatus,
+  NextMilestoneInfo,
+} from '@domain/entities/commute-streak.entity';
 
 // ========== Response DTOs (interfaces) ==========
 

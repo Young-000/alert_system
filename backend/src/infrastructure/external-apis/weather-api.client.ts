@@ -83,7 +83,12 @@ export class WeatherApiClient implements IWeatherApiClient {
   }
 
   // 초단기실황 조회
-  private async fetchCurrentWeather(nx: number, ny: number, baseDate: string, baseTime: string): Promise<KmaResponse> {
+  private async fetchCurrentWeather(
+    nx: number,
+    ny: number,
+    baseDate: string,
+    baseTime: string,
+  ): Promise<KmaResponse> {
     const response = await this.client.get('/getUltraSrtNcst', {
       params: {
         serviceKey: this.apiKey,
@@ -100,7 +105,12 @@ export class WeatherApiClient implements IWeatherApiClient {
   }
 
   // 단기예보 조회
-  private async fetchForecast(nx: number, ny: number, baseDate: string, baseTime: string): Promise<KmaResponse> {
+  private async fetchForecast(
+    nx: number,
+    ny: number,
+    baseDate: string,
+    baseTime: string,
+  ): Promise<KmaResponse> {
     const response = await this.client.get('/getVilageFcst', {
       params: {
         serviceKey: this.apiKey,
@@ -134,11 +144,21 @@ export class WeatherApiClient implements IWeatherApiClient {
     for (const item of items) {
       const value = item.obsrValue || '0';
       switch (item.category) {
-        case 'T1H': temperature = parseFloat(value); break;
-        case 'REH': humidity = parseInt(value, 10); break;
-        case 'WSD': windSpeed = parseFloat(value); break;
-        case 'PTY': pty = value; break;
-        case 'SKY': sky = value; break;
+        case 'T1H':
+          temperature = parseFloat(value);
+          break;
+        case 'REH':
+          humidity = parseInt(value, 10);
+          break;
+        case 'WSD':
+          windSpeed = parseFloat(value);
+          break;
+        case 'PTY':
+          pty = value;
+          break;
+        case 'SKY':
+          sky = value;
+          break;
       }
     }
 
@@ -154,7 +174,10 @@ export class WeatherApiClient implements IWeatherApiClient {
     const todayStr = this.formatDate(today);
 
     // 시간대별로 그룹화
-    const hourlyMap = new Map<string, { temp?: number; sky?: string; pty?: string; pop?: number }>();
+    const hourlyMap = new Map<
+      string,
+      { temp?: number; sky?: string; pty?: string; pop?: number }
+    >();
 
     for (const item of items) {
       if (item.fcstDate !== todayStr) continue;
@@ -167,10 +190,18 @@ export class WeatherApiClient implements IWeatherApiClient {
       const value = item.fcstValue || '0';
 
       switch (item.category) {
-        case 'TMP': data.temp = parseFloat(value); break;
-        case 'SKY': data.sky = value; break;
-        case 'PTY': data.pty = value; break;
-        case 'POP': data.pop = parseInt(value, 10); break;
+        case 'TMP':
+          data.temp = parseFloat(value);
+          break;
+        case 'SKY':
+          data.sky = value;
+          break;
+        case 'PTY':
+          data.pty = value;
+          break;
+        case 'POP':
+          data.pop = parseInt(value, 10);
+          break;
       }
     }
 
@@ -211,19 +242,31 @@ export class WeatherApiClient implements IWeatherApiClient {
     // PTY (강수형태): 0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기, 5=빗방울, 6=빗방울눈날림, 7=눈날림
     if (pty !== '0') {
       switch (pty) {
-        case '1': case '4': case '5': return 'Rain';
-        case '2': case '6': return 'Sleet';
-        case '3': case '7': return 'Snow';
-        default: return 'Rain';
+        case '1':
+        case '4':
+        case '5':
+          return 'Rain';
+        case '2':
+        case '6':
+          return 'Sleet';
+        case '3':
+        case '7':
+          return 'Snow';
+        default:
+          return 'Rain';
       }
     }
 
     // SKY (하늘상태): 1=맑음, 3=구름많음, 4=흐림
     switch (sky) {
-      case '1': return 'Clear';
-      case '3': return 'Clouds';
-      case '4': return 'Overcast';
-      default: return 'Clear';
+      case '1':
+        return 'Clear';
+      case '3':
+        return 'Clouds';
+      case '4':
+        return 'Overcast';
+      default:
+        return 'Clear';
     }
   }
 
@@ -234,13 +277,20 @@ export class WeatherApiClient implements IWeatherApiClient {
     const suffix = isDay ? 'd' : 'n';
 
     switch (condition) {
-      case 'Clear': return `01${suffix}`;
-      case 'Clouds': return `03${suffix}`;
-      case 'Overcast': return `04${suffix}`;
-      case 'Rain': return `10${suffix}`;
-      case 'Snow': return `13${suffix}`;
-      case 'Sleet': return `13${suffix}`;
-      default: return `01${suffix}`;
+      case 'Clear':
+        return `01${suffix}`;
+      case 'Clouds':
+        return `03${suffix}`;
+      case 'Overcast':
+        return `04${suffix}`;
+      case 'Rain':
+        return `10${suffix}`;
+      case 'Snow':
+        return `13${suffix}`;
+      case 'Sleet':
+        return `13${suffix}`;
+      default:
+        return `01${suffix}`;
     }
   }
 
@@ -308,7 +358,8 @@ export class WeatherApiClient implements IWeatherApiClient {
     let baseDate = now;
 
     for (let i = baseTimes.length - 1; i >= 0; i--) {
-      if (hour >= baseTimes[i] + 1) { // 발표 후 약 1시간 후 데이터 사용 가능
+      if (hour >= baseTimes[i] + 1) {
+        // 발표 후 약 1시간 후 데이터 사용 가능
         baseHour = baseTimes[i];
         break;
       }

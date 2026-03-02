@@ -25,6 +25,6 @@ export class UserResponseDto {
   }
 
   static fromEntities(users: User[]): UserResponseDto[] {
-    return users.map(user => UserResponseDto.fromEntity(user));
+    return users.map((user) => UserResponseDto.fromEntity(user));
   }
 }

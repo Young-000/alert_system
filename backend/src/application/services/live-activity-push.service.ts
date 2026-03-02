@@ -82,13 +82,10 @@ export interface ILiveActivityPushService {
 export class LiveActivityPushService implements ILiveActivityPushService {
   private readonly logger = new Logger(LiveActivityPushService.name);
 
-  async sendUpdate(
-    pushToken: string,
-    payload: LiveActivityPushPayload,
-  ): Promise<boolean> {
+  async sendUpdate(pushToken: string, payload: LiveActivityPushPayload): Promise<boolean> {
     this.logger.log(
       `[STUB] Would send Live Activity update to token ${pushToken.slice(0, 12)}...: ` +
-      `event=${payload.aps.event}, status=${payload.aps['content-state'].status}`,
+        `event=${payload.aps.event}, status=${payload.aps['content-state'].status}`,
     );
 
     // TODO: Implement real APNs HTTP/2 push
@@ -118,9 +115,7 @@ export class LiveActivityPushService implements ILiveActivityPushService {
       },
     };
 
-    this.logger.log(
-      `[STUB] Would send Live Activity end to token ${pushToken.slice(0, 12)}...`,
-    );
+    this.logger.log(`[STUB] Would send Live Activity end to token ${pushToken.slice(0, 12)}...`);
 
     return this.sendUpdate(pushToken, payload);
   }

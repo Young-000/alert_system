@@ -36,7 +36,7 @@ export class CommuteSession {
       notes?: string;
       checkpointRecords?: CheckpointRecord[];
       createdAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.userId = userId;
@@ -65,17 +65,17 @@ export class CommuteSession {
   complete(): CommuteSession {
     const now = new Date();
     const totalDurationMinutes = Math.round(
-      (now.getTime() - this.startedAt.getTime()) / (1000 * 60)
+      (now.getTime() - this.startedAt.getTime()) / (1000 * 60),
     );
 
     // 체크포인트 기록에서 대기 시간과 지연 시간 총합 계산
     const totalWaitMinutes = this.checkpointRecords.reduce(
       (sum, record) => sum + record.actualWaitTime,
-      0
+      0,
     );
     const totalDelayMinutes = this.checkpointRecords.reduce(
       (sum, record) => sum + record.delayMinutes,
-      0
+      0,
     );
 
     return new CommuteSession(this.userId, this.routeId, {
@@ -122,7 +122,7 @@ export class CommuteSession {
   getLongestSegment(): CheckpointRecord | undefined {
     if (this.checkpointRecords.length === 0) return undefined;
     return this.checkpointRecords.reduce((longest, current) =>
-      (current.durationFromPrevious || 0) > (longest.durationFromPrevious || 0) ? current : longest
+      (current.durationFromPrevious || 0) > (longest.durationFromPrevious || 0) ? current : longest,
     );
   }
 
@@ -130,7 +130,7 @@ export class CommuteSession {
   getMostDelayedSegment(): CheckpointRecord | undefined {
     if (this.checkpointRecords.length === 0) return undefined;
     return this.checkpointRecords.reduce((mostDelayed, current) =>
-      current.delayMinutes > mostDelayed.delayMinutes ? current : mostDelayed
+      current.delayMinutes > mostDelayed.delayMinutes ? current : mostDelayed,
     );
   }
 }

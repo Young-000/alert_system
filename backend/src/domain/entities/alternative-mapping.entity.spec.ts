@@ -1,14 +1,16 @@
 import { AlternativeMapping } from './alternative-mapping.entity';
 
 describe('AlternativeMapping', () => {
-  function createMapping(overrides?: Partial<{
-    from: string;
-    fromLine: string;
-    to: string;
-    toLine: string;
-    walk: number;
-    bidirectional: boolean;
-  }>): AlternativeMapping {
+  function createMapping(
+    overrides?: Partial<{
+      from: string;
+      fromLine: string;
+      to: string;
+      toLine: string;
+      walk: number;
+      bidirectional: boolean;
+    }>,
+  ): AlternativeMapping {
     return new AlternativeMapping(
       overrides?.from || '강남',
       overrides?.fromLine || '2호선',

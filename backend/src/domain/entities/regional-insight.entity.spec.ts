@@ -1,14 +1,9 @@
-import {
-  RegionalInsight,
-  toRegionId,
-  snapToGrid,
-  classifyTrend,
-} from './regional-insight.entity';
+import { RegionalInsight, toRegionId, snapToGrid, classifyTrend } from './regional-insight.entity';
 
 describe('RegionalInsight', () => {
   describe('toRegionId', () => {
     it('격자 좌표로 region ID를 생성한다', () => {
-      expect(toRegionId(37.50, 127.00)).toBe('grid_37.50_127.00');
+      expect(toRegionId(37.5, 127.0)).toBe('grid_37.50_127.00');
     });
 
     it('소수점 2자리로 포맷한다', () => {
@@ -27,7 +22,7 @@ describe('RegionalInsight', () => {
     });
 
     it('정확히 그리드 경계에 있으면 해당 셀 중심을 반환한다', () => {
-      expect(snapToGrid(37.50)).toBeCloseTo(37.505, 3);
+      expect(snapToGrid(37.5)).toBeCloseTo(37.505, 3);
     });
 
     it('그리드 중심 근처 값도 올바르게 스냅한다', () => {
@@ -222,13 +217,15 @@ describe('RegionalInsight', () => {
   });
 });
 
-function createInsight(overrides: Partial<{
-  userCount: number;
-  lastCalculatedAt: Date;
-  weekTrend: number;
-  monthTrend: number;
-  peakHourDistribution: Record<number, number>;
-}> = {}): RegionalInsight {
+function createInsight(
+  overrides: Partial<{
+    userCount: number;
+    lastCalculatedAt: Date;
+    weekTrend: number;
+    monthTrend: number;
+    peakHourDistribution: Record<number, number>;
+  }> = {},
+): RegionalInsight {
   return new RegionalInsight({
     regionId: 'grid_37.50_127.00',
     regionName: '테스트 지역',

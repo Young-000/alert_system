@@ -42,7 +42,11 @@ export class AirQualityApiClient implements IAirQualityApiClient {
         },
       });
 
-      if (!response.data.response || !response.data.response.body || !response.data.response.body.items) {
+      if (
+        !response.data.response ||
+        !response.data.response.body ||
+        !response.data.response.body.items
+      ) {
         throw new Error('Invalid API response structure');
       }
 
@@ -52,7 +56,7 @@ export class AirQualityApiClient implements IAirQualityApiClient {
       }
 
       const item = items[0];
-      
+
       // 값이 '-'인 경우 처리
       const pm10Value = item.pm10Value === '-' || !item.pm10Value ? '0' : item.pm10Value;
       const pm25Value = item.pm25Value === '-' || !item.pm25Value ? '0' : item.pm25Value;
@@ -62,16 +66,9 @@ export class AirQualityApiClient implements IAirQualityApiClient {
       const aqi = this.calculateAQI(pm10, pm25);
       const status = this.getStatus(aqi);
 
-      return new AirQuality(
-        item.stationName || sidoName,
-        pm10,
-        pm25,
-        aqi,
-        status
-      );
+      return new AirQuality(item.stationName || sidoName, pm10, pm25, aqi, status);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`미세먼지 정보를 가져오는데 실패했습니다: ${message}`);
     }
   }
@@ -105,4 +102,3 @@ export class AirQualityApiClient implements IAirQualityApiClient {
     return 'Unhealthy';
   }
 }
-

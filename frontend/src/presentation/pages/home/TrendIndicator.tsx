@@ -49,11 +49,10 @@ export function TrendIndicator({
   const text = getTrendText(trend, changeFromPrevious, changePercentage);
 
   return (
-    <span
-      className={`trend-indicator ${className}`}
-      aria-label={text}
-    >
-      <span className="trend-indicator-arrow" aria-hidden="true">{arrow}</span>
+    <span className={`trend-indicator ${className}`} aria-label={text}>
+      <span className="trend-indicator-arrow" aria-hidden="true">
+        {arrow}
+      </span>
       <span className="trend-indicator-text">{text}</span>
     </span>
   );

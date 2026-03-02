@@ -14,7 +14,10 @@ import {
   PeakHourDistribution,
   toRegionId,
 } from '@domain/entities/regional-insight.entity';
-import { BayesianPrior, updatePosterior } from '@application/services/statistics/bayesian-estimator';
+import {
+  BayesianPrior,
+  updatePosterior,
+} from '@application/services/statistics/bayesian-estimator';
 import { median } from '@application/services/statistics/descriptive-stats';
 import { snapToGridCenter, toGridKey, mostCommonName } from './grid.util';
 
@@ -138,11 +141,7 @@ export class InsightsAggregationService {
   private async fetchAllObservations(): Promise<RawSessionObservation[]> {
     const results = await this.sessionRepo
       .createQueryBuilder('cs')
-      .innerJoin(
-        RouteCheckpointEntity,
-        'rc',
-        'rc.route_id = cs.route_id AND rc.sequence_order = 0',
-      )
+      .innerJoin(RouteCheckpointEntity, 'rc', 'rc.route_id = cs.route_id AND rc.sequence_order = 0')
       .select([
         'cs.id AS "sessionId"',
         'cs.user_id AS "userId"',
@@ -330,16 +329,10 @@ export class InsightsAggregationService {
     }
 
     // Week-over-week trend (% change)
-    const weekTrend = this.computeTrend(
-      group.currentWeekDurations,
-      group.previousWeekDurations,
-    );
+    const weekTrend = this.computeTrend(group.currentWeekDurations, group.previousWeekDurations);
 
     // Month-over-month trend (% change)
-    const monthTrend = this.computeTrend(
-      group.currentMonthDurations,
-      group.previousMonthDurations,
-    );
+    const monthTrend = this.computeTrend(group.currentMonthDurations, group.previousMonthDurations);
 
     return {
       regionId,
@@ -361,18 +354,13 @@ export class InsightsAggregationService {
    * Compute percentage change between current and previous period.
    * Returns 0 if insufficient data in either period.
    */
-  private computeTrend(
-    currentDurations: number[],
-    previousDurations: number[],
-  ): number {
+  private computeTrend(currentDurations: number[], previousDurations: number[]): number {
     if (currentDurations.length === 0 || previousDurations.length === 0) {
       return 0;
     }
 
-    const currentAvg =
-      currentDurations.reduce((s, v) => s + v, 0) / currentDurations.length;
-    const previousAvg =
-      previousDurations.reduce((s, v) => s + v, 0) / previousDurations.length;
+    const currentAvg = currentDurations.reduce((s, v) => s + v, 0) / currentDurations.length;
+    const previousAvg = previousDurations.reduce((s, v) => s + v, 0) / previousDurations.length;
 
     if (previousAvg === 0) return 0;
 
@@ -386,7 +374,7 @@ export class InsightsAggregationService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);

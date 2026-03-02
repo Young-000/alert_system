@@ -7,7 +7,7 @@ describe('NotFoundPage', () => {
     render(
       <MemoryRouter>
         <NotFoundPage />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     expect(screen.getByText('404')).toBeInTheDocument();
   });
@@ -16,7 +16,7 @@ describe('NotFoundPage', () => {
     render(
       <MemoryRouter>
         <NotFoundPage />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     const homeLink = screen.getByRole('link', { name: /홈으로/i });
     expect(homeLink).toHaveAttribute('href', '/');

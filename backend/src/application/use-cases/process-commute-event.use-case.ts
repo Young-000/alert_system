@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  Logger,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Inject, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
 import {
   ICommuteEventRepository,
   COMMUTE_EVENT_REPOSITORY,
@@ -51,10 +45,7 @@ export class ProcessCommuteEventUseCase {
     private readonly placeRepository: IUserPlaceRepository,
   ) {}
 
-  async processEvent(
-    userId: string,
-    dto: RecordCommuteEventDto
-  ): Promise<CommuteEventResponseDto> {
+  async processEvent(userId: string, dto: RecordCommuteEventDto): Promise<CommuteEventResponseDto> {
     // 1. Validate place ownership
     const place = await this.placeRepository.findById(dto.placeId);
     if (!place) {
@@ -69,20 +60,18 @@ export class ProcessCommuteEventUseCase {
       userId,
       dto.placeId,
       dto.eventType,
-      DEBOUNCE_MS
+      DEBOUNCE_MS,
     );
 
     if (recentEvent) {
-      this.logger.debug(
-        `Debounced event: ${place.placeType}/${dto.eventType} for user ${userId}`
-      );
+      this.logger.debug(`Debounced event: ${place.placeType}/${dto.eventType} for user ${userId}`);
       // Save the event but mark as ignored
       const event = CommuteEvent.fromGeofence(
         userId,
         dto.placeId,
         dto.eventType,
         new Date(dto.triggeredAt),
-        { latitude: dto.latitude, longitude: dto.longitude, accuracyM: dto.accuracyM }
+        { latitude: dto.latitude, longitude: dto.longitude, accuracyM: dto.accuracyM },
       );
       const saved = await this.eventRepository.save(event);
       await this.eventRepository.markProcessed(saved.id);
@@ -104,7 +93,7 @@ export class ProcessCommuteEventUseCase {
       dto.placeId,
       dto.eventType,
       new Date(dto.triggeredAt),
-      { latitude: dto.latitude, longitude: dto.longitude, accuracyM: dto.accuracyM }
+      { latitude: dto.latitude, longitude: dto.longitude, accuracyM: dto.accuracyM },
     );
     const savedEvent = await this.eventRepository.save(event);
 
@@ -113,7 +102,7 @@ export class ProcessCommuteEventUseCase {
     const action = this.determineAction(place.placeType, dto.eventType, hour);
 
     this.logger.log(
-      `Event: ${place.placeType}/${dto.eventType} at hour ${hour} -> action: ${action}`
+      `Event: ${place.placeType}/${dto.eventType} at hour ${hour} -> action: ${action}`,
     );
 
     // 5. Create or complete session based on action
@@ -147,11 +136,11 @@ export class ProcessCommuteEventUseCase {
 
   async processBatch(
     userId: string,
-    events: RecordCommuteEventDto[]
+    events: RecordCommuteEventDto[],
   ): Promise<BatchCommuteEventsResponseDto> {
     // Sort by triggeredAt ascending (oldest first)
     const sorted = [...events].sort(
-      (a, b) => new Date(a.triggeredAt).getTime() - new Date(b.triggeredAt).getTime()
+      (a, b) => new Date(a.triggeredAt).getTime() - new Date(b.triggeredAt).getTime(),
     );
 
     const results: CommuteEventResponseDto[] = [];
@@ -172,18 +161,13 @@ export class ProcessCommuteEventUseCase {
     };
   }
 
-  async getEventsByUserId(
-    userId: string,
-    limit = 50
-  ): Promise<CommuteEventListResponseDto> {
+  async getEventsByUserId(userId: string, limit = 50): Promise<CommuteEventListResponseDto> {
     const events = await this.eventRepository.findByUserId(userId, limit);
 
     // Batch-fetch places to avoid N+1 queries
     const placeIds = [...new Set(events.map((e) => e.placeId))];
     const places = await this.placeRepository.findByIds(placeIds);
-    const placeMap = new Map(
-      places.map((p) => [p.id, { placeType: p.placeType, label: p.label }])
-    );
+    const placeMap = new Map(places.map((p) => [p.id, { placeType: p.placeType, label: p.label }]));
 
     const details: CommuteEventDetailDto[] = events.map((e) => {
       const placeInfo = placeMap.get(e.placeId);
@@ -214,7 +198,7 @@ export class ProcessCommuteEventUseCase {
   private determineAction(
     placeType: PlaceType,
     eventType: 'enter' | 'exit',
-    hour: number
+    hour: number,
   ): CommuteEventAction {
     // Morning commute: home exit between 05:00~11:59
     if (placeType === 'home' && eventType === 'exit' && hour >= 5 && hour < 12) {
@@ -239,13 +223,13 @@ export class ProcessCommuteEventUseCase {
   private async createAutoSession(
     userId: string,
     _placeType: PlaceType,
-    action: 'commute_started' | 'return_started'
+    action: 'commute_started' | 'return_started',
   ): Promise<string | undefined> {
     // Check for existing in-progress session
     const existingSession = await this.sessionRepository.findInProgressByUserId(userId);
     if (existingSession) {
       this.logger.warn(
-        `User ${userId} already has in-progress session ${existingSession.id}, skipping auto session creation`
+        `User ${userId} already has in-progress session ${existingSession.id}, skipping auto session creation`,
       );
       return undefined;
     }
@@ -276,7 +260,7 @@ export class ProcessCommuteEventUseCase {
   private async doCreateSession(
     userId: string,
     routeId: string,
-    action: 'commute_started' | 'return_started'
+    action: 'commute_started' | 'return_started',
   ): Promise<string> {
     const notes = action === 'commute_started' ? '[auto] 출근' : '[auto] 퇴근';
     const session = new CommuteSession(userId, routeId, {
@@ -301,13 +285,15 @@ export class ProcessCommuteEventUseCase {
     const twentyFourHours = 24 * 60 * 60 * 1000;
     if (sessionAge > twentyFourHours) {
       this.logger.warn(
-        `Stale session ${session.id} (${Math.round(sessionAge / 3600000)}h old), cancelling instead of completing`
+        `Stale session ${session.id} (${Math.round(sessionAge / 3600000)}h old), cancelling instead of completing`,
       );
       const cancelled = new CommuteSession(session.userId, session.routeId, {
         id: session.id,
         startedAt: session.startedAt,
         status: SessionStatus.CANCELLED,
-        notes: session.notes ? `${session.notes} [auto-cancelled: stale]` : '[auto-cancelled: stale]',
+        notes: session.notes
+          ? `${session.notes} [auto-cancelled: stale]`
+          : '[auto-cancelled: stale]',
         checkpointRecords: session.checkpointRecords,
         createdAt: session.createdAt,
       });

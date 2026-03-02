@@ -37,7 +37,7 @@ export class CommuteEvent {
       source?: CommuteEventSource;
       isProcessed?: boolean;
       createdAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.userId = userId;
@@ -59,7 +59,7 @@ export class CommuteEvent {
     placeId: string,
     eventType: CommuteEventType,
     triggeredAt: Date,
-    coords?: { latitude?: number; longitude?: number; accuracyM?: number }
+    coords?: { latitude?: number; longitude?: number; accuracyM?: number },
   ): CommuteEvent {
     return new CommuteEvent(userId, placeId, eventType, triggeredAt, {
       latitude: coords?.latitude,

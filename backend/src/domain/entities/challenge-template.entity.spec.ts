@@ -1,6 +1,4 @@
-import {
-  ChallengeTemplate,
-} from './challenge-template.entity';
+import { ChallengeTemplate } from './challenge-template.entity';
 
 const validOptions = {
   id: 'time-under-40',
@@ -60,39 +58,39 @@ describe('ChallengeTemplate', () => {
     });
 
     it('name이 빈 문자열이면 에러를 던진다', () => {
-      expect(() =>
-        ChallengeTemplate.create({ ...validOptions, name: '' }),
-      ).toThrow('name is required');
+      expect(() => ChallengeTemplate.create({ ...validOptions, name: '' })).toThrow(
+        'name is required',
+      );
     });
 
     it('name이 공백만 있으면 에러를 던진다', () => {
-      expect(() =>
-        ChallengeTemplate.create({ ...validOptions, name: '   ' }),
-      ).toThrow('name is required');
+      expect(() => ChallengeTemplate.create({ ...validOptions, name: '   ' })).toThrow(
+        'name is required',
+      );
     });
 
     it('targetValue가 0이면 에러를 던진다', () => {
-      expect(() =>
-        ChallengeTemplate.create({ ...validOptions, targetValue: 0 }),
-      ).toThrow('targetValue must be greater than 0');
+      expect(() => ChallengeTemplate.create({ ...validOptions, targetValue: 0 })).toThrow(
+        'targetValue must be greater than 0',
+      );
     });
 
     it('targetValue가 음수이면 에러를 던진다', () => {
-      expect(() =>
-        ChallengeTemplate.create({ ...validOptions, targetValue: -1 }),
-      ).toThrow('targetValue must be greater than 0');
+      expect(() => ChallengeTemplate.create({ ...validOptions, targetValue: -1 })).toThrow(
+        'targetValue must be greater than 0',
+      );
     });
 
     it('durationDays가 0이면 에러를 던진다', () => {
-      expect(() =>
-        ChallengeTemplate.create({ ...validOptions, durationDays: 0 }),
-      ).toThrow('durationDays must be greater than 0');
+      expect(() => ChallengeTemplate.create({ ...validOptions, durationDays: 0 })).toThrow(
+        'durationDays must be greater than 0',
+      );
     });
 
     it('durationDays가 음수이면 에러를 던진다', () => {
-      expect(() =>
-        ChallengeTemplate.create({ ...validOptions, durationDays: -5 }),
-      ).toThrow('durationDays must be greater than 0');
+      expect(() => ChallengeTemplate.create({ ...validOptions, durationDays: -5 })).toThrow(
+        'durationDays must be greater than 0',
+      );
     });
   });
 

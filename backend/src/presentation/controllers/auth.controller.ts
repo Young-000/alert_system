@@ -1,4 +1,17 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req, Res, Logger, Optional, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Get,
+  UseGuards,
+  Req,
+  Res,
+  Logger,
+  Optional,
+  Inject,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -33,7 +46,9 @@ export class AuthController {
     if (this.isGoogleEnabled) {
       this.logger.log('Google OAuth is enabled');
     } else {
-      this.logger.warn('Google OAuth is disabled (missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET)');
+      this.logger.warn(
+        'Google OAuth is disabled (missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET)',
+      );
     }
   }
 

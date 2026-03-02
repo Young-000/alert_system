@@ -9,13 +9,7 @@ describe('GetAirQualityUseCase', () => {
   let mockAirQualityApiClient: jest.Mocked<IAirQualityApiClient>;
   let mockUserRepository: jest.Mocked<IUserRepository>;
 
-  const mockAirQuality = new AirQuality(
-    '강남구',
-    45,
-    22,
-    65,
-    '보통',
-  );
+  const mockAirQuality = new AirQuality('강남구', 45, 22, 65, '보통');
 
   const mockUser = new User(
     'test@example.com',
@@ -41,10 +35,7 @@ describe('GetAirQualityUseCase', () => {
       save: jest.fn(),
     };
 
-    useCase = new GetAirQualityUseCase(
-      mockAirQualityApiClient,
-      mockUserRepository,
-    );
+    useCase = new GetAirQualityUseCase(mockAirQualityApiClient, mockUserRepository);
   });
 
   describe('execute', () => {
@@ -56,18 +47,13 @@ describe('GetAirQualityUseCase', () => {
 
       expect(result).toEqual(mockAirQuality);
       expect(mockUserRepository.findById).toHaveBeenCalledWith('user-1');
-      expect(mockAirQualityApiClient.getAirQuality).toHaveBeenCalledWith(
-        37.5665,
-        126.978,
-      );
+      expect(mockAirQualityApiClient.getAirQuality).toHaveBeenCalledWith(37.5665, 126.978);
     });
 
     it('존재하지 않는 사용자 ID로 조회 시 에러 발생', async () => {
       mockUserRepository.findById.mockResolvedValue(undefined);
 
-      await expect(useCase.execute('non-existent')).rejects.toThrow(
-        '사용자를 찾을 수 없습니다.',
-      );
+      await expect(useCase.execute('non-existent')).rejects.toThrow('사용자를 찾을 수 없습니다.');
     });
 
     it('사용자 위치 정보가 없는 경우 에러 발생', async () => {
@@ -95,20 +81,13 @@ describe('GetAirQualityUseCase', () => {
       const result = await useCase.executeByLocation(37.5665, 126.978);
 
       expect(result).toEqual(mockAirQuality);
-      expect(mockAirQualityApiClient.getAirQuality).toHaveBeenCalledWith(
-        37.5665,
-        126.978,
-      );
+      expect(mockAirQualityApiClient.getAirQuality).toHaveBeenCalledWith(37.5665, 126.978);
     });
 
     it('API 클라이언트 에러 전파', async () => {
-      mockAirQualityApiClient.getAirQuality.mockRejectedValue(
-        new Error('API Error'),
-      );
+      mockAirQualityApiClient.getAirQuality.mockRejectedValue(new Error('API Error'));
 
-      await expect(useCase.executeByLocation(37.5665, 126.978)).rejects.toThrow(
-        'API Error',
-      );
+      await expect(useCase.executeByLocation(37.5665, 126.978)).rejects.toThrow('API Error');
     });
   });
 });

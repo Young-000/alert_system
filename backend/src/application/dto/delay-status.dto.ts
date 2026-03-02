@@ -5,11 +5,7 @@ export type OverallDelayStatus =
   | 'severe_delay'
   | 'unavailable';
 
-export type SegmentDelayStatus =
-  | 'normal'
-  | 'delayed'
-  | 'severe_delay'
-  | 'unavailable';
+export type SegmentDelayStatus = 'normal' | 'delayed' | 'severe_delay' | 'unavailable';
 
 export type AlternativeConfidence = 'high' | 'medium' | 'low';
 

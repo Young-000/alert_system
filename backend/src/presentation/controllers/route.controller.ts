@@ -17,11 +17,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ManageRouteUseCase } from '@application/use-cases/manage-route.use-case';
 import { RecommendBestRouteUseCase } from '@application/use-cases/recommend-best-route.use-case';
-import {
-  CreateRouteDto,
-  UpdateRouteDto,
-  RouteResponseDto,
-} from '@application/dto/commute.dto';
+import { CreateRouteDto, UpdateRouteDto, RouteResponseDto } from '@application/dto/commute.dto';
 import {
   RouteRecommendationResponseDto,
   RouteRecommendationQueryDto,
@@ -71,10 +67,7 @@ export class RouteController {
       throw new ForbiddenException('다른 사용자의 경로를 조회할 수 없습니다.');
     }
     if (routeType) {
-      return this.manageRouteUseCase.getRoutesByUserIdAndType(
-        userId,
-        routeType as RouteType
-      );
+      return this.manageRouteUseCase.getRoutesByUserIdAndType(userId, routeType as RouteType);
     }
     return this.manageRouteUseCase.getRoutesByUserId(userId);
   }
@@ -136,10 +129,7 @@ export class RouteController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteRoute(
-    @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
-  ): Promise<void> {
+  async deleteRoute(@Param('id') id: string, @Request() req: AuthenticatedRequest): Promise<void> {
     // 권한 검사: 해당 경로가 본인의 것인지 확인
     const existingRoute = await this.manageRouteUseCase.getRouteById(id);
     if (existingRoute.userId !== req.user.userId) {

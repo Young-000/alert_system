@@ -14,7 +14,9 @@ export interface GoogleProfile {
 function getGoogleConfig(configService: ConfigService) {
   const clientID = configService.get<string>('GOOGLE_CLIENT_ID') || 'not-configured';
   const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET') || 'not-configured';
-  const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost:3000/auth/google/callback';
+  const callbackURL =
+    configService.get<string>('GOOGLE_CALLBACK_URL') ||
+    'http://localhost:3000/auth/google/callback';
 
   return { clientID, clientSecret, callbackURL };
 }
@@ -34,7 +36,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['email', 'profile'],
     });
 
-    this.isEnabled = config.clientID !== 'not-configured' && config.clientSecret !== 'not-configured';
+    this.isEnabled =
+      config.clientID !== 'not-configured' && config.clientSecret !== 'not-configured';
 
     if (this.isEnabled) {
       this.logger.log('Google OAuth Strategy initialized');

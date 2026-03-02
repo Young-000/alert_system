@@ -1,15 +1,7 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  Index,
-  Unique,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index, Unique } from 'typeorm';
 
 @Entity('regional_insights', { schema: 'alert_system' })
 @Unique('regional_insights_region_id_unique', ['regionId'])
-@Index('regional_insights_region_id_idx', ['regionId'])
 @Index('regional_insights_user_count_idx', ['userCount'])
 @Index('regional_insights_session_count_idx', ['sessionCount'])
 export class RegionalInsightEntity {
@@ -49,7 +41,7 @@ export class RegionalInsightEntity {
   @Column({ name: 'month_trend', type: 'real', default: 0 })
   monthTrend: number;
 
-  @Column({ name: 'last_calculated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'last_calculated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   lastCalculatedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

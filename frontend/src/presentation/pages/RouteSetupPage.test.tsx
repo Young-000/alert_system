@@ -1,18 +1,14 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { RouteSetupPage } from './RouteSetupPage';
-import {
-  commuteApiClient,
-  getCommuteApiClient,
-  alertApiClient,
-} from '@infrastructure/api';
+import { commuteApiClient, getCommuteApiClient, alertApiClient } from '@infrastructure/api';
 import type { RouteResponse, CheckpointResponse } from '@infrastructure/api/commute-api.client';
 import type { Mocked, MockedFunction } from 'vitest';
 
 // Mock navigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
-  ...await vi.importActual('react-router-dom'),
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
 }));
 
@@ -40,7 +36,7 @@ function renderPage(): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
       <RouteSetupPage />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -295,7 +291,9 @@ describe('RouteSetupPage', () => {
     });
 
     fireEvent.click(screen.getByText('경로 추가'));
-    await waitFor(() => { expect(screen.getByText('다음')).toBeInTheDocument(); });
+    await waitFor(() => {
+      expect(screen.getByText('다음')).toBeInTheDocument();
+    });
     fireEvent.click(screen.getByText('다음'));
 
     await waitFor(() => {
@@ -349,7 +347,7 @@ describe('RouteSetupPage', () => {
 
     // Find the danger confirm button inside the modal (not the card delete button)
     const allDeleteButtons = screen.getAllByRole('button', { name: '삭제' });
-    const confirmBtn = allDeleteButtons.find(btn => btn.classList.contains('btn-danger'));
+    const confirmBtn = allDeleteButtons.find((btn) => btn.classList.contains('btn-danger'));
     fireEvent.click(confirmBtn!);
 
     await waitFor(() => {

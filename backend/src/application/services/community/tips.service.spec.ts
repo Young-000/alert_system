@@ -83,10 +83,7 @@ describe('TipsService', () => {
     });
 
     it('로그인 사용자의 신고/도움 상태를 포함한다', async () => {
-      const tips = [
-        createMockTip('tip-1', 'test 1'),
-        createMockTip('tip-2', 'test 2'),
-      ];
+      const tips = [createMockTip('tip-1', 'test 1'), createMockTip('tip-2', 'test 2')];
       mockTipRepo.findByCheckpointKey.mockResolvedValue(tips);
       mockTipRepo.countByCheckpointKey.mockResolvedValue(2);
       mockReportRepo.findByTipAndReporter
@@ -143,11 +140,14 @@ describe('TipsService', () => {
     it('유효한 팁을 생성한다', async () => {
       mockSessionRepo.count.mockResolvedValue(5);
       mockTipRepo.countUserTipsToday.mockResolvedValue(0);
-      mockTipRepo.save.mockImplementation(async (tip) => new CommunityTip({
-        ...tip,
-        id: 'new-tip-id',
-        createdAt: new Date('2026-03-02'),
-      }));
+      mockTipRepo.save.mockImplementation(
+        async (tip) =>
+          new CommunityTip({
+            ...tip,
+            id: 'new-tip-id',
+            createdAt: new Date('2026-03-02'),
+          }),
+      );
 
       const result = await service.createTip('user-1', {
         checkpointKey: 'station:1',
@@ -226,10 +226,13 @@ describe('TipsService', () => {
     it('하루 3개 미만이면 팁을 생성한다', async () => {
       mockSessionRepo.count.mockResolvedValue(5);
       mockTipRepo.countUserTipsToday.mockResolvedValue(2);
-      mockTipRepo.save.mockImplementation(async (tip) => new CommunityTip({
-        ...tip,
-        id: 'tip-id',
-      }));
+      mockTipRepo.save.mockImplementation(
+        async (tip) =>
+          new CommunityTip({
+            ...tip,
+            id: 'tip-id',
+          }),
+      );
 
       const result = await service.createTip('user-1', {
         checkpointKey: 'station:1',
@@ -256,9 +259,9 @@ describe('TipsService', () => {
     it('존재하지 않는 팁이면 NotFoundException을 던진다', async () => {
       mockTipRepo.findById.mockResolvedValue(null);
 
-      await expect(
-        service.reportTip('nonexistent', 'reporter-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.reportTip('nonexistent', 'reporter-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('숨겨진 팁이면 NotFoundException을 던진다', async () => {
@@ -271,9 +274,7 @@ describe('TipsService', () => {
       });
       mockTipRepo.findById.mockResolvedValue(tip);
 
-      await expect(
-        service.reportTip('tip-1', 'reporter-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.reportTip('tip-1', 'reporter-1')).rejects.toThrow(NotFoundException);
     });
 
     it('이미 신고한 팁이면 ConflictException을 던진다', async () => {
@@ -283,9 +284,7 @@ describe('TipsService', () => {
         new CommunityTipReport({ tipId: 'tip-1', reporterId: 'reporter-1' }),
       );
 
-      await expect(
-        service.reportTip('tip-1', 'reporter-1'),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.reportTip('tip-1', 'reporter-1')).rejects.toThrow(ConflictException);
     });
 
     it('3번째 신고에서 auto-hide된다', async () => {
@@ -354,9 +353,9 @@ describe('TipsService', () => {
     it('존재하지 않는 팁이면 NotFoundException을 던진다', async () => {
       mockTipRepo.findById.mockResolvedValue(null);
 
-      await expect(
-        service.toggleHelpful('nonexistent', 'user-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.toggleHelpful('nonexistent', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('숨겨진 팁이면 NotFoundException을 던진다', async () => {
@@ -369,9 +368,7 @@ describe('TipsService', () => {
       });
       mockTipRepo.findById.mockResolvedValue(tip);
 
-      await expect(
-        service.toggleHelpful('tip-1', 'user-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.toggleHelpful('tip-1', 'user-1')).rejects.toThrow(NotFoundException);
     });
   });
 });

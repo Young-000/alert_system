@@ -14,10 +14,7 @@ import { SmartDepartureSettingEntity } from './smart-departure-setting.entity';
 
 @Entity('smart_departure_snapshots', { schema: 'alert_system' })
 @Index(['userId', 'departureDate'])
-@Unique('smart_departure_snapshots_setting_date_unique', [
-  'settingId',
-  'departureDate',
-])
+@Unique('smart_departure_snapshots_setting_date_unique', ['settingId', 'departureDate'])
 @Index('smart_departure_snapshots_status_idx', ['status'])
 export class SmartDepartureSnapshotEntity {
   @PrimaryGeneratedColumn('uuid')

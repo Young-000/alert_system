@@ -49,25 +49,19 @@ export function MilestoneBadgePanel({
       aria-modal="true"
       aria-labelledby="badge-panel-title"
     >
-      <div
-        ref={trapRef}
-        className="confirm-modal badge-panel"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div ref={trapRef} className="confirm-modal badge-panel" onClick={(e) => e.stopPropagation()}>
         <div className="badge-panel-header">
           <h2 id="badge-panel-title" className="badge-panel-title">
             배지 컬렉션
           </h2>
-          <p className="badge-panel-subtitle">
-            연속 {currentStreak}일째 출퇴근 기록 중
-          </p>
+          <p className="badge-panel-subtitle">연속 {currentStreak}일째 출퇴근 기록 중</p>
         </div>
 
         <ul className="badge-collection" role="list">
           {ALL_MILESTONES.map((m) => {
             const achieved = achievedSet.has(m.type);
             const isNext = nextMilestone?.type === m.type;
-            const progress = isNext ? nextMilestone.progress : (achieved ? 1 : 0);
+            const progress = isNext ? nextMilestone.progress : achieved ? 1 : 0;
             const progressPct = Math.round(progress * 100);
 
             return (
@@ -81,7 +75,12 @@ export function MilestoneBadgePanel({
                 <div className="badge-item-info">
                   <span className="badge-item-name">
                     {m.badgeName}
-                    {achieved && <span className="badge-item-check" aria-label="획득 완료"> \u2713</span>}
+                    {achieved && (
+                      <span className="badge-item-check" aria-label="획득 완료">
+                        {' '}
+                        \u2713
+                      </span>
+                    )}
                   </span>
                   <span className="badge-item-label">{m.label}</span>
                   {isNext && (

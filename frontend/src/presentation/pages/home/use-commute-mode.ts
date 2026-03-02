@@ -46,16 +46,19 @@ export function useCommuteMode(): UseCommuteModeReturn {
   const mode = manualOverride ?? autoMode;
 
   const toggleMode = useCallback(() => {
-    setManualOverride(prev => {
+    setManualOverride((prev) => {
       const current = prev ?? autoMode;
       return current === 'commute' ? 'return' : 'commute';
     });
   }, [autoMode]);
 
-  return useMemo(() => ({
-    mode,
-    isCommute: mode === 'commute',
-    isReturn: mode === 'return',
-    toggleMode,
-  }), [mode, toggleMode]);
+  return useMemo(
+    () => ({
+      mode,
+      isCommute: mode === 'commute',
+      isReturn: mode === 'return',
+      toggleMode,
+    }),
+    [mode, toggleMode],
+  );
 }

@@ -24,13 +24,7 @@ export class CachedSubwayApiClient implements ISubwayApiClient {
       this.logger.debug(`Returning cached subway arrivals for ${stationName}`);
       return cached.arrivals.map(
         (a) =>
-          new SubwayArrival(
-            a.stationId,
-            a.subwayId,
-            a.direction,
-            a.arrivalTime,
-            a.destination,
-          ),
+          new SubwayArrival(a.stationId, a.subwayId, a.direction, a.arrivalTime, a.destination),
       );
     }
 

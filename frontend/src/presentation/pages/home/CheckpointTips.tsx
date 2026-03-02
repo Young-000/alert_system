@@ -66,9 +66,7 @@ export function CheckpointTips({
         <h3 className="checkpoint-tips-title">
           <span aria-hidden="true">&#x1F4AC;</span>
           {checkpointName} 팁
-          {data && data.total > 0 && (
-            <span className="checkpoint-tips-count">{data.total}개</span>
-          )}
+          {data && data.total > 0 && <span className="checkpoint-tips-count">{data.total}개</span>}
         </h3>
       </div>
 
@@ -92,9 +90,7 @@ export function CheckpointTips({
 
       {!isLoading && !isError && data && data.tips.length === 0 && (
         <div className="tips-empty">
-          <p className="tips-empty-text">
-            아직 팁이 없어요. 첫 번째 팁을 남겨보세요!
-          </p>
+          <p className="tips-empty-text">아직 팁이 없어요. 첫 번째 팁을 남겨보세요!</p>
         </div>
       )}
 

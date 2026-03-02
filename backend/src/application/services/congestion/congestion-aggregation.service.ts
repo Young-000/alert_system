@@ -8,11 +8,11 @@ import {
   ISegmentCongestionRepository,
   SEGMENT_CONGESTION_REPOSITORY,
 } from '@domain/repositories/segment-congestion.repository';
+import { SegmentCongestion, TimeSlot } from '@domain/entities/segment-congestion.entity';
 import {
-  SegmentCongestion,
-  TimeSlot,
-} from '@domain/entities/segment-congestion.entity';
-import { BayesianPrior, updatePosterior } from '@application/services/statistics/bayesian-estimator';
+  BayesianPrior,
+  updatePosterior,
+} from '@application/services/statistics/bayesian-estimator';
 import { normalizeSegmentKey } from './segment-key.util';
 import { classifyTimeSlot } from './time-slot.util';
 
@@ -122,10 +122,7 @@ export class CongestionAggregationService {
       const [segmentKey, timeSlot] = key.split('||') as [string, TimeSlot];
 
       // Fetch existing record
-      const existing = await this.congestionRepo.findBySegmentKeyAndTimeSlot(
-        segmentKey,
-        timeSlot,
-      );
+      const existing = await this.congestionRepo.findBySegmentKeyAndTimeSlot(segmentKey, timeSlot);
 
       if (existing) {
         // Merge new observations: re-fetch all observations for this segment+slot
@@ -135,10 +132,12 @@ export class CongestionAggregationService {
         const mergedGroup = allGroups.get(key);
         if (mergedGroup) {
           const updated = this.computeSingleCongestion(mergedGroup);
-          await this.congestionRepo.save(new SegmentCongestion({
-            id: existing.id,
-            ...updated,
-          }));
+          await this.congestionRepo.save(
+            new SegmentCongestion({
+              id: existing.id,
+              ...updated,
+            }),
+          );
         }
       } else {
         // Create new entry
@@ -319,14 +318,13 @@ export class CongestionAggregationService {
     const delayPosterior = updatePosterior(CONGESTION_PRIOR, group.delayValues);
 
     // Calculate wait time average (simple, not Bayesian - wait times are more straightforward)
-    const avgWaitMinutes = group.waitTimes.length > 0
-      ? group.waitTimes.reduce((s, v) => s + v, 0) / group.waitTimes.length
-      : 0;
+    const avgWaitMinutes =
+      group.waitTimes.length > 0
+        ? group.waitTimes.reduce((s, v) => s + v, 0) / group.waitTimes.length
+        : 0;
 
     // Determine congestion level from Bayesian posterior
-    const congestionLevel = SegmentCongestion.determineCongestionLevel(
-      delayPosterior.mu,
-    );
+    const congestionLevel = SegmentCongestion.determineCongestionLevel(delayPosterior.mu);
 
     return {
       segmentKey: group.segmentKey,

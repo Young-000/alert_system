@@ -7,7 +7,9 @@ jest.mock('web-push', () => ({
   sendNotification: jest.fn(),
 }));
 
-const mockSendNotification = webPush.sendNotification as jest.MockedFunction<typeof webPush.sendNotification>;
+const mockSendNotification = webPush.sendNotification as jest.MockedFunction<
+  typeof webPush.sendNotification
+>;
 
 describe('WebPushService', () => {
   let service: WebPushService;
@@ -55,7 +57,9 @@ describe('WebPushService', () => {
       const sent = await service.sendToUser('user-1', '출근 알림', '오늘 날씨 맑음');
 
       expect(sent).toBe(2);
-      expect(mockSubscriptionRepo.find).toHaveBeenCalledWith({ where: { userId: 'user-1', platform: 'web' } });
+      expect(mockSubscriptionRepo.find).toHaveBeenCalledWith({
+        where: { userId: 'user-1', platform: 'web' },
+      });
       expect(mockSendNotification).toHaveBeenCalledTimes(2);
     });
 
@@ -131,8 +135,8 @@ describe('WebPushService', () => {
       const sub2 = createSubscription('sub-2', 'user-1');
       mockSubscriptionRepo.find.mockResolvedValue([sub1, sub2]);
       mockSendNotification
-        .mockRejectedValueOnce({ statusCode: 410 })  // first fails
-        .mockResolvedValueOnce({} as any);            // second succeeds
+        .mockRejectedValueOnce({ statusCode: 410 }) // first fails
+        .mockResolvedValueOnce({} as any); // second succeeds
 
       const sent = await service.sendToUser('user-1', '제목', '내용');
 

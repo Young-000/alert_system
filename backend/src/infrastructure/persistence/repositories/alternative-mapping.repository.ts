@@ -27,10 +27,7 @@ export class AlternativeMappingRepositoryImpl implements IAlternativeMappingRepo
     return entities.map((e) => this.toDomain(e));
   }
 
-  async findByStationAndLine(
-    stationName: string,
-    line: string,
-  ): Promise<AlternativeMapping[]> {
+  async findByStationAndLine(stationName: string, line: string): Promise<AlternativeMapping[]> {
     // Find direct matches (from_station matches)
     const directMatches = await this.repository.find({
       where: {

@@ -62,7 +62,7 @@ export function CommuteSection({
   const hasUpdate = lastTransitUpdate !== null;
   useEffect(() => {
     if (!hasUpdate) return;
-    const interval = setInterval(() => setTick(t => t + 1), 10_000);
+    const interval = setInterval(() => setTick((t) => t + 1), 10_000);
     return () => clearInterval(interval);
   }, [hasUpdate]);
 
@@ -95,7 +95,7 @@ export function CommuteSection({
             <h2 className="today-route-name">{activeRoute.name}</h2>
             <p className="today-route-detail">
               {(() => {
-                const names = activeRoute.checkpoints.map(cp => cp.name).filter(Boolean);
+                const names = activeRoute.checkpoints.map((cp) => cp.name).filter(Boolean);
                 if (names.length <= 3) return names.join(' \u2192 ');
                 return `${names[0]} \u2192 (${names.length - 2}\uacf3 \uacbd\uc720) \u2192 ${names[names.length - 1]}`;
               })()}
@@ -135,13 +135,19 @@ export function CommuteSection({
                     {info.isLoading ? (
                       <span className="spinner spinner-sm" aria-hidden="true" />
                     ) : info.error ? (
-                      <span className="today-transit-time muted" role="alert">{info.error}</span>
+                      <span className="today-transit-time muted" role="alert">
+                        {info.error}
+                      </span>
                     ) : info.arrivals.length > 0 ? (
                       <span
                         className={`today-transit-time${arrivingSoon ? ' arriving-soon-text' : ''}`}
                         role={arrivingSoon ? 'alert' : undefined}
                       >
-                        {arrivingSoon && <span className="arriving-soon-icon" aria-hidden="true">⚡</span>}
+                        {arrivingSoon && (
+                          <span className="arriving-soon-icon" aria-hidden="true">
+                            ⚡
+                          </span>
+                        )}
                         {(() => {
                           const a = info.arrivals[0];
                           if ('routeName' in a) {
@@ -183,7 +189,9 @@ export function CommuteSection({
         <div className="today-empty">
           <h2>출근 경로를 등록해보세요</h2>
           <p>경로를 등록하면 날씨, 도착정보, 기록이 자동으로 연결됩니다.</p>
-          <Link to="/routes" className="btn btn-primary">경로 등록하기</Link>
+          <Link to="/routes" className="btn btn-primary">
+            경로 등록하기
+          </Link>
         </div>
       )}
     </section>

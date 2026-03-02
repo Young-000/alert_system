@@ -9,10 +9,10 @@ export enum RuleCategory {
 }
 
 export enum RulePriority {
-  CRITICAL = 100,  // 안전 경고 (극한 날씨, 매우 나쁜 공기질)
-  HIGH = 75,       // 중요 추천 (우산, 마스크)
-  MEDIUM = 50,     // 일반 팁
-  LOW = 25,        // 참고 정보
+  CRITICAL = 100, // 안전 경고 (극한 날씨, 매우 나쁜 공기질)
+  HIGH = 75, // 중요 추천 (우산, 마스크)
+  MEDIUM = 50, // 일반 팁
+  LOW = 25, // 참고 정보
 }
 
 export class NotificationRule {
@@ -41,7 +41,7 @@ export class NotificationRule {
       userId?: string;
       createdAt?: Date;
       updatedAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || uuidv4();
     this.name = name;
@@ -65,7 +65,7 @@ export class NotificationRule {
     category: RuleCategory,
     priority: RulePriority,
     conditions: RuleCondition[],
-    messageTemplate: string
+    messageTemplate: string,
   ): NotificationRule {
     return new NotificationRule(name, category, priority, conditions, messageTemplate, {
       isSystemRule: true,
@@ -78,7 +78,7 @@ export class NotificationRule {
     category: RuleCategory,
     priority: RulePriority,
     conditions: RuleCondition[],
-    messageTemplate: string
+    messageTemplate: string,
   ): NotificationRule {
     return new NotificationRule(name, category, priority, conditions, messageTemplate, {
       isSystemRule: false,

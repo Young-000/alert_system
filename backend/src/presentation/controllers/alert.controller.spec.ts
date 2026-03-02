@@ -80,13 +80,13 @@ describe('AlertController', () => {
     });
 
     it('다른 사용자의 알림 생성 시 ForbiddenException', async () => {
-      await expect(
-        controller.create(createDto, mockRequest('other-user')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.create(createDto, mockRequest('other-user'))).rejects.toThrow(
+        ForbiddenException,
+      );
 
-      await expect(
-        controller.create(createDto, mockRequest('other-user')),
-      ).rejects.toThrow('다른 사용자의 알림을 생성할 수 없습니다.');
+      await expect(controller.create(createDto, mockRequest('other-user'))).rejects.toThrow(
+        '다른 사용자의 알림을 생성할 수 없습니다.',
+      );
 
       expect(createAlertUseCase.execute).not.toHaveBeenCalled();
     });
@@ -103,9 +103,9 @@ describe('AlertController', () => {
     });
 
     it('다른 사용자의 알림 목록 조회 시 ForbiddenException', async () => {
-      await expect(
-        controller.findByUser('user-123', mockRequest('other-user')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.findByUser('user-123', mockRequest('other-user'))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(alertRepository.findByUserId).not.toHaveBeenCalled();
     });
@@ -132,17 +132,17 @@ describe('AlertController', () => {
     it('존재하지 않는 알림 조회 시 NotFoundException', async () => {
       alertRepository.findById.mockResolvedValue(undefined);
 
-      await expect(
-        controller.findOne('non-existent', mockRequest('user-123')),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('non-existent', mockRequest('user-123'))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('다른 사용자의 알림 조회 시 ForbiddenException', async () => {
       alertRepository.findById.mockResolvedValue(mockAlert);
 
-      await expect(
-        controller.findOne('alert-1', mockRequest('other-user')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.findOne('alert-1', mockRequest('other-user'))).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -226,9 +226,9 @@ describe('AlertController', () => {
     it('다른 사용자의 알림 토글 시 ForbiddenException', async () => {
       alertRepository.findById.mockResolvedValue(mockAlert);
 
-      await expect(
-        controller.toggle('alert-1', mockRequest('other-user')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.toggle('alert-1', mockRequest('other-user'))).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -246,9 +246,9 @@ describe('AlertController', () => {
     it('존재하지 않는 알림 삭제 시 NotFoundException', async () => {
       alertRepository.findById.mockResolvedValue(undefined);
 
-      await expect(
-        controller.remove('non-existent', mockRequest('user-123')),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('non-existent', mockRequest('user-123'))).rejects.toThrow(
+        NotFoundException,
+      );
 
       expect(deleteAlertUseCase.execute).not.toHaveBeenCalled();
     });
@@ -256,9 +256,9 @@ describe('AlertController', () => {
     it('다른 사용자의 알림 삭제 시 ForbiddenException', async () => {
       alertRepository.findById.mockResolvedValue(mockAlert);
 
-      await expect(
-        controller.remove('alert-1', mockRequest('other-user')),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.remove('alert-1', mockRequest('other-user'))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(deleteAlertUseCase.execute).not.toHaveBeenCalled();
     });
@@ -268,8 +268,24 @@ describe('AlertController', () => {
     it('여러 개의 알림을 가진 사용자 조회', async () => {
       const alerts = [
         mockAlert,
-        new Alert('user-123', '퇴근 알림', '0 18 * * 1-5', [AlertType.BUS], 'bus-1', undefined, 'alert-2'),
-        new Alert('user-123', '주말 알림', '0 10 * * 6,0', [AlertType.WEATHER], undefined, undefined, 'alert-3'),
+        new Alert(
+          'user-123',
+          '퇴근 알림',
+          '0 18 * * 1-5',
+          [AlertType.BUS],
+          'bus-1',
+          undefined,
+          'alert-2',
+        ),
+        new Alert(
+          'user-123',
+          '주말 알림',
+          '0 10 * * 6,0',
+          [AlertType.WEATHER],
+          undefined,
+          undefined,
+          'alert-3',
+        ),
       ];
       alertRepository.findByUserId.mockResolvedValue(alerts);
 

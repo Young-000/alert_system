@@ -44,7 +44,9 @@ export class ErrorBoundary extends Component<Props, State> {
         <main className="page">
           <section className="error-page">
             <div className="error-content">
-              <div className="error-code" style={{ fontSize: '4rem' }}>!</div>
+              <div className="error-code" style={{ fontSize: '4rem' }}>
+                !
+              </div>
               <h1>문제가 발생했습니다</h1>
               <p className="muted">
                 예상치 못한 오류가 발생했습니다.
@@ -52,17 +54,13 @@ export class ErrorBoundary extends Component<Props, State> {
                 잠시 후 다시 시도해주세요.
               </p>
               <div className="error-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={this.handleRetry}
-                >
+                <button type="button" className="btn btn-primary" onClick={this.handleRetry}>
                   다시 시도
                 </button>
                 <button
                   type="button"
                   className="btn btn-outline"
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => (window.location.href = '/')}
                 >
                   홈으로
                 </button>

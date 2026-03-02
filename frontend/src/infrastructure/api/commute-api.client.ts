@@ -460,7 +460,12 @@ export interface RouteCongestionResponse {
 
 // ========== Delay Status Types ==========
 
-export type OverallDelayStatus = 'normal' | 'minor_delay' | 'delayed' | 'severe_delay' | 'unavailable';
+export type OverallDelayStatus =
+  | 'normal'
+  | 'minor_delay'
+  | 'delayed'
+  | 'severe_delay'
+  | 'unavailable';
 export type SegmentDelayStatus = 'normal' | 'delayed' | 'severe_delay' | 'unavailable';
 export type AlternativeConfidence = 'high' | 'medium' | 'low';
 
@@ -660,9 +665,7 @@ export class CommuteApiClient {
   }
 
   async getUserRoutes(userId: string, routeType?: RouteType): Promise<RouteResponse[]> {
-    const url = routeType
-      ? `/routes/user/${userId}?type=${routeType}`
-      : `/routes/user/${userId}`;
+    const url = routeType ? `/routes/user/${userId}?type=${routeType}` : `/routes/user/${userId}`;
     return this.apiClient.get<RouteResponse[]>(url);
   }
 
@@ -698,7 +701,7 @@ export class CommuteApiClient {
 
   async getInProgressSession(userId: string): Promise<SessionResponse | null> {
     const response = await this.apiClient.get<SessionResponse | { session: null }>(
-      `/commute/in-progress/${userId}`
+      `/commute/in-progress/${userId}`,
     );
     if ('session' in response && response.session === null) {
       return null;
@@ -710,7 +713,7 @@ export class CommuteApiClient {
 
   async getHistory(userId: string, limit = 20, offset = 0): Promise<CommuteHistoryResponse> {
     return this.apiClient.get<CommuteHistoryResponse>(
-      `/commute/history/${userId}?limit=${limit}&offset=${offset}`
+      `/commute/history/${userId}?limit=${limit}&offset=${offset}`,
     );
   }
 
@@ -734,13 +737,13 @@ export class CommuteApiClient {
 
   async compareRoutes(routeIds: string[]): Promise<RouteComparisonResponse> {
     return this.apiClient.get<RouteComparisonResponse>(
-      `/analytics/compare?routeIds=${routeIds.join(',')}`
+      `/analytics/compare?routeIds=${routeIds.join(',')}`,
     );
   }
 
   async getRecommendedRoutes(userId: string, limit = 3): Promise<RouteAnalyticsResponse[]> {
     return this.apiClient.get<RouteAnalyticsResponse[]>(
-      `/analytics/recommend/${userId}?limit=${limit}`
+      `/analytics/recommend/${userId}?limit=${limit}`,
     );
   }
 
@@ -778,16 +781,11 @@ export class CommuteApiClient {
     userId: string,
     dto: { weeklyGoal?: number; excludeWeekends?: boolean; reminderEnabled?: boolean },
   ): Promise<{ success: boolean }> {
-    return this.apiClient.patch<{ success: boolean }>(
-      `/commute/streak/${userId}/settings`,
-      dto,
-    );
+    return this.apiClient.patch<{ success: boolean }>(`/commute/streak/${userId}/settings`, dto);
   }
 
   async getMilestones(userId: string): Promise<MilestonesResponse> {
-    return this.apiClient.get<MilestonesResponse>(
-      `/commute/streak/${userId}/milestones`,
-    );
+    return this.apiClient.get<MilestonesResponse>(`/commute/streak/${userId}/milestones`);
   }
 
   // ========== Delay Status APIs ==========
@@ -813,14 +811,9 @@ export class CommuteApiClient {
     );
   }
 
-  async getRouteCongestion(
-    routeId: string,
-    timeSlot?: TimeSlot,
-  ): Promise<RouteCongestionResponse> {
+  async getRouteCongestion(routeId: string, timeSlot?: TimeSlot): Promise<RouteCongestionResponse> {
     const query = timeSlot ? `?timeSlot=${timeSlot}` : '';
-    return this.apiClient.get<RouteCongestionResponse>(
-      `/congestion/routes/${routeId}${query}`,
-    );
+    return this.apiClient.get<RouteCongestionResponse>(`/congestion/routes/${routeId}${query}`);
   }
 
   // ========== Regional Insights APIs ==========
@@ -835,9 +828,7 @@ export class CommuteApiClient {
     if (limit != null) params.set('limit', String(limit));
     if (offset != null) params.set('offset', String(offset));
     const query = params.toString();
-    return this.apiClient.get<RegionsListResponse>(
-      `/insights/regions${query ? `?${query}` : ''}`,
-    );
+    return this.apiClient.get<RegionsListResponse>(`/insights/regions${query ? `?${query}` : ''}`);
   }
 
   async getRegionById(regionId: string): Promise<RegionDetail> {
@@ -845,15 +836,11 @@ export class CommuteApiClient {
   }
 
   async getRegionTrends(regionId: string): Promise<RegionTrend> {
-    return this.apiClient.get<RegionTrend>(
-      `/insights/regions/${regionId}/trends`,
-    );
+    return this.apiClient.get<RegionTrend>(`/insights/regions/${regionId}/trends`);
   }
 
   async getRegionPeakHours(regionId: string): Promise<PeakHoursData> {
-    return this.apiClient.get<PeakHoursData>(
-      `/insights/regions/${regionId}/peak-hours`,
-    );
+    return this.apiClient.get<PeakHoursData>(`/insights/regions/${regionId}/peak-hours`);
   }
 
   async getMyComparison(): Promise<MyComparison> {
@@ -867,11 +854,7 @@ export class CommuteApiClient {
     return this.apiClient.get<NeighborStatsResponse>(`/community/neighbors${query}`);
   }
 
-  async getCheckpointTips(
-    checkpointKey: string,
-    page = 1,
-    limit = 20,
-  ): Promise<TipsListResponse> {
+  async getCheckpointTips(checkpointKey: string, page = 1, limit = 20): Promise<TipsListResponse> {
     const params = new URLSearchParams({
       checkpointKey,
       page: String(page),

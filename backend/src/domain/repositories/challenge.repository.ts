@@ -10,10 +10,7 @@ export interface ChallengeRepository {
   // User Challenges
   findActiveChallengesByUserId(userId: string): Promise<UserChallenge[]>;
   findChallengeById(id: string): Promise<UserChallenge | null>;
-  findActiveByUserAndTemplate(
-    userId: string,
-    templateId: string,
-  ): Promise<UserChallenge | null>;
+  findActiveByUserAndTemplate(userId: string, templateId: string): Promise<UserChallenge | null>;
   countActiveChallenges(userId: string): Promise<number>;
   findChallengeHistory(
     userId: string,
@@ -24,10 +21,7 @@ export interface ChallengeRepository {
 
   // Badges
   findBadgesByUserId(userId: string): Promise<UserBadge[]>;
-  findBadgeByUserAndBadgeId(
-    userId: string,
-    badgeId: string,
-  ): Promise<UserBadge | null>;
+  findBadgeByUserAndBadgeId(userId: string, badgeId: string): Promise<UserBadge | null>;
   saveBadge(badge: UserBadge): Promise<UserBadge>;
   countTotalBadges(): Promise<number>;
 }

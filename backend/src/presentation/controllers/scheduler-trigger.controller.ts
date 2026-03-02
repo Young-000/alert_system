@@ -60,8 +60,7 @@ export class SchedulerTriggerController {
 
     const expected = Buffer.from(expectedSecret, 'utf8');
     const received = Buffer.from(schedulerSecret, 'utf8');
-    if (expected.length !== received.length ||
-        !timingSafeEqual(expected, received)) {
+    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
       this.logger.warn(`Invalid scheduler secret for alert ${payload.alertId}`);
       throw new UnauthorizedException('Authentication failed');
     }
@@ -81,10 +80,7 @@ export class SchedulerTriggerController {
         message: `Notification sent for alert ${payload.alertId}`,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to send notification for alert ${payload.alertId}`,
-        error,
-      );
+      this.logger.error(`Failed to send notification for alert ${payload.alertId}`, error);
 
       // 에러를 던져서 EventBridge가 재시도하도록 함
       throw error;
@@ -104,14 +100,15 @@ export class SchedulerTriggerController {
   ): Promise<{ success: boolean; sent: number; skipped: number }> {
     const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
     if (!expectedSecret || !schedulerSecret) {
-      this.logger.error('SCHEDULER_SECRET is not configured or secret header is missing for weekly report');
+      this.logger.error(
+        'SCHEDULER_SECRET is not configured or secret header is missing for weekly report',
+      );
       throw new UnauthorizedException('Authentication failed');
     }
 
     const expected = Buffer.from(expectedSecret, 'utf8');
     const received = Buffer.from(schedulerSecret, 'utf8');
-    if (expected.length !== received.length ||
-        !timingSafeEqual(expected, received)) {
+    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
       this.logger.warn('Invalid scheduler secret for weekly report');
       throw new UnauthorizedException('Authentication failed');
     }

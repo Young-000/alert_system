@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { getCommuteApiClient, type MilestonesResponse } from '@infrastructure/api/commute-api.client';
+import {
+  getCommuteApiClient,
+  type MilestonesResponse,
+} from '@infrastructure/api/commute-api.client';
 import { queryKeys } from './query-keys';
 
 export function useMilestonesQuery(userId: string) {

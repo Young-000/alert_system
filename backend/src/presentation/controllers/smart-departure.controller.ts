@@ -58,18 +58,13 @@ export class SmartDepartureController {
       `Creating smart departure setting for user ${req.user.userId}: ${dto.departureType} at ${dto.arrivalTarget}`,
     );
 
-    const setting = await this.manageDeparture.createSetting(
-      req.user.userId,
-      dto,
-    );
+    const setting = await this.manageDeparture.createSetting(req.user.userId, dto);
 
     // Trigger initial calculation for today
     try {
       await this.calculateDeparture.calculateForToday(req.user.userId);
     } catch (error) {
-      this.logger.warn(
-        `Initial calculation failed for user ${req.user.userId}: ${error}`,
-      );
+      this.logger.warn(`Initial calculation failed for user ${req.user.userId}: ${error}`);
     }
 
     return setting;
@@ -84,23 +79,15 @@ export class SmartDepartureController {
     @Body() dto: UpdateSmartDepartureSettingDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<SmartDepartureSettingResponseDto> {
-    this.logger.log(
-      `Updating smart departure setting ${id} for user ${req.user.userId}`,
-    );
+    this.logger.log(`Updating smart departure setting ${id} for user ${req.user.userId}`);
 
-    const setting = await this.manageDeparture.updateSetting(
-      id,
-      req.user.userId,
-      dto,
-    );
+    const setting = await this.manageDeparture.updateSetting(id, req.user.userId, dto);
 
     // Trigger recalculation for today
     try {
       await this.calculateDeparture.calculateForToday(req.user.userId);
     } catch (error) {
-      this.logger.warn(
-        `Recalculation failed after update for user ${req.user.userId}: ${error}`,
-      );
+      this.logger.warn(`Recalculation failed after update for user ${req.user.userId}: ${error}`);
     }
 
     return setting;
@@ -115,9 +102,7 @@ export class SmartDepartureController {
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<void> {
-    this.logger.log(
-      `Deleting smart departure setting ${id} for user ${req.user.userId}`,
-    );
+    this.logger.log(`Deleting smart departure setting ${id} for user ${req.user.userId}`);
     await this.manageDeparture.deleteSetting(id, req.user.userId);
   }
 
@@ -129,9 +114,7 @@ export class SmartDepartureController {
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<SmartDepartureSettingResponseDto> {
-    this.logger.log(
-      `Toggling smart departure setting ${id} for user ${req.user.userId}`,
-    );
+    this.logger.log(`Toggling smart departure setting ${id} for user ${req.user.userId}`);
     return this.manageDeparture.toggleSetting(id, req.user.userId);
   }
 
@@ -139,9 +122,7 @@ export class SmartDepartureController {
    * 오늘의 출발 정보 조회 (출근 + 퇴근)
    */
   @Get('today')
-  async getToday(
-    @Request() req: AuthenticatedRequest,
-  ): Promise<SmartDepartureTodayResponseDto> {
+  async getToday(@Request() req: AuthenticatedRequest): Promise<SmartDepartureTodayResponseDto> {
     return this.calculateDeparture.getTodayDeparture(req.user.userId);
   }
 
@@ -149,16 +130,10 @@ export class SmartDepartureController {
    * 수동 재계산 요청
    */
   @Post('calculate')
-  async calculate(
-    @Request() req: AuthenticatedRequest,
-  ): Promise<CalculateResponseDto> {
-    this.logger.log(
-      `Manual recalculation requested by user ${req.user.userId}`,
-    );
+  async calculate(@Request() req: AuthenticatedRequest): Promise<CalculateResponseDto> {
+    this.logger.log(`Manual recalculation requested by user ${req.user.userId}`);
 
-    const recalculated = await this.calculateDeparture.calculateForToday(
-      req.user.userId,
-    );
+    const recalculated = await this.calculateDeparture.calculateForToday(req.user.userId);
 
     const response = new CalculateResponseDto();
     response.recalculated = recalculated;

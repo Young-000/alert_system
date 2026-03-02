@@ -25,7 +25,8 @@ function getStatusMessage(streak: StreakResponse): string {
 
 function getStatusClassName(streak: StreakResponse): string {
   if (streak.streakStatus === 'at_risk') return 'streak-badge--at-risk';
-  if (streak.streakStatus === 'broken' || streak.streakStatus === 'new') return 'streak-badge--inactive';
+  if (streak.streakStatus === 'broken' || streak.streakStatus === 'new')
+    return 'streak-badge--inactive';
   if (streak.todayRecorded) return 'streak-badge--done';
   return '';
 }
@@ -45,7 +46,9 @@ export const StreakBadge = memo(function StreakBadge({ streak }: StreakBadgeProp
         <div className="streak-badge-top">
           <div className="streak-count">
             <span className="streak-fire" aria-hidden="true">
-              {streak.streakStatus === 'active' || streak.streakStatus === 'at_risk' ? '\u{1F525}' : '\u{1F4A4}'}
+              {streak.streakStatus === 'active' || streak.streakStatus === 'at_risk'
+                ? '\u{1F525}'
+                : '\u{1F4A4}'}
             </span>
             <span className="streak-count-value">연속 {streak.currentStreak}일</span>
           </div>
@@ -55,7 +58,10 @@ export const StreakBadge = memo(function StreakBadge({ streak }: StreakBadgeProp
         </div>
 
         {statusMsg && (
-          <p className="streak-status-msg" role={streak.streakStatus === 'at_risk' ? 'alert' : undefined}>
+          <p
+            className="streak-status-msg"
+            role={streak.streakStatus === 'at_risk' ? 'alert' : undefined}
+          >
             {streak.todayRecorded && <span aria-hidden="true">{'\u2713'} </span>}
             {statusMsg}
           </p>

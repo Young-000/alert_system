@@ -71,11 +71,7 @@ describe('MissionStatsUseCase', () => {
       expect(result.dailyScores[0].date).toBe('2026-02-19');
 
       // 날짜 범위 확인: 7일 전(2026-02-19) ~ 오늘(2026-02-25)
-      expect(repo.findScoreRange).toHaveBeenCalledWith(
-        USER_ID,
-        '2026-02-19',
-        TODAY,
-      );
+      expect(repo.findScoreRange).toHaveBeenCalledWith(USER_ID, '2026-02-19', TODAY);
     });
 
     it('데이터가 없으면 0을 반환한다', async () => {
@@ -90,15 +86,17 @@ describe('MissionStatsUseCase', () => {
     });
 
     it('모든 미션 완료 시 100%를 반환한다', async () => {
-      const scores = Array.from({ length: 7 }, (_, i) =>
-        new MissionScore({
-          userId: USER_ID,
-          date: `2026-02-${19 + i}`,
-          totalMissions: 2,
-          completedMissions: 2,
-          completionRate: 100,
-          streakDay: i + 1,
-        }),
+      const scores = Array.from(
+        { length: 7 },
+        (_, i) =>
+          new MissionScore({
+            userId: USER_ID,
+            date: `2026-02-${19 + i}`,
+            totalMissions: 2,
+            completedMissions: 2,
+            completionRate: 100,
+            streakDay: i + 1,
+          }),
       );
 
       repo.findScoreRange.mockResolvedValue(scores);
@@ -142,11 +140,7 @@ describe('MissionStatsUseCase', () => {
       expect(result.dailyScores).toHaveLength(2);
 
       // 날짜 범위: 30일 전(2026-01-27) ~ 오늘(2026-02-25)
-      expect(repo.findScoreRange).toHaveBeenCalledWith(
-        USER_ID,
-        '2026-01-27',
-        TODAY,
-      );
+      expect(repo.findScoreRange).toHaveBeenCalledWith(USER_ID, '2026-01-27', TODAY);
     });
 
     it('데이터가 없으면 0을 반환한다', async () => {
@@ -187,11 +181,7 @@ describe('MissionStatsUseCase', () => {
 
       await useCase.getWeeklyStats(USER_ID, '2026-03-03');
 
-      expect(repo.findScoreRange).toHaveBeenCalledWith(
-        USER_ID,
-        '2026-02-25',
-        '2026-03-03',
-      );
+      expect(repo.findScoreRange).toHaveBeenCalledWith(USER_ID, '2026-02-25', '2026-03-03');
     });
 
     it('연도 경계를 넘는 날짜를 올바르게 계산한다', async () => {
@@ -200,11 +190,7 @@ describe('MissionStatsUseCase', () => {
 
       await useCase.getWeeklyStats(USER_ID, '2026-01-05');
 
-      expect(repo.findScoreRange).toHaveBeenCalledWith(
-        USER_ID,
-        '2025-12-30',
-        '2026-01-05',
-      );
+      expect(repo.findScoreRange).toHaveBeenCalledWith(USER_ID, '2025-12-30', '2026-01-05');
     });
 
     it('윤년 2월 경계를 올바르게 처리한다', async () => {
@@ -213,11 +199,7 @@ describe('MissionStatsUseCase', () => {
 
       await useCase.getMonthlyStats(USER_ID, '2028-03-01');
 
-      expect(repo.findScoreRange).toHaveBeenCalledWith(
-        USER_ID,
-        '2028-02-01',
-        '2028-03-01',
-      );
+      expect(repo.findScoreRange).toHaveBeenCalledWith(USER_ID, '2028-02-01', '2028-03-01');
     });
   });
 });

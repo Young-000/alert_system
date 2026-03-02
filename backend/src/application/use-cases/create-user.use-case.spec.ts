@@ -67,7 +67,7 @@ describe('CreateUserUseCase', () => {
       location: {
         address: 'Seoul',
         lat: 37.5665,
-        lng: 126.9780,
+        lng: 126.978,
       },
     };
     userRepository.findByEmail.mockResolvedValue(undefined);
@@ -78,4 +78,3 @@ describe('CreateUserUseCase', () => {
     expect(result.location).toEqual(dto.location);
   });
 });
-

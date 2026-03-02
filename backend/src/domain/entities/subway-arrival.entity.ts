@@ -4,7 +4,6 @@ export class SubwayArrival {
     public readonly lineId: string,
     public readonly direction: string,
     public readonly arrivalTime: number,
-    public readonly destination: string
+    public readonly destination: string,
   ) {}
 }
-

@@ -89,9 +89,11 @@ export class NotificationMessageBuilderService {
 
   buildSummary(data: NotificationData): string {
     const parts: string[] = [];
-    if (data.weather) parts.push(`${Math.round(data.weather.temperature)}° ${data.weather.conditionKr}`);
+    if (data.weather)
+      parts.push(`${Math.round(data.weather.temperature)}° ${data.weather.conditionKr}`);
     if (data.airQuality) parts.push(`미세먼지 ${data.airQuality.status}`);
-    if (data.subwayStations?.length) parts.push(`지하철 ${data.subwayStations.map(s => s.name).join(',')}`);
+    if (data.subwayStations?.length)
+      parts.push(`지하철 ${data.subwayStations.map((s) => s.name).join(',')}`);
     if (data.busStops?.length) parts.push(`버스 ${data.busStops.length}개 정류장`);
     return parts.join(' | ') || '알림 발송';
   }
@@ -104,17 +106,19 @@ export class NotificationMessageBuilderService {
     }
 
     const slots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts);
-    return slots.map(s => {
-      if (s.rainProbability > 0 && this.isRainyCondition(s.weather)) {
-        return `${s.slot} ${s.weather}(${s.rainProbability}%)`;
-      }
-      return `${s.slot} ${s.weather}`;
-    }).join(' → ');
+    return slots
+      .map((s) => {
+        if (s.rainProbability > 0 && this.isRainyCondition(s.weather)) {
+          return `${s.slot} ${s.weather}(${s.rainProbability}%)`;
+        }
+        return `${s.slot} ${s.weather}`;
+      })
+      .join(' → ');
   }
 
   isRainyCondition(condition: string): boolean {
     const rainyKeywords = ['비', '눈', '소나기', '뇌우', '이슬비', 'rain', 'snow', 'drizzle'];
-    return rainyKeywords.some(keyword => condition.toLowerCase().includes(keyword.toLowerCase()));
+    return rainyKeywords.some((keyword) => condition.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   buildWeatherHighlights(weather: Weather, airQuality?: AirQuality): string[] {
@@ -122,12 +126,13 @@ export class NotificationMessageBuilderService {
     const forecast = weather.forecast;
 
     if (forecast?.hourlyForecasts?.length) {
-      const rainySlots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts)
-        .filter(s => s.rainProbability >= 40 && this.isRainyCondition(s.weather));
+      const rainySlots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts).filter(
+        (s) => s.rainProbability >= 40 && this.isRainyCondition(s.weather),
+      );
 
       if (rainySlots.length > 0) {
-        const slotNames = rainySlots.map(s => s.slot).join(', ');
-        const maxRainProb = Math.max(...rainySlots.map(s => s.rainProbability));
+        const slotNames = rainySlots.map((s) => s.slot).join(', ');
+        const maxRainProb = Math.max(...rainySlots.map((s) => s.rainProbability));
         highlights.push(`☔ ${slotNames}에 비 예보(${maxRainProb}%), 우산 필수!`);
       }
 
@@ -143,8 +148,12 @@ export class NotificationMessageBuilderService {
       }
     }
 
-    if (airQuality?.status && ['나쁨', '매우나쁨', 'Bad', 'Very Bad'].some(s =>
-      airQuality.status.toLowerCase().includes(s.toLowerCase()))) {
+    if (
+      airQuality?.status &&
+      ['나쁨', '매우나쁨', 'Bad', 'Very Bad'].some((s) =>
+        airQuality.status.toLowerCase().includes(s.toLowerCase()),
+      )
+    ) {
       highlights.push(`😷 미세먼지 ${airQuality.status}, 마스크 착용`);
     }
 
@@ -157,11 +166,13 @@ export class NotificationMessageBuilderService {
     return `${airQuality.status || '정보 없음'}${pm10}`;
   }
 
-  buildSubwayInfo(stations?: Array<{ name: string; line: string; arrivals: SubwayArrival[] }>): string {
+  buildSubwayInfo(
+    stations?: Array<{ name: string; line: string; arrivals: SubwayArrival[] }>,
+  ): string {
     if (!stations?.length) return '정보 없음';
 
     return stations
-      .map(s => {
+      .map((s) => {
         const arrival = s.arrivals[0];
         const time = arrival ? this.formatArrivalTime(arrival.arrivalTime) : '정보 없음';
         return `• ${s.name}역 (${s.line}) ${time}`;
@@ -173,7 +184,7 @@ export class NotificationMessageBuilderService {
     if (!stops?.length) return '정보 없음';
 
     return stops
-      .map(s => {
+      .map((s) => {
         const arrival = s.arrivals[0];
         if (!arrival) return `• ${s.name} - 정보 없음`;
         const time = this.formatArrivalTime(arrival.arrivalTime);
@@ -188,18 +199,22 @@ export class NotificationMessageBuilderService {
     rainProbability: number;
     temperature: number;
   }> {
-    const slotMap = new Map<string, {
-      weather: string;
-      rainProbability: number;
-      temperature: number;
-      count: number;
-    }>();
+    const slotMap = new Map<
+      string,
+      {
+        weather: string;
+        rainProbability: number;
+        temperature: number;
+        count: number;
+      }
+    >();
 
     for (const forecast of hourlyForecasts) {
       const existing = slotMap.get(forecast.timeSlot);
       if (existing) {
         existing.rainProbability = Math.max(existing.rainProbability, forecast.rainProbability);
-        existing.temperature = (existing.temperature * existing.count + forecast.temperature) / (existing.count + 1);
+        existing.temperature =
+          (existing.temperature * existing.count + forecast.temperature) / (existing.count + 1);
         existing.count++;
         if (this.isRainyCondition(forecast.conditionKr)) {
           existing.weather = forecast.conditionKr;
@@ -216,8 +231,8 @@ export class NotificationMessageBuilderService {
 
     const slotOrder = ['오전', '오후', '저녁'];
     const result = slotOrder
-      .filter(slot => slotMap.has(slot))
-      .map(slot => {
+      .filter((slot) => slotMap.has(slot))
+      .map((slot) => {
         const data = slotMap.get(slot)!;
         return {
           slot,
@@ -228,7 +243,7 @@ export class NotificationMessageBuilderService {
       });
 
     for (const slot of slotOrder) {
-      if (!result.find(r => r.slot === slot)) {
+      if (!result.find((r) => r.slot === slot)) {
         result.push({ slot, weather: '정보없음', rainProbability: 0, temperature: 0 });
       }
     }
@@ -256,11 +271,14 @@ export class NotificationMessageBuilderService {
       const forecast = weather.forecast;
       if (forecast) {
         const slots = this.extractTimeSlotsWithRain(forecast.hourlyForecasts);
-        const morningSlot = slots.find(s => s.slot === '오전');
-        const afternoonSlot = slots.find(s => s.slot === '오후');
+        const morningSlot = slots.find((s) => s.slot === '오전');
+        const afternoonSlot = slots.find((s) => s.slot === '오후');
 
         if (morningSlot && afternoonSlot && morningSlot.weather !== afternoonSlot.weather) {
-          if (this.isRainyCondition(afternoonSlot.weather) && !this.isRainyCondition(morningSlot.weather)) {
+          if (
+            this.isRainyCondition(afternoonSlot.weather) &&
+            !this.isRainyCondition(morningSlot.weather)
+          ) {
             return `오전은 ${morningSlot.weather}이지만 오후에 ${afternoonSlot.weather} 예보`;
           }
         }
@@ -297,8 +315,8 @@ export class NotificationMessageBuilderService {
   }
 
   generateTransitTip(data: NotificationData): string {
-    const hasSubway = data.subwayStations?.some(s => s.arrivals.length > 0);
-    const hasBus = data.busStops?.some(s => s.arrivals.length > 0);
+    const hasSubway = data.subwayStations?.some((s) => s.arrivals.length > 0);
+    const hasBus = data.busStops?.some((s) => s.arrivals.length > 0);
 
     if (hasSubway && hasBus) return '지금 출발하면 딱 좋아요!';
     if (hasSubway) return '지하철 도착 정보 확인하세요.';

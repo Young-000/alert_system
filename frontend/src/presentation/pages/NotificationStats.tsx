@@ -16,10 +16,17 @@ function getBarWidthPercent(count: number, total: number): string {
   return `${Math.round((count / total) * 100)}%`;
 }
 
-export function NotificationStats({ stats, isLoading }: NotificationStatsProps): JSX.Element | null {
+export function NotificationStats({
+  stats,
+  isLoading,
+}: NotificationStatsProps): JSX.Element | null {
   if (isLoading) {
     return (
-      <section className="notif-stats-card" aria-label="알림 발송 통계 로딩 중" data-testid="notif-stats-skeleton">
+      <section
+        className="notif-stats-card"
+        aria-label="알림 발송 통계 로딩 중"
+        data-testid="notif-stats-skeleton"
+      >
         <div className="notif-stats-row">
           <div className="notif-stats-item">
             <span className="skeleton skeleton-text notif-stats-skeleton-label" />

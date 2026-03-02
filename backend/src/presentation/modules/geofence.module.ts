@@ -25,13 +25,7 @@ import { CommuteEventController } from '../controllers/commute-event.controller'
 import { CommuteModule } from './commute.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      UserPlaceEntity,
-      CommuteEventEntity,
-    ]),
-    CommuteModule,
-  ],
+  imports: [TypeOrmModule.forFeature([UserPlaceEntity, CommuteEventEntity]), CommuteModule],
   controllers: [PlaceController, CommuteEventController],
   providers: [
     // Repositories

@@ -1,10 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import {
-  SolapiService,
-  NoopSolapiService,
-  SOLAPI_SERVICE,
-} from './solapi.service';
+import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from './solapi.service';
 
 @Module({
   imports: [ConfigModule],

@@ -24,7 +24,7 @@ export class CheckpointRecord {
       waitDelayMinutes?: number;
       notes?: string;
       createdAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.sessionId = sessionId;
@@ -49,7 +49,7 @@ export class CheckpointRecord {
     options?: {
       actualWaitTime?: number;
       notes?: string;
-    }
+    },
   ): CheckpointRecord {
     const now = new Date();
 
@@ -57,7 +57,7 @@ export class CheckpointRecord {
     let durationFromPrevious: number | undefined;
     if (previousRecord) {
       durationFromPrevious = Math.round(
-        (now.getTime() - previousRecord.arrivedAt.getTime()) / (1000 * 60)
+        (now.getTime() - previousRecord.arrivedAt.getTime()) / (1000 * 60),
       );
     }
 

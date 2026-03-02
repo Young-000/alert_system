@@ -19,7 +19,9 @@ export function useRouteValidation(selectedStops: SelectedStop[]): {
     for (const stop of stops) {
       const key = `${stop.name}-${stop.line}-${stop.transportMode}`;
       if (seen.has(key)) {
-        errors.push(`"${stop.name} ${stop.line || ''}" ${stop.transportMode === 'subway' ? '역' : '정류장'}이 중복되었습니다`);
+        errors.push(
+          `"${stop.name} ${stop.line || ''}" ${stop.transportMode === 'subway' ? '역' : '정류장'}이 중복되었습니다`,
+        );
       }
       seen.add(key);
     }
@@ -35,11 +37,11 @@ export function useRouteValidation(selectedStops: SelectedStop[]): {
           errors.push(`${prev.name}역 ${prev.line}이 연속으로 중복되었습니다.`);
         } else if (prev.line === curr.line && prev.line !== '') {
           warnings.push(
-            `${prev.name}과 ${curr.name}은 같은 ${curr.line}입니다. 중간역이라면 생략해도 됩니다.`
+            `${prev.name}과 ${curr.name}은 같은 ${curr.line}입니다. 중간역이라면 생략해도 됩니다.`,
           );
         } else if (prev.line !== curr.line && prev.name !== curr.name) {
           errors.push(
-            `${prev.name}역(${prev.line})에서 ${curr.name}역(${curr.line})으로 직접 이동할 수 없습니다. 환승역을 추가해주세요.`
+            `${prev.name}역(${prev.line})에서 ${curr.name}역(${curr.line})으로 직접 이동할 수 없습니다. 환승역을 추가해주세요.`,
           );
         }
       }
@@ -47,9 +49,7 @@ export function useRouteValidation(selectedStops: SelectedStop[]): {
       // 2b. 버스 → 버스
       if (prev.transportMode === 'bus' && curr.transportMode === 'bus') {
         if (prev.name !== curr.name) {
-          warnings.push(
-            `${prev.name} → ${curr.name} 버스 환승이 가능한지 확인해주세요.`
-          );
+          warnings.push(`${prev.name} → ${curr.name} 버스 환승이 가능한지 확인해주세요.`);
         }
       }
 
@@ -58,7 +58,7 @@ export function useRouteValidation(selectedStops: SelectedStop[]): {
         const fromType = prev.transportMode === 'subway' ? '지하철' : '버스';
         const toType = curr.transportMode === 'subway' ? '지하철' : '버스';
         warnings.push(
-          `${prev.name}에서 ${fromType}→${toType} 환승이 있습니다. 환승 시간을 고려해주세요.`
+          `${prev.name}에서 ${fromType}→${toType} 환승이 있습니다. 환승 시간을 고려해주세요.`,
         );
       }
     }
@@ -66,10 +66,7 @@ export function useRouteValidation(selectedStops: SelectedStop[]): {
     return { isValid: errors.length === 0, errors, warnings };
   }, []);
 
-  const validation = useMemo(
-    () => validateRoute(selectedStops),
-    [selectedStops, validateRoute],
-  );
+  const validation = useMemo(() => validateRoute(selectedStops), [selectedStops, validateRoute]);
 
   return { validation, validateRoute };
 }

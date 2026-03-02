@@ -28,26 +28,26 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
       order: { commuteDate: 'DESC' },
       take: limit,
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserIdAndType(
     userId: string,
     commuteType: CommuteType,
-    limit = 100
+    limit = 100,
   ): Promise<CommuteRecord[]> {
     const entities = await this.repository.find({
       where: { userId, commuteType },
       order: { commuteDate: 'DESC' },
       take: limit,
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserIdInDateRange(
     userId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<CommuteRecord[]> {
     const entities = await this.repository.find({
       where: {
@@ -56,7 +56,7 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
       },
       order: { commuteDate: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findRecentByUserId(userId: string, days: number): Promise<CommuteRecord[]> {
@@ -70,7 +70,7 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
       },
       order: { commuteDate: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async countByUserId(userId: string): Promise<number> {
@@ -106,20 +106,15 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
   }
 
   private toDomain(entity: CommuteRecordEntity): CommuteRecord {
-    return new CommuteRecord(
-      entity.userId,
-      entity.commuteDate,
-      entity.commuteType as CommuteType,
-      {
-        id: entity.id,
-        alertId: entity.alertId,
-        scheduledDeparture: entity.scheduledDeparture,
-        actualDeparture: entity.actualDeparture,
-        weatherCondition: entity.weatherCondition,
-        transitDelayMinutes: entity.transitDelayMinutes,
-        notes: entity.notes,
-        createdAt: entity.createdAt,
-      }
-    );
+    return new CommuteRecord(entity.userId, entity.commuteDate, entity.commuteType as CommuteType, {
+      id: entity.id,
+      alertId: entity.alertId,
+      scheduledDeparture: entity.scheduledDeparture,
+      actualDeparture: entity.actualDeparture,
+      weatherCondition: entity.weatherCondition,
+      transitDelayMinutes: entity.transitDelayMinutes,
+      notes: entity.notes,
+      createdAt: entity.createdAt,
+    });
   }
 }

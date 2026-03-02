@@ -8,7 +8,12 @@ describe('MilestoneBadgePanel', () => {
     onClose: vi.fn(),
     milestonesAchieved: ['7d' as const, '14d' as const],
     currentStreak: 20,
-    nextMilestone: { type: '30d' as const, label: '30일 연속', daysRemaining: 10, progress: 20 / 30 },
+    nextMilestone: {
+      type: '30d' as const,
+      label: '30일 연속',
+      daysRemaining: 10,
+      progress: 20 / 30,
+    },
   };
 
   it('isOpen이 false이면 렌더링하지 않는다', () => {

@@ -16,7 +16,11 @@ function formatConfidencePercent(confidence: number): number {
   return Math.round(confidence * 100);
 }
 
-function ColdStartState({ dataStatus }: { dataStatus: PredictionResponse['dataStatus'] }): JSX.Element {
+function ColdStartState({
+  dataStatus,
+}: {
+  dataStatus: PredictionResponse['dataStatus'];
+}): JSX.Element {
   const current = dataStatus.totalRecords;
   const target = dataStatus.nextTierAt;
   const progressPercent = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : 0;
@@ -29,9 +33,7 @@ function ColdStartState({ dataStatus }: { dataStatus: PredictionResponse['dataSt
         </span>
         <span className="pattern-card-title">출발 패턴 분석</span>
       </div>
-      <p className="pattern-card-message">
-        출퇴근 기록을 쌓아보세요!
-      </p>
+      <p className="pattern-card-message">출퇴근 기록을 쌓아보세요!</p>
       <div className="pattern-card-progress-wrap">
         <div
           className="pattern-card-progress"
@@ -41,12 +43,11 @@ function ColdStartState({ dataStatus }: { dataStatus: PredictionResponse['dataSt
           aria-valuemax={target}
           aria-label={`기록 진행률 ${current}/${target}`}
         >
-          <div
-            className="pattern-card-progress-fill"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="pattern-card-progress-fill" style={{ width: `${progressPercent}%` }} />
         </div>
-        <span className="pattern-card-progress-label">{current}/{target} 기록</span>
+        <span className="pattern-card-progress-label">
+          {current}/{target} 기록
+        </span>
       </div>
     </div>
   );
@@ -57,13 +58,19 @@ function LearningState({ prediction }: { prediction: PredictionResponse }): JSX.
   const topFactor = prediction.contributingFactors[0];
 
   return (
-    <Link to="/patterns" className="pattern-card pattern-card--learning" aria-label="패턴 분석 보기">
+    <Link
+      to="/patterns"
+      className="pattern-card pattern-card--learning"
+      aria-label="패턴 분석 보기"
+    >
       <div className="pattern-card-header">
         <span className="pattern-card-icon" aria-hidden="true">
           <PatternIconSvg />
         </span>
         <span className="pattern-card-title">출발 패턴 분석</span>
-        <span className="pattern-card-arrow" aria-hidden="true">&rsaquo;</span>
+        <span className="pattern-card-arrow" aria-hidden="true">
+          &rsaquo;
+        </span>
       </div>
       <div className="pattern-card-body">
         <div className="pattern-card-time-row">
@@ -93,7 +100,8 @@ function LearningState({ prediction }: { prediction: PredictionResponse }): JSX.
           <div className="pattern-card-factor">
             <span className="pattern-card-factor-label">{topFactor.label}</span>
             <span className="pattern-card-factor-impact">
-              {topFactor.impact > 0 ? '+' : ''}{topFactor.impact}분
+              {topFactor.impact > 0 ? '+' : ''}
+              {topFactor.impact}분
             </span>
           </div>
         )}
@@ -114,7 +122,9 @@ function FullState({ prediction }: { prediction: PredictionResponse }): JSX.Elem
           <PatternIconSvg />
         </span>
         <span className="pattern-card-title">출발 패턴 분석</span>
-        <span className="pattern-card-arrow" aria-hidden="true">&rsaquo;</span>
+        <span className="pattern-card-arrow" aria-hidden="true">
+          &rsaquo;
+        </span>
       </div>
       <div className="pattern-card-body">
         <div className="pattern-card-time-row">
@@ -151,7 +161,8 @@ function FullState({ prediction }: { prediction: PredictionResponse }): JSX.Elem
               <div key={factor.type} className="pattern-card-factor">
                 <span className="pattern-card-factor-label">{factor.label}</span>
                 <span className="pattern-card-factor-impact">
-                  {factor.impact > 0 ? '+' : ''}{factor.impact}분
+                  {factor.impact > 0 ? '+' : ''}
+                  {factor.impact}분
                 </span>
               </div>
             ))}

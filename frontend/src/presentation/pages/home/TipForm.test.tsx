@@ -22,7 +22,9 @@ describe('TipForm', () => {
     render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
     const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
     fireEvent.change(textarea, { target: { value: '테스트' } });
-    const charCounter = screen.getByLabelText('팁 작성').parentElement?.querySelector('.tip-form-char-count');
+    const charCounter = screen
+      .getByLabelText('팁 작성')
+      .parentElement?.querySelector('.tip-form-char-count');
     expect(charCounter?.textContent).toBe('3/100');
   });
 
@@ -57,33 +59,25 @@ describe('TipForm', () => {
   });
 
   it('shows rate limit message when rate limited', () => {
-    render(
-      <TipForm checkpointKey="station:1" onSubmit={onSubmit} isRateLimited />,
-    );
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} isRateLimited />);
     expect(screen.getByText(/오늘은 팁을 3개까지 남길 수 있어요/)).toBeInTheDocument();
   });
 
   it('disables submit when rate limited', () => {
-    render(
-      <TipForm checkpointKey="station:1" onSubmit={onSubmit} isRateLimited />,
-    );
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} isRateLimited />);
     const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
     fireEvent.change(textarea, { target: { value: '팁 내용' } });
     expect(screen.getByRole('button', { name: '등록' })).toBeDisabled();
   });
 
   it('shows disabled message when not eligible', () => {
-    render(
-      <TipForm checkpointKey="station:1" onSubmit={onSubmit} isEligible={false} />,
-    );
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} isEligible={false} />);
     expect(screen.getByText(/3회 이상 출퇴근 기록 후 팁을 남길 수 있어요/)).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/이 구간 팁을 남겨보세요/)).not.toBeInTheDocument();
   });
 
   it('shows "등록 중..." when submitting', () => {
-    render(
-      <TipForm checkpointKey="station:1" onSubmit={onSubmit} isSubmitting />,
-    );
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} isSubmitting />);
     expect(screen.getByRole('button', { name: '등록 중...' })).toBeDisabled();
   });
 

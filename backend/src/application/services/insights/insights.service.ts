@@ -181,9 +181,8 @@ export class InsightsService {
 
     // Step 4: Compute difference
     const diffMinutes = userStats.avgDuration - regionalAvg;
-    const diffPercent = regionalAvg > 0
-      ? ((userStats.avgDuration - regionalAvg) / regionalAvg) * 100
-      : 0;
+    const diffPercent =
+      regionalAvg > 0 ? ((userStats.avgDuration - regionalAvg) / regionalAvg) * 100 : 0;
 
     return {
       userId,
@@ -209,10 +208,7 @@ export class InsightsService {
   }> {
     const result = await this.sessionRepo
       .createQueryBuilder('cs')
-      .select([
-        'AVG(cs.total_duration_minutes) AS "avgDuration"',
-        'COUNT(*) AS "sessionCount"',
-      ])
+      .select(['AVG(cs.total_duration_minutes) AS "avgDuration"', 'COUNT(*) AS "sessionCount"'])
       .where('cs.user_id = :userId', { userId })
       .andWhere("cs.status = 'completed'")
       .andWhere('cs.total_duration_minutes IS NOT NULL')

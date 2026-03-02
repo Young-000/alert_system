@@ -46,11 +46,18 @@ export function RouteListView({
   onDismissSharedRoute,
 }: RouteListViewProps): JSX.Element {
   const getRouteAlertCount = (routeId: string): number =>
-    userAlerts.filter(a => a.routeId === routeId && a.enabled).length;
+    userAlerts.filter((a) => a.routeId === routeId && a.enabled).length;
 
   return (
     <main className="page route-page-v2">
-      <PageHeader title="경로" action={<button type="button" className="btn btn-primary btn-sm" onClick={onStartCreating}>+ 새 경로</button>} />
+      <PageHeader
+        title="경로"
+        action={
+          <button type="button" className="btn btn-primary btn-sm" onClick={onStartCreating}>
+            + 새 경로
+          </button>
+        }
+      />
 
       {/* Shared route banner */}
       {sharedRoute && userId && (
@@ -64,7 +71,17 @@ export function RouteListView({
 
       {sortedRoutes.length === 0 ? (
         <div className="route-empty-v2">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--ink-muted)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <circle cx="6" cy="19" r="3" />
             <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
             <circle cx="18" cy="5" r="3" />
@@ -99,7 +116,7 @@ export function RouteListView({
               className={`route-filter-tab ${routeTab === 'morning' ? 'active' : ''}`}
               onClick={() => onTabChange('morning')}
             >
-              출근 ({sortedRoutes.filter(r => r.routeType === 'morning').length})
+              출근 ({sortedRoutes.filter((r) => r.routeType === 'morning').length})
             </button>
             <button
               type="button"
@@ -110,26 +127,26 @@ export function RouteListView({
               className={`route-filter-tab ${routeTab === 'evening' ? 'active' : ''}`}
               onClick={() => onTabChange('evening')}
             >
-              퇴근 ({sortedRoutes.filter(r => r.routeType === 'evening').length})
+              퇴근 ({sortedRoutes.filter((r) => r.routeType === 'evening').length})
             </button>
           </div>
 
           <div role="tabpanel" id="tabpanel-route-list" aria-labelledby={`tab-route-${routeTab}`}>
-          {filteredRoutes.length === 0 ? (
-            <div className="route-filter-empty">
-              <p>{routeTab === 'morning' ? '출근' : '퇴근'} 경로가 없어요</p>
-            </div>
-          ) : (
-            filteredRoutes.map((route) => (
-              <RouteCard
-                key={route.id}
-                route={route}
-                alertCount={getRouteAlertCount(route.id)}
-                onEdit={onEditRoute}
-                onDelete={onDeleteClick}
-              />
-            ))
-          )}
+            {filteredRoutes.length === 0 ? (
+              <div className="route-filter-empty">
+                <p>{routeTab === 'morning' ? '출근' : '퇴근'} 경로가 없어요</p>
+              </div>
+            ) : (
+              filteredRoutes.map((route) => (
+                <RouteCard
+                  key={route.id}
+                  route={route}
+                  alertCount={getRouteAlertCount(route.id)}
+                  onEdit={onEditRoute}
+                  onDelete={onDeleteClick}
+                />
+              ))
+            )}
           </div>
         </div>
       )}

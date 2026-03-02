@@ -55,7 +55,16 @@ export function ConfirmStep({
           <div className="delivery-methods">
             <div className="delivery-method">
               <span className="delivery-icon" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
               </span>
@@ -75,26 +84,24 @@ export function ConfirmStep({
             <p className="warning-message">{error}</p>
             <p className="warning-suggestion">시간을 변경하거나 기존 알림을 수정해주세요.</p>
             <div className="duplicate-alert-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onEditDuplicate}
-              >
+              <button type="button" className="btn btn-secondary" onClick={onEditDuplicate}>
                 기존 알림 수정하기
               </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={onChangeTime}
-              >
+              <button type="button" className="btn btn-ghost" onClick={onChangeTime}>
                 시간 변경하기
               </button>
             </div>
           </div>
         ) : error ? (
-          <div className="notice error" role="alert">{error}</div>
+          <div className="notice error" role="alert">
+            {error}
+          </div>
         ) : null}
-        {success && <div className="notice success" role="status">{success}</div>}
+        {success && (
+          <div className="notice success" role="status">
+            {success}
+          </div>
+        )}
       </div>
     </section>
   );

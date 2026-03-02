@@ -54,9 +54,7 @@ describe('CongestionChip', () => {
   });
 
   it('shows wait time and sample count in md size', () => {
-    render(
-      <CongestionChip level="high" avgWaitMinutes={7.2} sampleCount={23} size="md" />,
-    );
+    render(<CongestionChip level="high" avgWaitMinutes={7.2} sampleCount={23} size="md" />);
     const chip = screen.getByTestId('congestion-chip');
     expect(chip).toHaveClass('congestion-chip--md');
     expect(screen.getByText('혼잡')).toBeInTheDocument();

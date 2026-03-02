@@ -26,10 +26,7 @@ import { CommuteModule } from './commute.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      SmartDepartureSettingEntity,
-      SmartDepartureSnapshotEntity,
-    ]),
+    TypeOrmModule.forFeature([SmartDepartureSettingEntity, SmartDepartureSnapshotEntity]),
     CommuteModule,
   ],
   controllers: [SmartDepartureController],

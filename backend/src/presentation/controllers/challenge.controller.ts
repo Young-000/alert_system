@@ -23,9 +23,7 @@ import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request
 export class ChallengeController {
   private readonly logger = new Logger(ChallengeController.name);
 
-  constructor(
-    private readonly manageChallengeUseCase: ManageChallengeUseCase,
-  ) {}
+  constructor(private readonly manageChallengeUseCase: ManageChallengeUseCase) {}
 
   /**
    * 도전 템플릿 목록 조회
@@ -98,10 +96,7 @@ export class ChallengeController {
     this.logger.log(`User ${userId} joining challenge template ${body.templateId}`);
 
     try {
-      const challenge = await this.manageChallengeUseCase.joinChallenge(
-        userId,
-        body.templateId,
-      );
+      const challenge = await this.manageChallengeUseCase.joinChallenge(userId, body.templateId);
       return {
         id: challenge.id,
         templateId: challenge.challengeTemplateId,

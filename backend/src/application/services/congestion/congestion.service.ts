@@ -63,11 +63,15 @@ export class CongestionService {
       lastUpdatedAt: s.lastUpdatedAt.toISOString(),
     }));
 
-    const lastCalculatedAt = segments.length > 0
-      ? segments.reduce((latest, s) =>
-          s.lastUpdatedAt > latest ? s.lastUpdatedAt : latest,
-        segments[0].lastUpdatedAt).toISOString()
-      : new Date().toISOString();
+    const lastCalculatedAt =
+      segments.length > 0
+        ? segments
+            .reduce(
+              (latest, s) => (s.lastUpdatedAt > latest ? s.lastUpdatedAt : latest),
+              segments[0].lastUpdatedAt,
+            )
+            .toISOString()
+        : new Date().toISOString();
 
     return {
       timeSlot,
@@ -114,9 +118,7 @@ export class CongestionService {
       resolvedTimeSlot,
     );
 
-    const congestionMap = new Map(
-      congestionData.map((c) => [c.segmentKey, c]),
-    );
+    const congestionMap = new Map(congestionData.map((c) => [c.segmentKey, c]));
 
     // Map checkpoints to congestion data
     const checkpointDtos: RouteCongestionCheckpointDto[] = route.checkpoints
@@ -126,23 +128,23 @@ export class CongestionService {
         const congestion = congestionMap.get(segmentKey);
 
         // Skip home/work checkpoints (they typically have no transit congestion)
-        const isTransitCheckpoint =
-          cp.checkpointType !== 'home' && cp.checkpointType !== 'work';
+        const isTransitCheckpoint = cp.checkpointType !== 'home' && cp.checkpointType !== 'work';
 
         return {
           checkpointId: cp.id,
           checkpointName: cp.name,
           sequenceOrder: cp.sequenceOrder,
-          congestion: congestion && isTransitCheckpoint && congestion.hasMinimumSamples()
-            ? {
-                segmentKey: congestion.segmentKey,
-                avgWaitMinutes: congestion.avgWaitMinutes,
-                avgDelayMinutes: congestion.avgDelayMinutes,
-                congestionLevel: congestion.congestionLevel,
-                confidence: congestion.confidence,
-                sampleCount: congestion.sampleCount,
-              }
-            : null,
+          congestion:
+            congestion && isTransitCheckpoint && congestion.hasMinimumSamples()
+              ? {
+                  segmentKey: congestion.segmentKey,
+                  avgWaitMinutes: congestion.avgWaitMinutes,
+                  avgDelayMinutes: congestion.avgDelayMinutes,
+                  congestionLevel: congestion.congestionLevel,
+                  confidence: congestion.confidence,
+                  sampleCount: congestion.sampleCount,
+                }
+              : null,
         };
       });
 
@@ -158,11 +160,15 @@ export class CongestionService {
       .filter((cp) => cp.congestion !== null)
       .reduce((sum, cp) => sum + (cp.congestion?.avgDelayMinutes ?? 0), 0);
 
-    const lastCalculatedAt = congestionData.length > 0
-      ? congestionData.reduce((latest, c) =>
-          c.lastUpdatedAt > latest ? c.lastUpdatedAt : latest,
-        congestionData[0].lastUpdatedAt).toISOString()
-      : new Date().toISOString();
+    const lastCalculatedAt =
+      congestionData.length > 0
+        ? congestionData
+            .reduce(
+              (latest, c) => (c.lastUpdatedAt > latest ? c.lastUpdatedAt : latest),
+              congestionData[0].lastUpdatedAt,
+            )
+            .toISOString()
+        : new Date().toISOString();
 
     return {
       routeId: route.id,
@@ -189,9 +195,7 @@ export class CongestionService {
       severe: 3,
     };
 
-    const worst = levels.reduce((max, level) =>
-      severity[level] > severity[max] ? level : max,
-    );
+    const worst = levels.reduce((max, level) => (severity[level] > severity[max] ? level : max));
 
     return worst;
   }

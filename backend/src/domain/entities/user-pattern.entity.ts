@@ -10,7 +10,7 @@ export enum PatternType {
 }
 
 export interface DepartureTimeValue {
-  averageTime: string;  // "08:15" HH:mm format
+  averageTime: string; // "08:15" HH:mm format
   stdDevMinutes: number;
   earliestTime: string;
   latestTime: string;
@@ -31,28 +31,28 @@ export interface NotificationLeadTimeValue {
 // P3-1: Enhanced pattern value types
 export interface DayOfWeekDepartureValue {
   segments: Array<{
-    dayOfWeek: number;       // 0=Sun, 1=Mon, ..., 6=Sat
-    avgMinutes: number;      // average departure in minutes since midnight
+    dayOfWeek: number; // 0=Sun, 1=Mon, ..., 6=Sat
+    avgMinutes: number; // average departure in minutes since midnight
     stdDevMinutes: number;
     sampleCount: number;
   }>;
-  lastCalculated: string;    // ISO date
+  lastCalculated: string; // ISO date
 }
 
 export interface WeatherSensitivityValue {
-  rainCoefficient: number;       // minutes adjustment for rain
-  snowCoefficient: number;       // minutes adjustment for snow
+  rainCoefficient: number; // minutes adjustment for rain
+  snowCoefficient: number; // minutes adjustment for snow
   temperatureCoefficient: number; // minutes per degree deviation
   sampleCountRain: number;
   sampleCountSnow: number;
   sampleCountClear: number;
-  rSquared: number;              // model fit quality
+  rSquared: number; // model fit quality
   lastCalculated: string;
 }
 
 export interface SeasonalTrendValue {
   monthlyAverages: Array<{
-    month: number;               // 1-12
+    month: number; // 1-12
     avgMinutes: number;
     sampleCount: number;
   }>;
@@ -85,9 +85,9 @@ export type PatternValue =
 
 // Confidence levels based on sample count
 export const CONFIDENCE_LEVELS = {
-  COLD_START: 0.3,      // 0-4 samples
-  LEARNING: 0.5,        // 5-9 samples
-  CONFIDENT: 0.7,       // 10-19 samples
+  COLD_START: 0.3, // 0-4 samples
+  LEARNING: 0.5, // 5-9 samples
+  CONFIDENT: 0.7, // 10-19 samples
   HIGH_CONFIDENCE: 0.85, // 20+ samples
 } as const;
 
@@ -117,7 +117,7 @@ export class UserPattern {
       lastUpdated?: Date;
       createdAt?: Date;
       updatedAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.userId = userId;
@@ -158,6 +158,6 @@ export const DEFAULT_PATTERNS = {
     morning: { weekday: '08:00', weekend: '10:00' },
     evening: { weekday: '18:30' },
   },
-  notificationLeadTime: 15,  // 15분 전
-  weatherImpact: { rain: 10, snow: 15, hot: 5 },  // 분 단위 조정
+  notificationLeadTime: 15, // 15분 전
+  weatherImpact: { rain: 10, snow: 15, hot: 5 }, // 분 단위 조정
 } as const;

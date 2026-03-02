@@ -3,11 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserPatternEntity } from '../typeorm/user-pattern.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
-import {
-  UserPattern,
-  PatternType,
-  PatternValue,
-} from '@domain/entities/user-pattern.entity';
+import { UserPattern, PatternType, PatternValue } from '@domain/entities/user-pattern.entity';
 
 @Injectable()
 export class UserPatternRepositoryImpl implements IUserPatternRepository {
@@ -31,12 +27,12 @@ export class UserPatternRepositoryImpl implements IUserPatternRepository {
       where: { userId },
       order: { patternType: 'ASC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserIdAndType(
     userId: string,
-    patternType: PatternType
+    patternType: PatternType,
   ): Promise<UserPattern | undefined> {
     const entity = await this.repository.findOne({
       where: { userId, patternType },
@@ -48,7 +44,7 @@ export class UserPatternRepositoryImpl implements IUserPatternRepository {
     userId: string,
     patternType: PatternType,
     dayOfWeek?: number,
-    isWeekday?: boolean
+    isWeekday?: boolean,
   ): Promise<UserPattern | undefined> {
     const whereConditions: Record<string, unknown> = {
       userId,
@@ -105,7 +101,7 @@ export class UserPatternRepositoryImpl implements IUserPatternRepository {
         lastUpdated: entity.lastUpdated,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-      }
+      },
     );
   }
 }

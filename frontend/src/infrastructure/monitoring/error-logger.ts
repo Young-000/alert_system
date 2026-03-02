@@ -12,11 +12,11 @@
 type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 type ErrorSource =
-  | 'global'           // window.onerror / unhandledrejection
-  | 'react-boundary'   // ErrorBoundary componentDidCatch
-  | 'api'              // API client errors
-  | 'query'            // react-query onError
-  | 'manual';          // explicit logError() calls
+  | 'global' // window.onerror / unhandledrejection
+  | 'react-boundary' // ErrorBoundary componentDidCatch
+  | 'api' // API client errors
+  | 'query' // react-query onError
+  | 'manual'; // explicit logError() calls
 
 interface ErrorEntry {
   timestamp: string;
@@ -37,11 +37,7 @@ function createEntry(
   context?: Record<string, unknown>,
 ): ErrorEntry {
   const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'string'
-        ? error
-        : 'Unknown error';
+    error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error';
 
   const stack = error instanceof Error ? error.stack : undefined;
 
@@ -78,18 +74,11 @@ export function logError(
   pushEntry(createEntry(error, source, severity, context));
 }
 
-export function logApiError(
-  error: unknown,
-  endpoint: string,
-  method: string,
-): void {
+export function logApiError(error: unknown, endpoint: string, method: string): void {
   pushEntry(createEntry(error, 'api', 'medium', { endpoint, method }));
 }
 
-export function logReactError(
-  error: Error,
-  componentStack: string,
-): void {
+export function logReactError(error: Error, componentStack: string): void {
   pushEntry(createEntry(error, 'react-boundary', 'critical', { componentStack }));
 }
 
@@ -113,25 +102,15 @@ export function installGlobalErrorHandlers(): void {
     // Ignore cross-origin script errors (no useful info)
     if (event.message === 'Script error.' && !event.filename) return;
 
-    logError(
-      event.error ?? event.message,
-      'global',
-      'high',
-      {
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-      },
-    );
+    logError(event.error ?? event.message, 'global', 'high', {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    });
   });
 
   // Unhandled promise rejections
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-    logError(
-      event.reason,
-      'global',
-      'high',
-      { type: 'unhandledrejection' },
-    );
+    logError(event.reason, 'global', 'high', { type: 'unhandledrejection' });
   });
 }

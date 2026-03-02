@@ -8,9 +8,7 @@ import type { SnapshotStatus } from '@domain/entities/smart-departure-snapshot.e
 import type { DepartureType } from '@domain/entities/smart-departure-setting.entity';
 
 @Injectable()
-export class SmartDepartureSnapshotRepositoryImpl
-  implements ISmartDepartureSnapshotRepository
-{
+export class SmartDepartureSnapshotRepositoryImpl implements ISmartDepartureSnapshotRepository {
   constructor(
     @InjectRepository(SmartDepartureSnapshotEntity)
     private readonly repo: Repository<SmartDepartureSnapshotEntity>,
@@ -107,13 +105,9 @@ export class SmartDepartureSnapshotRepositoryImpl
     entity.historyAvgTravelMin = snapshot.historyAvgTravelMin;
     entity.realtimeAdjustmentMin = snapshot.realtimeAdjustmentMin;
     entity.status = snapshot.status;
-    entity.alertsSent = snapshot.alertsSent.length > 0
-      ? snapshot.alertsSent.join(',')
-      : '';
+    entity.alertsSent = snapshot.alertsSent.length > 0 ? snapshot.alertsSent.join(',') : '';
     entity.departedAt = snapshot.departedAt;
-    entity.scheduleIds = snapshot.scheduleIds.length > 0
-      ? snapshot.scheduleIds.join(',')
-      : '';
+    entity.scheduleIds = snapshot.scheduleIds.length > 0 ? snapshot.scheduleIds.join(',') : '';
     entity.calculatedAt = snapshot.calculatedAt;
     return entity;
   }
@@ -181,6 +175,9 @@ export class SmartDepartureSnapshotRepositoryImpl
 
   private parseStringArray(value: string | null | undefined): string[] {
     if (!value || value === '') return [];
-    return value.split(',').map((v) => v.trim()).filter((v) => v.length > 0);
+    return value
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v.length > 0);
   }
 }

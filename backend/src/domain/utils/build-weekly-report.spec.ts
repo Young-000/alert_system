@@ -108,7 +108,7 @@ describe('buildDailyStats', () => {
 
     expect(monday.sessionCount).toBe(2);
     expect(monday.averageDuration).toBe(45); // (40+50)/2
-    expect(monday.totalDuration).toBe(90);   // 40+50
+    expect(monday.totalDuration).toBe(90); // 40+50
   });
 
   it('가장 많이 출현한 날씨가 대표 날씨가 된다', () => {
@@ -148,7 +148,7 @@ describe('buildDailyStats', () => {
 describe('generateWeeklyInsights', () => {
   const emptyDailyStats: DailyStatsDto[] = Array.from({ length: 7 }, (_, i) => ({
     date: `2026-02-${16 + i}`,
-    dayOfWeek: ((1 + i) % 7),
+    dayOfWeek: (1 + i) % 7,
     dayName: ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'][i],
     sessionCount: 0,
     averageDuration: 0,
@@ -159,14 +159,7 @@ describe('generateWeeklyInsights', () => {
   }));
 
   it('데이터가 없으면 빈 상태 메시지를 반환한다', () => {
-    const insights = generateWeeklyInsights(
-      emptyDailyStats,
-      null,
-      null,
-      null,
-      null,
-      [],
-    );
+    const insights = generateWeeklyInsights(emptyDailyStats, null, null, null, null, []);
 
     expect(insights).toHaveLength(1);
     expect(insights[0]).toBe('이번 주 기록이 아직 없어요. 출퇴근을 기록해보세요!');
@@ -263,14 +256,7 @@ describe('generateWeeklyInsights', () => {
       createSession({ startedAt: kstDate('2026-02-19'), totalDurationMinutes: 60 }),
     ];
 
-    const insights = generateWeeklyInsights(
-      dailyStats,
-      bestDay,
-      worstDay,
-      null,
-      null,
-      sessions,
-    );
+    const insights = generateWeeklyInsights(dailyStats, bestDay, worstDay, null, null, sessions);
 
     expect(insights.some((i) => i.includes('화요일') && i.includes('빨랐어요'))).toBe(true);
     expect(insights.some((i) => i.includes('비 오는 목요일'))).toBe(true);
@@ -330,9 +316,21 @@ describe('generateWeeklyInsights', () => {
       ...emptyDailyStats.slice(3),
     ];
     const sessions = [
-      createSession({ startedAt: kstDate('2026-02-16'), totalDurationMinutes: 50, totalWaitMinutes: 15 }),
-      createSession({ startedAt: kstDate('2026-02-17'), totalDurationMinutes: 50, totalWaitMinutes: 15 }),
-      createSession({ startedAt: kstDate('2026-02-18'), totalDurationMinutes: 50, totalWaitMinutes: 15 }),
+      createSession({
+        startedAt: kstDate('2026-02-16'),
+        totalDurationMinutes: 50,
+        totalWaitMinutes: 15,
+      }),
+      createSession({
+        startedAt: kstDate('2026-02-17'),
+        totalDurationMinutes: 50,
+        totalWaitMinutes: 15,
+      }),
+      createSession({
+        startedAt: kstDate('2026-02-18'),
+        totalDurationMinutes: 50,
+        totalWaitMinutes: 15,
+      }),
     ];
 
     const insights = generateWeeklyInsights(
@@ -349,15 +347,45 @@ describe('generateWeeklyInsights', () => {
 
   it('최대 4개까지만 반환한다', () => {
     const dailyStats: DailyStatsDto[] = [
-      { ...emptyDailyStats[0], sessionCount: 1, averageDuration: 40, averageDelay: 6, averageWaitTime: 12 },
-      { ...emptyDailyStats[1], sessionCount: 1, averageDuration: 60, averageDelay: 8, averageWaitTime: 18 },
-      { ...emptyDailyStats[2], sessionCount: 1, averageDuration: 55, averageDelay: 7, averageWaitTime: 15 },
+      {
+        ...emptyDailyStats[0],
+        sessionCount: 1,
+        averageDuration: 40,
+        averageDelay: 6,
+        averageWaitTime: 12,
+      },
+      {
+        ...emptyDailyStats[1],
+        sessionCount: 1,
+        averageDuration: 60,
+        averageDelay: 8,
+        averageWaitTime: 18,
+      },
+      {
+        ...emptyDailyStats[2],
+        sessionCount: 1,
+        averageDuration: 55,
+        averageDelay: 7,
+        averageWaitTime: 15,
+      },
       ...emptyDailyStats.slice(3),
     ];
     const sessions = [
-      createSession({ startedAt: kstDate('2026-02-16'), totalDurationMinutes: 40, totalWaitMinutes: 12 }),
-      createSession({ startedAt: kstDate('2026-02-17'), totalDurationMinutes: 60, totalWaitMinutes: 18 }),
-      createSession({ startedAt: kstDate('2026-02-18'), totalDurationMinutes: 55, totalWaitMinutes: 15 }),
+      createSession({
+        startedAt: kstDate('2026-02-16'),
+        totalDurationMinutes: 40,
+        totalWaitMinutes: 12,
+      }),
+      createSession({
+        startedAt: kstDate('2026-02-17'),
+        totalDurationMinutes: 60,
+        totalWaitMinutes: 18,
+      }),
+      createSession({
+        startedAt: kstDate('2026-02-18'),
+        totalDurationMinutes: 55,
+        totalWaitMinutes: 15,
+      }),
     ];
 
     const insights = generateWeeklyInsights(
@@ -397,8 +425,16 @@ describe('buildWeeklyReport', () => {
   it('완료된 세션만 집계한다 (in_progress, cancelled 제외)', () => {
     const sessions = [
       createSession({ startedAt: kstDate('2026-02-16'), totalDurationMinutes: 40 }),
-      createSession({ startedAt: kstDate('2026-02-17'), status: SessionStatus.IN_PROGRESS, totalDurationMinutes: undefined }),
-      createSession({ startedAt: kstDate('2026-02-18'), status: SessionStatus.CANCELLED, totalDurationMinutes: 30 }),
+      createSession({
+        startedAt: kstDate('2026-02-17'),
+        status: SessionStatus.IN_PROGRESS,
+        totalDurationMinutes: undefined,
+      }),
+      createSession({
+        startedAt: kstDate('2026-02-18'),
+        status: SessionStatus.CANCELLED,
+        totalDurationMinutes: 30,
+      }),
     ];
 
     const result = buildWeeklyReport(sessions, [], WEEK_START, WEEK_END, 1, 5);
@@ -431,7 +467,11 @@ describe('buildWeeklyReport', () => {
       createSession({ startedAt: kstDate('2026-02-16'), totalDurationMinutes: 48 }),
       createSession({ startedAt: kstDate('2026-02-17'), totalDurationMinutes: 43 }),
       createSession({ startedAt: kstDate('2026-02-18'), totalDurationMinutes: 48 }),
-      createSession({ startedAt: kstDate('2026-02-19'), totalDurationMinutes: 62, weatherCondition: '비' }),
+      createSession({
+        startedAt: kstDate('2026-02-19'),
+        totalDurationMinutes: 62,
+        weatherCondition: '비',
+      }),
       createSession({ startedAt: kstDate('2026-02-20'), totalDurationMinutes: 42 }),
     ];
 
@@ -457,14 +497,7 @@ describe('buildWeeklyReport', () => {
       createSession({ startedAt: kstDate('2026-02-10'), totalDurationMinutes: 50 }),
     ];
 
-    const result = buildWeeklyReport(
-      currentSessions,
-      previousSessions,
-      WEEK_START,
-      WEEK_END,
-      2,
-      5,
-    );
+    const result = buildWeeklyReport(currentSessions, previousSessions, WEEK_START, WEEK_END, 2, 5);
 
     expect(result.previousWeekAverage).toBe(50);
     expect(result.changeFromPrevious).toBe(-5);
@@ -477,14 +510,7 @@ describe('buildWeeklyReport', () => {
       createSession({ startedAt: kstDate('2026-02-16'), totalDurationMinutes: 45 }),
     ];
 
-    const result = buildWeeklyReport(
-      currentSessions,
-      [],
-      WEEK_START,
-      WEEK_END,
-      1,
-      5,
-    );
+    const result = buildWeeklyReport(currentSessions, [], WEEK_START, WEEK_END, 1, 5);
 
     expect(result.previousWeekAverage).toBeNull();
     expect(result.changeFromPrevious).toBeNull();
@@ -500,14 +526,7 @@ describe('buildWeeklyReport', () => {
       createSession({ startedAt: kstDate('2026-02-09'), totalDurationMinutes: 48 }),
     ];
 
-    const result = buildWeeklyReport(
-      currentSessions,
-      previousSessions,
-      WEEK_START,
-      WEEK_END,
-      1,
-      5,
-    );
+    const result = buildWeeklyReport(currentSessions, previousSessions, WEEK_START, WEEK_END, 1, 5);
 
     expect(result.changeFromPrevious).toBe(7);
     expect(result.trend).toBe('worsening');
@@ -521,14 +540,7 @@ describe('buildWeeklyReport', () => {
       createSession({ startedAt: kstDate('2026-02-09'), totalDurationMinutes: 48 }),
     ];
 
-    const result = buildWeeklyReport(
-      currentSessions,
-      previousSessions,
-      WEEK_START,
-      WEEK_END,
-      1,
-      5,
-    );
+    const result = buildWeeklyReport(currentSessions, previousSessions, WEEK_START, WEEK_END, 1, 5);
 
     expect(result.changeFromPrevious).toBe(2);
     expect(result.trend).toBe('stable');

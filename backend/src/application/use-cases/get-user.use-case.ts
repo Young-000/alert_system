@@ -4,9 +4,7 @@ import { User } from '@domain/entities/user.entity';
 
 @Injectable()
 export class GetUserUseCase {
-  constructor(
-    @Inject('IUserRepository') private userRepository: IUserRepository,
-  ) {}
+  constructor(@Inject('IUserRepository') private userRepository: IUserRepository) {}
 
   async execute(id: string): Promise<User> {
     const user = await this.userRepository.findById(id);

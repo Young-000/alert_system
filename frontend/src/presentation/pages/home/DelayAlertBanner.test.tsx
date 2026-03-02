@@ -8,9 +8,7 @@ vi.mock('@infrastructure/query/use-delay-status-query', () => ({
   useRouteDelayStatus: (...args: unknown[]) => mockUseRouteDelayStatus(...args),
 }));
 
-function makeDelayStatus(
-  overrides: Partial<DelayStatusResponse> = {},
-): DelayStatusResponse {
+function makeDelayStatus(overrides: Partial<DelayStatusResponse> = {}): DelayStatusResponse {
   return {
     routeId: 'route-1',
     routeName: '강남 출근길',
@@ -95,7 +93,13 @@ describe('DelayAlertBanner', () => {
             description: '신분당선으로 우회',
             steps: [
               { action: 'walk', from: '강남역', to: '신논현역', durationMinutes: 5 },
-              { action: 'subway', from: '신논현역', to: '판교역', line: '신분당선', durationMinutes: 15 },
+              {
+                action: 'subway',
+                from: '신논현역',
+                to: '판교역',
+                line: '신분당선',
+                durationMinutes: 15,
+              },
             ],
             totalDurationMinutes: 20,
             originalDurationMinutes: 30,
@@ -218,9 +222,7 @@ describe('DelayAlertBanner', () => {
             triggerSegment: 'cp-1',
             triggerReason: '2호선 지연',
             description: '신분당선으로 우회',
-            steps: [
-              { action: 'walk', from: '강남역', to: '신논현역', durationMinutes: 5 },
-            ],
+            steps: [{ action: 'walk', from: '강남역', to: '신논현역', durationMinutes: 5 }],
             totalDurationMinutes: 20,
             originalDurationMinutes: 30,
             savingsMinutes: 10,

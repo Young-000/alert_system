@@ -30,7 +30,16 @@ export function LoadMoreButton({ onLoad }: LoadMoreButtonProps): JSX.Element {
         {isLoadingMore ? '불러오는 중...' : '더 보기'}
       </button>
       {loadError && (
-        <p className="muted" role="alert" style={{ textAlign: 'center', color: 'var(--color-danger, #ef4444)', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+        <p
+          className="muted"
+          role="alert"
+          style={{
+            textAlign: 'center',
+            color: 'var(--color-danger, #ef4444)',
+            marginTop: '0.5rem',
+            fontSize: '0.85rem',
+          }}
+        >
           {loadError}
         </p>
       )}

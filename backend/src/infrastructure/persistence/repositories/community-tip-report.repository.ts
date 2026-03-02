@@ -12,7 +12,10 @@ export class CommunityTipReportRepositoryImpl implements ICommunityTipReportRepo
     private readonly repository: Repository<CommunityTipReportEntity>,
   ) {}
 
-  async findByTipAndReporter(tipId: string, reporterId: string): Promise<CommunityTipReport | null> {
+  async findByTipAndReporter(
+    tipId: string,
+    reporterId: string,
+  ): Promise<CommunityTipReport | null> {
     const entity = await this.repository.findOne({
       where: { tipId, reporterId },
     });

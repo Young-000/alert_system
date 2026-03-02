@@ -1,6 +1,11 @@
 import { CalculateRouteAnalyticsUseCase } from './calculate-route-analytics.use-case';
 import { CommuteSession, SessionStatus } from '@domain/entities/commute-session.entity';
-import { CommuteRoute, RouteType, CheckpointType, TransportMode } from '@domain/entities/commute-route.entity';
+import {
+  CommuteRoute,
+  RouteType,
+  CheckpointType,
+  TransportMode,
+} from '@domain/entities/commute-route.entity';
 import { CheckpointRecord } from '@domain/entities/checkpoint-record.entity';
 
 describe('CalculateRouteAnalyticsUseCase', () => {
@@ -54,7 +59,7 @@ describe('CalculateRouteAnalyticsUseCase', () => {
   const createMockSession = (
     durationMinutes: number,
     weatherCondition: string,
-    dayOffset: number = 0
+    dayOffset: number = 0,
   ): CommuteSession => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dayOffset);
@@ -97,7 +102,7 @@ describe('CalculateRouteAnalyticsUseCase', () => {
     useCase = new CalculateRouteAnalyticsUseCase(
       mockSessionRepository,
       mockRouteRepository,
-      mockAnalyticsRepository
+      mockAnalyticsRepository,
     );
   });
 
@@ -155,7 +160,7 @@ describe('CalculateRouteAnalyticsUseCase', () => {
       expect(result.conditionAnalysis.byWeather['맑음']).toBeDefined();
       expect(result.conditionAnalysis.byWeather['비']).toBeDefined();
       expect(result.conditionAnalysis.byWeather['비'].avgDuration).toBeGreaterThan(
-        result.conditionAnalysis.byWeather['맑음'].avgDuration
+        result.conditionAnalysis.byWeather['맑음'].avgDuration,
       );
     });
 
@@ -188,15 +193,10 @@ describe('CalculateRouteAnalyticsUseCase', () => {
         checkpoints: mockRoute.checkpoints,
       });
 
-      mockRouteRepository.findById
-        .mockResolvedValueOnce(mockRoute)
-        .mockResolvedValueOnce(route2);
+      mockRouteRepository.findById.mockResolvedValueOnce(mockRoute).mockResolvedValueOnce(route2);
 
       mockSessionRepository.findByRouteId
-        .mockResolvedValueOnce([
-          createMockSession(42, '맑음', 0),
-          createMockSession(43, '맑음', 1),
-        ])
+        .mockResolvedValueOnce([createMockSession(42, '맑음', 0), createMockSession(43, '맑음', 1)])
         .mockResolvedValueOnce([
           createMockSession(55, '맑음', 0),
           createMockSession(58, '맑음', 1),
@@ -219,12 +219,8 @@ describe('CalculateRouteAnalyticsUseCase', () => {
       });
 
       mockRouteRepository.findByUserId.mockResolvedValue([mockRoute, route2]);
-      mockRouteRepository.findById
-        .mockResolvedValueOnce(mockRoute)
-        .mockResolvedValueOnce(route2);
-      mockSessionRepository.findByRouteId.mockResolvedValue([
-        createMockSession(45, '맑음', 0),
-      ]);
+      mockRouteRepository.findById.mockResolvedValueOnce(mockRoute).mockResolvedValueOnce(route2);
+      mockSessionRepository.findByRouteId.mockResolvedValue([createMockSession(45, '맑음', 0)]);
 
       const results = await useCase.executeForUser('user-1');
 

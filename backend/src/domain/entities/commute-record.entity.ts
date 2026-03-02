@@ -9,7 +9,7 @@ export class CommuteRecord {
   readonly alertId?: string;
   readonly commuteDate: Date;
   readonly commuteType: CommuteType;
-  readonly scheduledDeparture?: string;  // TIME format "HH:mm"
+  readonly scheduledDeparture?: string; // TIME format "HH:mm"
   readonly actualDeparture?: Date;
   readonly weatherCondition?: string;
   readonly transitDelayMinutes?: number;
@@ -29,7 +29,7 @@ export class CommuteRecord {
       transitDelayMinutes?: number;
       notes?: string;
       createdAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.userId = userId;
@@ -48,7 +48,7 @@ export class CommuteRecord {
     userId: string,
     alertId: string,
     weatherCondition?: string,
-    transitDelayMinutes?: number
+    transitDelayMinutes?: number,
   ): CommuteRecord {
     const now = new Date();
     const hour = now.getHours();

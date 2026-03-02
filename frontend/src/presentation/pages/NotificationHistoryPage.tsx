@@ -87,39 +87,38 @@ export function NotificationHistoryPage(): JSX.Element {
     let result = logs;
 
     if (typeFilter) {
-      result = result.filter(log =>
-        log.alertTypes.includes(typeFilter)
-      );
+      result = result.filter((log) => log.alertTypes.includes(typeFilter));
     }
 
     if (periodFilter !== 'all') {
       const cutoff = Date.now() - PERIOD_MS[periodFilter];
-      result = result.filter(log =>
-        new Date(log.sentAt).getTime() >= cutoff
-      );
+      result = result.filter((log) => new Date(log.sentAt).getTime() >= cutoff);
     }
 
     return result;
   }, [logs, typeFilter, periodFilter]);
 
-  const loadHistory = useCallback(async (offset = 0) => {
-    if (!userId) return;
-    setIsLoading(true);
-    setError('');
-    try {
-      const res = await notificationApiClient.getHistory(20, offset);
-      if (offset === 0) {
-        setLogs(res.items);
-      } else {
-        setLogs(prev => [...prev, ...res.items]);
+  const loadHistory = useCallback(
+    async (offset = 0) => {
+      if (!userId) return;
+      setIsLoading(true);
+      setError('');
+      try {
+        const res = await notificationApiClient.getHistory(20, offset);
+        if (offset === 0) {
+          setLogs(res.items);
+        } else {
+          setLogs((prev) => [...prev, ...res.items]);
+        }
+        setTotal(res.total);
+      } catch {
+        setError('알림 기록을 불러올 수 없습니다.');
+      } finally {
+        setIsLoading(false);
       }
-      setTotal(res.total);
-    } catch {
-      setError('알림 기록을 불러올 수 없습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId]);
+    },
+    [userId],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -153,7 +152,9 @@ export function NotificationHistoryPage(): JSX.Element {
     };
 
     load();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Skip initial mount — stats already fetched by the first useEffect
@@ -179,14 +180,30 @@ export function NotificationHistoryPage(): JSX.Element {
     };
 
     loadStats();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId, periodFilter]);
 
   if (!userId) {
     return (
       <AuthRequired
         pageTitle="알림 기록"
-        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+        icon={
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        }
         description="알림 기록을 보려면 로그인하세요"
       />
     );
@@ -196,21 +213,45 @@ export function NotificationHistoryPage(): JSX.Element {
     <main className="page notification-history-page">
       <PageHeader
         title="알림 기록"
-        action={total > 0 ? (
-          <span className="nav-badge">
-            {isFilterActive ? `${filteredLogs.length}/${total}건` : `${total}건`}
-          </span>
-        ) : undefined}
+        action={
+          total > 0 ? (
+            <span className="nav-badge">
+              {isFilterActive ? `${filteredLogs.length}/${total}건` : `${total}건`}
+            </span>
+          ) : undefined
+        }
       />
 
       {error && (
         <div className="error-banner" role="alert">
           {error}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => loadHistory(0)} aria-label="다시 시도">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => loadHistory(0)}
+            aria-label="다시 시도"
+          >
             다시 시도
           </button>
-          <button type="button" className="error-dismiss" onClick={() => setError('')} aria-label="오류 닫기">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <button
+            type="button"
+            className="error-dismiss"
+            onClick={() => setError('')}
+            aria-label="오류 닫기"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
       )}
@@ -251,11 +292,29 @@ export function NotificationHistoryPage(): JSX.Element {
       {!isLoading && logs.length === 0 && (
         <div className="settings-empty">
           <span className="empty-icon-svg" aria-hidden="true">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
           </span>
           <h2>알림 기록이 없어요</h2>
           <p>알림이 발송되면 여기에 기록됩니다</p>
-          <Link to="/alerts" className="btn btn-primary btn-sm" aria-label="알림 설정 페이지로 이동">알림 설정하기</Link>
+          <Link
+            to="/alerts"
+            className="btn btn-primary btn-sm"
+            aria-label="알림 설정 페이지로 이동"
+          >
+            알림 설정하기
+          </Link>
         </div>
       )}
 
@@ -283,9 +342,7 @@ export function NotificationHistoryPage(): JSX.Element {
                   </span>
                 ))}
               </div>
-              {log.summary && (
-                <p className="notif-history-summary">{log.summary}</p>
-              )}
+              {log.summary && <p className="notif-history-summary">{log.summary}</p>}
               <div className="notif-history-time">
                 <span>{formatDate(log.sentAt)}</span>
                 <span className="muted">{formatTime(log.sentAt)}</span>

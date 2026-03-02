@@ -15,7 +15,7 @@ export function OfflineBanner(): JSX.Element | null {
         'flex items-center justify-center gap-2.5',
         'text-sm font-medium',
         'z-[1002] animate-slide-down',
-        'shadow-[0_2px_8px_rgba(245,158,11,0.3)]'
+        'shadow-[0_2px_8px_rgba(245,158,11,0.3)]',
       )}
       role="alert"
       aria-live="assertive"

@@ -46,12 +46,9 @@ export class AlternativeMapping {
    * Check if this mapping matches a given station/line (including bidirectional reverse).
    */
   matchesStation(stationName: string, line: string): boolean {
-    const forwardMatch =
-      this.fromStationName === stationName && this.fromLine === line;
+    const forwardMatch = this.fromStationName === stationName && this.fromLine === line;
     const reverseMatch =
-      this.isBidirectional &&
-      this.toStationName === stationName &&
-      this.toLine === line;
+      this.isBidirectional && this.toStationName === stationName && this.toLine === line;
     return forwardMatch || reverseMatch;
   }
 
@@ -59,7 +56,10 @@ export class AlternativeMapping {
    * Get the alternative station info for a given source station.
    * Returns the "other side" of the mapping.
    */
-  getAlternativeFor(stationName: string, line: string): {
+  getAlternativeFor(
+    stationName: string,
+    line: string,
+  ): {
     stationName: string;
     line: string;
     walkingMinutes: number;
@@ -75,11 +75,7 @@ export class AlternativeMapping {
         description: this.description,
       };
     }
-    if (
-      this.isBidirectional &&
-      this.toStationName === stationName &&
-      this.toLine === line
-    ) {
+    if (this.isBidirectional && this.toStationName === stationName && this.toLine === line) {
       return {
         stationName: this.fromStationName,
         line: this.fromLine,

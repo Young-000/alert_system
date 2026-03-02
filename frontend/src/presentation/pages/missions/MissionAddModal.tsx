@@ -5,10 +5,26 @@ import type { MissionType, Mission } from '@infrastructure/api';
 // ─── Constants ──────────────────────────────────────
 
 const EMOJI_OPTIONS = [
-  '📖', '📰', '🎧', '📝', '🧘', '💪',
-  '📚', '✏️', '🎵', '📱', '🧠', '🎯',
-  '🏃', '☕', '🍎', '💡', '🔥', '⭐',
-  '🌟', '🎮',
+  '📖',
+  '📰',
+  '🎧',
+  '📝',
+  '🧘',
+  '💪',
+  '📚',
+  '✏️',
+  '🎵',
+  '📱',
+  '🧠',
+  '🎯',
+  '🏃',
+  '☕',
+  '🍎',
+  '💡',
+  '🔥',
+  '⭐',
+  '🌟',
+  '🎮',
 ] as const;
 
 const SUGGESTED_MISSIONS: Record<MissionType, ReadonlyArray<{ emoji: string; title: string }>> = {
@@ -64,13 +80,16 @@ export function MissionAddModal({
     onEscape: isLoading ? undefined : onClose,
   });
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length <= MAX_TITLE_LENGTH) {
-      setTitle(value);
-      if (titleError) setTitleError('');
-    }
-  }, [titleError]);
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value.length <= MAX_TITLE_LENGTH) {
+        setTitle(value);
+        if (titleError) setTitleError('');
+      }
+    },
+    [titleError],
+  );
 
   const handleSuggestionClick = useCallback((suggestion: { emoji: string; title: string }) => {
     setTitle(suggestion.title);
@@ -95,12 +114,15 @@ export function MissionAddModal({
     onSave({ title: trimmed, emoji });
   }, [title, emoji, onSave]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isLoading) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  }, [handleSubmit, isLoading]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !isLoading) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit, isLoading],
+  );
 
   if (!open) return null;
 
@@ -117,11 +139,7 @@ export function MissionAddModal({
       aria-modal="true"
       aria-labelledby="mission-modal-title"
     >
-      <div
-        ref={trapRef}
-        className="msettings-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div ref={trapRef} className="msettings-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="msettings-modal-header">
           <h2 id="mission-modal-title" className="msettings-modal-title">
@@ -151,7 +169,9 @@ export function MissionAddModal({
             미션 이름
           </label>
           <div className="msettings-input-wrap">
-            <span className="msettings-input-emoji" aria-hidden="true">{emoji}</span>
+            <span className="msettings-input-emoji" aria-hidden="true">
+              {emoji}
+            </span>
             <input
               id="mission-title"
               type="text"
@@ -167,7 +187,9 @@ export function MissionAddModal({
           </div>
           <div className="msettings-input-meta">
             {titleError ? (
-              <span className="msettings-input-error" role="alert">{titleError}</span>
+              <span className="msettings-input-error" role="alert">
+                {titleError}
+              </span>
             ) : (
               <span className="msettings-input-hint">&nbsp;</span>
             )}
@@ -220,7 +242,9 @@ export function MissionAddModal({
 
         {/* Error */}
         {error ? (
-          <p className="msettings-modal-error" role="alert">{error}</p>
+          <p className="msettings-modal-error" role="alert">
+            {error}
+          </p>
         ) : null}
 
         {/* Actions */}
@@ -244,8 +268,10 @@ export function MissionAddModal({
                 <span className="spinner spinner-sm" aria-hidden="true" />
                 저장 중...
               </>
+            ) : isEditing ? (
+              '수정'
             ) : (
-              isEditing ? '수정' : '추가'
+              '추가'
             )}
           </button>
         </div>

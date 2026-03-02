@@ -19,7 +19,7 @@ export enum AlertCategory {
 
 // 알림 트리거 방식
 export enum AlertTriggerType {
-  FIXED_TIME = 'fixed_time',           // 고정 시간 (매일 08:00)
+  FIXED_TIME = 'fixed_time', // 고정 시간 (매일 08:00)
   SMART_DEPARTURE = 'smart_departure', // 도착 시간 기준 역산
 }
 
@@ -32,11 +32,11 @@ export interface DepartureAlertConfig {
   triggerType: AlertTriggerType;
 
   // 고정 시간 모드 설정
-  fixedTime?: string;  // "08:00"
+  fixedTime?: string; // "08:00"
 
   // 스마트 모드 설정
-  targetArrivalTime?: string;  // 회사 도착 희망 시간 "09:00"
-  bufferMinutes?: number;      // 여유 시간 (기본 10분)
+  targetArrivalTime?: string; // 회사 도착 희망 시간 "09:00"
+  bufferMinutes?: number; // 여유 시간 (기본 10분)
 
   // 첫 번째 체크포인트 정보 (자동 설정)
   firstCheckpoint?: {
@@ -304,4 +304,3 @@ export class Alert {
     };
   }
 }
-

@@ -1,11 +1,4 @@
-import {
-  IsOptional,
-  IsString,
-  IsBoolean,
-  IsArray,
-  IsEnum,
-  Validate,
-} from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsArray, IsEnum, Validate } from 'class-validator';
 import { AlertType } from '@domain/entities/alert.entity';
 import { CronExpressionValidator } from './create-alert.dto';
 

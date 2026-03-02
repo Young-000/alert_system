@@ -20,13 +20,7 @@ describe('Alert', () => {
     });
 
     it('should create an alert with bus stop id', () => {
-      const alert = new Alert(
-        'user-id',
-        '출근 알림',
-        '0 8 * * *',
-        [AlertType.BUS],
-        'bus-stop-123'
-      );
+      const alert = new Alert('user-id', '출근 알림', '0 8 * * *', [AlertType.BUS], 'bus-stop-123');
 
       expect(alert.busStopId).toBe('bus-stop-123');
     });
@@ -38,7 +32,7 @@ describe('Alert', () => {
         '0 18 * * *',
         [AlertType.SUBWAY],
         undefined,
-        'subway-station-456'
+        'subway-station-456',
       );
 
       expect(alert.subwayStationId).toBe('subway-station-456');
@@ -86,7 +80,7 @@ describe('Alert', () => {
         undefined,
         false,
         undefined,
-        'route-123'
+        'route-123',
       );
 
       expect(alert.category).toBe(AlertCategory.DEPARTURE_REMINDER);

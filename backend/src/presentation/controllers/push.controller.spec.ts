@@ -10,9 +10,10 @@ describe('PushController', () => {
 
   const OWNER_ID = 'user-123';
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   beforeEach(async () => {
     subscriptionRepo = {

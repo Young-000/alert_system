@@ -20,14 +20,16 @@ describe('Mission', () => {
     });
 
     it('빈 제목이면 에러를 던진다', () => {
-      expect(() => Mission.createNew('user-1', '', 'commute'))
-        .toThrow('title은 1~100자여야 합니다');
+      expect(() => Mission.createNew('user-1', '', 'commute')).toThrow(
+        'title은 1~100자여야 합니다',
+      );
     });
 
     it('100자 초과하면 에러를 던진다', () => {
       const longTitle = 'a'.repeat(101);
-      expect(() => Mission.createNew('user-1', longTitle, 'commute'))
-        .toThrow('title은 1~100자여야 합니다');
+      expect(() => Mission.createNew('user-1', longTitle, 'commute')).toThrow(
+        'title은 1~100자여야 합니다',
+      );
     });
   });
 

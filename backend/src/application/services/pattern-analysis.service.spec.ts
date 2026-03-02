@@ -1,6 +1,11 @@
 import { PatternAnalysisService } from './pattern-analysis.service';
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
-import { PatternType, CONFIDENCE_LEVELS, DEFAULT_PATTERNS, UserPattern } from '@domain/entities/user-pattern.entity';
+import {
+  PatternType,
+  CONFIDENCE_LEVELS,
+  DEFAULT_PATTERNS,
+  UserPattern,
+} from '@domain/entities/user-pattern.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 
@@ -70,9 +75,9 @@ describe('PatternAnalysisService', () => {
       // 5 weekday records around 8:00-8:20
       // Use offsets that land on weekdays (Mon Feb 16, then previous Mon-Fri)
       const records = [
-        createRecord(8, 0, 0),     // Mon Feb 16
-        createRecord(8, 10, -7),   // Mon Feb 9
-        createRecord(8, 5, -8),    // Sun... need to be careful
+        createRecord(8, 0, 0), // Mon Feb 16
+        createRecord(8, 10, -7), // Mon Feb 9
+        createRecord(8, 5, -8), // Sun... need to be careful
         createRecord(8, 15, -9),
         createRecord(8, 20, -10),
       ];
@@ -85,10 +90,12 @@ describe('PatternAnalysisService', () => {
         date.setDate(date.getDate() + i); // Mon, Tue, Wed, Thu, Fri
         const departure = new Date(date);
         departure.setHours(8, i * 5, 0, 0); // 08:00, 08:05, 08:10, 08:15, 08:20
-        weekdayRecords.push(new CommuteRecord('user-1', date, CommuteType.MORNING, {
-          id: `rec-${i}`,
-          actualDeparture: departure,
-        }));
+        weekdayRecords.push(
+          new CommuteRecord('user-1', date, CommuteType.MORNING, {
+            id: `rec-${i}`,
+            actualDeparture: departure,
+          }),
+        );
       }
       mockCommuteRepo.findByUserIdAndType.mockResolvedValue(weekdayRecords);
 
@@ -97,10 +104,11 @@ describe('PatternAnalysisService', () => {
       expect(result.confidence).toBe(CONFIDENCE_LEVELS.LEARNING);
       expect(result.sampleCount).toBe(5);
       // Average should be around 08:08 (weighted toward earlier entries)
-      const avgMinutes = parseInt(result.averageTime.split(':')[0]) * 60 +
+      const avgMinutes =
+        parseInt(result.averageTime.split(':')[0]) * 60 +
         parseInt(result.averageTime.split(':')[1]);
       expect(avgMinutes).toBeGreaterThanOrEqual(480); // 08:00
-      expect(avgMinutes).toBeLessThanOrEqual(500);    // 08:20
+      expect(avgMinutes).toBeLessThanOrEqual(500); // 08:20
     });
 
     it('주말 데이터가 5개 미만이면 주말 기본값을 반환한다', async () => {
@@ -124,7 +132,9 @@ describe('PatternAnalysisService', () => {
       const serviceWithoutRepo = new PatternAnalysisService(mockPatternRepo, undefined);
 
       const result = await serviceWithoutRepo.analyzeDeparturePattern(
-        'user-1', CommuteType.MORNING, true,
+        'user-1',
+        CommuteType.MORNING,
+        true,
       );
 
       expect(result.confidence).toBe(CONFIDENCE_LEVELS.COLD_START);
@@ -134,12 +144,17 @@ describe('PatternAnalysisService', () => {
 
   describe('updatePatternFromRecord', () => {
     it('기존 패턴이 있으면 업데이트한다', async () => {
-      const existingPattern = new UserPattern('user-1', PatternType.DEPARTURE_TIME, {
-        averageTime: '08:00',
-        stdDevMinutes: 10,
-        earliestTime: '07:40',
-        latestTime: '08:20',
-      }, { sampleCount: 5 });
+      const existingPattern = new UserPattern(
+        'user-1',
+        PatternType.DEPARTURE_TIME,
+        {
+          averageTime: '08:00',
+          stdDevMinutes: 10,
+          earliestTime: '07:40',
+          latestTime: '08:20',
+        },
+        { sampleCount: 5 },
+      );
 
       mockPatternRepo.findByUserIdTypeAndDay.mockResolvedValue(existingPattern);
       mockCommuteRepo.findByUserIdAndType.mockResolvedValue([
@@ -163,9 +178,7 @@ describe('PatternAnalysisService', () => {
 
     it('기존 패턴이 없으면 새로 생성한다', async () => {
       mockPatternRepo.findByUserIdTypeAndDay.mockResolvedValue(undefined);
-      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([
-        createRecord(8, 0, 0),
-      ]);
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([createRecord(8, 0, 0)]);
 
       const record = createRecord(8, 10, 0);
       await service.updatePatternFromRecord(record);
@@ -222,7 +235,9 @@ describe('PatternAnalysisService', () => {
       const serviceWithoutRepo = new PatternAnalysisService(undefined, mockCommuteRepo);
 
       const result = await serviceWithoutRepo.getOrCreatePattern(
-        'user-1', PatternType.DEPARTURE_TIME, true,
+        'user-1',
+        PatternType.DEPARTURE_TIME,
+        true,
       );
 
       expect(result.userId).toBe('user-1');
@@ -233,7 +248,9 @@ describe('PatternAnalysisService', () => {
       mockPatternRepo.findByUserIdTypeAndDay.mockResolvedValue(undefined);
 
       const result = await service.getOrCreatePattern(
-        'user-1', PatternType.NOTIFICATION_LEAD_TIME, true,
+        'user-1',
+        PatternType.NOTIFICATION_LEAD_TIME,
+        true,
       );
 
       expect(result.patternType).toBe(PatternType.NOTIFICATION_LEAD_TIME);

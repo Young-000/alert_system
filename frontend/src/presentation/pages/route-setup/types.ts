@@ -1,11 +1,11 @@
 import type { RouteType } from '@infrastructure/api/commute-api.client';
 
 export type SetupStep =
-  | 'select-type'      // 출근/퇴근 선택
+  | 'select-type' // 출근/퇴근 선택
   | 'select-transport' // 교통수단 선택
-  | 'select-station'   // 역/정류장 검색
-  | 'ask-more'         // 더 거쳐가나요?
-  | 'confirm';         // 최종 확인
+  | 'select-station' // 역/정류장 검색
+  | 'ask-more' // 더 거쳐가나요?
+  | 'confirm'; // 최종 확인
 
 export type LocalTransportMode = 'subway' | 'bus';
 

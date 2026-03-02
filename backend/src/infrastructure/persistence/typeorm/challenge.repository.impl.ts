@@ -101,10 +101,7 @@ export class TypeormChallengeRepository implements ChallengeRepository {
     return entities.map((e) => this.badgeToDomain(e));
   }
 
-  async findBadgeByUserAndBadgeId(
-    userId: string,
-    badgeId: string,
-  ): Promise<UserBadge | null> {
+  async findBadgeByUserAndBadgeId(userId: string, badgeId: string): Promise<UserBadge | null> {
     const entity = await this.badgeRepo.findOneBy({ userId, badgeId });
     return entity ? this.badgeToDomain(entity) : null;
   }

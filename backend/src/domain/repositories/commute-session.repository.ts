@@ -8,13 +8,13 @@ export interface ICommuteSessionRepository {
   findByUserIdAndStatus(
     userId: string,
     status: SessionStatus,
-    limit?: number
+    limit?: number,
   ): Promise<CommuteSession[]>;
   findInProgressByUserId(userId: string): Promise<CommuteSession | undefined>;
   findByUserIdInDateRange(
     userId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<CommuteSession[]>;
   findByRouteId(routeId: string, limit?: number): Promise<CommuteSession[]>;
   update(session: CommuteSession): Promise<void>;

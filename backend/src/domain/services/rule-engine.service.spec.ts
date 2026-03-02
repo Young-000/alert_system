@@ -3,7 +3,11 @@ import { WeatherConditionEvaluator } from './evaluators/weather-evaluator';
 import { AirQualityConditionEvaluator } from './evaluators/air-quality-evaluator';
 import { TransitConditionEvaluator } from './evaluators/transit-evaluator';
 import { NotificationContext } from '@domain/entities/notification-context.entity';
-import { NotificationRule, RuleCategory, RulePriority } from '@domain/entities/notification-rule.entity';
+import {
+  NotificationRule,
+  RuleCategory,
+  RulePriority,
+} from '@domain/entities/notification-rule.entity';
 import {
   DataSource,
   ComparisonOperator,
@@ -303,8 +307,12 @@ describe('RuleEngine', () => {
       );
 
       const context = createContext({
-        busArrivals: [{ stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 2, remainingStops: 5 }],
-        subwayArrivals: [{ stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 8, destination: '강남' }],
+        busArrivals: [
+          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 2, remainingStops: 5 },
+        ],
+        subwayArrivals: [
+          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 8, destination: '강남' },
+        ],
       });
       const results = ruleEngine.evaluate(context, [rule]);
 

@@ -21,9 +21,7 @@ export function TransportStep({
     <section className="apple-step">
       <div className="apple-step-content">
         <h1 className="apple-question">
-          {selectedStops.length === 0
-            ? '어떤 교통수단을\n타세요?'
-            : '다음은 어떤\n교통수단이에요?'}
+          {selectedStops.length === 0 ? '어떤 교통수단을\n타세요?' : '다음은 어떤\n교통수단이에요?'}
         </h1>
 
         {selectedStops.length > 0 && (
@@ -39,13 +37,31 @@ export function TransportStep({
             className={`transport-option ${currentTransport === 'subway' ? 'selected' : ''}`}
             onClick={() => onTransportChange('subway')}
           >
-            <span className="transport-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
+            <span className="transport-icon" aria-hidden="true">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="4" y="3" width="16" height="18" rx="2" />
+                <line x1="4" y1="9" x2="20" y2="9" />
+                <line x1="4" y1="15" x2="20" y2="15" />
+                <line x1="10" y1="3" x2="10" y2="21" />
+              </svg>
+            </span>
             <div className="transport-text">
               <span className="transport-label">지하철</span>
               <span className="transport-desc">역 이름으로 검색</span>
             </div>
             {currentTransport === 'subway' && (
-              <span className="transport-check" aria-hidden="true">✓</span>
+              <span className="transport-check" aria-hidden="true">
+                ✓
+              </span>
             )}
           </button>
 
@@ -56,13 +72,31 @@ export function TransportStep({
             className={`transport-option ${currentTransport === 'bus' ? 'selected' : ''}`}
             onClick={() => onTransportChange('bus')}
           >
-            <span className="transport-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg></span>
+            <span className="transport-icon" aria-hidden="true">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="14" rx="2" />
+                <path d="M3 10h18" />
+                <path d="M7 21l2-4" />
+                <path d="M17 21l-2-4" />
+              </svg>
+            </span>
             <div className="transport-text">
               <span className="transport-label">버스</span>
               <span className="transport-desc">정류장으로 검색</span>
             </div>
             {currentTransport === 'bus' && (
-              <span className="transport-check" aria-hidden="true">✓</span>
+              <span className="transport-check" aria-hidden="true">
+                ✓
+              </span>
             )}
           </button>
         </div>

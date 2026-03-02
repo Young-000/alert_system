@@ -87,7 +87,9 @@ function MissionCard({
   );
 
   return (
-    <div className={`msettings-card ${!mission.isActive ? 'inactive' : ''} ${isToggling ? 'toggling' : ''}`}>
+    <div
+      className={`msettings-card ${!mission.isActive ? 'inactive' : ''} ${isToggling ? 'toggling' : ''}`}
+    >
       {/* Reorder buttons */}
       <div className="msettings-card-reorder">
         <button
@@ -112,7 +114,9 @@ function MissionCard({
 
       {/* Mission info */}
       <div className="msettings-card-info">
-        <span className="msettings-card-emoji" aria-hidden="true">{mission.emoji}</span>
+        <span className="msettings-card-emoji" aria-hidden="true">
+          {mission.emoji}
+        </span>
         <span className="msettings-card-title">{mission.title}</span>
       </div>
 
@@ -220,13 +224,17 @@ function MissionTypeSection({
         className="msettings-add-btn"
         onClick={() => onAdd(type)}
         disabled={isMaxReached}
-        aria-label={isMaxReached ? `${config.label} 최대 ${MAX_MISSIONS_PER_TYPE}개` : `${config.label} 추가`}
+        aria-label={
+          isMaxReached ? `${config.label} 최대 ${MAX_MISSIONS_PER_TYPE}개` : `${config.label} 추가`
+        }
       >
         {isMaxReached ? (
           <span className="msettings-add-label">최대 {MAX_MISSIONS_PER_TYPE}개까지 가능해요</span>
         ) : (
           <>
-            <span className="msettings-add-icon" aria-hidden="true">+</span>
+            <span className="msettings-add-icon" aria-hidden="true">
+              +
+            </span>
             <span className="msettings-add-label">미션 추가</span>
           </>
         )}
@@ -242,12 +250,7 @@ export function MissionSettingsPage(): JSX.Element {
   const navigate = useNavigate();
 
   // Queries
-  const {
-    data: missions,
-    isLoading,
-    error,
-    refetch,
-  } = useMissionsQuery();
+  const { data: missions, isLoading, error, refetch } = useMissionsQuery();
 
   // Mutations
   const createMutation = useCreateMissionMutation();
@@ -274,9 +277,7 @@ export function MissionSettingsPage(): JSX.Element {
     onEscape: deleteMutation.isPending ? undefined : handleCancelDelete,
   });
 
-  const togglingId = toggleMutation.isPending
-    ? (toggleMutation.variables ?? null)
-    : null;
+  const togglingId = toggleMutation.isPending ? (toggleMutation.variables ?? null) : null;
 
   // Derived: group missions by type, sorted by sortOrder
   const commuteMissions = useMemo(() => {
@@ -394,7 +395,9 @@ export function MissionSettingsPage(): JSX.Element {
     return (
       <main className="page msettings-page">
         <div className="msettings-auth-required">
-          <span className="msettings-auth-icon" aria-hidden="true">🔒</span>
+          <span className="msettings-auth-icon" aria-hidden="true">
+            🔒
+          </span>
           <p>로그인이 필요한 기능이에요</p>
           <button type="button" className="btn-primary" onClick={() => navigate('/login')}>
             로그인
@@ -449,11 +452,7 @@ export function MissionSettingsPage(): JSX.Element {
         </header>
         <div className="msettings-error" role="alert">
           <p>데이터를 불러오는 데 실패했습니다.</p>
-          <button
-            type="button"
-            className="btn-retry"
-            onClick={() => void refetch()}
-          >
+          <button type="button" className="btn-retry" onClick={() => void refetch()}>
             다시 시도
           </button>
         </div>
@@ -537,11 +536,15 @@ export function MissionSettingsPage(): JSX.Element {
               미션 삭제
             </h2>
             <p className="msettings-confirm-text">
-              <span className="msettings-confirm-emoji" aria-hidden="true">{deletingMission.emoji}</span>
+              <span className="msettings-confirm-emoji" aria-hidden="true">
+                {deletingMission.emoji}
+              </span>
               &quot;{deletingMission.title}&quot;을 삭제할까요?
             </p>
             {deleteError ? (
-              <p className="msettings-confirm-error" role="alert">{deleteError}</p>
+              <p className="msettings-confirm-error" role="alert">
+                {deleteError}
+              </p>
             ) : null}
             <div className="msettings-confirm-actions">
               <button

@@ -12,7 +12,7 @@ import type { Mocked, MockedFunction } from 'vitest';
 // Mock navigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
-  ...await vi.importActual('react-router-dom'),
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
 }));
 
@@ -41,7 +41,7 @@ function renderPage(): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
       <CommuteDashboardPage />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -67,9 +67,30 @@ const mockStatsWithData = {
     },
   ],
   dayOfWeekStats: [
-    { dayOfWeek: 1, dayName: '월요일', averageDuration: 45, averageWaitTime: 3, averageDelay: 1, sampleCount: 2 },
-    { dayOfWeek: 2, dayName: '화요일', averageDuration: 38, averageWaitTime: 2, averageDelay: 0, sampleCount: 2 },
-    { dayOfWeek: 3, dayName: '수요일', averageDuration: 42, averageWaitTime: 3, averageDelay: 1, sampleCount: 1 },
+    {
+      dayOfWeek: 1,
+      dayName: '월요일',
+      averageDuration: 45,
+      averageWaitTime: 3,
+      averageDelay: 1,
+      sampleCount: 2,
+    },
+    {
+      dayOfWeek: 2,
+      dayName: '화요일',
+      averageDuration: 38,
+      averageWaitTime: 2,
+      averageDelay: 0,
+      sampleCount: 2,
+    },
+    {
+      dayOfWeek: 3,
+      dayName: '수요일',
+      averageDuration: 42,
+      averageWaitTime: 3,
+      averageDelay: 1,
+      sampleCount: 1,
+    },
   ],
   weatherImpact: [],
   insights: ['화요일이 평균적으로 가장 빠릅니다'],
@@ -165,7 +186,9 @@ describe('CommuteDashboardPage', () => {
     await waitFor(() => {
       expect(screen.getByText('아직 기록이 없어요')).toBeInTheDocument();
     });
-    expect(screen.getByText('출퇴근 트래킹을 시작해보세요. 이동 시간을 기록하면 통계를 볼 수 있어요.')).toBeInTheDocument();
+    expect(
+      screen.getByText('출퇴근 트래킹을 시작해보세요. 이동 시간을 기록하면 통계를 볼 수 있어요.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('트래킹 시작하기')).toBeInTheDocument();
   });
 

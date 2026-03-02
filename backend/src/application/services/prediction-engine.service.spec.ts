@@ -1,7 +1,12 @@
 import { PredictionEngineService } from './prediction-engine.service';
 import { FeatureEngineeringService } from './feature-engineering.service';
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
-import { PatternType, UserPattern, DayOfWeekDepartureValue, WeatherSensitivityValue } from '@domain/entities/user-pattern.entity';
+import {
+  PatternType,
+  UserPattern,
+  DayOfWeekDepartureValue,
+  WeatherSensitivityValue,
+} from '@domain/entities/user-pattern.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 
@@ -26,7 +31,12 @@ describe('PredictionEngineService', () => {
     });
   };
 
-  const generateRecords = (count: number, baseHour = 8, baseMinute = 10, weather = 'clear'): CommuteRecord[] => {
+  const generateRecords = (
+    count: number,
+    baseHour = 8,
+    baseMinute = 10,
+    weather = 'clear',
+  ): CommuteRecord[] => {
     const records: CommuteRecord[] = [];
     let current = new Date('2026-02-02');
     let generated = 0;
@@ -68,11 +78,7 @@ describe('PredictionEngineService', () => {
 
     mockPatternRepo.findByUserIdAndType.mockResolvedValue(undefined);
 
-    service = new PredictionEngineService(
-      featureService,
-      mockPatternRepo,
-      mockCommuteRepo,
-    );
+    service = new PredictionEngineService(featureService, mockPatternRepo, mockCommuteRepo);
   });
 
   describe('determineTier', () => {
@@ -156,7 +162,7 @@ describe('PredictionEngineService', () => {
 
       expect(result.tier).toBe('day_aware');
       // Should have a day_of_week factor
-      const dayFactor = result.factors.find(f => f.type === 'day_of_week');
+      const dayFactor = result.factors.find((f) => f.type === 'day_of_week');
       // The factor might or might not be present depending on if impact >= 1
       expect(result.departureTime).toBeDefined();
     });
@@ -188,7 +194,7 @@ describe('PredictionEngineService', () => {
       const result = await service.predict('user-1', { weather: 'rain' });
 
       expect(result.tier).toBe('weather_aware');
-      const weatherFactor = result.factors.find(f => f.type === 'weather');
+      const weatherFactor = result.factors.find((f) => f.type === 'weather');
       expect(weatherFactor).toBeDefined();
       expect(weatherFactor!.impact).toBeLessThan(0); // Earlier departure
     });
@@ -198,7 +204,7 @@ describe('PredictionEngineService', () => {
 
       const result = await service.predict('user-1', { transitDelayMinutes: 12 });
 
-      const delayFactor = result.factors.find(f => f.type === 'transit_delay');
+      const delayFactor = result.factors.find((f) => f.type === 'transit_delay');
       expect(delayFactor).toBeDefined();
       expect(delayFactor!.impact).toBe(-12);
     });
@@ -208,7 +214,7 @@ describe('PredictionEngineService', () => {
 
       const result = await service.predict('user-1', { transitDelayMinutes: 5 });
 
-      const delayFactor = result.factors.find(f => f.type === 'transit_delay');
+      const delayFactor = result.factors.find((f) => f.type === 'transit_delay');
       expect(delayFactor).toBeUndefined();
     });
 
@@ -235,7 +241,7 @@ describe('PredictionEngineService', () => {
 
       const result = await service.predict('user-1', { weather: 'rain' });
 
-      const weatherFactor = result.factors.find(f => f.type === 'weather');
+      const weatherFactor = result.factors.find((f) => f.type === 'weather');
       expect(weatherFactor).toBeDefined();
     });
   });

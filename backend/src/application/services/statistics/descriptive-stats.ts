@@ -8,10 +8,7 @@ export function mean(values: readonly number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-export function weightedMean(
-  values: readonly number[],
-  weights: readonly number[],
-): number {
+export function weightedMean(values: readonly number[], weights: readonly number[]): number {
   if (values.length === 0 || weights.length === 0) return 0;
   const len = Math.min(values.length, weights.length);
 
@@ -68,10 +65,7 @@ export function median(values: readonly number[]): number {
  * Exponential decay weighted mean — most recent item (index 0) has highest weight.
  * weight_i = decayFactor ^ i
  */
-export function exponentialWeightedMean(
-  values: readonly number[],
-  decayFactor = 0.9,
-): number {
+export function exponentialWeightedMean(values: readonly number[], decayFactor = 0.9): number {
   if (values.length === 0) return 0;
 
   const weights = values.map((_, i) => decayFactor ** i);

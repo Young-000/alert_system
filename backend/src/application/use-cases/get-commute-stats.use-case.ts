@@ -29,7 +29,15 @@ interface CheckpointInfo {
 
 @Injectable()
 export class GetCommuteStatsUseCase {
-  private readonly dayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+  private readonly dayNames = [
+    '일요일',
+    '월요일',
+    '화요일',
+    '수요일',
+    '목요일',
+    '금요일',
+    '토요일',
+  ];
 
   constructor(
     @Optional()
@@ -53,11 +61,11 @@ export class GetCommuteStatsUseCase {
     const sessions = await this.sessionRepository.findByUserIdInDateRange(
       userId,
       startDate,
-      endDate
+      endDate,
     );
 
     const completedSessions = sessions.filter(
-      (s) => s.status === SessionStatus.COMPLETED && s.totalDurationMinutes
+      (s) => s.status === SessionStatus.COMPLETED && s.totalDurationMinutes,
     );
 
     if (completedSessions.length === 0) {
@@ -66,7 +74,7 @@ export class GetCommuteStatsUseCase {
 
     // Calculate overall stats
     const overallAverageDuration = this.average(
-      completedSessions.map((s) => s.totalDurationMinutes!)
+      completedSessions.map((s) => s.totalDurationMinutes!),
     );
     const overallAverageWaitTime = this.average(completedSessions.map((s) => s.totalWaitMinutes));
     const overallAverageDelay = this.average(completedSessions.map((s) => s.totalDelayMinutes));
@@ -87,7 +95,7 @@ export class GetCommuteStatsUseCase {
       completedSessions,
       routeStats,
       dayOfWeekStats,
-      weatherImpact
+      weatherImpact,
     );
 
     return {
@@ -119,9 +127,7 @@ export class GetCommuteStatsUseCase {
     const routeStats: RouteStatsDto[] = [];
 
     // Batch-fetch all routes to avoid N+1 query
-    const allRoutes = await this.routeRepository.findByUserId(
-      sessions[0]?.userId ?? ''
-    );
+    const allRoutes = await this.routeRepository.findByUserId(sessions[0]?.userId ?? '');
     const routeMap = new Map(allRoutes.map((r) => [r.id, r]));
 
     for (const [routeId, routeSessions] of sessionsByRoute) {
@@ -145,13 +151,15 @@ export class GetCommuteStatsUseCase {
 
       // Find bottleneck and most variable checkpoints
       const bottleneckCheckpoint = checkpointStats.reduce(
-        (worst, current) => (current.averageDelay > (worst?.averageDelay ?? -Infinity) ? current : worst),
-        checkpointStats[0]
+        (worst, current) =>
+          current.averageDelay > (worst?.averageDelay ?? -Infinity) ? current : worst,
+        checkpointStats[0],
       );
 
       const mostVariableCheckpoint = checkpointStats.reduce(
-        (worst, current) => (current.variability > (worst?.variability ?? -Infinity) ? current : worst),
-        checkpointStats[0]
+        (worst, current) =>
+          current.variability > (worst?.variability ?? -Infinity) ? current : worst,
+        checkpointStats[0],
       );
 
       const avgDuration = this.average(routeSessions.map((s) => s.totalDurationMinutes!));
@@ -177,7 +185,7 @@ export class GetCommuteStatsUseCase {
 
   private calculateCheckpointStats(
     sessions: CommuteSession[],
-    checkpointInfoMap: Map<string, CheckpointInfo>
+    checkpointInfoMap: Map<string, CheckpointInfo>,
   ): CheckpointStatsDto[] {
     // Group records by checkpoint
     const recordsByCheckpoint = new Map<string, CheckpointRecord[]>();
@@ -307,8 +315,7 @@ export class GetCommuteStatsUseCase {
         averageDuration: Math.round(avgDuration),
         averageDelay: Math.round(avgDelay),
         sampleCount: weatherSessions.length,
-        comparedToNormal:
-          baselineDuration > 0 ? Math.round(avgDuration - baselineDuration) : 0,
+        comparedToNormal: baselineDuration > 0 ? Math.round(avgDuration - baselineDuration) : 0,
       });
     }
 
@@ -319,32 +326,32 @@ export class GetCommuteStatsUseCase {
     sessions: CommuteSession[],
     routeStats: RouteStatsDto[],
     dayOfWeekStats: DayOfWeekStatsDto[],
-    weatherImpact: WeatherImpactDto[]
+    weatherImpact: WeatherImpactDto[],
   ): string[] {
     const insights: string[] = [];
 
     // Find the slowest day of the week
     const weekdayStats = dayOfWeekStats.filter(
-      (d) => d.sampleCount > 0 && d.dayOfWeek >= 1 && d.dayOfWeek <= 5
+      (d) => d.sampleCount > 0 && d.dayOfWeek >= 1 && d.dayOfWeek <= 5,
     );
     if (weekdayStats.length > 0) {
       const slowestDay = weekdayStats.reduce((slowest, current) =>
-        current.averageDuration > slowest.averageDuration ? current : slowest
+        current.averageDuration > slowest.averageDuration ? current : slowest,
       );
       const fastestDay = weekdayStats.reduce((fastest, current) =>
-        current.averageDuration < fastest.averageDuration ? current : fastest
+        current.averageDuration < fastest.averageDuration ? current : fastest,
       );
 
       if (slowestDay.averageDuration - fastestDay.averageDuration >= 3) {
         insights.push(
-          `${slowestDay.dayName}이 평균 ${slowestDay.averageDuration - fastestDay.averageDuration}분 더 오래 걸려요`
+          `${slowestDay.dayName}이 평균 ${slowestDay.averageDuration - fastestDay.averageDuration}분 더 오래 걸려요`,
         );
       }
     }
 
     // Find weather impact
     const rainyWeather = weatherImpact.find(
-      (w) => w.condition === '비' || w.condition === '소나기'
+      (w) => w.condition === '비' || w.condition === '소나기',
     );
     if (rainyWeather && rainyWeather.comparedToNormal >= 3) {
       insights.push(`비 오는 날 평균 ${rainyWeather.comparedToNormal}분 더 걸려요`);
@@ -356,7 +363,7 @@ export class GetCommuteStatsUseCase {
         const bottleneck = route.checkpointStats.find((c) => c.isBottleneck);
         if (bottleneck && bottleneck.averageDelay >= 2) {
           insights.push(
-            `"${route.routeName}" 경로에서 "${bottleneck.checkpointName}" 구간이 가장 지연이 많아요 (평균 +${bottleneck.averageDelay}분)`
+            `"${route.routeName}" 경로에서 "${bottleneck.checkpointName}" 구간이 가장 지연이 많아요 (평균 +${bottleneck.averageDelay}분)`,
           );
         }
       }
@@ -364,11 +371,11 @@ export class GetCommuteStatsUseCase {
       // Find high variability checkpoints
       if (route.mostVariableCheckpoint) {
         const variable = route.checkpointStats.reduce((v, c) =>
-          c.variability > v.variability ? c : v
+          c.variability > v.variability ? c : v,
         );
         if (variable.variability >= 3) {
           insights.push(
-            `"${variable.checkpointName}" 구간은 소요 시간 변동이 커요 (±${variable.variability}분)`
+            `"${variable.checkpointName}" 구간은 소요 시간 변동이 커요 (±${variable.variability}분)`,
           );
         }
       }
@@ -376,7 +383,7 @@ export class GetCommuteStatsUseCase {
       // Wait time insights
       if (route.waitTimePercentage >= 25) {
         insights.push(
-          `"${route.routeName}" 경로의 ${route.waitTimePercentage}%가 대기/환승 시간이에요`
+          `"${route.routeName}" 경로의 ${route.waitTimePercentage}%가 대기/환승 시간이에요`,
         );
       }
     }
@@ -387,7 +394,7 @@ export class GetCommuteStatsUseCase {
         ? Math.round(
             (this.average(sessions.map((s) => s.totalWaitMinutes)) /
               this.average(sessions.map((s) => s.totalDurationMinutes || 0))) *
-              100
+              100,
           )
         : 0;
 

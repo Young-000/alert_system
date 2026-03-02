@@ -22,6 +22,4 @@ export interface ISmartDepartureSnapshotRepository {
   expireOldSnapshots(beforeDate: string): Promise<number>;
 }
 
-export const SMART_DEPARTURE_SNAPSHOT_REPOSITORY = Symbol(
-  'ISmartDepartureSnapshotRepository',
-);
+export const SMART_DEPARTURE_SNAPSHOT_REPOSITORY = Symbol('ISmartDepartureSnapshotRepository');

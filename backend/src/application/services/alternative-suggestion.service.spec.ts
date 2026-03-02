@@ -40,22 +40,17 @@ describe('AlternativeSuggestionService', () => {
     };
   }
 
-  function createMapping(overrides?: Partial<ConstructorParameters<typeof AlternativeMapping>[5]>): AlternativeMapping {
-    return new AlternativeMapping(
-      '강남',
-      '2호선',
-      '신논현',
-      '9호선',
-      5,
-      {
-        id: 'map-1',
-        walkingDistanceMeters: 400,
-        description: '강남역 5번 출구 → 신논현역 4번 출구',
-        isBidirectional: true,
-        isActive: true,
-        ...overrides,
-      },
-    );
+  function createMapping(
+    overrides?: Partial<ConstructorParameters<typeof AlternativeMapping>[5]>,
+  ): AlternativeMapping {
+    return new AlternativeMapping('강남', '2호선', '신논현', '9호선', 5, {
+      id: 'map-1',
+      walkingDistanceMeters: 400,
+      description: '강남역 5번 출구 → 신논현역 4번 출구',
+      isBidirectional: true,
+      isActive: true,
+      ...overrides,
+    });
   }
 
   describe('findAlternatives', () => {

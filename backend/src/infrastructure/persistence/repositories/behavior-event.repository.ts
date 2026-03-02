@@ -32,26 +32,26 @@ export class BehaviorEventRepositoryImpl implements IBehaviorEventRepository {
       order: { timestamp: 'DESC' },
       take: limit,
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserIdAndType(
     userId: string,
     eventType: BehaviorEventType,
-    limit = 100
+    limit = 100,
   ): Promise<BehaviorEvent[]> {
     const entities = await this.repository.find({
       where: { userId, eventType },
       order: { timestamp: 'DESC' },
       take: limit,
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
   async findByUserIdInDateRange(
     userId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<BehaviorEvent[]> {
     const entities = await this.repository.find({
       where: {
@@ -60,13 +60,10 @@ export class BehaviorEventRepositoryImpl implements IBehaviorEventRepository {
       },
       order: { timestamp: 'DESC' },
     });
-    return entities.map(e => this.toDomain(e));
+    return entities.map((e) => this.toDomain(e));
   }
 
-  async countByUserIdAndType(
-    userId: string,
-    eventType: BehaviorEventType
-  ): Promise<number> {
+  async countByUserIdAndType(userId: string, eventType: BehaviorEventType): Promise<number> {
     return this.repository.count({
       where: { userId, eventType },
     });
@@ -99,15 +96,11 @@ export class BehaviorEventRepositoryImpl implements IBehaviorEventRepository {
   }
 
   private toDomain(entity: BehaviorEventEntity): BehaviorEvent {
-    return new BehaviorEvent(
-      entity.userId,
-      entity.eventType as BehaviorEventType,
-      {
-        id: entity.id,
-        alertId: entity.alertId,
-        timestamp: entity.timestamp,
-        metadata: entity.metadata as BehaviorEventMetadata,
-      }
-    );
+    return new BehaviorEvent(entity.userId, entity.eventType as BehaviorEventType, {
+      id: entity.id,
+      alertId: entity.alertId,
+      timestamp: entity.timestamp,
+      metadata: entity.metadata as BehaviorEventMetadata,
+    });
   }
 }

@@ -74,21 +74,35 @@ export class GetStreakUseCase {
     const milestones: MilestoneInfoDto[] = MILESTONES.map((m) => {
       const achieved = streak!.milestonesAchieved.includes(m.type);
       if (achieved) {
-        return { type: m.type, label: m.label, achieved: true, badge: m.badge, badgeName: m.badgeName };
+        return {
+          type: m.type,
+          label: m.label,
+          achieved: true,
+          badge: m.badge,
+          badgeName: m.badgeName,
+        };
       }
       const daysRemaining = Math.max(0, m.days - streak!.currentStreak);
       const progress = Math.min(1, streak!.currentStreak / m.days);
-      return { type: m.type, label: m.label, achieved: false, daysRemaining, progress, badge: m.badge, badgeName: m.badgeName };
-    });
-
-    const earnedBadges: StreakBadgeDto[] = MILESTONES
-      .filter((m) => streak!.milestonesAchieved.includes(m.type))
-      .map((m) => ({
+      return {
         type: m.type,
+        label: m.label,
+        achieved: false,
+        daysRemaining,
+        progress,
         badge: m.badge,
         badgeName: m.badgeName,
-        label: m.label,
-      }));
+      };
+    });
+
+    const earnedBadges: StreakBadgeDto[] = MILESTONES.filter((m) =>
+      streak!.milestonesAchieved.includes(m.type),
+    ).map((m) => ({
+      type: m.type,
+      badge: m.badge,
+      badgeName: m.badgeName,
+      label: m.label,
+    }));
 
     return {
       milestones,

@@ -41,11 +41,7 @@ export class BriefingController {
     const lat = query.lat ? parseFloat(query.lat) : undefined;
     const lng = query.lng ? parseFloat(query.lng) : undefined;
 
-    const widgetData = await this.widgetDataService.getData(
-      req.user.userId,
-      lat,
-      lng,
-    );
+    const widgetData = await this.widgetDataService.getData(req.user.userId, lat, lng);
 
     const timeContext = BriefingAdviceService.getTimeContext();
 

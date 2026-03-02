@@ -11,20 +11,18 @@ export interface TransitArrivalInfo {
 
 export function getActiveRoute(
   routes: RouteResponse[],
-  forceType?: 'auto' | 'morning' | 'evening'
+  forceType?: 'auto' | 'morning' | 'evening',
 ): RouteResponse | null {
   const hour = new Date().getHours();
-  const isMorning = forceType === 'auto' || !forceType
-    ? hour < 14
-    : forceType === 'morning';
+  const isMorning = forceType === 'auto' || !forceType ? hour < 14 : forceType === 'morning';
 
-  const preferred = routes.find(r =>
-    r.isPreferred && (isMorning ? r.routeType === 'morning' : r.routeType === 'evening')
+  const preferred = routes.find(
+    (r) => r.isPreferred && (isMorning ? r.routeType === 'morning' : r.routeType === 'evening'),
   );
   if (preferred) return preferred;
 
-  const timeMatch = routes.find(r =>
-    isMorning ? r.routeType === 'morning' : r.routeType === 'evening'
+  const timeMatch = routes.find((r) =>
+    isMorning ? r.routeType === 'morning' : r.routeType === 'evening',
   );
   if (timeMatch) return timeMatch;
 

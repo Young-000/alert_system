@@ -23,17 +23,13 @@ export class RuleEngine implements IRuleEngine {
     private airQualityEvaluator: AirQualityConditionEvaluator,
     private transitEvaluator: TransitConditionEvaluator,
   ) {
-    this.evaluators = [
-      this.weatherEvaluator,
-      this.airQualityEvaluator,
-      this.transitEvaluator,
-    ];
+    this.evaluators = [this.weatherEvaluator, this.airQualityEvaluator, this.transitEvaluator];
   }
 
   evaluate(context: NotificationContext, rules: NotificationRule[]): Recommendation[] {
     const recommendations: Recommendation[] = [];
 
-    for (const rule of rules.filter(r => r.enabled)) {
+    for (const rule of rules.filter((r) => r.enabled)) {
       if (this.evaluateConditions(context, rule.conditions)) {
         const message = this.buildMessage(rule.messageTemplate, context);
         recommendations.push({
@@ -76,7 +72,7 @@ export class RuleEngine implements IRuleEngine {
   }
 
   private evaluateSingleCondition(context: NotificationContext, condition: RuleCondition): boolean {
-    const evaluator = this.evaluators.find(e => e.canEvaluate(condition.dataSource));
+    const evaluator = this.evaluators.find((e) => e.canEvaluate(condition.dataSource));
     if (!evaluator) {
       return false;
     }
@@ -88,7 +84,10 @@ export class RuleEngine implements IRuleEngine {
 
     // Weather variables
     if (context.weather) {
-      message = message.replace(/\{\{weather\.temperature\}\}/g, String(context.weather.temperature));
+      message = message.replace(
+        /\{\{weather\.temperature\}\}/g,
+        String(context.weather.temperature),
+      );
       message = message.replace(/\{\{weather\.condition\}\}/g, context.weather.condition);
       message = message.replace(/\{\{weather\.humidity\}\}/g, String(context.weather.humidity));
       message = message.replace(/\{\{weather\.windSpeed\}\}/g, String(context.weather.windSpeed));
@@ -112,7 +111,10 @@ export class RuleEngine implements IRuleEngine {
 
     if (context.subwayArrivals && context.subwayArrivals.length > 0) {
       const firstSubway = context.subwayArrivals[0];
-      message = message.replace(/\{\{subwayArrival\.arrivalTime\}\}/g, String(firstSubway.arrivalTime));
+      message = message.replace(
+        /\{\{subwayArrival\.arrivalTime\}\}/g,
+        String(firstSubway.arrivalTime),
+      );
       message = message.replace(/\{\{subwayArrival\.destination\}\}/g, firstSubway.destination);
     }
 
@@ -152,7 +154,10 @@ export class RuleEngine implements IRuleEngine {
     }
   }
 
-  private extractMetadata(context: NotificationContext, rule: NotificationRule): Record<string, unknown> {
+  private extractMetadata(
+    context: NotificationContext,
+    rule: NotificationRule,
+  ): Record<string, unknown> {
     const metadata: Record<string, unknown> = {
       ruleCategory: rule.category,
       evaluatedAt: context.timestamp.toISOString(),

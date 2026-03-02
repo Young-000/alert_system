@@ -1,6 +1,10 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ISubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
-import { CommuteRoute, CheckpointType, RouteCheckpoint } from '@domain/entities/commute-route.entity';
+import {
+  CommuteRoute,
+  CheckpointType,
+  RouteCheckpoint,
+} from '@domain/entities/commute-route.entity';
 import {
   DelaySegmentDto,
   SegmentDelayStatus,
@@ -67,9 +71,7 @@ export class RouteDelayCheckService {
     );
   }
 
-  private async checkCheckpointDelay(
-    checkpoint: RouteCheckpoint,
-  ): Promise<DelaySegmentDto> {
+  private async checkCheckpointDelay(checkpoint: RouteCheckpoint): Promise<DelaySegmentDto> {
     const now = new Date().toISOString();
     const stationName = checkpoint.name.replace(/역$/, '');
 
@@ -100,9 +102,7 @@ export class RouteDelayCheckService {
       }
 
       // Get the shortest arrival time (in seconds, convert to minutes)
-      const shortestArrivalSeconds = Math.min(
-        ...matchingArrivals.map((a) => a.arrivalTime),
-      );
+      const shortestArrivalSeconds = Math.min(...matchingArrivals.map((a) => a.arrivalTime));
       const estimatedWaitMinutes = Math.ceil(shortestArrivalSeconds / 60);
       const expectedWaitMinutes = checkpoint.expectedWaitTime;
       const delayMinutes = Math.max(0, estimatedWaitMinutes - expectedWaitMinutes);
@@ -153,7 +153,9 @@ export class RouteDelayCheckService {
     // Also handle 3-digit patterns for lines >= 10
     const expectedLineIdAlt = `10${lineNum}`;
 
-    return lineId === expectedLineId || lineId === expectedLineIdAlt || lineId.endsWith(String(lineNum));
+    return (
+      lineId === expectedLineId || lineId === expectedLineIdAlt || lineId.endsWith(String(lineNum))
+    );
   }
 
   private categorizeDelay(delayMinutes: number): SegmentDelayStatus {

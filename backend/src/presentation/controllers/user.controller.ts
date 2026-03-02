@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, Param, Patch, Request, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Request,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateUserUseCase } from '@application/use-cases/create-user.use-case';
 import { GetUserUseCase } from '@application/use-cases/get-user.use-case';
 import { UpdateUserLocationUseCase } from '@application/use-cases/update-user-location.use-case';
@@ -24,7 +33,10 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest): Promise<UserResponseDto> {
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<UserResponseDto> {
     // 자신의 정보만 조회 가능 (Authorization)
     if (req.user.userId !== id) {
       throw new ForbiddenException('다른 사용자의 정보를 조회할 수 없습니다.');

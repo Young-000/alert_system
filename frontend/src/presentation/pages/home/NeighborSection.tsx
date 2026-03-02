@@ -16,14 +16,14 @@ export function NeighborSection({ routeId }: NeighborSectionProps): JSX.Element 
   return (
     <section className="neighbor-section" aria-label="경로 이웃 정보">
       <div className="neighbor-header">
-        <span className="neighbor-icon" aria-hidden="true">&#x1F465;</span>
+        <span className="neighbor-icon" aria-hidden="true">
+          &#x1F465;
+        </span>
         <span className="neighbor-title">경로 이웃</span>
       </div>
 
       {data.dataStatus === 'insufficient' ? (
-        <p className="neighbor-insufficient">
-          아직 이웃 데이터가 부족해요
-        </p>
+        <p className="neighbor-insufficient">아직 이웃 데이터가 부족해요</p>
       ) : (
         <>
           <p className="neighbor-count">
@@ -38,8 +38,7 @@ export function NeighborSection({ routeId }: NeighborSectionProps): JSX.Element 
 
               {data.myAvgDurationMinutes != null && data.diffMinutes != null && (
                 <span className="neighbor-comparison-item">
-                  내 평균 {data.myAvgDurationMinutes}분
-                  {' '}
+                  내 평균 {data.myAvgDurationMinutes}분{' '}
                   <span
                     className={`neighbor-diff ${
                       data.diffMinutes < 0
@@ -49,7 +48,8 @@ export function NeighborSection({ routeId }: NeighborSectionProps): JSX.Element 
                           : ''
                     }`}
                   >
-                    ({data.diffMinutes > 0 ? '+' : ''}{data.diffMinutes}분)
+                    ({data.diffMinutes > 0 ? '+' : ''}
+                    {data.diffMinutes}분)
                   </span>
                 </span>
               )}

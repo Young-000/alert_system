@@ -7,10 +7,7 @@ import {
   FindAllOptions,
   InsightSortBy,
 } from '@domain/repositories/regional-insight.repository';
-import {
-  RegionalInsight,
-  PeakHourDistribution,
-} from '@domain/entities/regional-insight.entity';
+import { RegionalInsight, PeakHourDistribution } from '@domain/entities/regional-insight.entity';
 
 @Injectable()
 export class RegionalInsightRepositoryImpl implements IRegionalInsightRepository {
@@ -78,11 +75,16 @@ export class RegionalInsightRepositoryImpl implements IRegionalInsightRepository
 
   private toSortColumn(sortBy?: InsightSortBy): string {
     switch (sortBy) {
-      case 'userCount': return 'userCount';
-      case 'sessionCount': return 'sessionCount';
-      case 'avgDuration': return 'avgDurationMinutes';
-      case 'regionName': return 'regionName';
-      default: return 'sessionCount';
+      case 'userCount':
+        return 'userCount';
+      case 'sessionCount':
+        return 'sessionCount';
+      case 'avgDuration':
+        return 'avgDurationMinutes';
+      case 'regionName':
+        return 'regionName';
+      default:
+        return 'sessionCount';
     }
   }
 

@@ -26,7 +26,7 @@ export class UserPlace {
       isActive?: boolean;
       createdAt?: Date;
       updatedAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.userId = userId;
@@ -47,7 +47,7 @@ export class UserPlace {
     label: string,
     latitude: number,
     longitude: number,
-    options?: { address?: string; radiusM?: number }
+    options?: { address?: string; radiusM?: number },
   ): UserPlace {
     return new UserPlace(userId, placeType, label, latitude, longitude, {
       address: options?.address,
@@ -76,26 +76,19 @@ export class UserPlace {
         isActive: this.isActive,
         createdAt: this.createdAt,
         updatedAt: new Date(),
-      }
+      },
     );
   }
 
   toggleActive(): UserPlace {
-    return new UserPlace(
-      this.userId,
-      this.placeType,
-      this.label,
-      this.latitude,
-      this.longitude,
-      {
-        id: this.id,
-        address: this.address,
-        radiusM: this.radiusM,
-        isActive: !this.isActive,
-        createdAt: this.createdAt,
-        updatedAt: new Date(),
-      }
-    );
+    return new UserPlace(this.userId, this.placeType, this.label, this.latitude, this.longitude, {
+      id: this.id,
+      address: this.address,
+      radiusM: this.radiusM,
+      isActive: !this.isActive,
+      createdAt: this.createdAt,
+      updatedAt: new Date(),
+    });
   }
 
   isValidRadius(): boolean {
@@ -104,10 +97,7 @@ export class UserPlace {
 
   isValidCoordinates(): boolean {
     return (
-      this.latitude >= -90 &&
-      this.latitude <= 90 &&
-      this.longitude >= -180 &&
-      this.longitude <= 180
+      this.latitude >= -90 && this.latitude <= 90 && this.longitude >= -180 && this.longitude <= 180
     );
   }
 }

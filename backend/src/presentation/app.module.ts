@@ -38,10 +38,12 @@ const isDev = process.env.NODE_ENV !== 'production';
   imports: [
     DatabaseModule,
     // Rate Limiting: 1분에 60회 요청 제한
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 60,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
     AuthModule,
     UserModule,
     AlertModule,

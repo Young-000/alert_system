@@ -23,14 +23,7 @@ export class CachedBusApiClient implements IBusApiClient {
     if (cached) {
       this.logger.debug(`Returning cached bus arrivals for ${stopId}`);
       return cached.arrivals.map(
-        (a) =>
-          new BusArrival(
-            a.stopId,
-            a.routeId,
-            a.routeName,
-            a.arrivalTime,
-            a.stationOrder,
-          ),
+        (a) => new BusArrival(a.stopId, a.routeId, a.routeName, a.arrivalTime, a.stationOrder),
       );
     }
 

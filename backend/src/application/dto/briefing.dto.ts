@@ -1,12 +1,6 @@
 export type AdviceSeverity = 'info' | 'warning' | 'danger';
 
-export type AdviceCategory =
-  | 'clothing'
-  | 'umbrella'
-  | 'mask'
-  | 'transit'
-  | 'temperature'
-  | 'wind';
+export type AdviceCategory = 'clothing' | 'umbrella' | 'mask' | 'transit' | 'temperature' | 'wind';
 
 export class BriefingAdviceDto {
   category: AdviceCategory;

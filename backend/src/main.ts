@@ -10,17 +10,19 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // 보안 헤더 설정 (Helmet)
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+        },
       },
-    },
-    crossOriginEmbedderPolicy: false, // PWA 호환성
-  }));
+      crossOriginEmbedderPolicy: false, // PWA 호환성
+    }),
+  );
 
   // CORS 설정 - 명시적 도메인만 허용 (보안 강화)
   const allowedOrigins = [
@@ -102,4 +104,3 @@ async function bootstrap() {
   logger.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();
-

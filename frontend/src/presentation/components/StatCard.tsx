@@ -21,9 +21,15 @@ export function StatCard({
 }: StatCardProps): JSX.Element {
   return (
     <div className={`stat-card-enhanced ${highlight ? 'highlight' : ''}`}>
-      {icon && <span className="stat-card-icon" aria-hidden="true">{icon}</span>}
+      {icon && (
+        <span className="stat-card-icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
       <div className="stat-card-content">
-        <span className="stat-card-value">{typeof value === 'number' ? value.toLocaleString('ko-KR') : value}</span>
+        <span className="stat-card-value">
+          {typeof value === 'number' ? value.toLocaleString('ko-KR') : value}
+        </span>
         <span className="stat-card-title">{title}</span>
         {subtitle && <span className="stat-card-subtitle">{subtitle}</span>}
       </div>

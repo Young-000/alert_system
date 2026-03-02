@@ -1,5 +1,10 @@
 import { RouteDelayCheckService } from './route-delay-check.service';
-import { CommuteRoute, RouteCheckpoint, CheckpointType, RouteType } from '@domain/entities/commute-route.entity';
+import {
+  CommuteRoute,
+  RouteCheckpoint,
+  CheckpointType,
+  RouteType,
+} from '@domain/entities/commute-route.entity';
 import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
 import { ISubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 
@@ -105,9 +110,7 @@ describe('RouteDelayCheckService', () => {
       const checkpoint = createSubwayCheckpoint('강남역', '2호선', 3);
       const route = createRoute([checkpoint]);
 
-      mockSubwayClient.getSubwayArrival.mockRejectedValue(
-        new Error('API 호출 실패'),
-      );
+      mockSubwayClient.getSubwayArrival.mockRejectedValue(new Error('API 호출 실패'));
 
       const result = await service.checkRouteDelays(route);
 

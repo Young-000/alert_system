@@ -69,3 +69,6 @@ database.sqlite
 
 # Temporary checklists
 *CHECKLIST*.md
+
+# Local MCP config
+.mcp.json

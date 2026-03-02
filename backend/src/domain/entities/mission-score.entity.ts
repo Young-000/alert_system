@@ -41,8 +41,7 @@ export class MissionScore {
   ): MissionScore {
     const completionRate =
       totalMissions === 0 ? 0 : Math.round((completedMissions / totalMissions) * 100);
-    const streakDay =
-      completionRate === 100 ? previousStreakDay + 1 : 0;
+    const streakDay = completionRate === 100 ? previousStreakDay + 1 : 0;
 
     return new MissionScore({
       userId,

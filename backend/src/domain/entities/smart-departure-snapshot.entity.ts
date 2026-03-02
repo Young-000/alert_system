@@ -209,9 +209,7 @@ export class SmartDepartureSnapshot {
 
   getMinutesUntilDeparture(): number {
     const now = new Date();
-    return Math.round(
-      (this.optimalDepartureAt.getTime() - now.getTime()) / 60_000,
-    );
+    return Math.round((this.optimalDepartureAt.getTime() - now.getTime()) / 60_000);
   }
 
   isExpired(): boolean {

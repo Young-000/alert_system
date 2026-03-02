@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 export interface SegmentStats {
   checkpointName: string;
   transportMode: string;
-  averageDuration: number;  // 평균 소요시간 (분)
+  averageDuration: number; // 평균 소요시간 (분)
   minDuration: number;
   maxDuration: number;
-  variability: 'stable' | 'variable' | 'unpredictable';  // 일관성
+  variability: 'stable' | 'variable' | 'unpredictable'; // 일관성
   sampleCount: number;
 }
 
@@ -23,9 +23,9 @@ export interface ConditionAnalysis {
 
 // 점수 요소
 export interface ScoreFactors {
-  speed: number;        // 빠르기 (0-100)
-  reliability: number;  // 일관성 (0-100)
-  comfort: number;      // 편의성 (환승 횟수, 도보 거리 등) (0-100)
+  speed: number; // 빠르기 (0-100)
+  reliability: number; // 일관성 (0-100)
+  comfort: number; // 편의성 (환승 횟수, 도보 거리 등) (0-100)
 }
 
 export class RouteAnalytics {
@@ -80,7 +80,7 @@ export class RouteAnalytics {
       lastCalculatedAt?: Date;
       createdAt?: Date;
       updatedAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || uuidv4();
     this.routeId = routeId;
@@ -133,7 +133,7 @@ export class RouteAnalytics {
   // 최근 7일 평균과 비교
   getTrend(recentAverage: number): 'improving' | 'stable' | 'worsening' {
     const diff = this.duration.average - recentAverage;
-    if (diff > 3) return 'worsening';  // 3분 이상 느려짐
+    if (diff > 3) return 'worsening'; // 3분 이상 느려짐
     if (diff < -3) return 'improving'; // 3분 이상 빨라짐
     return 'stable';
   }
@@ -163,16 +163,16 @@ export class RouteAnalytics {
   getSlowestSegment(): SegmentStats | undefined {
     if (this.segmentStats.length === 0) return undefined;
     return this.segmentStats.reduce((slowest, current) =>
-      current.averageDuration > slowest.averageDuration ? current : slowest
+      current.averageDuration > slowest.averageDuration ? current : slowest,
     );
   }
 
   // 가장 불안정한 구간
   getMostUnreliableSegment(): SegmentStats | undefined {
     if (this.segmentStats.length === 0) return undefined;
-    const variabilityOrder = { 'unpredictable': 3, 'variable': 2, 'stable': 1 };
+    const variabilityOrder = { unpredictable: 3, variable: 2, stable: 1 };
     return this.segmentStats.reduce((worst, current) =>
-      variabilityOrder[current.variability] > variabilityOrder[worst.variability] ? current : worst
+      variabilityOrder[current.variability] > variabilityOrder[worst.variability] ? current : worst,
     );
   }
 
@@ -197,12 +197,12 @@ export class RouteAnalytics {
 export interface RouteComparison {
   routes: RouteAnalytics[];
   winner: {
-    fastest: string;      // 가장 빠른 경로 ID
+    fastest: string; // 가장 빠른 경로 ID
     mostReliable: string; // 가장 일관된 경로 ID
-    recommended: string;  // 종합 추천 경로 ID
+    recommended: string; // 종합 추천 경로 ID
   };
   analysis: {
-    timeDifference: number;       // 최빠른-최느린 차이 (분)
+    timeDifference: number; // 최빠른-최느린 차이 (분)
     reliabilityDifference: number; // 신뢰성 점수 차이
   };
 }

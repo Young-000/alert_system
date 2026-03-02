@@ -65,15 +65,11 @@ export function RegionDetailPanel({ regionId }: RegionDetailPanelProps): JSX.Ele
       <div className="insight-detail-stats">
         <div className="insight-detail-row">
           <span className="insight-detail-label">평균 소요</span>
-          <span className="insight-detail-value">
-            {Math.round(detail.avgDurationMinutes)}분
-          </span>
+          <span className="insight-detail-value">{Math.round(detail.avgDurationMinutes)}분</span>
         </div>
         <div className="insight-detail-row">
           <span className="insight-detail-label">중간값</span>
-          <span className="insight-detail-value">
-            {Math.round(detail.medianDurationMinutes)}분
-          </span>
+          <span className="insight-detail-value">{Math.round(detail.medianDurationMinutes)}분</span>
         </div>
         <div className="insight-detail-row">
           <span className="insight-detail-label">통근자</span>

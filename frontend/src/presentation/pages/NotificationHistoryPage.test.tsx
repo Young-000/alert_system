@@ -10,7 +10,7 @@ function renderPage(): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
       <NotificationHistoryPage />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -52,7 +52,10 @@ describe('NotificationHistoryPage', () => {
     });
 
     expect(screen.getByText('알림이 발송되면 여기에 기록됩니다')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '알림 설정 페이지로 이동' })).toHaveAttribute('href', '/alerts');
+    expect(screen.getByRole('link', { name: '알림 설정 페이지로 이동' })).toHaveAttribute(
+      'href',
+      '/alerts',
+    );
   });
 
   it('should render notification items correctly', async () => {
@@ -152,7 +155,9 @@ describe('NotificationHistoryPage', () => {
 
     // Click the subway type filter (the one in the type filter group, not the badge)
     const typeFilterGroup = screen.getByRole('group', { name: '알림 유형 필터' });
-    const subwayFilterButton = typeFilterGroup.querySelector('button:nth-child(4)') as HTMLButtonElement;
+    const subwayFilterButton = typeFilterGroup.querySelector(
+      'button:nth-child(4)',
+    ) as HTMLButtonElement;
     fireEvent.click(subwayFilterButton);
 
     // Only subway notification should be visible

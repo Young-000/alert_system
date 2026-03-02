@@ -60,12 +60,7 @@ export class CommunityController {
     const page = pageStr ? parseInt(pageStr, 10) : 1;
     const limit = limitStr ? parseInt(limitStr, 10) : 20;
 
-    return this.tipsService.getTips(
-      checkpointKey,
-      req.user?.userId ?? null,
-      page,
-      limit,
-    );
+    return this.tipsService.getTips(checkpointKey, req.user?.userId ?? null, page, limit);
   }
 
   /**

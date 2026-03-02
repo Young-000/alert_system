@@ -21,9 +21,7 @@ describe('useCollapsible', () => {
   });
 
   it('defaultExpanded 미지정 시 false가 기본값이다', () => {
-    const { result } = renderHook(() =>
-      useCollapsible({ storageKey: 'test' }),
-    );
+    const { result } = renderHook(() => useCollapsible({ storageKey: 'test' }));
     expect(result.current.isExpanded).toBe(false);
   });
 
@@ -98,9 +96,7 @@ describe('useCollapsible', () => {
   });
 
   it('ariaProps에 role, tabIndex가 포함된다', () => {
-    const { result } = renderHook(() =>
-      useCollapsible({ storageKey: 'test' }),
-    );
+    const { result } = renderHook(() => useCollapsible({ storageKey: 'test' }));
 
     expect(result.current.ariaProps.role).toBe('button');
     expect(result.current.ariaProps.tabIndex).toBe(0);

@@ -14,11 +14,7 @@ import {
   ICommuteRecordRepository,
   COMMUTE_RECORD_REPOSITORY,
 } from '@domain/repositories/commute-record.repository';
-import {
-  updatePosterior,
-  credibleInterval,
-  DEFAULT_PRIOR,
-} from './statistics/bayesian-estimator';
+import { updatePosterior, credibleInterval, DEFAULT_PRIOR } from './statistics/bayesian-estimator';
 import { mean, timeToMinutes, minutesToTime, clamp } from './statistics/descriptive-stats';
 import { FeatureEngineeringService } from './feature-engineering.service';
 
@@ -33,8 +29,12 @@ export interface ContributingFactor {
 }
 
 export interface PatternInsight {
-  type: 'day_variation' | 'weather_sensitivity' | 'improving_trend'
-    | 'route_bottleneck' | 'seasonal_shift';
+  type:
+    | 'day_variation'
+    | 'weather_sensitivity'
+    | 'improving_trend'
+    | 'route_bottleneck'
+    | 'seasonal_shift';
   title: string;
   description: string;
   data?: Record<string, number>;
@@ -84,10 +84,7 @@ export class PredictionEngineService {
    * Generate a full prediction for a user.
    * Combines day-of-week, weather, Bayesian confidence, and transit delay.
    */
-  async predict(
-    userId: string,
-    conditions?: PredictionConditions,
-  ): Promise<PredictionResult> {
+  async predict(userId: string, conditions?: PredictionConditions): Promise<PredictionResult> {
     const targetDate = conditions?.targetDate ?? new Date();
     const dayOfWeek = targetDate.getDay();
 
@@ -101,7 +98,7 @@ export class PredictionEngineService {
     const tier = this.determineTier(totalRecords);
 
     // 2. Get base departure using Bayesian estimation
-    const departureTimes = featureRows.map(r => r.departureMinutes);
+    const departureTimes = featureRows.map((r) => r.departureMinutes);
     const posterior = updatePosterior(DEFAULT_PRIOR, departureTimes);
 
     let baseDeparture = posterior.mu;
@@ -113,7 +110,7 @@ export class PredictionEngineService {
     if (tier === 'day_aware' || tier === 'weather_aware' || tier === 'full') {
       const dayPattern = await this.getDayOfWeekPattern(userId);
       if (dayPattern) {
-        const todaySegment = dayPattern.segments.find(s => s.dayOfWeek === dayOfWeek);
+        const todaySegment = dayPattern.segments.find((s) => s.dayOfWeek === dayOfWeek);
         if (todaySegment && todaySegment.sampleCount >= 2) {
           const overallMean = mean(departureTimes);
           const dayImpact = todaySegment.avgMinutes - overallMean;
@@ -126,9 +123,10 @@ export class PredictionEngineService {
               type: 'day_of_week',
               label: `${dayName}요일 패턴`,
               impact: Math.round(dayImpact),
-              description: Math.abs(dayImpact) >= 2
-                ? `${dayName}요일에는 평균 ${Math.abs(Math.round(dayImpact))}분 ${dayImpact > 0 ? '늦게' : '일찍'} 출발해요`
-                : `${dayName}요일은 평소와 비슷해요`,
+              description:
+                Math.abs(dayImpact) >= 2
+                  ? `${dayName}요일에는 평균 ${Math.abs(Math.round(dayImpact))}분 ${dayImpact > 0 ? '늦게' : '일찍'} 출발해요`
+                  : `${dayName}요일은 평소와 비슷해요`,
               confidence: clamp(todaySegment.sampleCount / 10, 0.3, 0.95),
             });
           }
@@ -162,8 +160,12 @@ export class PredictionEngineService {
           weatherDesc = `비 오는 날 ${Math.abs(Math.round(weatherImpact))}분 ${weatherImpact < 0 ? '일찍' : '늦게'} 출발하는 패턴`;
         }
 
-        if (weatherFeatures.temperatureDeviation !== 0 && Math.abs(weatherPattern.temperatureCoefficient) > 0.1) {
-          const tempImpact = weatherPattern.temperatureCoefficient * weatherFeatures.temperatureDeviation;
+        if (
+          weatherFeatures.temperatureDeviation !== 0 &&
+          Math.abs(weatherPattern.temperatureCoefficient) > 0.1
+        ) {
+          const tempImpact =
+            weatherPattern.temperatureCoefficient * weatherFeatures.temperatureDeviation;
           weatherImpact += tempImpact;
         }
 
@@ -182,19 +184,15 @@ export class PredictionEngineService {
         this.addWeatherSensitivityInsight(weatherPattern, insights);
       } else {
         // Fallback to hardcoded weather adjustments
-        this.applyDefaultWeatherAdjustments(
-          conditions,
-          factors,
-          (impact) => { baseDeparture += impact; },
-        );
+        this.applyDefaultWeatherAdjustments(conditions, factors, (impact) => {
+          baseDeparture += impact;
+        });
       }
     } else if (conditions?.weather || conditions?.temperature !== undefined) {
       // Lower tiers still get basic weather adjustments
-      this.applyDefaultWeatherAdjustments(
-        conditions,
-        factors,
-        (impact) => { baseDeparture += impact; },
-      );
+      this.applyDefaultWeatherAdjustments(conditions, factors, (impact) => {
+        baseDeparture += impact;
+      });
     }
 
     // 5. Apply transit delay
@@ -216,9 +214,10 @@ export class PredictionEngineService {
         type: 'base_pattern',
         label: '기본 패턴',
         impact: 0,
-        description: totalRecords > 0
-          ? `${totalRecords}개 기록 기반 평균 출발 시간`
-          : '기본 출발 시간 (데이터 수집 중)',
+        description:
+          totalRecords > 0
+            ? `${totalRecords}개 기록 기반 평균 출발 시간`
+            : '기본 출발 시간 (데이터 수집 중)',
         confidence,
       });
     }
@@ -287,18 +286,19 @@ export class PredictionEngineService {
     const tier = this.determineTier(totalRecords);
 
     // Overall stats
-    const departureTimes = featureRows.map(r => r.departureMinutes);
+    const departureTimes = featureRows.map((r) => r.departureMinutes);
     const avgDeparture = totalRecords > 0 ? mean(departureTimes) : timeToMinutes('08:00');
-    const earliest = records.length > 0
-      ? records[records.length - 1].commuteDate.toISOString()
-      : new Date().toISOString();
+    const earliest =
+      records.length > 0
+        ? records[records.length - 1].commuteDate.toISOString()
+        : new Date().toISOString();
 
     // Day-of-week analysis
     let dayOfWeek = null;
     if (totalRecords >= 10) {
       const dayPattern = await this.getDayOfWeekPattern(userId);
       if (dayPattern && dayPattern.segments.length > 0) {
-        const segments = dayPattern.segments.map(s => ({
+        const segments = dayPattern.segments.map((s) => ({
           day: s.dayOfWeek,
           dayName: DAY_NAMES_KO[s.dayOfWeek] + '요일',
           avgDepartureTime: minutesToTime(s.avgMinutes),
@@ -306,13 +306,17 @@ export class PredictionEngineService {
           stdDevMinutes: s.stdDevMinutes,
         }));
 
-        const withStdDev = dayPattern.segments.filter(s => s.sampleCount >= 2);
-        const mostConsistent = withStdDev.length > 0
-          ? withStdDev.reduce((min, s) => s.stdDevMinutes < min.stdDevMinutes ? s : min).dayOfWeek
-          : 0;
-        const mostVariable = withStdDev.length > 0
-          ? withStdDev.reduce((max, s) => s.stdDevMinutes > max.stdDevMinutes ? s : max).dayOfWeek
-          : 0;
+        const withStdDev = dayPattern.segments.filter((s) => s.sampleCount >= 2);
+        const mostConsistent =
+          withStdDev.length > 0
+            ? withStdDev.reduce((min, s) => (s.stdDevMinutes < min.stdDevMinutes ? s : min))
+                .dayOfWeek
+            : 0;
+        const mostVariable =
+          withStdDev.length > 0
+            ? withStdDev.reduce((max, s) => (s.stdDevMinutes > max.stdDevMinutes ? s : max))
+                .dayOfWeek
+            : 0;
 
         dayOfWeek = { segments, mostConsistentDay: mostConsistent, mostVariableDay: mostVariable };
       }
@@ -328,13 +332,12 @@ export class PredictionEngineService {
           Math.abs(weatherPattern.snowCoefficient),
         );
         const sensitivity: 'low' | 'medium' | 'high' =
-          maxCoeff > 12 ? 'high' :
-          maxCoeff > 5 ? 'medium' :
-          'low';
+          maxCoeff > 12 ? 'high' : maxCoeff > 5 ? 'medium' : 'low';
 
-        const rainDesc = weatherPattern.rainCoefficient !== 0
-          ? `비 오는 날 평균 ${Math.abs(Math.round(weatherPattern.rainCoefficient))}분 ${weatherPattern.rainCoefficient < 0 ? '일찍' : '늦게'} 출발`
-          : '비에 큰 영향 없음';
+        const rainDesc =
+          weatherPattern.rainCoefficient !== 0
+            ? `비 오는 날 평균 ${Math.abs(Math.round(weatherPattern.rainCoefficient))}분 ${weatherPattern.rainCoefficient < 0 ? '일찍' : '늦게'} 출발`
+            : '비에 큰 영향 없음';
 
         weatherImpact = {
           sensitivity,
@@ -457,11 +460,15 @@ export class PredictionEngineService {
   ): void {
     if (dayPattern.segments.length < 2) return;
 
-    const weekdaySegments = dayPattern.segments.filter(s => s.dayOfWeek >= 1 && s.dayOfWeek <= 5);
+    const weekdaySegments = dayPattern.segments.filter((s) => s.dayOfWeek >= 1 && s.dayOfWeek <= 5);
     if (weekdaySegments.length < 2) return;
 
-    const maxSegment = weekdaySegments.reduce((max, s) => s.avgMinutes > max.avgMinutes ? s : max);
-    const minSegment = weekdaySegments.reduce((min, s) => s.avgMinutes < min.avgMinutes ? s : min);
+    const maxSegment = weekdaySegments.reduce((max, s) =>
+      s.avgMinutes > max.avgMinutes ? s : max,
+    );
+    const minSegment = weekdaySegments.reduce((min, s) =>
+      s.avgMinutes < min.avgMinutes ? s : min,
+    );
     const diff = maxSegment.avgMinutes - minSegment.avgMinutes;
 
     if (diff >= 3) {
@@ -496,11 +503,16 @@ export class PredictionEngineService {
 
   private estimateAccuracy(tier: PredictionTier, recordCount: number): number {
     switch (tier) {
-      case 'cold_start': return 30;
-      case 'basic': return 50;
-      case 'day_aware': return 65 + Math.min(10, recordCount - 10);
-      case 'weather_aware': return 75 + Math.min(10, recordCount - 20);
-      case 'full': return Math.min(95, 85 + Math.min(10, (recordCount - 30) / 5));
+      case 'cold_start':
+        return 30;
+      case 'basic':
+        return 50;
+      case 'day_aware':
+        return 65 + Math.min(10, recordCount - 10);
+      case 'weather_aware':
+        return 75 + Math.min(10, recordCount - 20);
+      case 'full':
+        return Math.min(95, 85 + Math.min(10, (recordCount - 30) / 5));
     }
   }
 }

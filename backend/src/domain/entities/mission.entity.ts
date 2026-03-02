@@ -58,11 +58,7 @@ export class Mission {
     this.updatedAt = options.updatedAt ?? new Date();
   }
 
-  static createNew(
-    userId: string,
-    title: string,
-    missionType: MissionType,
-  ): Mission {
+  static createNew(userId: string, title: string, missionType: MissionType): Mission {
     if (!title || title.trim().length === 0 || title.length > 100) {
       throw new Error('title은 1~100자여야 합니다');
     }

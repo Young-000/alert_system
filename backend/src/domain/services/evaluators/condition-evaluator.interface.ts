@@ -10,11 +10,7 @@ export abstract class BaseConditionEvaluator implements IConditionEvaluator {
   abstract canEvaluate(dataSource: DataSource): boolean;
   abstract evaluate(context: NotificationContext, condition: RuleCondition): boolean;
 
-  protected compareValues(
-    actual: unknown,
-    operator: string,
-    expected: unknown
-  ): boolean {
+  protected compareValues(actual: unknown, operator: string, expected: unknown): boolean {
     if (actual === undefined || actual === null) {
       return false;
     }
@@ -39,9 +35,11 @@ export abstract class BaseConditionEvaluator implements IConditionEvaluator {
         return typeof actual === 'number' && typeof expected === 'number' && actual <= expected;
 
       case 'contains':
-        return typeof actual === 'string' &&
-               typeof expected === 'string' &&
-               actual.toLowerCase().includes(expected.toLowerCase());
+        return (
+          typeof actual === 'string' &&
+          typeof expected === 'string' &&
+          actual.toLowerCase().includes(expected.toLowerCase())
+        );
 
       case 'in':
         return Array.isArray(expected) && expected.includes(actual);

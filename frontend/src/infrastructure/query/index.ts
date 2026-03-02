@@ -23,14 +23,8 @@ export {
   useToggleSmartDepartureMutation,
 } from './use-smart-departure-query';
 export { useCommuteMonthlyStatsQuery, useAnalyticsSummaryQuery } from './use-report-query';
-export {
-  usePredictionQuery,
-  usePatternInsightsQuery,
-} from './use-behavior-query';
-export {
-  useCongestionSegments,
-  useRouteCongestion,
-} from './use-congestion-query';
+export { usePredictionQuery, usePatternInsightsQuery } from './use-behavior-query';
+export { useCongestionSegments, useRouteCongestion } from './use-congestion-query';
 export {
   useMissionsQuery,
   useDailyStatusQuery,

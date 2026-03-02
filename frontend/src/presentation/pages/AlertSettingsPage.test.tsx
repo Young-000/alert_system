@@ -1,10 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AlertSettingsPage } from './AlertSettingsPage';
-import {
-  alertApiClient,
-  commuteApiClient,
-  getCommuteApiClient,
-} from '@infrastructure/api';
+import { alertApiClient, commuteApiClient, getCommuteApiClient } from '@infrastructure/api';
 import type { AlertType } from '@infrastructure/api';
 import type { Mocked, MockedFunction } from 'vitest';
 import { TestProviders } from '../../test-utils';
@@ -33,7 +29,7 @@ function renderPage(): ReturnType<typeof render> {
   return render(
     <TestProviders>
       <AlertSettingsPage />
-    </TestProviders>
+    </TestProviders>,
   );
 }
 
@@ -310,7 +306,7 @@ describe('AlertSettingsPage', () => {
     });
 
     const deleteButtons = screen.getAllByRole('button', { name: '삭제' });
-    const confirmButton = deleteButtons.find(btn => btn.classList.contains('btn-danger'));
+    const confirmButton = deleteButtons.find((btn) => btn.classList.contains('btn-danger'));
     fireEvent.click(confirmButton!);
 
     await waitFor(() => {

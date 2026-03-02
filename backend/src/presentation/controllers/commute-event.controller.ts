@@ -12,10 +12,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ProcessCommuteEventUseCase } from '@application/use-cases/process-commute-event.use-case';
-import {
-  RecordCommuteEventDto,
-  BatchCommuteEventsDto,
-} from '@application/dto/commute-event.dto';
+import { RecordCommuteEventDto, BatchCommuteEventsDto } from '@application/dto/commute-event.dto';
 import type {
   CommuteEventResponseDto,
   BatchCommuteEventsResponseDto,
@@ -28,9 +25,7 @@ import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request
 export class CommuteEventController {
   private readonly logger = new Logger(CommuteEventController.name);
 
-  constructor(
-    private readonly processCommuteEventUseCase: ProcessCommuteEventUseCase,
-  ) {}
+  constructor(private readonly processCommuteEventUseCase: ProcessCommuteEventUseCase) {}
 
   /**
    * 출퇴근 이벤트 기록 (모바일에서 호출)
@@ -42,7 +37,7 @@ export class CommuteEventController {
     @Request() req: AuthenticatedRequest,
   ): Promise<CommuteEventResponseDto> {
     this.logger.log(
-      `Recording commute event for user ${req.user.userId}: ${dto.eventType} at place ${dto.placeId}`
+      `Recording commute event for user ${req.user.userId}: ${dto.eventType} at place ${dto.placeId}`,
     );
     return this.processCommuteEventUseCase.processEvent(req.user.userId, dto);
   }
@@ -57,7 +52,7 @@ export class CommuteEventController {
     @Request() req: AuthenticatedRequest,
   ): Promise<BatchCommuteEventsResponseDto> {
     this.logger.log(
-      `Recording batch commute events for user ${req.user.userId}: ${dto.events.length} events`
+      `Recording batch commute events for user ${req.user.userId}: ${dto.events.length} events`,
     );
     return this.processCommuteEventUseCase.processBatch(req.user.userId, dto.events);
   }

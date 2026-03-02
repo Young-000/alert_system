@@ -105,8 +105,8 @@ describe('EnhancedPatternAnalysisService', () => {
 
     it('10개 이상 레코드면 요일별 세그먼트를 생성한다', async () => {
       const dates = generateWeekdayDates(12);
-      const records = dates.map((d, i) =>
-        createRecord(8, i * 2, d), // 08:00, 08:02, 08:04, ...
+      const records = dates.map(
+        (d, i) => createRecord(8, i * 2, d), // 08:00, 08:02, 08:04, ...
       );
 
       mockCommuteRepo.findByUserIdAndType.mockResolvedValue(records);
@@ -157,7 +157,7 @@ describe('EnhancedPatternAnalysisService', () => {
   describe('analyzeWeatherSensitivity', () => {
     it('20개 미만 레코드면 null을 반환한다', async () => {
       const dates = generateWeekdayDates(10);
-      const records = dates.map(d => createRecord(8, 0, d, 'rain'));
+      const records = dates.map((d) => createRecord(8, 0, d, 'rain'));
       mockCommuteRepo.findByUserIdAndType.mockResolvedValue(records);
 
       const result = await service.analyzeWeatherSensitivity('user-1');
@@ -166,7 +166,7 @@ describe('EnhancedPatternAnalysisService', () => {
 
     it('날씨 다양성이 2 미만이면 null을 반환한다', async () => {
       const dates = generateWeekdayDates(25);
-      const records = dates.map(d => createRecord(8, 0, d, 'clear'));
+      const records = dates.map((d) => createRecord(8, 0, d, 'clear'));
       mockCommuteRepo.findByUserIdAndType.mockResolvedValue(records);
 
       const result = await service.analyzeWeatherSensitivity('user-1');
@@ -208,7 +208,7 @@ describe('EnhancedPatternAnalysisService', () => {
   describe('analyzeSeasonalTrend', () => {
     it('30개 미만 레코드면 null을 반환한다', async () => {
       const dates = generateWeekdayDates(20);
-      const records = dates.map(d => createRecord(8, 0, d));
+      const records = dates.map((d) => createRecord(8, 0, d));
       mockCommuteRepo.findByUserIdAndType.mockResolvedValue(records);
 
       const result = await service.analyzeSeasonalTrend('user-1');
@@ -270,23 +270,26 @@ describe('EnhancedPatternAnalysisService', () => {
     });
 
     it('충분한 세션으로 구간 통계를 계산한다', async () => {
-      const sessions = Array(6).fill(null).map((_, i) =>
-        new CommuteSession('user-1', 'route-1', {
-          id: `session-${i}`,
-          status: SessionStatus.COMPLETED,
-          totalDurationMinutes: 40 + i,
-          checkpointRecords: [
-            new CheckpointRecord(`session-${i}`, 'cp-1', new Date(), {
-              durationFromPrevious: 10 + (i % 3),
-              actualWaitTime: 3,
+      const sessions = Array(6)
+        .fill(null)
+        .map(
+          (_, i) =>
+            new CommuteSession('user-1', 'route-1', {
+              id: `session-${i}`,
+              status: SessionStatus.COMPLETED,
+              totalDurationMinutes: 40 + i,
+              checkpointRecords: [
+                new CheckpointRecord(`session-${i}`, 'cp-1', new Date(), {
+                  durationFromPrevious: 10 + (i % 3),
+                  actualWaitTime: 3,
+                }),
+                new CheckpointRecord(`session-${i}`, 'cp-2', new Date(), {
+                  durationFromPrevious: 15 + (i % 5),
+                  actualWaitTime: 5,
+                }),
+              ],
             }),
-            new CheckpointRecord(`session-${i}`, 'cp-2', new Date(), {
-              durationFromPrevious: 15 + (i % 5),
-              actualWaitTime: 5,
-            }),
-          ],
-        }),
-      );
+        );
 
       mockSessionRepo.findByRouteId.mockResolvedValue(sessions);
 

@@ -50,12 +50,7 @@ describe('DailyBarChart', () => {
   it('소요시간을 분 단위로 표시한다', () => {
     const stats = makeWeekStats();
     render(
-      <DailyBarChart
-        dailyStats={stats}
-        bestDayDate={null}
-        worstDayDate={null}
-        maxDuration={62}
-      />,
+      <DailyBarChart dailyStats={stats} bestDayDate={null} worstDayDate={null} maxDuration={62} />,
     );
 
     expect(screen.getByText(/52분/)).toBeInTheDocument();
@@ -99,12 +94,7 @@ describe('DailyBarChart', () => {
       makeDailyStat({ date: '2026-02-17', dayName: '월요일', sessionCount: 0, averageDuration: 0 }),
     ];
     render(
-      <DailyBarChart
-        dailyStats={stats}
-        bestDayDate={null}
-        worstDayDate={null}
-        maxDuration={50}
-      />,
+      <DailyBarChart dailyStats={stats} bestDayDate={null} worstDayDate={null} maxDuration={50} />,
     );
 
     expect(screen.getByText('기록 없음')).toBeInTheDocument();
@@ -113,32 +103,29 @@ describe('DailyBarChart', () => {
 
   it('빈 데이터일 때 차트 컨테이너에 적절한 aria-label을 가진다', () => {
     render(
-      <DailyBarChart
-        dailyStats={[]}
-        bestDayDate={null}
-        worstDayDate={null}
-        maxDuration={0}
-      />,
+      <DailyBarChart dailyStats={[]} bestDayDate={null} worstDayDate={null} maxDuration={0} />,
     );
 
-    expect(screen.getByRole('img')).toHaveAttribute(
-      'aria-label',
-      '일별 소요시간: 데이터 없음',
-    );
+    expect(screen.getByRole('img')).toHaveAttribute('aria-label', '일별 소요시간: 데이터 없음');
   });
 
   it('데이터가 있을 때 차트 aria-label에 요약 정보가 포함된다', () => {
     const stats = [
-      makeDailyStat({ date: '2026-02-17', dayName: '월요일', averageDuration: 52, sessionCount: 2 }),
-      makeDailyStat({ date: '2026-02-18', dayName: '화요일', averageDuration: 43, sessionCount: 1 }),
+      makeDailyStat({
+        date: '2026-02-17',
+        dayName: '월요일',
+        averageDuration: 52,
+        sessionCount: 2,
+      }),
+      makeDailyStat({
+        date: '2026-02-18',
+        dayName: '화요일',
+        averageDuration: 43,
+        sessionCount: 1,
+      }),
     ];
     render(
-      <DailyBarChart
-        dailyStats={stats}
-        bestDayDate={null}
-        worstDayDate={null}
-        maxDuration={52}
-      />,
+      <DailyBarChart dailyStats={stats} bestDayDate={null} worstDayDate={null} maxDuration={52} />,
     );
 
     const chart = screen.getByRole('img');

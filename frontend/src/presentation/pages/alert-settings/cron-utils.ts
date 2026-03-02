@@ -91,9 +91,7 @@ function parseDayOfWeek(field: string): string {
   if (sorted.length === 5 && sorted.join(',') === '1,2,3,4,5') return '평일';
   if (sorted.length === 7) return '매일';
 
-  const dayLabels = dayNums
-    .filter((n) => n >= 0 && n <= 6)
-    .map((n) => DAY_NAMES_KR[n]);
+  const dayLabels = dayNums.filter((n) => n >= 0 && n <= 6).map((n) => DAY_NAMES_KR[n]);
 
   return dayLabels.length > 0 ? dayLabels.join(',') : field;
 }

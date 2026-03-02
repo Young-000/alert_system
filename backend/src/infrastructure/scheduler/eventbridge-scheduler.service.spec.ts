@@ -22,12 +22,14 @@ describe('EventBridgeSchedulerService', () => {
   let service: EventBridgeSchedulerService;
   const originalEnv = process.env;
 
-  const createAlert = (overrides?: Partial<{
-    id: string;
-    userId: string;
-    schedule: string;
-    enabled: boolean;
-  }>): Alert => {
+  const createAlert = (
+    overrides?: Partial<{
+      id: string;
+      userId: string;
+      schedule: string;
+      enabled: boolean;
+    }>,
+  ): Alert => {
     const alert = new Alert(
       overrides?.userId || 'user-1',
       '출근 알림',
@@ -68,8 +70,8 @@ describe('EventBridgeSchedulerService', () => {
       const notFoundError = new Error('Not found');
       notFoundError.name = 'ResourceNotFoundException';
       mockSend
-        .mockRejectedValueOnce(notFoundError)  // getSchedule
-        .mockResolvedValueOnce({});             // createSchedule
+        .mockRejectedValueOnce(notFoundError) // getSchedule
+        .mockResolvedValueOnce({}); // createSchedule
 
       const alert = createAlert({ schedule: '0 8 * * 1-5' });
       await service.scheduleNotification(alert);
@@ -85,9 +87,7 @@ describe('EventBridgeSchedulerService', () => {
     it('요일이 *이면 dayOfWeek를 ?로 변환한다', async () => {
       const notFoundError = new Error('Not found');
       notFoundError.name = 'ResourceNotFoundException';
-      mockSend
-        .mockRejectedValueOnce(notFoundError)
-        .mockResolvedValueOnce({});
+      mockSend.mockRejectedValueOnce(notFoundError).mockResolvedValueOnce({});
 
       const alert = createAlert({ schedule: '30 7 * * *' });
       await service.scheduleNotification(alert);
@@ -103,9 +103,7 @@ describe('EventBridgeSchedulerService', () => {
     it('HH:mm 형식을 매일 반복 cron으로 변환한다', async () => {
       const notFoundError = new Error('Not found');
       notFoundError.name = 'ResourceNotFoundException';
-      mockSend
-        .mockRejectedValueOnce(notFoundError)
-        .mockResolvedValueOnce({});
+      mockSend.mockRejectedValueOnce(notFoundError).mockResolvedValueOnce({});
 
       const alert = createAlert({ schedule: '08:30' });
       await service.scheduleNotification(alert);
@@ -121,9 +119,7 @@ describe('EventBridgeSchedulerService', () => {
     it('이미 EventBridge 형식이면 그대로 사용한다', async () => {
       const notFoundError = new Error('Not found');
       notFoundError.name = 'ResourceNotFoundException';
-      mockSend
-        .mockRejectedValueOnce(notFoundError)
-        .mockResolvedValueOnce({});
+      mockSend.mockRejectedValueOnce(notFoundError).mockResolvedValueOnce({});
 
       const alert = createAlert({ schedule: 'cron(0 8 ? * MON-FRI *)' });
       await service.scheduleNotification(alert);
@@ -139,9 +135,7 @@ describe('EventBridgeSchedulerService', () => {
     it('요일 목록을 올바르게 변환한다 (1,3,5 -> MON,WED,FRI)', async () => {
       const notFoundError = new Error('Not found');
       notFoundError.name = 'ResourceNotFoundException';
-      mockSend
-        .mockRejectedValueOnce(notFoundError)
-        .mockResolvedValueOnce({});
+      mockSend.mockRejectedValueOnce(notFoundError).mockResolvedValueOnce({});
 
       const alert = createAlert({ schedule: '0 9 * * 1,3,5' });
       await service.scheduleNotification(alert);
@@ -161,7 +155,7 @@ describe('EventBridgeSchedulerService', () => {
       notFoundError.name = 'ResourceNotFoundException';
       mockSend
         .mockRejectedValueOnce(notFoundError) // getSchedule
-        .mockResolvedValueOnce({});            // createSchedule
+        .mockResolvedValueOnce({}); // createSchedule
 
       await service.scheduleNotification(createAlert());
 
@@ -172,7 +166,7 @@ describe('EventBridgeSchedulerService', () => {
 
     it('기존 스케줄이 있으면 업데이트한다', async () => {
       mockSend
-        .mockResolvedValueOnce({})  // getSchedule (found)
+        .mockResolvedValueOnce({}) // getSchedule (found)
         .mockResolvedValueOnce({}); // updateSchedule
 
       await service.scheduleNotification(createAlert());
@@ -208,7 +202,7 @@ describe('EventBridgeSchedulerService', () => {
       notFoundError.name = 'ResourceNotFoundException';
       mockSend
         .mockRejectedValueOnce(notFoundError) // getSchedule
-        .mockRejectedValueOnce(awsError);      // createSchedule fails
+        .mockRejectedValueOnce(awsError); // createSchedule fails
 
       await expect(service.scheduleNotification(createAlert())).rejects.toThrow('Throttling');
     });

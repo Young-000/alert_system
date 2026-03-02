@@ -12,7 +12,12 @@ import {
   type CreateCheckpointDto,
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
-import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from '@infrastructure/api';
+import {
+  alertApiClient,
+  type Alert,
+  type CreateAlertDto,
+  type AlertType,
+} from '@infrastructure/api';
 import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
@@ -25,6 +30,8 @@ import { StationSearchStep } from './route-setup/StationSearchStep';
 import { AskMoreStep } from './route-setup/AskMoreStep';
 import { ConfirmStep } from './route-setup/ConfirmStep';
 import { RouteListView } from './route-setup/RouteListView';
+
+const NAVIGATE_DELAY_MS = 1500;
 
 export function RouteSetupPage(): JSX.Element {
   const navigate = useNavigate();
@@ -76,33 +83,36 @@ export function RouteSetupPage(): JSX.Element {
   const { validation, validateRoute } = useRouteValidation(selectedStops);
 
   // 정류장 선택 콜백 (검색 훅에 전달)
-  const handleSelectStopDirect = useCallback((name: string, line: string, id: string) => {
-    const newStop: SelectedStop = {
-      id,
-      uniqueKey: `${id}-${Date.now()}`,
-      name,
-      line,
-      transportMode: currentTransport,
-    };
+  const handleSelectStopDirect = useCallback(
+    (name: string, line: string, id: string) => {
+      const newStop: SelectedStop = {
+        id,
+        uniqueKey: `${id}-${Date.now()}`,
+        name,
+        line,
+        transportMode: currentTransport,
+      };
 
-    const testStops = [...selectedStops, newStop];
-    const testValidation = validateRoute(testStops);
+      const testStops = [...selectedStops, newStop];
+      const testValidation = validateRoute(testStops);
 
-    if (!testValidation.isValid) {
-      setError(testValidation.errors[0]);
-      return;
-    }
+      if (!testValidation.isValid) {
+        setError(testValidation.errors[0]);
+        return;
+      }
 
-    if (testValidation.warnings.length > 0) {
-      setWarning(testValidation.warnings[0]);
-    } else {
-      setWarning('');
-    }
+      if (testValidation.warnings.length > 0) {
+        setWarning(testValidation.warnings[0]);
+      } else {
+        setWarning('');
+      }
 
-    setSelectedStops(testStops);
-    setError('');
-    setStep('ask-more');
-  }, [currentTransport, selectedStops, validateRoute]);
+      setSelectedStops(testStops);
+      setError('');
+      setStep('ask-more');
+    },
+    [currentTransport, selectedStops, validateRoute],
+  );
 
   // 검색 훅 (clearSearch는 onStopSelected 콜백 후 훅 내부에서 자동 호출)
   const search = useStationSearch(currentTransport, selectedStops, handleSelectStopDirect);
@@ -121,20 +131,24 @@ export function RouteSetupPage(): JSX.Element {
         console.warn('Failed to load alerts for route setup');
         return [] as Alert[];
       }),
-    ]).then(([routes, alerts]) => {
-      if (isMounted) {
-        setExistingRoutes(routes);
-        setUserAlerts(alerts);
-        setIsLoading(false);
-      }
-    }).catch(() => {
-      if (isMounted) {
-        setError('경로 목록을 불러올 수 없습니다');
-        setIsLoading(false);
-      }
-    });
+    ])
+      .then(([routes, alerts]) => {
+        if (isMounted) {
+          setExistingRoutes(routes);
+          setUserAlerts(alerts);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setError('경로 목록을 불러올 수 없습니다');
+          setIsLoading(false);
+        }
+      });
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId, commuteApi]);
 
   // Parse shared route from URL
@@ -174,7 +188,7 @@ export function RouteSetupPage(): JSX.Element {
         })),
       };
       const saved = await commuteApi.createRoute(dto);
-      setExistingRoutes(prev => [...prev, saved]);
+      setExistingRoutes((prev) => [...prev, saved]);
       setSharedRoute(null);
     } catch {
       setError('경로 가져오기에 실패했습니다.');
@@ -194,7 +208,7 @@ export function RouteSetupPage(): JSX.Element {
 
   const filteredRoutes = useMemo(() => {
     if (routeTab === 'all') return sortedRoutes;
-    return sortedRoutes.filter(r => r.routeType === routeTab);
+    return sortedRoutes.filter((r) => r.routeType === routeTab);
   }, [sortedRoutes, routeTab]);
 
   // 환승 정보 계산
@@ -214,7 +228,7 @@ export function RouteSetupPage(): JSX.Element {
 
   // 정류장 삭제
   const removeStop = useCallback((index: number) => {
-    setSelectedStops(prev => {
+    setSelectedStops((prev) => {
       if (prev.length <= 1) {
         setError('경유지는 최소 1개 필요합니다.');
         return prev;
@@ -369,7 +383,7 @@ export function RouteSetupPage(): JSX.Element {
         }
       }
 
-      navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
+      navigateTimerRef.current = setTimeout(() => navigate('/'), NAVIGATE_DELAY_MS);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '';
       if (message.includes('401') || message.includes('Unauthorized')) {
@@ -385,28 +399,34 @@ export function RouteSetupPage(): JSX.Element {
   };
 
   // Toast dismiss 시 즉시 네비게이션
-  const handleToastDismiss = useCallback((id: string) => {
-    toast.dismissToast(id);
-    if (navigateTimerRef.current) {
-      clearTimeout(navigateTimerRef.current);
-      navigateTimerRef.current = null;
-      navigate('/');
-    }
-  }, [toast, navigate]);
+  const handleToastDismiss = useCallback(
+    (id: string) => {
+      toast.dismissToast(id);
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+        navigateTimerRef.current = null;
+        navigate('/');
+      }
+    },
+    [toast, navigate],
+  );
 
   // 경로 이름 자동 생성
-  const generateRouteName = useCallback((type: RouteType, stops: SelectedStop[]): string => {
-    const existingCount = existingRoutes.filter(r => r.routeType === type).length;
-    const label = type === 'morning' ? '출근' : '퇴근';
+  const generateRouteName = useCallback(
+    (type: RouteType, stops: SelectedStop[]): string => {
+      const existingCount = existingRoutes.filter((r) => r.routeType === type).length;
+      const label = type === 'morning' ? '출근' : '퇴근';
 
-    if (stops.length >= 2) {
-      return `${stops[0].name} → ${stops[stops.length - 1].name}`;
-    }
-    if (stops.length === 1) {
-      return `${label} (${stops[0].name})`;
-    }
-    return `${label} ${existingCount + 1}`;
-  }, [existingRoutes]);
+      if (stops.length >= 2) {
+        return `${stops[0].name} → ${stops[stops.length - 1].name}`;
+      }
+      if (stops.length === 1) {
+        return `${label} (${stops[0].name})`;
+      }
+      return `${label} ${existingCount + 1}`;
+    },
+    [existingRoutes],
+  );
 
   const defaultRouteName = useMemo(
     () => generateRouteName(routeType, selectedStops),
@@ -427,29 +447,35 @@ export function RouteSetupPage(): JSX.Element {
   };
 
   // 기존 경로 수정 모드 진입
-  const handleEditRoute = useCallback((route: RouteResponse) => {
-    setEditingRoute(route);
-    setRouteType(route.routeType);
-    setRouteName(route.name || '');
+  const handleEditRoute = useCallback(
+    (route: RouteResponse) => {
+      setEditingRoute(route);
+      setRouteType(route.routeType);
+      setRouteName(route.name || '');
 
-    const stops: SelectedStop[] = route.checkpoints
-      .filter(cp => cp.checkpointType === 'subway' || cp.checkpointType === 'bus_stop')
-      .map((cp, index) => ({
-        id: cp.linkedStationId || cp.linkedBusStopId || `cp-${index}`,
-        uniqueKey: `edit-${cp.linkedStationId || cp.linkedBusStopId || index}-${Date.now()}-${index}`,
-        name: cp.name,
-        line: cp.lineInfo || '',
-        transportMode: cp.checkpointType === 'subway' ? 'subway' as LocalTransportMode : 'bus' as LocalTransportMode,
-      }));
+      const stops: SelectedStop[] = route.checkpoints
+        .filter((cp) => cp.checkpointType === 'subway' || cp.checkpointType === 'bus_stop')
+        .map((cp, index) => ({
+          id: cp.linkedStationId || cp.linkedBusStopId || `cp-${index}`,
+          uniqueKey: `edit-${cp.linkedStationId || cp.linkedBusStopId || index}-${Date.now()}-${index}`,
+          name: cp.name,
+          line: cp.lineInfo || '',
+          transportMode:
+            cp.checkpointType === 'subway'
+              ? ('subway' as LocalTransportMode)
+              : ('bus' as LocalTransportMode),
+        }));
 
-    setSelectedStops(stops);
-    search.clearSearch();
-    setIsCreating(true);
-    setStep('ask-more');
-    setCreateReverse(false);
-    setError('');
-    setWarning('');
-  }, [search]);
+      setSelectedStops(stops);
+      search.clearSearch();
+      setIsCreating(true);
+      setStep('ask-more');
+      setCreateReverse(false);
+      setError('');
+      setWarning('');
+    },
+    [search],
+  );
 
   // 취소
   const cancelCreating = (): void => {
@@ -475,7 +501,7 @@ export function RouteSetupPage(): JSX.Element {
     setIsDeleting(true);
     try {
       await commuteApi.deleteRoute(deleteTarget.id);
-      setExistingRoutes(prev => prev.filter(r => r.id !== deleteTarget.id));
+      setExistingRoutes((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch {
       setError('삭제에 실패했습니다.');
@@ -489,7 +515,23 @@ export function RouteSetupPage(): JSX.Element {
     return (
       <AuthRequired
         pageTitle="경로"
-        icon={<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>}
+        icon={
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="4" y="3" width="16" height="18" rx="2" />
+            <line x1="4" y1="9" x2="20" y2="9" />
+            <line x1="4" y1="15" x2="20" y2="15" />
+            <line x1="10" y1="3" x2="10" y2="21" />
+          </svg>
+        }
         description="출퇴근 경로를 저장하려면 먼저 로그인하세요"
       />
     );
@@ -500,11 +542,20 @@ export function RouteSetupPage(): JSX.Element {
     return (
       <main className="page apple-route-page">
         <nav className="apple-nav">
-          <button type="button" className="apple-back" onClick={() => navigate(-1)} aria-label="뒤로 가기">←</button>
+          <button
+            type="button"
+            className="apple-back"
+            onClick={() => navigate(-1)}
+            aria-label="뒤로 가기"
+          >
+            ←
+          </button>
           <span className="apple-title">경로</span>
           <span />
         </nav>
-        <div className="apple-loading" role="status" aria-live="polite">불러오는 중...</div>
+        <div className="apple-loading" role="status" aria-live="polite">
+          불러오는 중...
+        </div>
       </main>
     );
   }
@@ -514,7 +565,14 @@ export function RouteSetupPage(): JSX.Element {
     return (
       <main className="page apple-route-page">
         <nav className="apple-nav">
-          <button type="button" className="apple-back" onClick={cancelCreating} aria-label="뒤로 가기">←</button>
+          <button
+            type="button"
+            className="apple-back"
+            onClick={cancelCreating}
+            aria-label="뒤로 가기"
+          >
+            ←
+          </button>
           <span className="apple-title">{editingRoute ? '경로 수정' : '새 경로'}</span>
           <span />
         </nav>
@@ -529,11 +587,7 @@ export function RouteSetupPage(): JSX.Element {
         )}
 
         {step === 'select-type' && (
-          <RouteTypeStep
-            routeType={routeType}
-            onRouteTypeChange={setRouteType}
-            onNext={setStep}
-          />
+          <RouteTypeStep routeType={routeType} onRouteTypeChange={setRouteType} onNext={setStep} />
         )}
 
         {step === 'select-transport' && (

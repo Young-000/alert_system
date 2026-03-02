@@ -24,7 +24,12 @@ export function WeeklyProgress({
     <div className="weekly-progress" aria-label={`이번 주 ${weeklyCount}/${weeklyGoal}`}>
       <span className="weekly-progress-label">
         이번 주 {weeklyCount}/{weeklyGoal}
-        {goalMet && <span className="weekly-goal-met" aria-label="목표 달성"> 달성</span>}
+        {goalMet && (
+          <span className="weekly-goal-met" aria-label="목표 달성">
+            {' '}
+            달성
+          </span>
+        )}
       </span>
       <div className="weekly-dots" role="img" aria-hidden="true">
         {dots.map((filled, i) => {
@@ -35,14 +40,14 @@ export function WeeklyProgress({
             goalMet ? 'weekly-dot--goal-met' : '',
             isToday && streakStatus === 'at_risk' ? 'weekly-dot--today-risk' : '',
             isToday && !filled ? 'weekly-dot--today' : '',
-          ].filter(Boolean).join(' ');
+          ]
+            .filter(Boolean)
+            .join(' ');
 
           return (
             <div key={i} className="weekly-dot-col">
               <div className={dotClass} />
-              {i < DAY_LABELS.length && (
-                <span className="weekly-dot-label">{DAY_LABELS[i]}</span>
-              )}
+              {i < DAY_LABELS.length && <span className="weekly-dot-label">{DAY_LABELS[i]}</span>}
             </div>
           );
         })}

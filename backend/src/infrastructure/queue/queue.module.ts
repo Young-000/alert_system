@@ -43,8 +43,6 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
         ]
       : []),
   ],
-  exports: [
-    ...(isQueueEnabled ? ['INotificationScheduler', BullModule] : []),
-  ],
+  exports: [...(isQueueEnabled ? ['INotificationScheduler', BullModule] : [])],
 })
 export class QueueModule {}

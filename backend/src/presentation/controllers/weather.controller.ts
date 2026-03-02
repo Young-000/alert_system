@@ -12,10 +12,7 @@ export class WeatherController {
   ) {}
 
   @Get('current')
-  async getCurrent(
-    @Query('lat') lat?: string,
-    @Query('lng') lng?: string,
-  ) {
+  async getCurrent(@Query('lat') lat?: string, @Query('lng') lng?: string) {
     if (!this.weatherApiClient) {
       return { error: 'Weather API not configured' };
     }

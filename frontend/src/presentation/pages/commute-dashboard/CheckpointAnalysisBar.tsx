@@ -34,10 +34,7 @@ export function CheckpointAnalysisBar({ checkpoint }: CheckpointAnalysisBarProps
         <div className="bar-row">
           <span className="bar-label">실제</span>
           <div className="bar-track">
-            <div
-              className="bar-fill actual"
-              style={{ width: `${(totalActual / maxTime) * 100}%` }}
-            >
+            <div className="bar-fill actual" style={{ width: `${(totalActual / maxTime) * 100}%` }}>
               <span className="bar-value">{Math.round(totalActual * 10) / 10}분</span>
             </div>
             {checkpoint.averageActualWaitTime > 0 && (
@@ -55,9 +52,7 @@ export function CheckpointAnalysisBar({ checkpoint }: CheckpointAnalysisBarProps
 
       {/* Variability indicator */}
       {checkpoint.variability >= 3 && (
-        <div className="bar-variability">
-          ±{checkpoint.variability}분 변동
-        </div>
+        <div className="bar-variability">±{checkpoint.variability}분 변동</div>
       )}
     </div>
   );

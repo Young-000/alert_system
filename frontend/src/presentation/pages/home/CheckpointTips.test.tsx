@@ -48,9 +48,7 @@ function renderWithProviders(ui: React.ReactElement): ReturnType<typeof render> 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 describe('CheckpointTips', () => {
@@ -66,9 +64,7 @@ describe('CheckpointTips', () => {
       refetch: vi.fn(),
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
     expect(screen.getByText('팁을 불러오는 중...')).toBeInTheDocument();
   });
 
@@ -81,9 +77,7 @@ describe('CheckpointTips', () => {
       refetch,
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
     expect(screen.getByText('팁을 불러올 수 없습니다')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('다시 시도'));
@@ -98,9 +92,7 @@ describe('CheckpointTips', () => {
       refetch: vi.fn(),
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
     expect(screen.getByText(/아직 팁이 없어요/)).toBeInTheDocument();
   });
 
@@ -112,9 +104,7 @@ describe('CheckpointTips', () => {
       refetch: vi.fn(),
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
     expect(screen.getByText('강남역 팁')).toBeInTheDocument();
     expect(screen.getByText('2개')).toBeInTheDocument();
     expect(screen.getByText('4번 출구가 빨라요')).toBeInTheDocument();
@@ -130,11 +120,7 @@ describe('CheckpointTips', () => {
     });
 
     renderWithProviders(
-      <CheckpointTips
-        checkpointKey="station:1"
-        checkpointName="강남역"
-        isLoggedIn
-      />,
+      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" isLoggedIn />,
     );
     expect(screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/)).toBeInTheDocument();
   });
@@ -148,11 +134,7 @@ describe('CheckpointTips', () => {
     });
 
     renderWithProviders(
-      <CheckpointTips
-        checkpointKey="station:1"
-        checkpointName="강남역"
-        isLoggedIn={false}
-      />,
+      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" isLoggedIn={false} />,
     );
     expect(screen.queryByPlaceholderText(/이 구간 팁을 남겨보세요/)).not.toBeInTheDocument();
   });
@@ -184,9 +166,7 @@ describe('CheckpointTips', () => {
       refetch: vi.fn(),
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
 
     const helpfulBtns = screen.getAllByLabelText(/도움이 됐어요/);
     fireEvent.click(helpfulBtns[0]);
@@ -201,9 +181,7 @@ describe('CheckpointTips', () => {
       refetch: vi.fn(),
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
 
     const reportBtns = screen.getAllByLabelText('이 팁 신고하기');
     fireEvent.click(reportBtns[0]);
@@ -219,9 +197,7 @@ describe('CheckpointTips', () => {
       refetch: vi.fn(),
     });
 
-    renderWithProviders(
-      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
-    );
+    renderWithProviders(<CheckpointTips checkpointKey="station:1" checkpointName="강남역" />);
     expect(screen.getByLabelText('강남역 팁')).toBeInTheDocument();
   });
 });

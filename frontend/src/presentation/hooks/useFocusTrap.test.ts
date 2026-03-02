@@ -47,18 +47,14 @@ describe('useFocusTrap', () => {
   });
 
   it('비활성 상태에서는 포커스를 가두지 않는다', () => {
-    const { result } = renderHook(() =>
-      useFocusTrap({ active: false }),
-    );
+    const { result } = renderHook(() => useFocusTrap({ active: false }));
 
     expect(result.current.current).toBeNull();
   });
 
   it('활성 상태에서 Escape 키를 누르면 onEscape를 호출한다', () => {
     const onEscape = vi.fn();
-    const { result } = renderHook(() =>
-      useFocusTrap({ active: true, onEscape }),
-    );
+    const { result } = renderHook(() => useFocusTrap({ active: true, onEscape }));
 
     // Assign the mock container to ref
     Object.defineProperty(result.current, 'current', {
@@ -73,9 +69,7 @@ describe('useFocusTrap', () => {
 
   it('활성화되면 첫 번째 포커스 가능 요소에 포커스한다', () => {
     vi.useFakeTimers();
-    const { result } = renderHook(() =>
-      useFocusTrap({ active: true }),
-    );
+    const { result } = renderHook(() => useFocusTrap({ active: true }));
 
     Object.defineProperty(result.current, 'current', {
       value: container,
@@ -96,9 +90,7 @@ describe('useFocusTrap', () => {
     document.body.appendChild(outsideButton);
     outsideButton.focus();
 
-    const { unmount } = renderHook(() =>
-      useFocusTrap({ active: true }),
-    );
+    const { unmount } = renderHook(() => useFocusTrap({ active: true }));
 
     unmount();
 
@@ -108,9 +100,7 @@ describe('useFocusTrap', () => {
   });
 
   it('onEscape 없이 Escape를 눌러도 에러가 발생하지 않는다', () => {
-    renderHook(() =>
-      useFocusTrap({ active: true }),
-    );
+    renderHook(() => useFocusTrap({ active: true }));
 
     expect(() => {
       fireKeyDown('Escape');
@@ -118,9 +108,7 @@ describe('useFocusTrap', () => {
   });
 
   it('Tab 키 래핑: 마지막에서 Tab 시 첫 번째로 이동한다', () => {
-    const { result } = renderHook(() =>
-      useFocusTrap({ active: true }),
-    );
+    const { result } = renderHook(() => useFocusTrap({ active: true }));
 
     Object.defineProperty(result.current, 'current', {
       value: container,
@@ -145,9 +133,7 @@ describe('useFocusTrap', () => {
   });
 
   it('Shift+Tab 래핑: 첫 번째에서 Shift+Tab 시 마지막으로 이동한다', () => {
-    const { result } = renderHook(() =>
-      useFocusTrap({ active: true }),
-    );
+    const { result } = renderHook(() => useFocusTrap({ active: true }));
 
     Object.defineProperty(result.current, 'current', {
       value: container,

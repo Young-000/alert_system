@@ -8,9 +8,7 @@ const BCRYPT_SALT_ROUNDS = 12;
 
 @Injectable()
 export class CreateUserUseCase {
-  constructor(
-    @Inject('IUserRepository') private userRepository: IUserRepository,
-  ) {}
+  constructor(@Inject('IUserRepository') private userRepository: IUserRepository) {}
 
   async execute(dto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(dto.email);

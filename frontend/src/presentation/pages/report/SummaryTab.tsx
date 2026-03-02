@@ -54,16 +54,10 @@ function RouteCard({
         <span className="report-route-card-stat">
           점수 <strong>{route.score}점</strong>
         </span>
-        <span className="report-route-card-stat">
-          {route.totalTrips}회 사용
-        </span>
-        <span className="report-route-card-stat">
-          평균 {route.duration.average}분
-        </span>
+        <span className="report-route-card-stat">{route.totalTrips}회 사용</span>
+        <span className="report-route-card-stat">평균 {route.duration.average}분</span>
       </div>
-      {route.summary && (
-        <p className="report-route-card-summary">{route.summary}</p>
-      )}
+      {route.summary && <p className="report-route-card-summary">{route.summary}</p>}
     </div>
   );
 }
@@ -92,7 +86,9 @@ export function SummaryTab(): JSX.Element {
     return (
       <div className="report-tab-content">
         <div className="report-card report-card--empty">
-          <p className="report-empty-icon" aria-hidden="true">&#128200;</p>
+          <p className="report-empty-icon" aria-hidden="true">
+            &#128200;
+          </p>
           <p className="report-empty-msg">분석 데이터가 아직 없어요</p>
           <p className="report-empty-hint">출퇴근 기록이 쌓이면 경로 분석을 볼 수 있어요!</p>
         </div>
@@ -142,7 +138,9 @@ export function SummaryTab(): JSX.Element {
           <h3 className="report-section-title">분석 인사이트</h3>
           <ul className="report-insights" aria-label="분석 인사이트">
             {summary.insights.map((insight) => (
-              <li key={insight} className="report-insight">{insight}</li>
+              <li key={insight} className="report-insight">
+                {insight}
+              </li>
             ))}
           </ul>
         </div>

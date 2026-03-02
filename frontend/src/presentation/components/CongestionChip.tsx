@@ -45,9 +45,10 @@ export function CongestionChip({
   }
 
   const label = LEVEL_LABELS[level];
-  const ariaLabel = avgWaitMinutes !== undefined
-    ? `${LEVEL_ARIA[level]}, 평균 대기 ${avgWaitMinutes.toFixed(0)}분`
-    : LEVEL_ARIA[level];
+  const ariaLabel =
+    avgWaitMinutes !== undefined
+      ? `${LEVEL_ARIA[level]}, 평균 대기 ${avgWaitMinutes.toFixed(0)}분`
+      : LEVEL_ARIA[level];
 
   return (
     <span
@@ -59,10 +60,7 @@ export function CongestionChip({
       <span>{label}</span>
       {size === 'md' && avgWaitMinutes !== undefined && (
         <span className="congestion-chip-detail">
-          {avgWaitMinutes.toFixed(0)}분
-          {sampleCount !== undefined && (
-            <> ({sampleCount}건)</>
-          )}
+          {avgWaitMinutes.toFixed(0)}분{sampleCount !== undefined && <> ({sampleCount}건)</>}
         </span>
       )}
     </span>

@@ -106,10 +106,7 @@ export class MissionApiClient {
   }
 
   async toggleCheck(missionId: string): Promise<DailyMissionRecord> {
-    return this.apiClient.post<DailyMissionRecord>(
-      `/missions/daily/${missionId}/check`,
-      {},
-    );
+    return this.apiClient.post<DailyMissionRecord>(`/missions/daily/${missionId}/check`, {});
   }
 
   async getDailyScore(): Promise<MissionScore | null> {

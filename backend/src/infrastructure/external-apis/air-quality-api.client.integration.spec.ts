@@ -14,7 +14,7 @@ describeIntegration('AirQualityApiClient Integration', () => {
   it('should fetch real air quality data for Seoul', async () => {
     // 서울 좌표
     const lat = 37.5665;
-    const lng = 126.9780;
+    const lng = 126.978;
 
     const result = await client.getAirQuality(lat, lng);
 
@@ -32,7 +32,7 @@ describeIntegration('AirQualityApiClient Integration', () => {
     const lng = 0;
 
     const result = await client.getAirQuality(lat, lng);
-    
+
     // 기본값으로 서울 데이터를 가져옴
     expect(result).toBeDefined();
     expect(result.location).toBeDefined();

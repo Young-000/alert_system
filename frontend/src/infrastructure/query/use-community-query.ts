@@ -20,11 +20,7 @@ export function useNeighborStats(routeId: string | undefined, enabled = true) {
   });
 }
 
-export function useCheckpointTips(
-  checkpointKey: string | undefined,
-  page = 1,
-  limit = 20,
-) {
+export function useCheckpointTips(checkpointKey: string | undefined, page = 1, limit = 20) {
   return useQuery<TipsListResponse>({
     queryKey: queryKeys.community.tips(checkpointKey ?? '', page),
     queryFn: () => getCommuteApiClient().getCheckpointTips(checkpointKey!, page, limit),

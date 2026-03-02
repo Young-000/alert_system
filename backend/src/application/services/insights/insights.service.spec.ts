@@ -86,9 +86,7 @@ describe('InsightsService', () => {
 
       await service.getRegions({ limit: 200 });
 
-      expect(mockInsightRepo.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: 100 }),
-      );
+      expect(mockInsightRepo.findAll).toHaveBeenCalledWith(expect.objectContaining({ limit: 100 }));
     });
 
     it('지역 summary에 weekTrendDirection이 포함된다', async () => {
@@ -134,9 +132,7 @@ describe('InsightsService', () => {
     it('존재하지 않는 지역에 대해 NotFoundException을 던진다', async () => {
       mockInsightRepo.findByRegionId.mockResolvedValue(null);
 
-      await expect(
-        service.getRegionById('nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getRegionById('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -159,9 +155,7 @@ describe('InsightsService', () => {
     it('존재하지 않는 지역에 대해 NotFoundException을 던진다', async () => {
       mockInsightRepo.findByRegionId.mockResolvedValue(null);
 
-      await expect(
-        service.getRegionTrends('nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getRegionTrends('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -187,9 +181,7 @@ describe('InsightsService', () => {
     it('존재하지 않는 지역에 대해 NotFoundException을 던진다', async () => {
       mockInsightRepo.findByRegionId.mockResolvedValue(null);
 
-      await expect(
-        service.getRegionPeakHours('nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getRegionPeakHours('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 

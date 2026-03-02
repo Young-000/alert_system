@@ -32,8 +32,6 @@ export class WeatherApiClient {
   constructor(private apiClient: ApiClient) {}
 
   async getCurrentWeather(lat: number, lng: number): Promise<WeatherData> {
-    return this.apiClient.get<WeatherData>(
-      `/weather/current?lat=${lat}&lng=${lng}`
-    );
+    return this.apiClient.get<WeatherData>(`/weather/current?lat=${lat}&lng=${lng}`);
   }
 }

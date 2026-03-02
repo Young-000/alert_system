@@ -25,9 +25,7 @@ describe('BusController', () => {
 
   describe('searchStops', () => {
     it('검색어로 버스 정류장 검색 성공', async () => {
-      const mockStops = [
-        { id: 'stop-1', name: '강남역', arsId: '22001' },
-      ];
+      const mockStops = [{ id: 'stop-1', name: '강남역', arsId: '22001' }];
       searchBusStopsUseCase.execute.mockResolvedValue(mockStops as any);
 
       const result = await controller.searchStops('강남');
@@ -48,9 +46,7 @@ describe('BusController', () => {
 
   describe('getArrival', () => {
     it('버스 도착 정보 조회 성공', async () => {
-      const mockArrivals = [
-        { busRouteNm: '146', arrmsg1: '3분 후 도착' },
-      ];
+      const mockArrivals = [{ busRouteNm: '146', arrmsg1: '3분 후 도착' }];
       busApiClient.getBusArrival.mockResolvedValue(mockArrivals as any);
 
       const result = await controller.getArrival('22001');
@@ -62,9 +58,7 @@ describe('BusController', () => {
     it('busApiClient 미주입 시 빈 배열 반환', async () => {
       const module = await Test.createTestingModule({
         controllers: [BusController],
-        providers: [
-          { provide: SearchBusStopsUseCase, useValue: searchBusStopsUseCase },
-        ],
+        providers: [{ provide: SearchBusStopsUseCase, useValue: searchBusStopsUseCase }],
       }).compile();
       const ctrl = module.get<BusController>(BusController);
 

@@ -12,7 +12,11 @@ export interface IMissionRepository {
 
   // Daily Records
   findDailyRecords(userId: string, date: string): Promise<DailyMissionRecord[]>;
-  findDailyRecord(userId: string, missionId: string, date: string): Promise<DailyMissionRecord | null>;
+  findDailyRecord(
+    userId: string,
+    missionId: string,
+    date: string,
+  ): Promise<DailyMissionRecord | null>;
   saveDailyRecord(record: DailyMissionRecord): Promise<DailyMissionRecord>;
 
   // Scores

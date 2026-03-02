@@ -13,11 +13,20 @@ import {
   COMMUTE_ROUTE_REPOSITORY,
 } from '@domain/repositories/commute-route.repository';
 import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
-import { NotificationContext, NotificationContextBuilder } from '@domain/entities/notification-context.entity';
+import {
+  NotificationContext,
+  NotificationContextBuilder,
+} from '@domain/entities/notification-context.entity';
 import { RuleCategory } from '@domain/entities/notification-rule.entity';
 import { IRuleEngine, RULE_ENGINE } from '@domain/services/rule-engine.service';
-import { ISmartMessageBuilder, SMART_MESSAGE_BUILDER } from '@application/services/smart-message-builder.service';
-import { INotificationRuleRepository, NOTIFICATION_RULE_REPOSITORY } from '@domain/repositories/notification-rule.repository';
+import {
+  ISmartMessageBuilder,
+  SMART_MESSAGE_BUILDER,
+} from '@application/services/smart-message-builder.service';
+import {
+  INotificationRuleRepository,
+  NOTIFICATION_RULE_REPOSITORY,
+} from '@domain/repositories/notification-rule.repository';
 import { RecommendBestRouteUseCase } from './recommend-best-route.use-case';
 import { Repository } from 'typeorm';
 import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
@@ -28,7 +37,10 @@ import {
   SOLAPI_SERVICE,
   AlertTimeType,
 } from '@infrastructure/messaging/solapi.service';
-import { NotificationMessageBuilderService, NotificationData } from '@application/services/notification-message-builder.service';
+import {
+  NotificationMessageBuilderService,
+  NotificationData,
+} from '@application/services/notification-message-builder.service';
 
 // B-7: Delay detection threshold — if all arrivals exceed this, suspect delay
 const DELAY_THRESHOLD_SECONDS = 600; // 10 minutes
@@ -55,9 +67,13 @@ export class SendNotificationUseCase {
     @Optional() private recommendBestRouteUseCase?: RecommendBestRouteUseCase,
     @Optional() @Inject(RULE_ENGINE) private ruleEngine?: IRuleEngine,
     @Optional() @Inject(SMART_MESSAGE_BUILDER) private smartMessageBuilder?: ISmartMessageBuilder,
-    @Optional() @Inject(NOTIFICATION_RULE_REPOSITORY) private ruleRepository?: INotificationRuleRepository,
+    @Optional()
+    @Inject(NOTIFICATION_RULE_REPOSITORY)
+    private ruleRepository?: INotificationRuleRepository,
     @Optional() @Inject(SOLAPI_SERVICE) private solapiService?: ISolapiService,
-    @Optional() @InjectRepository(NotificationLogEntity) private notificationLogRepo?: Repository<NotificationLogEntity>,
+    @Optional()
+    @InjectRepository(NotificationLogEntity)
+    private notificationLogRepo?: Repository<NotificationLogEntity>,
     @Optional() @Inject(WEB_PUSH_SERVICE) private webPushService?: IWebPushService,
     @Optional() @Inject(EXPO_PUSH_SERVICE) private expoPushService?: IExpoPushService,
   ) {}
@@ -120,17 +136,33 @@ export class SendNotificationUseCase {
 
     if (alert.alertTypes.includes(AlertType.WEATHER)) {
       tasks.push(
-        this.weatherApiClient.getWeatherWithForecast(location.lat, location.lng)
-          .then((weather) => { data.weather = weather; contextBuilder.withWeather(weather); })
-          .catch((error) => { this.logger.warn(`날씨 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`); }),
+        this.weatherApiClient
+          .getWeatherWithForecast(location.lat, location.lng)
+          .then((weather) => {
+            data.weather = weather;
+            contextBuilder.withWeather(weather);
+          })
+          .catch((error) => {
+            this.logger.warn(
+              `날씨 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`,
+            );
+          }),
       );
     }
 
     if (alert.alertTypes.includes(AlertType.AIR_QUALITY)) {
       tasks.push(
-        this.airQualityApiClient.getAirQuality(location.lat, location.lng)
-          .then((airQuality) => { data.airQuality = airQuality; contextBuilder.withAirQuality(airQuality); })
-          .catch((error) => { this.logger.warn(`미세먼지 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`); }),
+        this.airQualityApiClient
+          .getAirQuality(location.lat, location.lng)
+          .then((airQuality) => {
+            data.airQuality = airQuality;
+            contextBuilder.withAirQuality(airQuality);
+          })
+          .catch((error) => {
+            this.logger.warn(
+              `미세먼지 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`,
+            );
+          }),
       );
     }
 
@@ -146,16 +178,18 @@ export class SendNotificationUseCase {
         if (data.subwayStations.length > 0 && (this.webPushService || this.expoPushService)) {
           const delayInfo = this.detectSubwayDelay(data.subwayStations);
           if (delayInfo) {
-            this.sendDelayAlert(alert, delayInfo, data).catch(err =>
+            this.sendDelayAlert(alert, delayInfo, data).catch((err) =>
               this.logger.warn(`Delay alert push failed: ${err}`),
             );
-            this.sendDelayAlertExpo(alert, delayInfo, data).catch(err =>
+            this.sendDelayAlertExpo(alert, delayInfo, data).catch((err) =>
               this.logger.warn(`Delay alert expo push failed: ${err}`),
             );
           }
         }
       } catch (error) {
-        this.logger.warn(`지하철 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`);
+        this.logger.warn(
+          `지하철 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`,
+        );
       }
     }
 
@@ -163,7 +197,9 @@ export class SendNotificationUseCase {
       try {
         data.busStops = await this.collectBusData(alert.busStopId);
       } catch (error) {
-        this.logger.warn(`버스 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`);
+        this.logger.warn(
+          `버스 API 호출 실패 (계속 진행): ${error instanceof Error ? error.message : error}`,
+        );
       }
     }
   }
@@ -185,8 +221,13 @@ export class SendNotificationUseCase {
     }
   }
 
-  private async collectSubwayData(stationIds: string): Promise<Array<{ name: string; line: string; arrivals: SubwayArrival[] }>> {
-    const ids = stationIds.split(',').map(id => id.trim()).slice(0, 2);
+  private async collectSubwayData(
+    stationIds: string,
+  ): Promise<Array<{ name: string; line: string; arrivals: SubwayArrival[] }>> {
+    const ids = stationIds
+      .split(',')
+      .map((id) => id.trim())
+      .slice(0, 2);
 
     const settled = await Promise.allSettled(
       ids.map(async (id) => {
@@ -198,13 +239,24 @@ export class SendNotificationUseCase {
     );
 
     return settled
-      .filter((r): r is PromiseFulfilledResult<{ name: string; line: string; arrivals: SubwayArrival[] }> =>
-        r.status === 'fulfilled' && r.value != null)
+      .filter(
+        (
+          r,
+        ): r is PromiseFulfilledResult<{ name: string; line: string; arrivals: SubwayArrival[] }> =>
+          r.status === 'fulfilled' && r.value != null,
+      )
       .map((r) => r.value);
   }
 
-  private async collectBusData(stopIds: string): Promise<Array<{ name: string; arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[] }>> {
-    const ids = stopIds.split(',').map(id => id.trim()).slice(0, 2);
+  private async collectBusData(
+    stopIds: string,
+  ): Promise<
+    Array<{ name: string; arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[] }>
+  > {
+    const ids = stopIds
+      .split(',')
+      .map((id) => id.trim())
+      .slice(0, 2);
 
     const settled = await Promise.allSettled(
       ids.map(async (id) => {
@@ -214,8 +266,14 @@ export class SendNotificationUseCase {
     );
 
     return settled
-      .filter((r): r is PromiseFulfilledResult<{ name: string; arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[] }> =>
-        r.status === 'fulfilled')
+      .filter(
+        (
+          r,
+        ): r is PromiseFulfilledResult<{
+          name: string;
+          arrivals: import('@domain/entities/bus-arrival.entity').BusArrival[];
+        }> => r.status === 'fulfilled',
+      )
       .map((r) => r.value);
   }
 
@@ -263,7 +321,7 @@ export class SendNotificationUseCase {
     timeType: AlertTimeType,
   ): Promise<void> {
     const hasWeather = alert.alertTypes.includes(AlertType.WEATHER) && data.weather;
-    const hasTransit = (data.subwayStations?.length || data.busStops?.length);
+    const hasTransit = data.subwayStations?.length || data.busStops?.length;
 
     if (hasWeather && hasTransit) {
       const variables = this.messageBuilder.buildCombinedVariables(userName, data);
@@ -284,22 +342,16 @@ export class SendNotificationUseCase {
 
   private sendWebPush(alert: Alert, summary: string): void {
     if (!this.webPushService) return;
-    this.webPushService.sendToUser(
-      alert.userId,
-      `${alert.name}`,
-      summary,
-      '/',
-    ).catch(err => this.logger.warn(`Web push failed: ${err}`));
+    this.webPushService
+      .sendToUser(alert.userId, `${alert.name}`, summary, '/')
+      .catch((err) => this.logger.warn(`Web push failed: ${err}`));
   }
 
   private sendExpoPush(alert: Alert, summary: string): void {
     if (!this.expoPushService) return;
-    this.expoPushService.sendToUser(
-      alert.userId,
-      alert.name,
-      summary,
-      { url: '/', alertId: alert.id },
-    ).catch(err => this.logger.warn(`Expo push failed: ${err}`));
+    this.expoPushService
+      .sendToUser(alert.userId, alert.name, summary, { url: '/', alertId: alert.id })
+      .catch((err) => this.logger.warn(`Expo push failed: ${err}`));
   }
 
   private async handleSendFailure(
@@ -339,8 +391,8 @@ export class SendNotificationUseCase {
         status,
         summary,
       });
-    } catch (err) {
-      this.logger.warn(`Failed to save notification log: ${err}`);
+    } catch (error) {
+      this.logger.warn(`Failed to save notification log: ${error}`);
     }
   }
 
@@ -362,9 +414,7 @@ export class SendNotificationUseCase {
       if (station.arrivals.length === 0) {
         return { stationName: station.name, type: 'no_arrivals' };
       }
-      const allLongWait = station.arrivals.every(
-        a => a.arrivalTime >= DELAY_THRESHOLD_SECONDS,
-      );
+      const allLongWait = station.arrivals.every((a) => a.arrivalTime >= DELAY_THRESHOLD_SECONDS);
       if (allLongWait) {
         return { stationName: station.name, type: 'long_wait' };
       }

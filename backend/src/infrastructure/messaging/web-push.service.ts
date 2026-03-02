@@ -24,11 +24,7 @@ export class WebPushService implements IWebPushService {
     const privateKey = process.env.VAPID_PRIVATE_KEY || '';
 
     if (publicKey && privateKey) {
-      webPush.setVapidDetails(
-        'mailto:alert@commute-mate.app',
-        publicKey,
-        privateKey,
-      );
+      webPush.setVapidDetails('mailto:alert@commute-mate.app', publicKey, privateKey);
       this.isConfigured = true;
       this.logger.log('Web Push configured');
     } else {

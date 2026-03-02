@@ -3,17 +3,26 @@ import { Link } from 'react-router-dom';
 export function GuestLanding(): JSX.Element {
   return (
     <main className="page guest-page">
-      <a href="#main-content" className="skip-link">본문으로 건너뛰기</a>
+      <a href="#main-content" className="skip-link">
+        본문으로 건너뛰기
+      </a>
       <div className="guest-top-bar">
         <strong className="guest-brand">출퇴근 메이트</strong>
-        <Link className="btn btn-primary btn-sm" to="/login">시작하기</Link>
+        <Link className="btn btn-primary btn-sm" to="/login">
+          시작하기
+        </Link>
       </div>
 
       <section id="main-content" className="guest-hero">
         <div className="guest-hero-content">
-          <h1 className="guest-headline">출퇴근을<br />책임지는 앱</h1>
+          <h1 className="guest-headline">
+            출퇴근을
+            <br />
+            책임지는 앱
+          </h1>
           <p className="guest-sub">
-            날씨, 교통, 이동시간까지.<br />
+            날씨, 교통, 이동시간까지.
+            <br />
             매일 아침 알림 하나로 시작하세요.
           </p>
           <Link className="btn btn-primary btn-lg guest-cta" to="/login">

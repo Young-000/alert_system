@@ -95,11 +95,9 @@ describe('error-logger', () => {
     const handlers: Record<string, (e: any) => void> = {};
 
     beforeEach(() => {
-      vi.spyOn(window, 'addEventListener').mockImplementation(
-        (event: string, handler: unknown) => {
-          handlers[event] = handler as (e: unknown) => void;
-        },
-      );
+      vi.spyOn(window, 'addEventListener').mockImplementation((event: string, handler: unknown) => {
+        handlers[event] = handler as (e: unknown) => void;
+      });
       installGlobalErrorHandlers();
     });
 

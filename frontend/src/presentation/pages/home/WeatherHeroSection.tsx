@@ -48,15 +48,15 @@ export function WeatherHeroSection({
         >
           <WeatherIcon condition={weather.condition} size={isExpanded ? 48 : 24} />
           <span className="weather-hero-summary-temp">{Math.round(weather.temperature)}&deg;</span>
-          <span className="weather-hero-summary-condition">{weather.conditionKr || translateCondition(weather.condition)}</span>
+          <span className="weather-hero-summary-condition">
+            {weather.conditionKr || translateCondition(weather.condition)}
+          </span>
           {airQuality.label !== '-' && (
             <span className={`aqi-badge ${airQuality.className} weather-hero-summary-aqi`}>
               {airQuality.label}
             </span>
           )}
-          {isDefaultLocation && (
-            <span className="weather-hero-summary-location">서울</span>
-          )}
+          {isDefaultLocation && <span className="weather-hero-summary-location">서울</span>}
           <ChevronIcon
             size={16}
             className={`collapsible-chevron ${isExpanded ? 'collapsible-chevron--expanded' : ''}`}
@@ -64,12 +64,17 @@ export function WeatherHeroSection({
         </div>
 
         {/* Detail content (only visible when expanded) */}
-        <div id="weather-detail-content" className={`collapsible-content ${isExpanded ? 'collapsible-content--expanded' : ''}`}>
+        <div
+          id="weather-detail-content"
+          className={`collapsible-content ${isExpanded ? 'collapsible-content--expanded' : ''}`}
+        >
           <div className="weather-hero-detail">
             <div className="weather-hero-main">
               <div className="weather-hero-text">
                 <span className="weather-temp-value">{Math.round(weather.temperature)}&deg;</span>
-                <span className="weather-condition">{weather.conditionKr || translateCondition(weather.condition)}</span>
+                <span className="weather-condition">
+                  {weather.conditionKr || translateCondition(weather.condition)}
+                </span>
               </div>
               {isDefaultLocation && (
                 <button
@@ -77,11 +82,21 @@ export function WeatherHeroSection({
                   className="location-default-badge"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowLocationTip(prev => !prev);
+                    setShowLocationTip((prev) => !prev);
                   }}
                   aria-label="위치 권한이 없어 서울 기준 날씨를 표시합니다"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
@@ -99,9 +114,13 @@ export function WeatherHeroSection({
             <div className="weather-hero-details">
               <span>습도 {weather.humidity}%</span>
               {airQuality.label !== '-' ? (
-                <span className={`aqi-badge ${airQuality.className}`}>미세먼지 {airQuality.label}</span>
+                <span className={`aqi-badge ${airQuality.className}`}>
+                  미세먼지 {airQuality.label}
+                </span>
               ) : airQualityError ? (
-                <span className="muted" role="alert">{airQualityError}</span>
+                <span className="muted" role="alert">
+                  {airQualityError}
+                </span>
               ) : null}
             </div>
             <p className="weather-advice">{getWeatherAdvice(weather, airQuality)}</p>
@@ -114,7 +133,7 @@ export function WeatherHeroSection({
           <section className="weather-checklist" aria-label="오늘의 준비물">
             <h3 className="weather-checklist-title">오늘의 준비물</h3>
             <div className="weather-checklist-items">
-              {checklistItems.map(item => (
+              {checklistItems.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -122,11 +141,24 @@ export function WeatherHeroSection({
                   onClick={() => onChecklistToggle(item.id)}
                   aria-pressed={checkedItems.has(item.id)}
                 >
-                  <span className="checklist-emoji" aria-hidden="true">{item.emoji}</span>
+                  <span className="checklist-emoji" aria-hidden="true">
+                    {item.emoji}
+                  </span>
                   <span className="checklist-label">{item.label}</span>
                   {checkedItems.has(item.id) && (
                     <span className="checklist-check" aria-hidden="true">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     </span>
                   )}
                 </button>

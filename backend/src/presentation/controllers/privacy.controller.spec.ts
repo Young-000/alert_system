@@ -12,9 +12,10 @@ describe('PrivacyController', () => {
   const OWNER_ID = 'user-123';
   const OTHER_USER_ID = 'other-user';
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   beforeEach(async () => {
     exportUserDataUseCase = { execute: jest.fn() } as any;
@@ -56,17 +57,17 @@ describe('PrivacyController', () => {
     });
 
     it('다른 사용자의 데이터 내보내기 시 ForbiddenException', async () => {
-      await expect(
-        controller.exportUserData(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.exportUserData(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(exportUserDataUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('다른 사용자 접근 시 올바른 에러 메시지', async () => {
-      await expect(
-        controller.exportUserData(OWNER_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow('다른 사용자의 데이터에 접근할 수 없습니다.');
+      await expect(controller.exportUserData(OWNER_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        '다른 사용자의 데이터에 접근할 수 없습니다.',
+      );
     });
   });
 

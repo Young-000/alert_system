@@ -49,9 +49,9 @@ describe('ManageMissionUseCase', () => {
     it('같은 타입 미션이 3개면 에러를 던진다', async () => {
       repo.countByUserAndType.mockResolvedValue(3);
 
-      await expect(
-        useCase.createMission('user-1', '네 번째', 'commute'),
-      ).rejects.toThrow('commute 미션은 최대 3개까지 설정할 수 있습니다');
+      await expect(useCase.createMission('user-1', '네 번째', 'commute')).rejects.toThrow(
+        'commute 미션은 최대 3개까지 설정할 수 있습니다',
+      );
     });
   });
 
@@ -101,9 +101,9 @@ describe('ManageMissionUseCase', () => {
       const mission = Mission.createNew('user-1', '독서', 'commute');
       repo.findById.mockResolvedValue(mission);
 
-      await expect(
-        useCase.updateMission(mission.id, 'user-2', { title: '해킹' }),
-      ).rejects.toThrow('권한이 없습니다');
+      await expect(useCase.updateMission(mission.id, 'user-2', { title: '해킹' })).rejects.toThrow(
+        '권한이 없습니다',
+      );
     });
 
     it('존재하지 않는 미션을 수정하면 에러를 던진다', async () => {
@@ -129,17 +129,15 @@ describe('ManageMissionUseCase', () => {
       const mission = Mission.createNew('user-1', '독서', 'commute');
       repo.findById.mockResolvedValue(mission);
 
-      await expect(
-        useCase.deleteMission(mission.id, 'user-2'),
-      ).rejects.toThrow('권한이 없습니다');
+      await expect(useCase.deleteMission(mission.id, 'user-2')).rejects.toThrow('권한이 없습니다');
     });
 
     it('존재하지 않는 미션을 삭제하면 에러를 던진다', async () => {
       repo.findById.mockResolvedValue(null);
 
-      await expect(
-        useCase.deleteMission('non-existent', 'user-1'),
-      ).rejects.toThrow('미션을 찾을 수 없습니다');
+      await expect(useCase.deleteMission('non-existent', 'user-1')).rejects.toThrow(
+        '미션을 찾을 수 없습니다',
+      );
     });
   });
 
@@ -160,9 +158,7 @@ describe('ManageMissionUseCase', () => {
       const mission = Mission.createNew('user-1', '독서', 'commute');
       repo.findById.mockResolvedValue(mission);
 
-      await expect(
-        useCase.toggleActive(mission.id, 'user-2'),
-      ).rejects.toThrow('권한이 없습니다');
+      await expect(useCase.toggleActive(mission.id, 'user-2')).rejects.toThrow('권한이 없습니다');
     });
   });
 
@@ -183,9 +179,7 @@ describe('ManageMissionUseCase', () => {
       const mission = Mission.createNew('user-1', '독서', 'commute');
       repo.findById.mockResolvedValue(mission);
 
-      await expect(
-        useCase.reorder(mission.id, 'user-2', 1),
-      ).rejects.toThrow('권한이 없습니다');
+      await expect(useCase.reorder(mission.id, 'user-2', 1)).rejects.toThrow('권한이 없습니다');
     });
   });
 });

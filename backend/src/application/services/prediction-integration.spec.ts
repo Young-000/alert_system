@@ -12,7 +12,12 @@ import { PredictionEngineService, PredictionTier } from './prediction-engine.ser
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
 import { CommuteSession, SessionStatus } from '@domain/entities/commute-session.entity';
 import { CheckpointRecord } from '@domain/entities/checkpoint-record.entity';
-import { PatternType, UserPattern, DayOfWeekDepartureValue, WeatherSensitivityValue } from '@domain/entities/user-pattern.entity';
+import {
+  PatternType,
+  UserPattern,
+  DayOfWeekDepartureValue,
+  WeatherSensitivityValue,
+} from '@domain/entities/user-pattern.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 import { ICommuteSessionRepository } from '@domain/repositories/commute-session.repository';
@@ -123,11 +128,7 @@ describe('Prediction Pipeline Integration', () => {
       sessionRepo,
     );
 
-    predictionEngine = new PredictionEngineService(
-      featureService,
-      patternRepo,
-      commuteRepo,
-    );
+    predictionEngine = new PredictionEngineService(featureService, patternRepo, commuteRepo);
   });
 
   describe('Tier progression: cold_start → basic → day_aware → weather_aware → full', () => {
@@ -156,7 +157,7 @@ describe('Prediction Pipeline Integration', () => {
       const [h, m] = result.departureTime.split(':').map(Number);
       const minutes = h * 60 + m;
       expect(minutes).toBeGreaterThanOrEqual(480); // >= 08:00
-      expect(minutes).toBeLessThanOrEqual(510);    // <= 08:30
+      expect(minutes).toBeLessThanOrEqual(510); // <= 08:30
       expect(result.dataStatus.nextTierAt).toBe(10);
     });
 
@@ -194,7 +195,7 @@ describe('Prediction Pipeline Integration', () => {
       const [h, m] = result.departureTime.split(':').map(Number);
       const minutes = h * 60 + m;
       expect(minutes).toBeGreaterThanOrEqual(495); // ~ 08:15
-      expect(minutes).toBeLessThanOrEqual(505);    // ~ 08:25
+      expect(minutes).toBeLessThanOrEqual(505); // ~ 08:25
     });
 
     it('25 records with weather: weather_aware tier, applies weather coefficients', async () => {
@@ -227,15 +228,17 @@ describe('Prediction Pipeline Integration', () => {
       expect(resultRain.tier).toBe('weather_aware');
 
       // Rain should have a weather factor that shifts earlier
-      const weatherFactor = resultRain.factors.find(f => f.type === 'weather');
+      const weatherFactor = resultRain.factors.find((f) => f.type === 'weather');
       expect(weatherFactor).toBeDefined();
       expect(weatherFactor!.impact).toBeLessThan(0);
 
       // Rain prediction should be earlier than clear
-      const clearMinutes = parseInt(resultClear.departureTime.split(':')[0]) * 60
-        + parseInt(resultClear.departureTime.split(':')[1]);
-      const rainMinutes = parseInt(resultRain.departureTime.split(':')[0]) * 60
-        + parseInt(resultRain.departureTime.split(':')[1]);
+      const clearMinutes =
+        parseInt(resultClear.departureTime.split(':')[0]) * 60 +
+        parseInt(resultClear.departureTime.split(':')[1]);
+      const rainMinutes =
+        parseInt(resultRain.departureTime.split(':')[0]) * 60 +
+        parseInt(resultRain.departureTime.split(':')[1]);
       expect(rainMinutes).toBeLessThan(clearMinutes);
     });
 
@@ -328,7 +331,7 @@ describe('Prediction Pipeline Integration', () => {
       const prediction = await predictionEngine.predict('user-1', { weather: 'rain' });
 
       expect(prediction.tier).toBe('weather_aware');
-      const weatherFactor = prediction.factors.find(f => f.type === 'weather');
+      const weatherFactor = prediction.factors.find((f) => f.type === 'weather');
       expect(weatherFactor).toBeDefined();
     });
   });
@@ -343,8 +346,8 @@ describe('Prediction Pipeline Integration', () => {
       });
 
       // Both weather and transit delay should have factors
-      const weatherFactor = result.factors.find(f => f.type === 'weather');
-      const transitFactor = result.factors.find(f => f.type === 'transit_delay');
+      const weatherFactor = result.factors.find((f) => f.type === 'weather');
+      const transitFactor = result.factors.find((f) => f.type === 'transit_delay');
       expect(weatherFactor).toBeDefined();
       expect(transitFactor).toBeDefined();
     });

@@ -8,7 +8,7 @@ export function useAirQualityQuery(lat: number, lng: number, enabled: boolean) {
     queryKey: queryKeys.airQuality.byLocation(lat, lng),
     queryFn: () => airQualityApiClient.getByLocation(lat, lng),
     enabled,
-    staleTime: 10 * 60 * 1000,      // 10분 — 미세먼지는 시간 단위 변동
+    staleTime: 10 * 60 * 1000, // 10분 — 미세먼지는 시간 단위 변동
     refetchOnWindowFocus: true,
   });
 }

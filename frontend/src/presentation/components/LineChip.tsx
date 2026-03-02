@@ -16,19 +16,19 @@ const LINE_COLORS: Record<string, string> = {
   '7호선': '#747F00',
   '8호선': '#E6186C',
   '9호선': '#BDB092',
-  '경의중앙선': '#77C4A3',
-  '경춘선': '#0C8E72',
-  '수인분당선': '#FABE00',
-  '신분당선': '#D31145',
-  '공항철도': '#0090D2',
-  '우이신설선': '#B0CE18',
+  경의중앙선: '#77C4A3',
+  경춘선: '#0C8E72',
+  수인분당선: '#FABE00',
+  신분당선: '#D31145',
+  공항철도: '#0090D2',
+  우이신설선: '#B0CE18',
   'GTX-A': '#9A6292',
-  '인천1호선': '#7CA8D5',
-  '인천2호선': '#ED8B00',
-  '김포골드라인': '#AD8605',
-  '신림선': '#6789CA',
-  '의정부경전철': '#FDA600',
-  '용인에버라인': '#509F22',
+  인천1호선: '#7CA8D5',
+  인천2호선: '#ED8B00',
+  김포골드라인: '#AD8605',
+  신림선: '#6789CA',
+  의정부경전철: '#FDA600',
+  용인에버라인: '#509F22',
 };
 
 function getLineColor(line: string): string {
@@ -44,7 +44,12 @@ function getLineColor(line: string): string {
   return '#666';
 }
 
-export function LineChip({ line, size = 'default', onClick, selected }: LineChipProps): JSX.Element {
+export function LineChip({
+  line,
+  size = 'default',
+  onClick,
+  selected,
+}: LineChipProps): JSX.Element {
   const bgColor = getLineColor(line);
   const Tag = onClick ? 'button' : 'span';
 

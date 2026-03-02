@@ -1,11 +1,4 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsNumber,
-  IsIn,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsIn, MaxLength } from 'class-validator';
 
 const MISSION_TYPES = ['commute', 'return'] as const;
 

@@ -27,7 +27,7 @@ import { BriefingAdviceService } from '@application/services/briefing-advice.ser
 import { BriefingResponseDto } from '@application/dto/briefing.dto';
 
 const DEFAULT_LAT = 37.5665;
-const DEFAULT_LNG = 126.9780;
+const DEFAULT_LNG = 126.978;
 
 @Injectable()
 export class WidgetDataService {
@@ -35,12 +35,18 @@ export class WidgetDataService {
 
   constructor(
     @Optional() @Inject('IWeatherApiClient') private readonly weatherApiClient?: IWeatherApiClient,
-    @Optional() @Inject('IAirQualityApiClient') private readonly airQualityApiClient?: IAirQualityApiClient,
+    @Optional()
+    @Inject('IAirQualityApiClient')
+    private readonly airQualityApiClient?: IAirQualityApiClient,
     @Optional() @Inject('ISubwayApiClient') private readonly subwayApiClient?: ISubwayApiClient,
     @Optional() @Inject('IBusApiClient') private readonly busApiClient?: IBusApiClient,
     @Optional() @Inject('IAlertRepository') private readonly alertRepository?: IAlertRepository,
-    @Optional() @Inject(COMMUTE_ROUTE_REPOSITORY) private readonly routeRepository?: ICommuteRouteRepository,
-    @Optional() @Inject('ISubwayStationRepository') private readonly subwayStationRepository?: ISubwayStationRepository,
+    @Optional()
+    @Inject(COMMUTE_ROUTE_REPOSITORY)
+    private readonly routeRepository?: ICommuteRouteRepository,
+    @Optional()
+    @Inject('ISubwayStationRepository')
+    private readonly subwayStationRepository?: ISubwayStationRepository,
     @Optional() private readonly calculateDepartureUseCase?: CalculateDepartureUseCase,
     @Optional() private readonly briefingAdviceService?: BriefingAdviceService,
   ) {}
@@ -66,12 +72,9 @@ export class WidgetDataService {
     const weather = weatherResult.status === 'fulfilled' ? weatherResult.value : null;
     const airQuality = airQualityResult.status === 'fulfilled' ? airQualityResult.value : null;
     const alerts = alertsResult.status === 'fulfilled' ? alertsResult.value : [];
-    const transit = transitResult.status === 'fulfilled'
-      ? transitResult.value
-      : { subway: null, bus: null };
-    const departure = departureResult.status === 'fulfilled'
-      ? departureResult.value
-      : null;
+    const transit =
+      transitResult.status === 'fulfilled' ? transitResult.value : { subway: null, bus: null };
+    const departure = departureResult.status === 'fulfilled' ? departureResult.value : null;
 
     if (weatherResult.status === 'rejected') {
       this.logger.warn(`Widget weather fetch failed: ${weatherResult.reason}`);
@@ -130,11 +133,7 @@ export class WidgetDataService {
     return this.mapAirQualityToDto(aq.pm10, aq.pm25, aq.status);
   }
 
-  private mapAirQualityToDto(
-    pm10: number,
-    pm25: number,
-    status: string,
-  ): WidgetAirQualityDto {
+  private mapAirQualityToDto(pm10: number, pm25: number, status: string): WidgetAirQualityDto {
     const dto = new WidgetAirQualityDto();
     dto.pm10 = pm10;
     dto.pm25 = pm25;
@@ -145,19 +144,17 @@ export class WidgetDataService {
 
   private translateAqiStatus(status: string): string {
     const statusMap: Record<string, string> = {
-      'Good': '좋음',
-      'Moderate': '보통',
+      Good: '좋음',
+      Moderate: '보통',
       'Unhealthy for Sensitive': '민감군 나쁨',
-      'Unhealthy': '나쁨',
+      Unhealthy: '나쁨',
       'Very Unhealthy': '매우 나쁨',
-      'Hazardous': '위험',
+      Hazardous: '위험',
     };
     return statusMap[status] ?? status;
   }
 
-  private computeAqiStatusLevel(
-    pm10: number,
-  ): 'good' | 'moderate' | 'unhealthy' | 'veryUnhealthy' {
+  private computeAqiStatusLevel(pm10: number): 'good' | 'moderate' | 'unhealthy' | 'veryUnhealthy' {
     if (pm10 <= 30) return 'good';
     if (pm10 <= 80) return 'moderate';
     if (pm10 <= 150) return 'unhealthy';
@@ -241,24 +238,25 @@ export class WidgetDataService {
     if (routes.length === 0) return result;
 
     // Prefer `isPreferred: true`, fall back to first route
-    const preferredRoute =
-      routes.find((r) => r.isPreferred) ?? routes[0];
+    const preferredRoute = routes.find((r) => r.isPreferred) ?? routes[0];
 
     // Find first subway checkpoint
     const subwayCheckpoint = preferredRoute.checkpoints.find(
-      (cp) =>
-        cp.checkpointType === CheckpointType.SUBWAY && cp.linkedStationId,
+      (cp) => cp.checkpointType === CheckpointType.SUBWAY && cp.linkedStationId,
     );
 
     // Find first bus checkpoint
     const busCheckpoint = preferredRoute.checkpoints.find(
-      (cp) =>
-        cp.checkpointType === CheckpointType.BUS_STOP && cp.linkedBusStopId,
+      (cp) => cp.checkpointType === CheckpointType.BUS_STOP && cp.linkedBusStopId,
     );
 
     const [subwayResult, busResult] = await Promise.allSettled([
       subwayCheckpoint
-        ? this.fetchSubwayArrival(subwayCheckpoint.linkedStationId!, subwayCheckpoint.name, subwayCheckpoint.lineInfo)
+        ? this.fetchSubwayArrival(
+            subwayCheckpoint.linkedStationId!,
+            subwayCheckpoint.name,
+            subwayCheckpoint.lineInfo,
+          )
         : Promise.resolve(null),
       busCheckpoint
         ? this.fetchBusArrival(busCheckpoint.linkedBusStopId!, busCheckpoint.name)
@@ -345,7 +343,9 @@ export class WidgetDataService {
 
     // Mode override: commute→morning, return→evening
     const timeContext = mode
-      ? (mode === 'commute' ? 'morning' : 'evening')
+      ? mode === 'commute'
+        ? 'morning'
+        : 'evening'
       : BriefingAdviceService.getTimeContext();
 
     return this.briefingAdviceService.generate({

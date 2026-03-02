@@ -66,15 +66,23 @@ describe('CommunityTip', () => {
     });
 
     it('URL이 포함되면 에러를 반환한다', () => {
-      expect(CommunityTip.validateContent('https://example.com 참고')).toBe('URL은 포함할 수 없습니다.');
-      expect(CommunityTip.validateContent('www.example.com 참고')).toBe('URL은 포함할 수 없습니다.');
+      expect(CommunityTip.validateContent('https://example.com 참고')).toBe(
+        'URL은 포함할 수 없습니다.',
+      );
+      expect(CommunityTip.validateContent('www.example.com 참고')).toBe(
+        'URL은 포함할 수 없습니다.',
+      );
       expect(CommunityTip.validateContent('http://test 참고')).toBe('URL은 포함할 수 없습니다.');
       expect(CommunityTip.validateContent('example.com 참고')).toBe('URL은 포함할 수 없습니다.');
     });
 
     it('부적절한 표현이 포함되면 에러를 반환한다', () => {
-      expect(CommunityTip.validateContent('시발 여기 너무 느려')).toBe('부적절한 표현이 포함되어 있습니다.');
-      expect(CommunityTip.validateContent('fuck this station')).toBe('부적절한 표현이 포함되어 있습니다.');
+      expect(CommunityTip.validateContent('시발 여기 너무 느려')).toBe(
+        '부적절한 표현이 포함되어 있습니다.',
+      );
+      expect(CommunityTip.validateContent('fuck this station')).toBe(
+        '부적절한 표현이 포함되어 있습니다.',
+      );
     });
 
     it('일반적인 한국어 팁은 유효하다', () => {

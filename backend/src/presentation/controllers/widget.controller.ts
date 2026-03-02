@@ -8,15 +8,7 @@ export class WidgetController {
   constructor(private readonly widgetDataService: WidgetDataService) {}
 
   @Get('data')
-  async getData(
-    @Query() query: WidgetDataQueryDto,
-    @Request() req: AuthenticatedRequest,
-  ) {
-    return this.widgetDataService.getData(
-      req.user.userId,
-      query.lat,
-      query.lng,
-      query.mode,
-    );
+  async getData(@Query() query: WidgetDataQueryDto, @Request() req: AuthenticatedRequest) {
+    return this.widgetDataService.getData(req.user.userId, query.lat, query.lng, query.mode);
   }
 }

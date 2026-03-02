@@ -42,20 +42,20 @@ describe('linear-regression', () => {
   it('3개 특성 회귀 (날씨 시나리오: rain, snow, temp)', () => {
     // y = -8*rain - 14*snow - 0.5*temp + 0
     const X = [
-      [1, 0, 5],   // rainy, 5C
-      [0, 0, 10],  // clear, 10C
-      [0, 1, -3],  // snowy, -3C
-      [1, 0, -2],  // rainy, -2C
-      [0, 0, 20],  // clear, 20C
-      [0, 1, 0],   // snowy, 0C
-      [1, 0, 15],  // rainy, 15C
+      [1, 0, 5], // rainy, 5C
+      [0, 0, 10], // clear, 10C
+      [0, 1, -3], // snowy, -3C
+      [1, 0, -2], // rainy, -2C
+      [0, 0, 20], // clear, 20C
+      [0, 1, 0], // snowy, 0C
+      [1, 0, 15], // rainy, 15C
     ];
     const Y = X.map(([rain, snow, temp]) => -8 * rain - 14 * snow - 0.5 * temp);
 
     const result = linearRegression(X, Y);
 
-    expect(result.coefficients[0]).toBeCloseTo(-8, 2);   // rain
-    expect(result.coefficients[1]).toBeCloseTo(-14, 2);  // snow
+    expect(result.coefficients[0]).toBeCloseTo(-8, 2); // rain
+    expect(result.coefficients[1]).toBeCloseTo(-14, 2); // snow
     expect(result.coefficients[2]).toBeCloseTo(-0.5, 2); // temp
     expect(result.rSquared).toBeCloseTo(1, 3);
   });

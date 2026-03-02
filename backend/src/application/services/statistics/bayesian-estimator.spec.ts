@@ -20,7 +20,9 @@ describe('bayesian-estimator', () => {
       const prior: BayesianPrior = { mu: 480, sigma: 15 }; // 08:00
 
       // 데이터: 모두 492분 (08:12) 근처
-      const observations = Array(20).fill(0).map(() => 492 + (Math.random() - 0.5) * 2);
+      const observations = Array(20)
+        .fill(0)
+        .map(() => 492 + (Math.random() - 0.5) * 2);
       const posterior = updatePosterior(prior, observations);
 
       // 사후 평균은 데이터 평균(~492)에 훨씬 가까워야 함
@@ -122,12 +124,8 @@ describe('bayesian-estimator', () => {
     });
 
     it('sigma가 작을수록 구간이 좁다', () => {
-      const narrow = credibleInterval(
-        { mu: 490, sigma: 2, confidence: 0.9, sampleCount: 50 },
-      );
-      const wide = credibleInterval(
-        { mu: 490, sigma: 10, confidence: 0.5, sampleCount: 5 },
-      );
+      const narrow = credibleInterval({ mu: 490, sigma: 2, confidence: 0.9, sampleCount: 50 });
+      const wide = credibleInterval({ mu: 490, sigma: 10, confidence: 0.5, sampleCount: 5 });
 
       expect(narrow.upper - narrow.lower).toBeLessThan(wide.upper - wide.lower);
     });

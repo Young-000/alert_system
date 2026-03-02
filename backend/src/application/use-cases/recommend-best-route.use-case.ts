@@ -50,7 +50,7 @@ export class RecommendBestRouteUseCase {
   async execute(
     userId: string,
     weatherCondition?: string,
-    days = 30
+    days = 30,
   ): Promise<RouteRecommendationResponseDto> {
     if (!this.sessionRepository || !this.routeRepository) {
       return this.emptyResponse('필요한 저장소가 사용 불가능합니다.');
@@ -64,11 +64,11 @@ export class RecommendBestRouteUseCase {
     const sessions = await this.sessionRepository.findByUserIdInDateRange(
       userId,
       startDate,
-      endDate
+      endDate,
     );
 
     const completedSessions = sessions.filter(
-      (s) => s.status === SessionStatus.COMPLETED && s.totalDurationMinutes
+      (s) => s.status === SessionStatus.COMPLETED && s.totalDurationMinutes,
     );
 
     if (completedSessions.length === 0) {
@@ -99,7 +99,7 @@ export class RecommendBestRouteUseCase {
         route.name,
         routeSessions,
         weatherCondition,
-        sessionsByRoute
+        sessionsByRoute,
       );
 
       routeScores.push(score);
@@ -145,7 +145,7 @@ export class RecommendBestRouteUseCase {
     routeName: string,
     sessions: CommuteSession[],
     weatherCondition: string | undefined,
-    allSessionsByRoute: Map<string, CommuteSession[]>
+    allSessionsByRoute: Map<string, CommuteSession[]>,
   ): RouteScoreDto {
     const durations = sessions.map((s) => s.totalDurationMinutes!);
 
@@ -162,7 +162,7 @@ export class RecommendBestRouteUseCase {
       averageDuration,
       allRouteStats.minDuration,
       allRouteStats.maxDuration,
-      true // 역순: 낮을수록 좋음
+      true, // 역순: 낮을수록 좋음
     );
 
     // 안정성 점수 (변동성이 낮을수록 높은 점수)
@@ -170,7 +170,7 @@ export class RecommendBestRouteUseCase {
       variability,
       allRouteStats.minVariability,
       allRouteStats.maxVariability,
-      true // 역순: 낮을수록 좋음
+      true, // 역순: 낮을수록 좋음
     );
 
     // 날씨 영향 점수
@@ -179,8 +179,8 @@ export class RecommendBestRouteUseCase {
     // 종합 점수
     const totalScore = Math.round(
       speedScore * this.WEIGHT_SPEED +
-      reliabilityScore * this.WEIGHT_RELIABILITY +
-      weatherScore * this.WEIGHT_WEATHER
+        reliabilityScore * this.WEIGHT_RELIABILITY +
+        weatherScore * this.WEIGHT_WEATHER,
     );
 
     // 추천 이유 생성
@@ -190,7 +190,7 @@ export class RecommendBestRouteUseCase {
       speedScore,
       reliabilityScore,
       weatherScore,
-      allRouteStats
+      allRouteStats,
     );
 
     return {
@@ -231,12 +231,7 @@ export class RecommendBestRouteUseCase {
     };
   }
 
-  private normalizeToScore(
-    value: number,
-    min: number,
-    max: number,
-    inverse: boolean
-  ): number {
+  private normalizeToScore(value: number, min: number, max: number, inverse: boolean): number {
     if (max === min) return 75; // 동일하면 기본 점수
 
     // 0-100 범위로 정규화
@@ -248,26 +243,21 @@ export class RecommendBestRouteUseCase {
     }
 
     // 50-100 범위로 조정 (너무 낮은 점수 방지)
-    return 50 + (normalized * 0.5);
+    return 50 + normalized * 0.5;
   }
 
-  private calculateWeatherScore(
-    sessions: CommuteSession[],
-    weatherCondition?: string
-  ): number {
+  private calculateWeatherScore(sessions: CommuteSession[], weatherCondition?: string): number {
     if (!weatherCondition) {
       // 날씨 조건이 없으면 기본 점수
       return 75;
     }
 
     // 해당 날씨 조건의 세션들
-    const weatherSessions = sessions.filter(
-      (s) => s.weatherCondition === weatherCondition
-    );
+    const weatherSessions = sessions.filter((s) => s.weatherCondition === weatherCondition);
 
     // 맑은 날 세션들 (기준)
     const clearSessions = sessions.filter(
-      (s) => s.weatherCondition === '맑음' || !s.weatherCondition
+      (s) => s.weatherCondition === '맑음' || !s.weatherCondition,
     );
 
     if (weatherSessions.length < 2 || clearSessions.length < 2) {
@@ -282,7 +272,7 @@ export class RecommendBestRouteUseCase {
 
     // 영향이 적을수록 높은 점수 (-10분 ~ +10분 범위를 50-100점으로 매핑)
     const clampedImpact = Math.max(-10, Math.min(10, weatherImpact));
-    const score = 75 - (clampedImpact * 2.5); // 영향 1분당 ±2.5점
+    const score = 75 - clampedImpact * 2.5; // 영향 1분당 ±2.5점
 
     return Math.max(50, Math.min(100, score));
   }
@@ -293,7 +283,7 @@ export class RecommendBestRouteUseCase {
     speedScore: number,
     reliabilityScore: number,
     weatherScore: number,
-    allRouteStats: { minDuration: number; avgDuration: number }
+    allRouteStats: { minDuration: number; avgDuration: number },
   ): string[] {
     const reasons: string[] = [];
 
@@ -324,10 +314,7 @@ export class RecommendBestRouteUseCase {
     return reasons;
   }
 
-  private generateInsights(
-    routeScores: RouteScoreDto[],
-    weatherCondition?: string
-  ): string[] {
+  private generateInsights(routeScores: RouteScoreDto[], weatherCondition?: string): string[] {
     const insights: string[] = [];
 
     if (routeScores.length === 0) return insights;
@@ -339,33 +326,31 @@ export class RecommendBestRouteUseCase {
 
       if (timeDiff > 0) {
         insights.push(
-          `"${best.routeName}"이 "${second.routeName}"보다 평균 ${Math.round(timeDiff)}분 빨라요`
+          `"${best.routeName}"이 "${second.routeName}"보다 평균 ${Math.round(timeDiff)}분 빨라요`,
         );
       }
 
       // 안정성 비교
       if (best.scores.reliability - second.scores.reliability >= 15) {
-        insights.push(
-          `"${best.routeName}"이 시간 예측이 더 잘 돼요`
-        );
+        insights.push(`"${best.routeName}"이 시간 예측이 더 잘 돼요`);
       }
     }
 
     // 날씨 영향 인사이트
     if (weatherCondition) {
       const bestWeatherRoute = routeScores.reduce((best, current) =>
-        current.scores.weatherResilience > best.scores.weatherResilience ? current : best
+        current.scores.weatherResilience > best.scores.weatherResilience ? current : best,
       );
 
       if (bestWeatherRoute.scores.weatherResilience >= 80) {
-        insights.push(
-          `${weatherCondition} 날에는 "${bestWeatherRoute.routeName}"이 덜 영향받아요`
-        );
+        insights.push(`${weatherCondition} 날에는 "${bestWeatherRoute.routeName}"이 덜 영향받아요`);
       }
     }
 
     // 데이터 부족 경고
-    const lowSampleRoutes = routeScores.filter((r) => r.sampleCount < this.MIN_SAMPLES_MEDIUM_CONFIDENCE);
+    const lowSampleRoutes = routeScores.filter(
+      (r) => r.sampleCount < this.MIN_SAMPLES_MEDIUM_CONFIDENCE,
+    );
     if (lowSampleRoutes.length > 0) {
       insights.push('일부 경로는 데이터가 부족해 정확도가 낮을 수 있어요');
     }

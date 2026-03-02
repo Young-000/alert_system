@@ -19,11 +19,7 @@ describe('GenerateWeeklyReportUseCase', () => {
     'user-1',
   );
 
-  const createMockSession = (
-    durationMinutes: number,
-    delayMinutes: number,
-    dayOffset: number,
-  ) => {
+  const createMockSession = (durationMinutes: number, delayMinutes: number, dayOffset: number) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dayOffset);
     startDate.setHours(8, 0, 0, 0);
@@ -114,9 +110,9 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockWebPushService,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'non-existent-user' },
-    ]);
+    mockSessionRepo
+      .createQueryBuilder()
+      .getRawMany.mockResolvedValue([{ userId: 'non-existent-user' }]);
     mockUserRepository.findByIds.mockResolvedValue([]);
 
     const result = await useCase.execute();
@@ -134,9 +130,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockWebPushService,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'user-1' },
-    ]);
+    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([{ userId: 'user-1' }]);
 
     mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
@@ -162,16 +156,11 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockWebPushService,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'user-1' },
-    ]);
+    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([{ userId: 'user-1' }]);
 
     mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
-    const sessions = [
-      createMockSession(42, 0, 1),
-      createMockSession(48, 3, 2),
-    ];
+    const sessions = [createMockSession(42, 0, 1), createMockSession(48, 3, 2)];
     mockSessionRepository.findByUserIdInDateRange.mockResolvedValue(sessions);
 
     await useCase.execute();
@@ -194,16 +183,11 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockWebPushService,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'user-1' },
-    ]);
+    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([{ userId: 'user-1' }]);
 
     mockUserRepository.findByIds.mockResolvedValue([testUser]);
 
-    const sessions = [
-      createMockSession(42, 0, 1),
-      createMockSession(48, 3, 2),
-    ];
+    const sessions = [createMockSession(42, 0, 1), createMockSession(48, 3, 2)];
     mockSessionRepository.findByUserIdInDateRange.mockResolvedValue(sessions);
 
     await useCase.execute();
@@ -225,12 +209,19 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockWebPushService,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'user-1' },
-      { userId: 'user-2' },
-    ]);
+    mockSessionRepo
+      .createQueryBuilder()
+      .getRawMany.mockResolvedValue([{ userId: 'user-1' }, { userId: 'user-2' }]);
 
-    const user2 = new User('user2@example.com', '사용자2', '01098765432', undefined, undefined, undefined, 'user-2');
+    const user2 = new User(
+      'user2@example.com',
+      '사용자2',
+      '01098765432',
+      undefined,
+      undefined,
+      undefined,
+      'user-2',
+    );
     mockUserRepository.findByIds.mockResolvedValue([testUser, user2]);
 
     // user-1: session fetch에서 에러 발생, user-2: 정상
@@ -254,14 +245,10 @@ describe('GenerateWeeklyReportUseCase', () => {
       undefined,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'user-1' },
-    ]);
+    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([{ userId: 'user-1' }]);
 
     mockUserRepository.findByIds.mockResolvedValue([testUser]);
-    mockSessionRepository.findByUserIdInDateRange.mockResolvedValue([
-      createMockSession(42, 0, 1),
-    ]);
+    mockSessionRepository.findByUserIdInDateRange.mockResolvedValue([createMockSession(42, 0, 1)]);
 
     const result = await useCase.execute();
 
@@ -278,9 +265,7 @@ describe('GenerateWeeklyReportUseCase', () => {
       mockWebPushService,
     );
 
-    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([
-      { userId: 'user-1' },
-    ]);
+    mockSessionRepo.createQueryBuilder().getRawMany.mockResolvedValue([{ userId: 'user-1' }]);
 
     mockUserRepository.findByIds.mockResolvedValue([testUser]);
 

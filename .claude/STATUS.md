@@ -10,7 +10,7 @@
 - **Current Status**: 🟢 Complete (AWS CloudFront + ECS Fargate 배포 완료)
 - **Progress**: 100%
 - **Priority**: High
-- **Last Updated**: 2026-02-17 03:40:30
+- **Last Updated**: 2026-03-02 06:48:57
 
 ## Infrastructure
 
@@ -50,11 +50,11 @@
 | CI/CD | 🟢 | Vercel 자동 배포 |
 
 ## Git Statistics
-- **Total Commits**: 100
-- **Last Commit**: 2026-02-17 03:40:29
-- **Last Commit Message**: fix: ESLint rules + test coverage + HTML entity fixes (#29)
+- **Total Commits**: 187
+- **Last Commit**: 2026-03-02 06:48:41
+- **Last Commit Message**: feat(community): add anonymous route community + checkpoint tips — P4-3 (#96)
 - **Current Branch**: main
-- **Uncommitted Changes**: 11 files
+- **Uncommitted Changes**: 83 files
 
 ## Implementation Status
 

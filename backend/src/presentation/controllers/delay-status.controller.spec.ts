@@ -1,11 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DelayStatusController } from './delay-status.controller';
-import { RouteDelayCheckService, DelayCheckResult } from '@application/services/route-delay-check.service';
+import {
+  RouteDelayCheckService,
+  DelayCheckResult,
+} from '@application/services/route-delay-check.service';
 import { AlternativeSuggestionService } from '@application/services/alternative-suggestion.service';
 import { COMMUTE_ROUTE_REPOSITORY } from '@domain/repositories/commute-route.repository';
 import { ALTERNATIVE_MAPPING_REPOSITORY } from '@domain/repositories/alternative-mapping.repository';
-import { CommuteRoute, RouteType, RouteCheckpoint, CheckpointType } from '@domain/entities/commute-route.entity';
+import {
+  CommuteRoute,
+  RouteType,
+  RouteCheckpoint,
+  CheckpointType,
+} from '@domain/entities/commute-route.entity';
 import { AlternativeMapping } from '@domain/entities/alternative-mapping.entity';
 
 describe('DelayStatusController', () => {
@@ -162,9 +170,9 @@ describe('DelayStatusController', () => {
     it('다른 사용자의 경로에 접근하면 403을 반환한다', async () => {
       mockRouteRepository.findById.mockResolvedValue(mockRoute);
 
-      await expect(
-        controller.getDelayStatus(ROUTE_ID, mockRequest(OTHER_USER_ID)),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getDelayStatus(ROUTE_ID, mockRequest(OTHER_USER_ID))).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(mockDelayCheckService.checkRouteDelays).not.toHaveBeenCalled();
     });

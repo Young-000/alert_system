@@ -5,7 +5,12 @@ import { useUserLocation } from '@presentation/hooks/useUserLocation';
 import { behaviorCollector } from '@infrastructure/analytics/behavior-collector';
 import { behaviorApiClient } from '@infrastructure/api';
 import type { Alert, WeatherData, AirQualityData, DeparturePrediction } from '@infrastructure/api';
-import { getCommuteApiClient, type RouteResponse, type CommuteStatsResponse, type RouteRecommendationResponse } from '@infrastructure/api/commute-api.client';
+import {
+  getCommuteApiClient,
+  type RouteResponse,
+  type CommuteStatsResponse,
+  type RouteRecommendationResponse,
+} from '@infrastructure/api/commute-api.client';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 import { useWeatherQuery } from '@infrastructure/query/use-weather-query';
@@ -90,10 +95,14 @@ export function useHomeData(): UseHomeDataReturn {
 
   const locationReady = !!userId && !userLocation.isLoading;
   const weatherQuery = useWeatherQuery(
-    userLocation.latitude, userLocation.longitude, locationReady,
+    userLocation.latitude,
+    userLocation.longitude,
+    locationReady,
   );
   const airQualityQuery = useAirQualityQuery(
-    userLocation.latitude, userLocation.longitude, locationReady,
+    userLocation.latitude,
+    userLocation.longitude,
+    locationReady,
   );
 
   // Derive values from query results (maintains existing interface)
@@ -112,10 +121,10 @@ export function useHomeData(): UseHomeDataReturn {
   const isLoading = !userId
     ? false
     : alertsQuery.isLoading || routesQuery.isLoading || statsQuery.isLoading;
-  const loadError = [alertsQuery.error, routesQuery.error, statsQuery.error]
-    .filter(Boolean)
-    .map(() => '데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
-    [0] ?? '';
+  const loadError =
+    [alertsQuery.error, routesQuery.error, statsQuery.error]
+      .filter(Boolean)
+      .map(() => '데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')[0] ?? '';
 
   // Weather/air quality errors (independent, non-blocking)
   const weatherError = weatherQuery.error ? '날씨 정보를 불러올 수 없습니다' : '';
@@ -125,8 +134,11 @@ export function useHomeData(): UseHomeDataReturn {
   const [isCommuteStarting, setIsCommuteStarting] = useState(false);
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
-  const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
-  const [routeRecDismissed, setRouteRecDismissed] = useState(() => sessionStorage.getItem('routeRecDismissed') === 'true');
+  const [routeRecommendation, setRouteRecommendation] =
+    useState<RouteRecommendationResponse | null>(null);
+  const [routeRecDismissed, setRouteRecDismissed] = useState(
+    () => sessionStorage.getItem('routeRecDismissed') === 'true',
+  );
   const [checkedItems, setCheckedItems] = useState<Set<string>>(getCheckedItems);
 
   // Initialize behavior collector
@@ -141,22 +153,29 @@ export function useHomeData(): UseHomeDataReturn {
     let isMounted = true;
     if (!userId || alerts.length === 0 || !weather) return;
 
-    const enabledAlert = alerts.find(a => a.enabled);
+    const enabledAlert = alerts.find((a) => a.enabled);
     if (!enabledAlert) return;
 
-    behaviorApiClient.getOptimalDeparture(userId, enabledAlert.id, {
-      weather: weather.condition,
-      temperature: Math.round(weather.temperature),
-      isRaining: getWeatherType(weather.condition) === 'rainy',
-    })
-      .then(prediction => {
-        if (isMounted && prediction && prediction.confidence >= DEPARTURE_PREDICTION_CONFIDENCE_THRESHOLD) {
+    behaviorApiClient
+      .getOptimalDeparture(userId, enabledAlert.id, {
+        weather: weather.condition,
+        temperature: Math.round(weather.temperature),
+        isRaining: getWeatherType(weather.condition) === 'rainy',
+      })
+      .then((prediction) => {
+        if (
+          isMounted &&
+          prediction &&
+          prediction.confidence >= DEPARTURE_PREDICTION_CONFIDENCE_THRESHOLD
+        ) {
           setDeparturePrediction(prediction);
         }
       })
-      .catch(err => console.warn('Failed to load departure prediction:', err));
+      .catch((err) => console.warn('Failed to load departure prediction:', err));
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId, alerts, weather]);
 
   // A-3: Load weather route recommendation
@@ -165,19 +184,29 @@ export function useHomeData(): UseHomeDataReturn {
     if (!userId || routes.length < 2 || !weather) return;
 
     const commuteApi = getCommuteApiClient();
-    commuteApi.getWeatherRouteRecommendation(userId, weather.condition)
-      .then(rec => {
-        if (isMounted && rec.confidence > ROUTE_RECOMMENDATION_CONFIDENCE_THRESHOLD && rec.recommendation) {
+    commuteApi
+      .getWeatherRouteRecommendation(userId, weather.condition)
+      .then((rec) => {
+        if (
+          isMounted &&
+          rec.confidence > ROUTE_RECOMMENDATION_CONFIDENCE_THRESHOLD &&
+          rec.recommendation
+        ) {
           setRouteRecommendation(rec);
         }
       })
-      .catch(err => console.warn('Failed to load route recommendation:', err));
+      .catch((err) => console.warn('Failed to load route recommendation:', err));
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId, routes, weather]);
 
   // Active route
-  const activeRoute = useMemo(() => getActiveRoute(routes, forceRouteType), [routes, forceRouteType]);
+  const activeRoute = useMemo(
+    () => getActiveRoute(routes, forceRouteType),
+    [routes, forceRouteType],
+  );
 
   // Transit arrivals via react-query (auto-refreshes every 30 seconds)
   const transitQuery = useTransitQuery(activeRoute);
@@ -197,7 +226,7 @@ export function useHomeData(): UseHomeDataReturn {
   }, [weather, airQuality]);
 
   const handleChecklistToggle = useCallback((id: string) => {
-    setCheckedItems(prev => {
+    setCheckedItems((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);

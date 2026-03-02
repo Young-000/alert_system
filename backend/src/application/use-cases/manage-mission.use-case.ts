@@ -14,15 +14,9 @@ const MAX_MISSIONS_PER_TYPE = 3;
 
 @Injectable()
 export class ManageMissionUseCase {
-  constructor(
-    @Inject(MISSION_REPOSITORY) private readonly repo: IMissionRepository,
-  ) {}
+  constructor(@Inject(MISSION_REPOSITORY) private readonly repo: IMissionRepository) {}
 
-  async createMission(
-    userId: string,
-    title: string,
-    missionType: MissionType,
-  ): Promise<Mission> {
+  async createMission(userId: string, title: string, missionType: MissionType): Promise<Mission> {
     const count = await this.repo.countByUserAndType(userId, missionType);
     if (count >= MAX_MISSIONS_PER_TYPE) {
       throw new BadRequestException(
@@ -60,20 +54,13 @@ export class ManageMissionUseCase {
     return this.repo.saveMission(mission);
   }
 
-  async reorder(
-    missionId: string,
-    userId: string,
-    newOrder: number,
-  ): Promise<Mission> {
+  async reorder(missionId: string, userId: string, newOrder: number): Promise<Mission> {
     const mission = await this.findOwnedMission(missionId, userId);
     mission.sortOrder = newOrder;
     return this.repo.saveMission(mission);
   }
 
-  private async findOwnedMission(
-    missionId: string,
-    userId: string,
-  ): Promise<Mission> {
+  private async findOwnedMission(missionId: string, userId: string): Promise<Mission> {
     const mission = await this.repo.findById(missionId);
     if (!mission) {
       throw new NotFoundException('미션을 찾을 수 없습니다');

@@ -22,9 +22,10 @@ describe('NotificationHistoryController', () => {
 
   const OWNER_ID = 'user-123';
 
-  const mockRequest = (userId: string) => ({
-    user: { userId, email: `${userId}@test.com` },
-  }) as any;
+  const mockRequest = (userId: string) =>
+    ({
+      user: { userId, email: `${userId}@test.com` },
+    }) as any;
 
   const mockLog = {
     id: 'log-1',
@@ -70,10 +71,7 @@ describe('NotificationHistoryController', () => {
         failed: 0,
         successRate: 100,
       });
-      expect(qb.where).toHaveBeenCalledWith(
-        'log.userId = :userId',
-        { userId: OWNER_ID },
-      );
+      expect(qb.where).toHaveBeenCalledWith('log.userId = :userId', { userId: OWNER_ID });
     });
 
     it('혼합 상태 로그에서 올바른 비율 계산 (10 성공, 2 대체, 1 실패)', async () => {
@@ -131,10 +129,9 @@ describe('NotificationHistoryController', () => {
 
       const result = await controller.getStats(mockRequest(OWNER_ID), '7');
 
-      expect(qb.andWhere).toHaveBeenCalledWith(
-        "log.sentAt >= NOW() - INTERVAL '1 day' * :days",
-        { days: 7 },
-      );
+      expect(qb.andWhere).toHaveBeenCalledWith("log.sentAt >= NOW() - INTERVAL '1 day' * :days", {
+        days: 7,
+      });
       expect(result.total).toBe(3);
     });
 
@@ -162,10 +159,7 @@ describe('NotificationHistoryController', () => {
 
       await controller.getStats(mockRequest('other-user'));
 
-      expect(qb.where).toHaveBeenCalledWith(
-        'log.userId = :userId',
-        { userId: 'other-user' },
-      );
+      expect(qb.where).toHaveBeenCalledWith('log.userId = :userId', { userId: 'other-user' });
     });
   });
 

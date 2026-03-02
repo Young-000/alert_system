@@ -24,7 +24,15 @@ import {
 @Injectable()
 export class CalculateRouteAnalyticsUseCase {
   private readonly logger = new Logger(CalculateRouteAnalyticsUseCase.name);
-  private readonly dayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+  private readonly dayNames = [
+    '일요일',
+    '월요일',
+    '화요일',
+    '수요일',
+    '목요일',
+    '금요일',
+    '토요일',
+  ];
 
   constructor(
     @Optional()
@@ -55,7 +63,7 @@ export class CalculateRouteAnalyticsUseCase {
     // 완료된 세션 조회
     const sessions = await this.sessionRepository.findByRouteId(routeId);
     const completedSessions = sessions.filter(
-      (s) => s.status === SessionStatus.COMPLETED && s.totalDurationMinutes
+      (s) => s.status === SessionStatus.COMPLETED && s.totalDurationMinutes,
     );
 
     // 분석 데이터 계산
@@ -80,9 +88,7 @@ export class CalculateRouteAnalyticsUseCase {
     const routes = await this.routeRepository.findByUserId(userId);
 
     // Parallel execution to avoid sequential N+1 pattern
-    const settled = await Promise.allSettled(
-      routes.map((route) => this.execute(route.id))
-    );
+    const settled = await Promise.allSettled(routes.map((route) => this.execute(route.id)));
 
     const results: RouteAnalytics[] = [];
     for (let i = 0; i < settled.length; i++) {
@@ -113,17 +119,17 @@ export class CalculateRouteAnalyticsUseCase {
 
     // 가장 빠른 경로 찾기
     const fastest = routes.reduce((fast, current) =>
-      current.duration.average < fast.duration.average ? current : fast
+      current.duration.average < fast.duration.average ? current : fast,
     );
 
     // 가장 일관된 경로 찾기
     const mostReliable = routes.reduce((reliable, current) =>
-      current.scoreFactors.reliability > reliable.scoreFactors.reliability ? current : reliable
+      current.scoreFactors.reliability > reliable.scoreFactors.reliability ? current : reliable,
     );
 
     // 종합 추천 (총 점수 기준)
     const recommended = routes.reduce((best, current) =>
-      current.score > best.score ? current : best
+      current.score > best.score ? current : best,
     );
 
     // 시간 차이 계산
@@ -148,10 +154,7 @@ export class CalculateRouteAnalyticsUseCase {
     };
   }
 
-  private calculateAnalytics(
-    route: CommuteRoute,
-    sessions: CommuteSession[]
-  ): RouteAnalytics {
+  private calculateAnalytics(route: CommuteRoute, sessions: CommuteSession[]): RouteAnalytics {
     if (sessions.length === 0) {
       return new RouteAnalytics(route.id, route.name, {
         totalTrips: 0,
@@ -176,14 +179,12 @@ export class CalculateRouteAnalyticsUseCase {
     // 점수 계산
     const scoreFactors = this.calculateScoreFactors(route, duration, segmentStats, sessions);
     const score = Math.round(
-      scoreFactors.speed * 0.4 +
-      scoreFactors.reliability * 0.4 +
-      scoreFactors.comfort * 0.2
+      scoreFactors.speed * 0.4 + scoreFactors.reliability * 0.4 + scoreFactors.comfort * 0.2,
     );
 
     // 마지막 측정일
     const sortedSessions = [...sessions].sort(
-      (a, b) => b.startedAt.getTime() - a.startedAt.getTime()
+      (a, b) => b.startedAt.getTime() - a.startedAt.getTime(),
     );
     const lastTripDate = sortedSessions[0]?.startedAt;
 
@@ -199,18 +200,18 @@ export class CalculateRouteAnalyticsUseCase {
     });
   }
 
-  private calculateSegmentStats(
-    route: CommuteRoute,
-    sessions: CommuteSession[]
-  ): SegmentStats[] {
+  private calculateSegmentStats(route: CommuteRoute, sessions: CommuteSession[]): SegmentStats[] {
     const stats: SegmentStats[] = [];
 
     // 체크포인트별로 그룹화
-    const checkpointMap = new Map<string, {
-      name: string;
-      transportMode: string;
-      durations: number[];
-    }>();
+    const checkpointMap = new Map<
+      string,
+      {
+        name: string;
+        transportMode: string;
+        durations: number[];
+      }
+    >();
 
     // 초기화
     for (const cp of route.checkpoints) {
@@ -323,7 +324,7 @@ export class CalculateRouteAnalyticsUseCase {
     route: CommuteRoute,
     duration: { average: number; min: number; max: number; stdDev: number },
     _segmentStats: SegmentStats[],
-    sessions: CommuteSession[]
+    sessions: CommuteSession[],
   ): ScoreFactors {
     // 속도 점수: 예상 시간 대비 실제 시간
     const expectedDuration = route.totalExpectedDuration || 60;
@@ -354,16 +355,15 @@ export class CalculateRouteAnalyticsUseCase {
 
     // 편의성 점수: 환승 횟수, 대기 시간 비율
     const transferCount = route.checkpoints.filter(
-      (cp) => cp.transportMode === TransportMode.TRANSFER
+      (cp) => cp.transportMode === TransportMode.TRANSFER,
     ).length;
-    const avgWaitTime = sessions.length > 0
-      ? this.average(sessions.map((s) => s.totalWaitMinutes))
-      : 0;
+    const avgWaitTime =
+      sessions.length > 0 ? this.average(sessions.map((s) => s.totalWaitMinutes)) : 0;
     const waitRatio = duration.average > 0 ? avgWaitTime / duration.average : 0;
 
     let comfortScore = 100;
-    comfortScore -= transferCount * 10;  // 환승당 -10점
-    comfortScore -= waitRatio * 50;       // 대기 비율에 따라 최대 -50점
+    comfortScore -= transferCount * 10; // 환승당 -10점
+    comfortScore -= waitRatio * 50; // 대기 비율에 따라 최대 -50점
     comfortScore = Math.max(50, comfortScore);
 
     return {

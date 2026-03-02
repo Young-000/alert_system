@@ -43,7 +43,7 @@ describe('AirQualityApiClient', () => {
     };
     mockGet.mockResolvedValue(mockResponse);
 
-    const result = await client.getAirQuality(37.5665, 126.9780);
+    const result = await client.getAirQuality(37.5665, 126.978);
 
     expect(result).toBeInstanceOf(AirQuality);
     expect(result.pm10).toBe(50);
@@ -54,6 +54,6 @@ describe('AirQualityApiClient', () => {
   it('should handle API errors', async () => {
     mockGet.mockRejectedValue(new Error('API Error'));
 
-    await expect(client.getAirQuality(37.5665, 126.9780)).rejects.toThrow('API Error');
+    await expect(client.getAirQuality(37.5665, 126.978)).rejects.toThrow('API Error');
   });
 });

@@ -39,7 +39,21 @@ export function ConfirmStep({
   return (
     <section className="apple-step">
       <div className="apple-step-content">
-        <h1 className="apple-question">{editingRoute ? <>수정된 경로를<br />확인해주세요</> : <>이 경로가<br />맞나요?</>}</h1>
+        <h1 className="apple-question">
+          {editingRoute ? (
+            <>
+              수정된 경로를
+              <br />
+              확인해주세요
+            </>
+          ) : (
+            <>
+              이 경로가
+              <br />
+              맞나요?
+            </>
+          )}
+        </h1>
 
         {/* 개선된 경로 미리보기 패널 */}
         <div className="route-preview-panel">
@@ -55,7 +69,21 @@ export function ConfirmStep({
             {/* 시작점 */}
             <div className="preview-stop start">
               <div className="stop-marker">
-                <span className="marker-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+                <span className="marker-icon" aria-hidden="true">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                </span>
                 <span className="marker-line" />
               </div>
               <div className="stop-details">
@@ -73,9 +101,37 @@ export function ConfirmStep({
                   <div className="stop-marker">
                     <span className="marker-icon" aria-hidden="true">
                       {stop.transportMode === 'subway' ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="4" y="3" width="16" height="18" rx="2" />
+                          <line x1="4" y1="9" x2="20" y2="9" />
+                          <line x1="4" y1="15" x2="20" y2="15" />
+                          <line x1="10" y1="3" x2="10" y2="21" />
+                        </svg>
                       ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 21l2-4"/><path d="M17 21l-2-4"/></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="3" y="3" width="18" height="14" rx="2" />
+                          <path d="M3 10h18" />
+                          <path d="M7 21l2-4" />
+                          <path d="M17 21l-2-4" />
+                        </svg>
                       )}
                     </span>
                     <span className="marker-line" />
@@ -97,7 +153,21 @@ export function ConfirmStep({
             {/* 도착점 */}
             <div className="preview-stop end">
               <div className="stop-marker">
-                <span className="marker-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <span className="marker-icon" aria-hidden="true">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </span>
               </div>
               <div className="stop-details">
                 <span className="stop-name-main">{routeType === 'morning' ? '회사' : '집'}</span>
@@ -143,11 +213,30 @@ export function ConfirmStep({
         )}
 
         <div className="apple-info-card">
-          <span className="info-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+          <span className="info-icon" aria-hidden="true">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          </span>
           <p>소요시간은 실제 출퇴근을 기록하면서 자동으로 측정됩니다</p>
         </div>
 
-        {error && <div className="apple-error" role="alert">{error}</div>}
+        {error && (
+          <div className="apple-error" role="alert">
+            {error}
+          </div>
+        )}
       </div>
 
       <div className="apple-step-footer">

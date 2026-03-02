@@ -5,22 +5,50 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { BottomNavigation } from './components/BottomNavigation';
 
 // All pages are lazy-loaded for optimal code splitting
-const HomePage = lazy(() => import('./pages/home/HomePage').then(m => ({ default: m.HomePage })));
-const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const AlertSettingsPage = lazy(() => import('./pages/AlertSettingsPage').then(m => ({ default: m.AlertSettingsPage })));
-const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const RouteSetupPage = lazy(() => import('./pages/RouteSetupPage').then(m => ({ default: m.RouteSetupPage })));
-const CommuteTrackingPage = lazy(() => import('./pages/CommuteTrackingPage').then(m => ({ default: m.CommuteTrackingPage })));
-const CommuteDashboardPage = lazy(() => import('./pages/CommuteDashboardPage').then(m => ({ default: m.CommuteDashboardPage })));
-const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
-const NotificationHistoryPage = lazy(() => import('./pages/NotificationHistoryPage').then(m => ({ default: m.NotificationHistoryPage })));
-const MissionsPage = lazy(() => import('./pages/MissionsPage').then(m => ({ default: m.MissionsPage })));
-const MissionSettingsPage = lazy(() => import('./pages/missions/MissionSettingsPage').then(m => ({ default: m.MissionSettingsPage })));
-const ReportPage = lazy(() => import('./pages/report/ReportPage').then(m => ({ default: m.ReportPage })));
-const PatternAnalysisPage = lazy(() => import('./pages/patterns/PatternAnalysisPage').then(m => ({ default: m.PatternAnalysisPage })));
-const InsightsPage = lazy(() => import('./pages/insights/InsightsPage').then(m => ({ default: m.InsightsPage })));
+const HomePage = lazy(() => import('./pages/home/HomePage').then((m) => ({ default: m.HomePage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const AlertSettingsPage = lazy(() =>
+  import('./pages/AlertSettingsPage').then((m) => ({ default: m.AlertSettingsPage })),
+);
+const AuthCallbackPage = lazy(() =>
+  import('./pages/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })),
+);
+const NotFoundPage = lazy(() =>
+  import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
+);
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+);
+const RouteSetupPage = lazy(() =>
+  import('./pages/RouteSetupPage').then((m) => ({ default: m.RouteSetupPage })),
+);
+const CommuteTrackingPage = lazy(() =>
+  import('./pages/CommuteTrackingPage').then((m) => ({ default: m.CommuteTrackingPage })),
+);
+const CommuteDashboardPage = lazy(() =>
+  import('./pages/CommuteDashboardPage').then((m) => ({ default: m.CommuteDashboardPage })),
+);
+const OnboardingPage = lazy(() =>
+  import('./pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
+);
+const NotificationHistoryPage = lazy(() =>
+  import('./pages/NotificationHistoryPage').then((m) => ({ default: m.NotificationHistoryPage })),
+);
+const MissionsPage = lazy(() =>
+  import('./pages/MissionsPage').then((m) => ({ default: m.MissionsPage })),
+);
+const MissionSettingsPage = lazy(() =>
+  import('./pages/missions/MissionSettingsPage').then((m) => ({ default: m.MissionSettingsPage })),
+);
+const ReportPage = lazy(() =>
+  import('./pages/report/ReportPage').then((m) => ({ default: m.ReportPage })),
+);
+const PatternAnalysisPage = lazy(() =>
+  import('./pages/patterns/PatternAnalysisPage').then((m) => ({ default: m.PatternAnalysisPage })),
+);
+const InsightsPage = lazy(() =>
+  import('./pages/insights/InsightsPage').then((m) => ({ default: m.InsightsPage })),
+);
 
 function PageLoader() {
   return (
@@ -96,4 +124,3 @@ function App() {
 }
 
 export default App;
-

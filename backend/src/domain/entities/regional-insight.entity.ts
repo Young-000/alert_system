@@ -95,8 +95,7 @@ export class RegionalInsight {
    * Check if this insight data is stale (>30 days old).
    */
   isStale(): boolean {
-    const daysSinceUpdate =
-      (Date.now() - this.lastCalculatedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceUpdate = (Date.now() - this.lastCalculatedAt.getTime()) / (1000 * 60 * 60 * 24);
     return daysSinceUpdate > STALE_THRESHOLD_DAYS;
   }
 

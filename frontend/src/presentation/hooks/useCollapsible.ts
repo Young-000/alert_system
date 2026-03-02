@@ -38,24 +38,27 @@ function writeToStorage(key: string, value: boolean): void {
 export function useCollapsible(options: UseCollapsibleOptions): UseCollapsibleReturn {
   const { storageKey, defaultExpanded = false } = options;
 
-  const [isExpanded, setIsExpanded] = useState<boolean>(
-    () => readFromStorage(storageKey, defaultExpanded),
+  const [isExpanded, setIsExpanded] = useState<boolean>(() =>
+    readFromStorage(storageKey, defaultExpanded),
   );
 
   const toggle = useCallback((): void => {
-    setIsExpanded(prev => {
+    setIsExpanded((prev) => {
       const next = !prev;
       writeToStorage(storageKey, next);
       return next;
     });
   }, [storageKey]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggle();
-    }
-  }, [toggle]);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent): void => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    },
+    [toggle],
+  );
 
   return {
     isExpanded,

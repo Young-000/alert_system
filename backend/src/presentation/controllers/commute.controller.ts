@@ -96,10 +96,12 @@ export class CommuteController {
   async completeSession(
     @Body() dto: CompleteSessionDto,
     @Request() req: AuthenticatedRequest,
-  ): Promise<SessionResponseDto & {
-    streakUpdate?: import('@application/dto/streak.dto').StreakUpdateResultDto | null;
-    challengeUpdates?: ChallengeUpdate[];
-  }> {
+  ): Promise<
+    SessionResponseDto & {
+      streakUpdate?: import('@application/dto/streak.dto').StreakUpdateResultDto | null;
+      challengeUpdates?: ChallengeUpdate[];
+    }
+  > {
     // 권한 검사: 해당 세션이 본인의 것인지 확인
     const session = await this.manageSessionUseCase.getSessionById(dto.sessionId);
     if (session.userId !== req.user.userId) {
@@ -123,18 +125,13 @@ export class CommuteController {
     let challengeUpdates: ChallengeUpdate[] = [];
     if (this.evaluateChallengeUseCase) {
       try {
-        challengeUpdates = await this.evaluateChallengeUseCase.execute(
-          req.user.userId,
-          {
-            totalDurationMinutes: result.totalDurationMinutes,
-            currentStreak: streakUpdate?.currentStreak,
-            weeklySessionCount: streakUpdate?.weeklyCount,
-          },
-        );
+        challengeUpdates = await this.evaluateChallengeUseCase.execute(req.user.userId, {
+          totalDurationMinutes: result.totalDurationMinutes,
+          currentStreak: streakUpdate?.currentStreak,
+          weeklySessionCount: streakUpdate?.weeklyCount,
+        });
       } catch (err) {
-        this.logger.warn(
-          `Failed to evaluate challenges for user ${req.user.userId}: ${err}`,
-        );
+        this.logger.warn(`Failed to evaluate challenges for user ${req.user.userId}: ${err}`);
       }
     }
 
@@ -278,7 +275,12 @@ export class CommuteController {
     @Param('userId') userId: string,
     @Body() dto: UpdateStreakSettingsDto,
     @Request() req: AuthenticatedRequest,
-  ): Promise<{ success: boolean; weeklyGoal: number; excludeWeekends: boolean; reminderEnabled: boolean }> {
+  ): Promise<{
+    success: boolean;
+    weeklyGoal: number;
+    excludeWeekends: boolean;
+    reminderEnabled: boolean;
+  }> {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 스트릭 설정을 변경할 수 없습니다.');
     }

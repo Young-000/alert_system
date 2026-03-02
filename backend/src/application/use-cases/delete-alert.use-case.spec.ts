@@ -16,7 +16,7 @@ describe('DeleteAlertUseCase', () => {
     [AlertType.WEATHER],
     undefined,
     undefined,
-    'alert-id'
+    'alert-id',
   );
 
   beforeEach(() => {

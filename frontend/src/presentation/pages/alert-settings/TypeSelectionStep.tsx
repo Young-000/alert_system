@@ -28,7 +28,16 @@ export function TypeSelectionStep({
       {/* 알림톡 안내 배너 */}
       <div className="alimtalk-banner">
         <span className="alimtalk-icon" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
             <line x1="12" y1="18" x2="12.01" y2="18" />
           </svg>
@@ -43,7 +52,16 @@ export function TypeSelectionStep({
       <div className="quick-action-card">
         <div className="quick-action-content">
           <span className="quick-action-icon" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 18a5 5 0 0 0-10 0" />
               <line x1="12" y1="9" x2="12" y2="2" />
               <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
@@ -72,19 +90,23 @@ export function TypeSelectionStep({
         {error && (
           <div className="toast toast-error" role="alert">
             <span className="toast-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </span>
             <span className="toast-message">{error}</span>
-            <button
-              type="button"
-              className="toast-close"
-              onClick={onClearError}
-              aria-label="닫기"
-            >
+            <button type="button" className="toast-close" onClick={onClearError} aria-label="닫기">
               &times;
             </button>
           </div>
@@ -92,7 +114,16 @@ export function TypeSelectionStep({
         {success && (
           <div className="toast toast-success" role="status">
             <span className="toast-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
@@ -118,7 +149,16 @@ export function TypeSelectionStep({
           aria-label="날씨 알림 선택"
         >
           <span className="choice-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 18a5 5 0 0 0-10 0" />
               <line x1="12" y1="9" x2="12" y2="2" />
               <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
@@ -139,7 +179,16 @@ export function TypeSelectionStep({
           aria-label="교통 알림 선택"
         >
           <span className="choice-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="4" y="3" width="16" height="18" rx="2" />
               <line x1="4" y1="9" x2="20" y2="9" />
               <line x1="4" y1="15" x2="20" y2="15" />

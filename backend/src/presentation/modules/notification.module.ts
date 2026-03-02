@@ -15,7 +15,11 @@ import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-a
 import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
 import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
 import { NotificationProcessor } from '@infrastructure/queue/notification.processor';
-import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
+import {
+  SolapiService,
+  NoopSolapiService,
+  SOLAPI_SERVICE,
+} from '@infrastructure/messaging/solapi.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
@@ -24,7 +28,14 @@ import { PushModule } from './push.module';
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
-  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]), PushModule],
+  imports: [
+    SchedulerModule.forRoot(),
+    SmartNotificationModule,
+    ConfigModule,
+    CommuteModule,
+    TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]),
+    PushModule,
+  ],
   controllers: [SchedulerTriggerController],
   providers: [
     {

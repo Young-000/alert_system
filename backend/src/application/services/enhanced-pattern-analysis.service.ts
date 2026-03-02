@@ -67,7 +67,7 @@ export class EnhancedPatternAnalysisService {
     for (const [dayOfWeek, dayRows] of groups) {
       if (dayRows.length < 2) continue;
 
-      const departures = dayRows.map(r => r.departureMinutes);
+      const departures = dayRows.map((r) => r.departureMinutes);
       segments.push({
         dayOfWeek,
         avgMinutes: Math.round(mean(departures)),
@@ -86,12 +86,7 @@ export class EnhancedPatternAnalysisService {
 
     // Save to repository
     if (this.patternRepository) {
-      await this.saveOrUpdatePattern(
-        userId,
-        PatternType.DAY_OF_WEEK_DEPARTURE,
-        value,
-        rows.length,
-      );
+      await this.saveOrUpdatePattern(userId, PatternType.DAY_OF_WEEK_DEPARTURE, value, rows.length);
     }
 
     return value;
@@ -115,17 +110,15 @@ export class EnhancedPatternAnalysisService {
     const variety = this.featureService.countWeatherVariety(rows);
     if (variety.totalDistinctConditions < 2) return null;
 
-    const departures = rows.map(r => r.departureMinutes);
+    const departures = rows.map((r) => r.departureMinutes);
     const overallMean = mean(departures);
 
     const { X, Y } = this.featureService.buildWeatherRegressionData(rows, overallMean);
 
     // Check if temperature column has any variance; if not, exclude it
     // to prevent singular matrix issues
-    const hasTempVariance = X.some(row => row[2] !== 0);
-    const regressionX = hasTempVariance
-      ? X
-      : X.map(row => [row[0], row[1]]); // drop temperature column
+    const hasTempVariance = X.some((row) => row[2] !== 0);
+    const regressionX = hasTempVariance ? X : X.map((row) => [row[0], row[1]]); // drop temperature column
 
     // addIntercept=false: Y is already mean-centered, intercept would be ~0
     const result = linearRegression(regressionX, Y, false);
@@ -146,12 +139,7 @@ export class EnhancedPatternAnalysisService {
     };
 
     if (this.patternRepository) {
-      await this.saveOrUpdatePattern(
-        userId,
-        PatternType.WEATHER_SENSITIVITY,
-        value,
-        rows.length,
-      );
+      await this.saveOrUpdatePattern(userId, PatternType.WEATHER_SENSITIVITY, value, rows.length);
     }
 
     return value;
@@ -194,15 +182,13 @@ export class EnhancedPatternAnalysisService {
     monthlyAverages.sort((a, b) => a.month - b.month);
 
     // Calculate trend using simple linear regression on months
-    const X = monthlyAverages.map(m => [m.month]);
-    const Y = monthlyAverages.map(m => m.avgMinutes);
+    const X = monthlyAverages.map((m) => [m.month]);
+    const Y = monthlyAverages.map((m) => m.avgMinutes);
     const trend = linearRegression(X, Y);
 
     const trendSlope = trend.coefficients[0] || 0;
     const trendDirection: SeasonalTrendValue['trendDirection'] =
-      trendSlope > 1 ? 'later' :
-      trendSlope < -1 ? 'earlier' :
-      'stable';
+      trendSlope > 1 ? 'later' : trendSlope < -1 ? 'earlier' : 'stable';
 
     const value: SeasonalTrendValue = {
       monthlyAverages,
@@ -212,12 +198,7 @@ export class EnhancedPatternAnalysisService {
     };
 
     if (this.patternRepository) {
-      await this.saveOrUpdatePattern(
-        userId,
-        PatternType.SEASONAL_TREND,
-        value,
-        rows.length,
-      );
+      await this.saveOrUpdatePattern(userId, PatternType.SEASONAL_TREND, value, rows.length);
     }
 
     return value;
@@ -235,16 +216,19 @@ export class EnhancedPatternAnalysisService {
 
     const sessions = await this.sessionRepository.findByRouteId(routeId, 50);
     const completedSessions = sessions.filter(
-      s => s.userId === userId && s.status === SessionStatus.COMPLETED,
+      (s) => s.userId === userId && s.status === SessionStatus.COMPLETED,
     );
 
     if (completedSessions.length < 5) return null;
 
     // Group checkpoint records by checkpointId
-    const checkpointStats = new Map<string, {
-      durations: number[];
-      waitTimes: number[];
-    }>();
+    const checkpointStats = new Map<
+      string,
+      {
+        durations: number[];
+        waitTimes: number[];
+      }
+    >();
 
     for (const session of completedSessions) {
       for (const record of session.checkpointRecords) {
@@ -294,7 +278,10 @@ export class EnhancedPatternAnalysisService {
   /**
    * Run all analyses for a user. Called after a new commute record is saved.
    */
-  async runFullAnalysis(userId: string, commuteType: CommuteType = CommuteType.MORNING): Promise<{
+  async runFullAnalysis(
+    userId: string,
+    commuteType: CommuteType = CommuteType.MORNING,
+  ): Promise<{
     dayOfWeek: DayOfWeekDepartureValue | null;
     weatherSensitivity: WeatherSensitivityValue | null;
     seasonalTrend: SeasonalTrendValue | null;
@@ -307,9 +294,9 @@ export class EnhancedPatternAnalysisService {
 
     this.logger.log(
       `Analysis complete for user ${userId}: ` +
-      `dayOfWeek=${dayOfWeek ? 'yes' : 'no'}, ` +
-      `weather=${weatherSensitivity ? 'yes' : 'no'}, ` +
-      `seasonal=${seasonalTrend ? 'yes' : 'no'}`,
+        `dayOfWeek=${dayOfWeek ? 'yes' : 'no'}, ` +
+        `weather=${weatherSensitivity ? 'yes' : 'no'}, ` +
+        `seasonal=${seasonalTrend ? 'yes' : 'no'}`,
     );
 
     return { dayOfWeek, weatherSensitivity, seasonalTrend };

@@ -2,10 +2,10 @@ import type { CommuteStatsResponse } from '@infrastructure/api/commute-api.clien
 import { StatCard } from '../../components/StatCard';
 
 const WEATHER_ICON_CLASS: Record<string, string> = {
-  '맑음': 'sunny',
-  '흐림': 'cloudy',
-  '비': 'rainy',
-  '눈': 'snowy',
+  맑음: 'sunny',
+  흐림: 'cloudy',
+  비: 'rainy',
+  눈: 'snowy',
 };
 
 interface OverviewTabProps {
@@ -14,17 +14,54 @@ interface OverviewTabProps {
 
 export function OverviewTab({ stats }: OverviewTabProps): JSX.Element {
   return (
-    <div className="tab-content" role="tabpanel" id="tabpanel-overview" aria-labelledby="tab-overview">
+    <div
+      className="tab-content"
+      role="tabpanel"
+      id="tabpanel-overview"
+      aria-labelledby="tab-overview"
+    >
       {/* Core stats - compact */}
       <section className="stats-section stats-compact">
         <div className="stats-grid-compact">
           <StatCard
-            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+            icon={
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            }
             title="평균 시간"
             value={`${stats.overallAverageDuration}분`}
           />
           <StatCard
-            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h20"/><path d="M10 16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6"/><path d="M12 12H4"/></svg>}
+            icon={
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M13 4h3a2 2 0 0 1 2 2v14" />
+                <path d="M2 20h20" />
+                <path d="M10 16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6" />
+                <path d="M12 12H4" />
+              </svg>
+            }
             title="이번 주"
             value={`${stats.recentSessions}회`}
           />
@@ -34,7 +71,23 @@ export function OverviewTab({ stats }: OverviewTabProps): JSX.Element {
       {/* Insight - show 1 inline */}
       {stats.insights.length > 0 && (
         <div className="insight-inline">
-          <span className="insight-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
+          <span className="insight-icon">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--warning)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 18h6" />
+              <path d="M10 22h4" />
+              <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />
+            </svg>
+          </span>
           <span className="insight-text">{stats.insights[0]}</span>
         </div>
       )}
@@ -53,13 +106,19 @@ export function OverviewTab({ stats }: OverviewTabProps): JSX.Element {
             {stats.weatherImpact.map((weather) => (
               <div key={weather.condition} className="weather-item">
                 <span className="weather-condition">
-                  <span className={`weather-icon weather-icon--${WEATHER_ICON_CLASS[weather.condition] ?? 'default'}`} aria-hidden="true" />
-                  {' '}{weather.condition}
+                  <span
+                    className={`weather-icon weather-icon--${WEATHER_ICON_CLASS[weather.condition] ?? 'default'}`}
+                    aria-hidden="true"
+                  />{' '}
+                  {weather.condition}
                 </span>
                 <span className="weather-duration">{weather.averageDuration}분</span>
                 {weather.comparedToNormal !== 0 && (
-                  <span className={`weather-diff ${weather.comparedToNormal > 0 ? 'slower' : 'faster'}`}>
-                    {weather.comparedToNormal > 0 ? '+' : ''}{weather.comparedToNormal}분
+                  <span
+                    className={`weather-diff ${weather.comparedToNormal > 0 ? 'slower' : 'faster'}`}
+                  >
+                    {weather.comparedToNormal > 0 ? '+' : ''}
+                    {weather.comparedToNormal}분
                   </span>
                 )}
                 <span className="weather-count">({weather.sampleCount}회)</span>
@@ -90,9 +149,7 @@ function DayOfWeekChart({ stats }: { stats: CommuteStatsResponse }): JSX.Element
   return (
     <div className="weekly-chart">
       {daysWithData.map((day) => {
-        const barHeight = maxDuration > 0
-          ? (day.averageDuration / maxDuration) * 100
-          : 0;
+        const barHeight = maxDuration > 0 ? (day.averageDuration / maxDuration) * 100 : 0;
         const isHighest = day.averageDuration === maxDuration;
 
         return (

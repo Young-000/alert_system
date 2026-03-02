@@ -4,7 +4,6 @@ export class AirQuality {
     public readonly pm10: number,
     public readonly pm25: number,
     public readonly aqi: number,
-    public readonly status: string
+    public readonly status: string,
   ) {}
 }
-

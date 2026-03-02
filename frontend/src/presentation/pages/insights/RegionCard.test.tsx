@@ -22,30 +22,22 @@ function makeRegion(overrides: Partial<RegionSummary> = {}): RegionSummary {
 
 describe('RegionCard', () => {
   it('지역 이름을 표시한다', () => {
-    render(
-      <RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />);
     expect(screen.getByText('강남/역삼 지역')).toBeInTheDocument();
   });
 
   it('평균 소요시간을 반올림하여 표시한다', () => {
-    render(
-      <RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />);
     expect(screen.getByText('42분')).toBeInTheDocument();
   });
 
   it('통근자 수를 표시한다', () => {
-    render(
-      <RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />);
     expect(screen.getByText('12명')).toBeInTheDocument();
   });
 
   it('세션 수를 표시한다', () => {
-    render(
-      <RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />);
     expect(screen.getByText('156회')).toBeInTheDocument();
   });
 
@@ -107,25 +99,19 @@ describe('RegionCard', () => {
 
   it('클릭하면 onToggle을 호출한다', () => {
     const onToggle = vi.fn();
-    render(
-      <RegionCard region={makeRegion()} isExpanded={false} onToggle={onToggle} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={false} onToggle={onToggle} />);
     fireEvent.click(screen.getByRole('button'));
     expect(onToggle).toHaveBeenCalledOnce();
   });
 
   it('확장 시 상세 정보를 표시한다', () => {
-    render(
-      <RegionCard region={makeRegion()} isExpanded={true} onToggle={vi.fn()} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={true} onToggle={vi.fn()} />);
     expect(screen.getByText('40분')).toBeInTheDocument(); // median
     expect(screen.getByText('8시')).toBeInTheDocument(); // peak hour
   });
 
   it('축소 시 상세 정보를 숨긴다', () => {
-    render(
-      <RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />,
-    );
+    render(<RegionCard region={makeRegion()} isExpanded={false} onToggle={vi.fn()} />);
     expect(screen.queryByText('8시')).not.toBeInTheDocument();
   });
 
@@ -135,9 +121,7 @@ describe('RegionCard', () => {
     );
     expect(screen.getByRole('button')).toHaveAttribute('aria-expanded', 'false');
 
-    rerender(
-      <RegionCard region={makeRegion()} isExpanded={true} onToggle={vi.fn()} />,
-    );
+    rerender(<RegionCard region={makeRegion()} isExpanded={true} onToggle={vi.fn()} />);
     expect(screen.getByRole('button')).toHaveAttribute('aria-expanded', 'true');
   });
 });

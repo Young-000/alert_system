@@ -214,18 +214,18 @@ describe('DailyCheckUseCase', () => {
     it('존재하지 않는 미션이면 에러를 던진다', async () => {
       repo.findById.mockResolvedValue(null);
 
-      await expect(
-        useCase.toggleCheck(USER_ID, 'non-existent', TODAY),
-      ).rejects.toThrow(NotFoundException);
+      await expect(useCase.toggleCheck(USER_ID, 'non-existent', TODAY)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('다른 사용자의 미션은 토글할 수 없다', async () => {
       const mission = Mission.createNew('other-user', '영어 단어', 'commute');
       repo.findById.mockResolvedValue(mission);
 
-      await expect(
-        useCase.toggleCheck(USER_ID, mission.id, TODAY),
-      ).rejects.toThrow('권한이 없습니다');
+      await expect(useCase.toggleCheck(USER_ID, mission.id, TODAY)).rejects.toThrow(
+        '권한이 없습니다',
+      );
     });
 
     it('토글 후 recalculateScore가 호출된다 (saveScore 호출 확인)', async () => {

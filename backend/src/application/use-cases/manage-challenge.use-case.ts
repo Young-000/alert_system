@@ -18,13 +18,10 @@ export class ManageChallengeUseCase {
 
   async getTemplates(userId: string): Promise<TemplateWithStatus[]> {
     const templates = await this.challengeRepo.findAllTemplates();
-    const activeChallenges =
-      await this.challengeRepo.findActiveChallengesByUserId(userId);
+    const activeChallenges = await this.challengeRepo.findActiveChallengesByUserId(userId);
     const badges = await this.challengeRepo.findBadgesByUserId(userId);
 
-    const activeTemplateIds = new Set(
-      activeChallenges.map((c) => c.challengeTemplateId),
-    );
+    const activeTemplateIds = new Set(activeChallenges.map((c) => c.challengeTemplateId));
     const completedBadgeIds = new Set(badges.map((b) => b.badgeId));
 
     return templates.map((template) => ({
@@ -34,10 +31,7 @@ export class ManageChallengeUseCase {
     }));
   }
 
-  async joinChallenge(
-    userId: string,
-    templateId: string,
-  ): Promise<UserChallenge> {
+  async joinChallenge(userId: string, templateId: string): Promise<UserChallenge> {
     const template = await this.challengeRepo.findTemplateById(templateId);
     if (!template) {
       throw new Error('챌린지 템플릿을 찾을 수 없습니다.');
@@ -50,14 +44,9 @@ export class ManageChallengeUseCase {
       );
     }
 
-    const existing = await this.challengeRepo.findActiveByUserAndTemplate(
-      userId,
-      templateId,
-    );
+    const existing = await this.challengeRepo.findActiveByUserAndTemplate(userId, templateId);
     if (existing) {
-      throw new ChallengeConflictError(
-        '이미 참여 중인 챌린지입니다.',
-      );
+      throw new ChallengeConflictError('이미 참여 중인 챌린지입니다.');
     }
 
     const challenge = UserChallenge.create(
@@ -70,10 +59,7 @@ export class ManageChallengeUseCase {
     return this.challengeRepo.saveChallenge(challenge);
   }
 
-  async abandonChallenge(
-    userId: string,
-    challengeId: string,
-  ): Promise<void> {
+  async abandonChallenge(userId: string, challengeId: string): Promise<void> {
     const challenge = await this.challengeRepo.findChallengeById(challengeId);
     if (!challenge) {
       throw new Error('챌린지를 찾을 수 없습니다.');
@@ -88,8 +74,7 @@ export class ManageChallengeUseCase {
   }
 
   async getActiveChallenges(userId: string): Promise<ActiveChallengeDetail[]> {
-    const activeChallenges =
-      await this.challengeRepo.findActiveChallengesByUserId(userId);
+    const activeChallenges = await this.challengeRepo.findActiveChallengesByUserId(userId);
     const now = new Date();
     const details: ActiveChallengeDetail[] = [];
 
@@ -101,9 +86,7 @@ export class ManageChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        checked.challengeTemplateId,
-      );
+      const template = await this.challengeRepo.findTemplateById(checked.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -128,8 +111,11 @@ export class ManageChallengeUseCase {
     limit: number,
     offset: number,
   ): Promise<ChallengeHistoryResult> {
-    const { challenges, totalCount } =
-      await this.challengeRepo.findChallengeHistory(userId, limit, offset);
+    const { challenges, totalCount } = await this.challengeRepo.findChallengeHistory(
+      userId,
+      limit,
+      offset,
+    );
 
     const details: ActiveChallengeDetail[] = [];
     let totalCompleted = 0;
@@ -137,9 +123,7 @@ export class ManageChallengeUseCase {
     let totalAbandoned = 0;
 
     for (const challenge of challenges) {
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = await this.challengeRepo.findTemplateById(challenge.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -162,9 +146,7 @@ export class ManageChallengeUseCase {
 
     const totalFinished = totalCompleted + totalFailed + totalAbandoned;
     const completionRate =
-      totalFinished > 0
-        ? Math.round((totalCompleted / totalFinished) * 100)
-        : 0;
+      totalFinished > 0 ? Math.round((totalCompleted / totalFinished) * 100) : 0;
 
     return {
       challenges: details,

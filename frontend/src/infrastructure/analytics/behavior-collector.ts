@@ -56,10 +56,7 @@ class BehaviorCollector {
   /**
    * Track a generic behavior event
    */
-  async trackEvent(
-    eventType: BehaviorEventType,
-    options?: TrackEventOptions
-  ): Promise<void> {
+  async trackEvent(eventType: BehaviorEventType, options?: TrackEventOptions): Promise<void> {
     if (!this.isAvailable()) {
       // Behavior tracking disabled or user not initialized
       return;
@@ -103,10 +100,7 @@ class BehaviorCollector {
   /**
    * Track notification opened
    */
-  async trackNotificationOpened(
-    alertId: string,
-    notificationId?: string
-  ): Promise<void> {
+  async trackNotificationOpened(alertId: string, notificationId?: string): Promise<void> {
     if (!this.isAvailable()) return;
 
     try {

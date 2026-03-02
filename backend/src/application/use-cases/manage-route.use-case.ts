@@ -3,11 +3,7 @@ import {
   ICommuteRouteRepository,
   COMMUTE_ROUTE_REPOSITORY,
 } from '@domain/repositories/commute-route.repository';
-import {
-  CommuteRoute,
-  RouteCheckpoint,
-  RouteType,
-} from '@domain/entities/commute-route.entity';
+import { CommuteRoute, RouteCheckpoint, RouteType } from '@domain/entities/commute-route.entity';
 import {
   CreateRouteDto,
   UpdateRouteDto,
@@ -42,7 +38,7 @@ export class ManageRouteUseCase {
         expectedDurationToNext: cp.expectedDurationToNext,
         expectedWaitTime: cp.expectedWaitTime,
         transportMode: cp.transportMode,
-      }))
+      })),
     );
 
     // Handle isPreferred
@@ -50,15 +46,20 @@ export class ManageRouteUseCase {
       // Unset previous preferred route of same type
       const existingPreferred = await this.routeRepository.findPreferredByUserId(
         dto.userId,
-        dto.routeType
+        dto.routeType,
       );
       if (existingPreferred) {
         await this.routeRepository.update(
-          new CommuteRoute(existingPreferred.userId, existingPreferred.name, existingPreferred.routeType, {
-            id: existingPreferred.id,
-            isPreferred: false,
-            checkpoints: existingPreferred.checkpoints,
-          })
+          new CommuteRoute(
+            existingPreferred.userId,
+            existingPreferred.name,
+            existingPreferred.routeType,
+            {
+              id: existingPreferred.id,
+              isPreferred: false,
+              checkpoints: existingPreferred.checkpoints,
+            },
+          ),
         );
       }
     }
@@ -68,7 +69,7 @@ export class ManageRouteUseCase {
         isPreferred: dto.isPreferred ?? false,
         totalExpectedDuration: route.totalExpectedDuration,
         checkpoints: route.checkpoints,
-      })
+      }),
     );
 
     return this.toResponseDto(savedRoute);
@@ -96,7 +97,10 @@ export class ManageRouteUseCase {
     return routes.map((r) => this.toResponseDto(r));
   }
 
-  async getRoutesByUserIdAndType(userId: string, routeType: RouteType): Promise<RouteResponseDto[]> {
+  async getRoutesByUserIdAndType(
+    userId: string,
+    routeType: RouteType,
+  ): Promise<RouteResponseDto[]> {
     if (!this.routeRepository) {
       throw new Error('Route repository not available');
     }
@@ -129,11 +133,11 @@ export class ManageRouteUseCase {
             expectedDurationToNext: cp.expectedDurationToNext,
             expectedWaitTime: cp.expectedWaitTime,
             transportMode: cp.transportMode,
-          })
+          }),
       );
       totalExpectedDuration = checkpoints.reduce(
         (sum, cp) => sum + (cp.expectedDurationToNext || 0) + (cp.expectedWaitTime || 0),
-        0
+        0,
       );
     }
 
@@ -142,15 +146,20 @@ export class ManageRouteUseCase {
       const routeType = dto.routeType ?? existing.routeType;
       const existingPreferred = await this.routeRepository.findPreferredByUserId(
         existing.userId,
-        routeType
+        routeType,
       );
       if (existingPreferred && existingPreferred.id !== id) {
         await this.routeRepository.update(
-          new CommuteRoute(existingPreferred.userId, existingPreferred.name, existingPreferred.routeType, {
-            id: existingPreferred.id,
-            isPreferred: false,
-            checkpoints: existingPreferred.checkpoints,
-          })
+          new CommuteRoute(
+            existingPreferred.userId,
+            existingPreferred.name,
+            existingPreferred.routeType,
+            {
+              id: existingPreferred.id,
+              isPreferred: false,
+              checkpoints: existingPreferred.checkpoints,
+            },
+          ),
         );
       }
     }
@@ -165,7 +174,7 @@ export class ManageRouteUseCase {
         totalExpectedDuration,
         checkpoints,
         createdAt: existing.createdAt,
-      }
+      },
     );
 
     await this.routeRepository.update(updatedRoute);

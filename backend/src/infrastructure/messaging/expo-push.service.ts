@@ -67,8 +67,7 @@ export class ExpoPushService implements IExpoPushService {
 
     for (const chunk of chunks) {
       try {
-        const tickets: ExpoPushTicket[] =
-          await this.expo.sendPushNotificationsAsync(chunk);
+        const tickets: ExpoPushTicket[] = await this.expo.sendPushNotificationsAsync(chunk);
 
         for (let i = 0; i < tickets.length; i++) {
           const ticket = tickets[i];
@@ -79,9 +78,7 @@ export class ExpoPushService implements IExpoPushService {
               const token = (chunk[i] as ExpoPushMessage).to as string;
               await this.removeExpiredToken(token);
             } else {
-              this.logger.warn(
-                `Expo push error: ${ticket.details?.error} - ${ticket.message}`,
-              );
+              this.logger.warn(`Expo push error: ${ticket.details?.error} - ${ticket.message}`);
             }
           }
         }

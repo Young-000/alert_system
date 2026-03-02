@@ -57,7 +57,7 @@ export class CommuteRoute {
       checkpoints?: RouteCheckpoint[];
       createdAt?: Date;
       updatedAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.userId = userId;
@@ -74,7 +74,7 @@ export class CommuteRoute {
     userId: string,
     name: string,
     routeType: RouteType,
-    checkpointsData: RouteCheckpointData[]
+    checkpointsData: RouteCheckpointData[],
   ): CommuteRoute {
     const checkpoints = checkpointsData.map(
       (data) =>
@@ -86,12 +86,12 @@ export class CommuteRoute {
           expectedDurationToNext: data.expectedDurationToNext,
           expectedWaitTime: data.expectedWaitTime,
           transportMode: data.transportMode,
-        })
+        }),
     );
 
     const totalExpectedDuration = checkpoints.reduce(
       (sum, cp) => sum + (cp.expectedDurationToNext || 0) + (cp.expectedWaitTime || 0),
-      0
+      0,
     );
 
     return new CommuteRoute(userId, name, routeType, {
@@ -154,7 +154,7 @@ export class RouteCheckpoint {
       expectedWaitTime?: number;
       transportMode?: TransportMode;
       createdAt?: Date;
-    }
+    },
   ) {
     this.id = options?.id || '';
     this.routeId = options?.routeId || '';

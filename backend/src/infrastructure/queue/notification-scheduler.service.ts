@@ -8,7 +8,7 @@ import { INotificationScheduler } from '@application/ports/notification-schedule
 export class NotificationSchedulerService implements INotificationScheduler {
   constructor(
     @InjectQueue('notifications') private queue: Queue,
-    @Inject('IAlertRepository') private alertRepository: IAlertRepository
+    @Inject('IAlertRepository') private alertRepository: IAlertRepository,
   ) {}
 
   async scheduleNotification(alert: Alert): Promise<void> {
@@ -24,7 +24,7 @@ export class NotificationSchedulerService implements INotificationScheduler {
           pattern: alert.schedule,
         },
         jobId: `alert-${alert.id}`,
-      }
+      },
     );
   }
 

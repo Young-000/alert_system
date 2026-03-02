@@ -1,10 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CommuteTrackingPage } from './CommuteTrackingPage';
-import {
-  commuteApiClient,
-  getCommuteApiClient,
-} from '@infrastructure/api';
+import { commuteApiClient, getCommuteApiClient } from '@infrastructure/api';
 import type { Mocked, MockedFunction } from 'vitest';
 
 // Mock navigate and location
@@ -13,7 +10,7 @@ let mockLocationState: Record<string, unknown> | null = null;
 let mockSearchParams = new URLSearchParams();
 
 vi.mock('react-router-dom', async () => ({
-  ...await vi.importActual('react-router-dom'),
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ state: mockLocationState, pathname: '/commute' }),
   useSearchParams: () => [mockSearchParams, vi.fn()],
@@ -42,7 +39,7 @@ function renderPage(): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
       <CommuteTrackingPage />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 

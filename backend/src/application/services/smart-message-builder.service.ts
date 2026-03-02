@@ -13,24 +13,24 @@ export const SMART_MESSAGE_BUILDER = Symbol('ISmartMessageBuilder');
 @Injectable()
 export class SmartMessageBuilder implements ISmartMessageBuilder {
   private readonly WEATHER_TRANSLATIONS: Record<string, string> = {
-    'clear': '맑음',
+    clear: '맑음',
     'clear sky': '맑음',
-    'clouds': '흐림',
+    clouds: '흐림',
     'few clouds': '약간 흐림',
     'scattered clouds': '구름 조금',
     'broken clouds': '구름 많음',
     'overcast clouds': '흐림',
-    'rain': '비',
+    rain: '비',
     'light rain': '가벼운 비',
     'moderate rain': '비',
     'heavy rain': '폭우',
-    'snow': '눈',
+    snow: '눈',
     'light snow': '가벼운 눈',
-    'thunderstorm': '뇌우',
-    'drizzle': '이슬비',
-    'mist': '안개',
-    'fog': '짙은 안개',
-    'haze': '연무',
+    thunderstorm: '뇌우',
+    drizzle: '이슬비',
+    mist: '안개',
+    fog: '짙은 안개',
+    haze: '연무',
   };
 
   build(context: NotificationContext, recommendations: Recommendation[]): string {
@@ -50,11 +50,11 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
 
     // 3. Smart recommendations (top 2 high-priority ones)
     const topRecommendations = recommendations
-      .filter(r => r.priority >= RulePriority.HIGH)
+      .filter((r) => r.priority >= RulePriority.HIGH)
       .slice(0, 2);
 
     if (topRecommendations.length > 0) {
-      const recommendationMessages = topRecommendations.map(r => r.message);
+      const recommendationMessages = topRecommendations.map((r) => r.message);
       parts.push(recommendationMessages.join('\n'));
     }
 
@@ -128,7 +128,9 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
     if (busArrivals?.length) {
       const first = busArrivals[0];
       const stopLabel = busStopName || '';
-      transitParts.push(`🚌 ${first.routeName}번 ${first.arrivalTime}분 후${stopLabel ? ` (${stopLabel})` : ''}`);
+      transitParts.push(
+        `🚌 ${first.routeName}번 ${first.arrivalTime}분 후${stopLabel ? ` (${stopLabel})` : ''}`,
+      );
     }
 
     return transitParts.length > 0 ? transitParts.join('\n') : null;
@@ -141,13 +143,13 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
 
   private getAirQualityEmoji(status: string): string {
     const statusMap: Record<string, string> = {
-      'good': '😆 좋음',
-      'moderate': '😊 보통',
+      good: '😆 좋음',
+      moderate: '😊 보통',
       'unhealthy for sensitive': '😐 민감군 주의',
       'unhealthy for sensitive groups': '😐 민감군 주의',
-      'unhealthy': '😷 나쁨',
+      unhealthy: '😷 나쁨',
       'very unhealthy': '🤢 매우나쁨',
-      'hazardous': '🤢 위험',
+      hazardous: '🤢 위험',
     };
 
     const lowerStatus = status.toLowerCase();
