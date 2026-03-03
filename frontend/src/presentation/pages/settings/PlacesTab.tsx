@@ -6,6 +6,7 @@ import {
   useDeletePlaceMutation,
   useTogglePlaceMutation,
 } from '@infrastructure/query';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import type { Place, PlaceType } from '@infrastructure/api';
 
 const PLACE_ICONS: Record<PlaceType, string> = { home: '🏠', work: '🏢' };
@@ -76,9 +77,12 @@ export function PlacesTab(): JSX.Element {
   const [formLabel, setFormLabel] = useState('');
   const [formAddress, setFormAddress] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const handleCreate = useCallback(async () => {
     if (!formLabel.trim()) return;
+    setActionError('');
     try {
       await createMutation.mutateAsync({
         placeType: formType,
@@ -91,21 +95,28 @@ export function PlacesTab(): JSX.Element {
       setFormAddress('');
       setShowForm(false);
     } catch {
-      alert('장소 등록에 실패했습니다.');
+      setActionError('장소 등록에 실패했습니다.');
     }
   }, [formLabel, formType, formAddress, createMutation]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 장소를 삭제하시겠습니까?')) return;
-    setDeletingId(id);
+  const handleDeleteClick = useCallback((id: string) => {
+    const place = places?.find((p) => p.id === id);
+    setDeleteTarget({ id, label: place?.label ?? '장소' });
+  }, [places]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    setActionError('');
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      setDeleteTarget(null);
     } catch {
-      alert('장소 삭제에 실패했습니다.');
+      setActionError('장소 삭제에 실패했습니다.');
     } finally {
       setDeletingId(null);
     }
-  }, [deleteMutation]);
+  }, [deleteTarget, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id);
@@ -198,13 +209,31 @@ export function PlacesTab(): JSX.Element {
                 key={place.id}
                 place={place}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
                 isDeleting={deletingId === place.id}
               />
             ))}
           </div>
         )}
+        {actionError && (
+          <div className="notice error" role="alert" style={{ marginTop: '0.75rem' }}>
+            {actionError}
+          </div>
+        )}
       </section>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="장소 삭제"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmVariant="danger"
+        isLoading={!!deletingId}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
+      >
+        <p><strong>{deleteTarget?.label}</strong>을(를) 삭제하시겠습니까?</p>
+      </ConfirmModal>
     </div>
   );
 }
