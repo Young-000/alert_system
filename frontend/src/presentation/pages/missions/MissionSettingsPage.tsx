@@ -395,7 +395,7 @@ export function MissionSettingsPage(): JSX.Element {
         <div className="msettings-auth-required">
           <span className="msettings-auth-icon" aria-hidden="true">🔒</span>
           <p>로그인이 필요한 기능이에요</p>
-          <button type="button" className="btn-primary" onClick={() => navigate('/login')}>
+          <button type="button" className="btn btn-primary" onClick={() => navigate('/login')}>
             로그인
           </button>
         </div>

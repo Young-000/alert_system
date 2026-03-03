@@ -350,7 +350,7 @@ export function OnboardingPage(): JSX.Element {
             {error && <div className="notice error" role="alert">{error}</div>}
 
             <div className="step-actions">
-              <button type="button" className="btn btn-ghost" onClick={goBack}>
+              <button type="button" className="btn btn-ghost" onClick={goBack} disabled={isCreating}>
                 ← 이전
               </button>
               <button
