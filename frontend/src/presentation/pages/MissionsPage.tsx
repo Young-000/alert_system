@@ -7,7 +7,6 @@ import {
   useWeeklyStatsQuery,
 } from '@infrastructure/query';
 import type { MissionWithRecord, MissionScore } from '@infrastructure/api';
-import '../styles/pages/missions.css';
 
 // ─── Constants ──────────────────────────────────────
 

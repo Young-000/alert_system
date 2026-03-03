@@ -48,22 +48,22 @@
   --ink-secondary: #475569;
   --ink-muted: #64748b;
 
-  /* Brand Colors */
-  --primary: #6366f1;
+  /* Brand Colors — WCAG AA compliant (>= 4.5:1 on white) */
+  --primary: #5b5ee0;
   --primary-hover: #4f46e5;
   --primary-light: #eef2ff;
-  --primary-glow: rgba(99, 102, 241, 0.15);
+  --primary-glow: rgba(91, 94, 224, 0.15);
 
-  /* Status Colors */
-  --success: #10b981;
+  /* Status Colors — WCAG AA compliant on white & light backgrounds */
+  --success: #047857;
   --success-light: #ecfdf5;
-  --warning: #f59e0b;
+  --warning: #b45309;
   --warning-light: #fffbeb;
-  --error: #ef4444;
+  --error: #c81e1e;
   --error-light: #fef2f2;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-primary: linear-gradient(135deg, #5b5ee0 0%, #7c3aed 100%);
   --gradient-warm: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
   --gradient-cool: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
 

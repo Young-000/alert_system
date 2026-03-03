@@ -8,7 +8,6 @@ import type {
   DaySegment,
   SensitivityLevel,
 } from '@infrastructure/api';
-import '../../styles/pages/patterns.css';
 
 type TabId = 'overview' | 'by-day' | 'weather';
 

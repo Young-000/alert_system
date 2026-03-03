@@ -12,7 +12,6 @@ import {
 } from '@infrastructure/query';
 import type { Mission, MissionType } from '@infrastructure/api';
 import { MissionAddModal } from './MissionAddModal';
-import '../../styles/pages/mission-settings.css';
 
 // ─── Constants ──────────────────────────────────────
 

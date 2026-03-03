@@ -415,11 +415,11 @@ export function OnboardingPage(): JSX.Element {
                 </>
               ) : (
                 <>
-                  <Link to="/commute?mode=stopwatch" className="btn btn-primary btn-lg">
-                    스톱워치로 시작
-                  </Link>
-                  <Link to="/routes" className="btn btn-ghost">
+                  <Link to="/routes" className="btn btn-primary btn-lg">
                     경로 설정하기
+                  </Link>
+                  <Link to="/" className="btn btn-ghost">
+                    홈으로
                   </Link>
                 </>
               )}
