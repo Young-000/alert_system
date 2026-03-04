@@ -7,6 +7,7 @@ import {
   useDeleteSmartDepartureMutation,
   useToggleSmartDepartureMutation,
 } from '@infrastructure/query';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import type { SmartDepartureSetting, DepartureType } from '@infrastructure/api';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -87,15 +88,18 @@ export function SmartDepartureTab(): JSX.Element {
   const [formTarget, setFormTarget] = useState('09:00');
   const [formPrep, setFormPrep] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const routeMap = new Map((routes ?? []).map((r) => [r.id, r.name]));
 
   const handleCreate = useCallback(async () => {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
-      alert('먼저 경로를 등록해주세요.');
+      setActionError('먼저 경로를 등록해주세요.');
       return;
     }
+    setActionError('');
     try {
       await createMutation.mutateAsync({
         routeId,
@@ -106,21 +110,31 @@ export function SmartDepartureTab(): JSX.Element {
       });
       setShowForm(false);
     } catch {
-      alert('스마트 출발 설정에 실패했습니다.');
+      setActionError('스마트 출발 설정에 실패했습니다.');
     }
   }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 스마트 출발 설정을 삭제하시겠습니까?')) return;
-    setDeletingId(id);
+  const handleDeleteClick = useCallback((id: string) => {
+    const setting = settings?.find((s) => s.id === id);
+    const label = setting
+      ? `${TYPE_LABELS[setting.departureType]} ${setting.arrivalTarget}`
+      : '설정';
+    setDeleteTarget({ id, label });
+  }, [settings]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    setActionError('');
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      setDeleteTarget(null);
     } catch {
-      alert('삭제에 실패했습니다.');
+      setActionError('삭제에 실패했습니다.');
     } finally {
       setDeletingId(null);
     }
-  }, [deleteMutation]);
+  }, [deleteTarget, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id);
@@ -231,13 +245,31 @@ export function SmartDepartureTab(): JSX.Element {
                 setting={setting}
                 routeName={routeMap.get(setting.routeId) ?? '알 수 없는 경로'}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
                 isDeleting={deletingId === setting.id}
               />
             ))}
           </div>
         )}
+        {actionError && (
+          <div className="notice error" role="alert" style={{ marginTop: '0.75rem' }}>
+            {actionError}
+          </div>
+        )}
       </section>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="스마트 출발 설정 삭제"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmVariant="danger"
+        isLoading={!!deletingId}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
+      >
+        <p><strong>{deleteTarget?.label}</strong> 설정을 삭제하시겠습니까?</p>
+      </ConfirmModal>
     </div>
   );
 }
