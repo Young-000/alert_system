@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 
 // ========== GET /community/neighbors ==========
 
@@ -38,12 +38,13 @@ export class CreateTipRequestDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  checkpointKey: string;
+  checkpointKey!: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
-  content: string;
+  @MinLength(2)
+  @MaxLength(500)
+  content!: string;
 }
 
 export interface CreateTipResponseDto {
