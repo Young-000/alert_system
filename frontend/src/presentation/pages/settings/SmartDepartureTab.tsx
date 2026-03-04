@@ -153,6 +153,9 @@ export function SmartDepartureTab(): JSX.Element {
 
   return (
     <div role="tabpanel" id="tabpanel-departure" aria-labelledby="tab-departure">
+      {actionError && (
+        <div className="notice error" role="alert">{actionError}</div>
+      )}
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">스마트 출발</h2>
@@ -249,11 +252,6 @@ export function SmartDepartureTab(): JSX.Element {
                 isDeleting={deletingId === setting.id}
               />
             ))}
-          </div>
-        )}
-        {actionError && (
-          <div className="notice error" role="alert" style={{ marginTop: '0.75rem' }}>
-            {actionError}
           </div>
         )}
       </section>

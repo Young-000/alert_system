@@ -172,6 +172,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     } catch {
       setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
       setError('알림 상태 변경에 실패했습니다.');
+      setTimeout(() => setError(''), TOAST_DURATION_MS);
     } finally {
       setTogglingIds(prev => {
         const next = new Set(prev);

@@ -6,12 +6,14 @@ import {
   ManyToOne,
   JoinColumn,
   Unique,
+  Index,
 } from 'typeorm';
 import { CommunityTipEntity } from './community-tip.entity';
 import { UserEntity } from './user.entity';
 
 @Entity('community_tip_reports', { schema: 'alert_system' })
 @Unique('community_tip_reports_unique', ['tipId', 'reporterId'])
+@Index('community_tip_reports_tip_id_idx', ['tipId'])
 export class CommunityTipReportEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

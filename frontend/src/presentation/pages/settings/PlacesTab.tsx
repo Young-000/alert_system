@@ -135,6 +135,9 @@ export function PlacesTab(): JSX.Element {
 
   return (
     <div role="tabpanel" id="tabpanel-places" aria-labelledby="tab-places">
+      {actionError && (
+        <div className="notice error" role="alert">{actionError}</div>
+      )}
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">내 장소</h2>
@@ -213,11 +216,6 @@ export function PlacesTab(): JSX.Element {
                 isDeleting={deletingId === place.id}
               />
             ))}
-          </div>
-        )}
-        {actionError && (
-          <div className="notice error" role="alert" style={{ marginTop: '0.75rem' }}>
-            {actionError}
           </div>
         )}
       </section>

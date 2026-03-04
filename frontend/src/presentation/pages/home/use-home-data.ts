@@ -261,11 +261,12 @@ export function useHomeData(): UseHomeDataReturn {
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,
-    retryLoad: () => {
-      alertsQuery.refetch();
-      routesQuery.refetch();
-      statsQuery.refetch();
-    },
+    retryLoad: useCallback(() => {
+      void alertsQuery.refetch();
+      void routesQuery.refetch();
+      void statsQuery.refetch();
+      void weeklyReportQuery.refetch();
+    }, [alertsQuery, routesQuery, statsQuery, weeklyReportQuery]),
     navigate,
   };
 }
