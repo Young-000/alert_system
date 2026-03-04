@@ -7,6 +7,7 @@ import {
   useDeleteSmartDepartureMutation,
   useToggleSmartDepartureMutation,
 } from '@infrastructure/query';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import type { SmartDepartureSetting, DepartureType } from '@infrastructure/api';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -87,8 +88,8 @@ export function SmartDepartureTab(): JSX.Element {
   const [formTarget, setFormTarget] = useState('09:00');
   const [formPrep, setFormPrep] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
   const [actionError, setActionError] = useState('');
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const routeMap = new Map((routes ?? []).map((r) => [r.id, r.name]));
 
@@ -96,9 +97,9 @@ export function SmartDepartureTab(): JSX.Element {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
       setActionError('먼저 경로를 등록해주세요.');
-      setTimeout(() => setActionError(''), 3000);
       return;
     }
+    setActionError('');
     try {
       await createMutation.mutateAsync({
         routeId,
@@ -110,27 +111,30 @@ export function SmartDepartureTab(): JSX.Element {
       setShowForm(false);
     } catch {
       setActionError('스마트 출발 설정에 실패했습니다.');
-      setTimeout(() => setActionError(''), 3000);
     }
   }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
 
   const handleDeleteClick = useCallback((id: string) => {
-    setConfirmDeleteId(id);
-  }, []);
+    const setting = settings?.find((s) => s.id === id);
+    const label = setting
+      ? `${TYPE_LABELS[setting.departureType]} ${setting.arrivalTarget}`
+      : '설정';
+    setDeleteTarget({ id, label });
+  }, [settings]);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!confirmDeleteId) return;
-    setDeletingId(confirmDeleteId);
-    setConfirmDeleteId(null);
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    setActionError('');
     try {
-      await deleteMutation.mutateAsync(confirmDeleteId);
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      setDeleteTarget(null);
     } catch {
       setActionError('삭제에 실패했습니다.');
-      setTimeout(() => setActionError(''), 3000);
     } finally {
       setDeletingId(null);
     }
-  }, [confirmDeleteId, deleteMutation]);
+  }, [deleteTarget, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id);
@@ -151,17 +155,6 @@ export function SmartDepartureTab(): JSX.Element {
     <div role="tabpanel" id="tabpanel-departure" aria-labelledby="tab-departure">
       {actionError && (
         <div className="notice error" role="alert">{actionError}</div>
-      )}
-      {confirmDeleteId && (
-        <div className="confirm-modal-overlay" role="dialog" aria-label="삭제 확인">
-          <div className="confirm-modal">
-            <p>이 스마트 출발 설정을 삭제하시겠습니까?</p>
-            <div className="confirm-modal-actions">
-              <button type="button" className="btn" onClick={() => setConfirmDeleteId(null)}>취소</button>
-              <button type="button" className="btn btn-danger" onClick={() => void handleDeleteConfirm()}>삭제</button>
-            </div>
-          </div>
-        </div>
       )}
       <section className="settings-section">
         <div className="settings-section-header">
@@ -262,6 +255,19 @@ export function SmartDepartureTab(): JSX.Element {
           </div>
         )}
       </section>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="스마트 출발 설정 삭제"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmVariant="danger"
+        isLoading={!!deletingId}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
+      >
+        <p><strong>{deleteTarget?.label}</strong> 설정을 삭제하시겠습니까?</p>
+      </ConfirmModal>
     </div>
   );
 }
