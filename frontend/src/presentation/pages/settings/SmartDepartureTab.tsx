@@ -87,13 +87,16 @@ export function SmartDepartureTab(): JSX.Element {
   const [formTarget, setFormTarget] = useState('09:00');
   const [formPrep, setFormPrep] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const routeMap = new Map((routes ?? []).map((r) => [r.id, r.name]));
 
   const handleCreate = useCallback(async () => {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
-      alert('먼저 경로를 등록해주세요.');
+      setActionError('먼저 경로를 등록해주세요.');
+      setTimeout(() => setActionError(''), 3000);
       return;
     }
     try {
@@ -106,21 +109,28 @@ export function SmartDepartureTab(): JSX.Element {
       });
       setShowForm(false);
     } catch {
-      alert('스마트 출발 설정에 실패했습니다.');
+      setActionError('스마트 출발 설정에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     }
   }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 스마트 출발 설정을 삭제하시겠습니까?')) return;
-    setDeletingId(id);
+  const handleDeleteClick = useCallback((id: string) => {
+    setConfirmDeleteId(id);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!confirmDeleteId) return;
+    setDeletingId(confirmDeleteId);
+    setConfirmDeleteId(null);
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(confirmDeleteId);
     } catch {
-      alert('삭제에 실패했습니다.');
+      setActionError('삭제에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     } finally {
       setDeletingId(null);
     }
-  }, [deleteMutation]);
+  }, [confirmDeleteId, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id);
@@ -139,6 +149,20 @@ export function SmartDepartureTab(): JSX.Element {
 
   return (
     <div role="tabpanel" id="tabpanel-departure" aria-labelledby="tab-departure">
+      {actionError && (
+        <div className="notice error" role="alert">{actionError}</div>
+      )}
+      {confirmDeleteId && (
+        <div className="confirm-modal-overlay" role="dialog" aria-label="삭제 확인">
+          <div className="confirm-modal">
+            <p>이 스마트 출발 설정을 삭제하시겠습니까?</p>
+            <div className="confirm-modal-actions">
+              <button type="button" className="btn" onClick={() => setConfirmDeleteId(null)}>취소</button>
+              <button type="button" className="btn btn-danger" onClick={() => void handleDeleteConfirm()}>삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">스마트 출발</h2>
@@ -231,7 +255,7 @@ export function SmartDepartureTab(): JSX.Element {
                 setting={setting}
                 routeName={routeMap.get(setting.routeId) ?? '알 수 없는 경로'}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
                 isDeleting={deletingId === setting.id}
               />
             ))}

@@ -76,6 +76,8 @@ export function PlacesTab(): JSX.Element {
   const [formLabel, setFormLabel] = useState('');
   const [formAddress, setFormAddress] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleCreate = useCallback(async () => {
     if (!formLabel.trim()) return;
@@ -91,21 +93,28 @@ export function PlacesTab(): JSX.Element {
       setFormAddress('');
       setShowForm(false);
     } catch {
-      alert('장소 등록에 실패했습니다.');
+      setActionError('장소 등록에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     }
   }, [formLabel, formType, formAddress, createMutation]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('이 장소를 삭제하시겠습니까?')) return;
-    setDeletingId(id);
+  const handleDeleteClick = useCallback((id: string) => {
+    setConfirmDeleteId(id);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!confirmDeleteId) return;
+    setDeletingId(confirmDeleteId);
+    setConfirmDeleteId(null);
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(confirmDeleteId);
     } catch {
-      alert('장소 삭제에 실패했습니다.');
+      setActionError('장소 삭제에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     } finally {
       setDeletingId(null);
     }
-  }, [deleteMutation]);
+  }, [confirmDeleteId, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id);
@@ -124,6 +133,20 @@ export function PlacesTab(): JSX.Element {
 
   return (
     <div role="tabpanel" id="tabpanel-places" aria-labelledby="tab-places">
+      {actionError && (
+        <div className="notice error" role="alert">{actionError}</div>
+      )}
+      {confirmDeleteId && (
+        <div className="confirm-modal-overlay" role="dialog" aria-label="삭제 확인">
+          <div className="confirm-modal">
+            <p>이 장소를 삭제하시겠습니까?</p>
+            <div className="confirm-modal-actions">
+              <button type="button" className="btn" onClick={() => setConfirmDeleteId(null)}>취소</button>
+              <button type="button" className="btn btn-danger" onClick={() => void handleDeleteConfirm()}>삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">내 장소</h2>
@@ -198,7 +221,7 @@ export function PlacesTab(): JSX.Element {
                 key={place.id}
                 place={place}
                 onToggle={handleToggle}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
                 isDeleting={deletingId === place.id}
               />
             ))}
