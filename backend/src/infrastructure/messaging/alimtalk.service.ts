@@ -72,8 +72,9 @@ export class AlimtalkService implements IAlimtalkService {
   }
 
   async sendAlimtalk(message: AlimtalkMessage): Promise<void> {
+    const maskedPhone = this.maskPhone(message.to);
     if (!this.isConfigured) {
-      this.logger.log(`[Mock Alimtalk] to: ${message.to}, template: ${message.templateCode}`);
+      this.logger.log(`[Mock Alimtalk] to: ${maskedPhone}, template: ${message.templateCode}`);
       this.logger.log(`[Mock Alimtalk] variables: ${JSON.stringify(message.variables)}`);
       return;
     }
@@ -123,7 +124,7 @@ export class AlimtalkService implements IAlimtalkService {
         throw new Error(`Alimtalk send failed: ${sendResult.resultMessage}`);
       }
 
-      this.logger.log(`Alimtalk sent successfully to ${message.to}`);
+      this.logger.log(`Alimtalk sent successfully to ${maskedPhone}`);
     } catch (error) {
       this.logger.error('Failed to send Alimtalk:', error);
       // 알림톡 실패시 SMS로 대체 (NHN Cloud가 자동 대체 발송하므로 여기서는 로깅만)
@@ -132,8 +133,9 @@ export class AlimtalkService implements IAlimtalkService {
   }
 
   async sendSMS(to: string, text: string): Promise<void> {
+    const maskedPhone = this.maskPhone(to);
     if (!this.isConfigured) {
-      this.logger.log(`[Mock SMS] to: ${to}, text: ${text}`);
+      this.logger.log(`[Mock SMS] to: ${maskedPhone}, text: ${text}`);
       return;
     }
 
@@ -168,7 +170,7 @@ export class AlimtalkService implements IAlimtalkService {
         throw new Error(`SMS failed: ${result.header?.resultMessage || 'Unknown error'}`);
       }
 
-      this.logger.log(`SMS sent successfully to ${to}`);
+      this.logger.log(`SMS sent successfully to ${maskedPhone}`);
     } catch (error) {
       this.logger.error('Failed to send SMS:', error);
       throw error;
@@ -179,6 +181,14 @@ export class AlimtalkService implements IAlimtalkService {
     // 하이픈 제거하고 숫자만 반환
     return phone.replace(/-/g, '');
   }
+
+  private maskPhone(phone: string): string {
+    const digits = phone.replace(/-/g, '');
+    if (digits.length >= 8) {
+      return digits.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    }
+    return '***masked***';
+  }
 }
 
 // 알림톡 없이 동작하는 Noop 서비스
@@ -186,11 +196,19 @@ export class AlimtalkService implements IAlimtalkService {
 export class NoopAlimtalkService implements IAlimtalkService {
   private readonly logger = new Logger(NoopAlimtalkService.name);
 
+  private maskPhone(phone: string): string {
+    const digits = phone.replace(/-/g, '');
+    if (digits.length >= 8) {
+      return digits.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    }
+    return '***masked***';
+  }
+
   async sendAlimtalk(message: AlimtalkMessage): Promise<void> {
-    this.logger.log(`[Noop Alimtalk] to: ${message.to}, template: ${message.templateCode}`);
+    this.logger.log(`[Noop Alimtalk] to: ${this.maskPhone(message.to)}, template: ${message.templateCode}`);
   }
 
   async sendSMS(to: string, text: string): Promise<void> {
-    this.logger.log(`[Noop SMS] to: ${to}, text: ${text}`);
+    this.logger.log(`[Noop SMS] to: ${this.maskPhone(to)}, text: ${text}`);
   }
 }

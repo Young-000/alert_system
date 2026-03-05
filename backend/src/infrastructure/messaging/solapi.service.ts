@@ -112,8 +112,9 @@ export class SolapiService implements ISolapiService {
   }
 
   async sendAlimtalk(message: AlimtalkMessage): Promise<void> {
+    const maskedPhone = this.maskPhone(message.to);
     if (!this.isConfigured || !this.client) {
-      this.logger.log(`[Mock Alimtalk] to: ${message.to}, template: ${message.templateId}`);
+      this.logger.log(`[Mock Alimtalk] to: ${maskedPhone}, template: ${message.templateId}`);
       this.logger.log(`[Mock Alimtalk] variables: ${JSON.stringify(message.variables)}`);
       return;
     }
@@ -128,7 +129,7 @@ export class SolapiService implements ISolapiService {
         },
       });
 
-      this.logger.log(`Alimtalk sent successfully to ${message.to}`);
+      this.logger.log(`Alimtalk sent successfully to ${maskedPhone}`);
       this.logger.debug(`Response: ${JSON.stringify(response)}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -209,11 +210,19 @@ export class SolapiService implements ISolapiService {
   async sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void> {
     // TODO: Solapi 주간 리포트 템플릿 승인 후 TEMPLATE_IDS.WEEKLY_REPORT 사용
     // 현재는 로깅만 수행 (Web Push로 대체 발송됨)
-    this.logger.log(`[Weekly Report] to: ${to}, variables: ${JSON.stringify(variables)}`);
+    this.logger.log(`[Weekly Report] to: ${this.maskPhone(to)}, variables: ${JSON.stringify(variables)}`);
   }
 
   private formatPhoneNumber(phone: string): string {
     return phone.replace(/-/g, '');
+  }
+
+  private maskPhone(phone: string): string {
+    const digits = phone.replace(/-/g, '');
+    if (digits.length >= 8) {
+      return digits.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    }
+    return '***masked***';
   }
 }
 
@@ -222,27 +231,35 @@ export class SolapiService implements ISolapiService {
 export class NoopSolapiService implements ISolapiService {
   private readonly logger = new Logger(NoopSolapiService.name);
 
+  private maskPhone(phone: string): string {
+    const digits = phone.replace(/-/g, '');
+    if (digits.length >= 8) {
+      return digits.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    }
+    return '***masked***';
+  }
+
   async sendAlimtalk(message: AlimtalkMessage): Promise<void> {
-    this.logger.log(`[Noop Alimtalk] to: ${message.to}, template: ${message.templateId}`);
+    this.logger.log(`[Noop Alimtalk] to: ${this.maskPhone(message.to)}, template: ${message.templateId}`);
   }
 
   async sendLegacyWeatherAlert(to: string, variables: LegacyWeatherVariables): Promise<void> {
-    this.logger.log(`[Noop Legacy Weather] to: ${to}, variables: ${JSON.stringify(variables)}`);
+    this.logger.log(`[Noop Legacy Weather] to: ${this.maskPhone(to)}, variables: ${JSON.stringify(variables)}`);
   }
 
   async sendWeatherAlert(to: string, variables: WeatherAlertVariables, timeType: AlertTimeType): Promise<void> {
-    this.logger.log(`[Noop Weather ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+    this.logger.log(`[Noop Weather ${timeType}] to: ${this.maskPhone(to)}, variables: ${JSON.stringify(variables)}`);
   }
 
   async sendTransitAlert(to: string, variables: TransitAlertVariables, timeType: AlertTimeType): Promise<void> {
-    this.logger.log(`[Noop Transit ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+    this.logger.log(`[Noop Transit ${timeType}] to: ${this.maskPhone(to)}, variables: ${JSON.stringify(variables)}`);
   }
 
   async sendCombinedAlert(to: string, variables: CombinedAlertVariables, timeType: AlertTimeType): Promise<void> {
-    this.logger.log(`[Noop Combined ${timeType}] to: ${to}, variables: ${JSON.stringify(variables)}`);
+    this.logger.log(`[Noop Combined ${timeType}] to: ${this.maskPhone(to)}, variables: ${JSON.stringify(variables)}`);
   }
 
   async sendWeeklyReport(to: string, variables: WeeklyReportVariables): Promise<void> {
-    this.logger.log(`[Noop Weekly Report] to: ${to}, variables: ${JSON.stringify(variables)}`);
+    this.logger.log(`[Noop Weekly Report] to: ${this.maskPhone(to)}, variables: ${JSON.stringify(variables)}`);
   }
 }

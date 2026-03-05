@@ -32,9 +32,18 @@ export interface TipsListResponseDto {
 
 // ========== POST /community/tips ==========
 
-export interface CreateTipRequestDto {
-  checkpointKey: string;
-  content: string;
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+
+export class CreateTipRequestDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  checkpointKey!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  content!: string;
 }
 
 export interface CreateTipResponseDto {
