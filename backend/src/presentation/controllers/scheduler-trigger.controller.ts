@@ -10,14 +10,23 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { Public } from '@infrastructure/auth/public.decorator';
 
-interface SchedulerTriggerPayload {
-  alertId: string;
-  userId: string;
-  alertTypes: string[];
+class SchedulerTriggerPayload {
+  @IsString()
+  @IsNotEmpty()
+  alertId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userId!: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  alertTypes!: string[];
 }
 
 /**

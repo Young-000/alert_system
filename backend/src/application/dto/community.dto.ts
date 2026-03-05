@@ -1,3 +1,5 @@
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+
 // ========== GET /community/neighbors ==========
 
 export type NeighborDataStatus = 'sufficient' | 'insufficient' | 'no_route';
@@ -32,9 +34,16 @@ export interface TipsListResponseDto {
 
 // ========== POST /community/tips ==========
 
-export interface CreateTipRequestDto {
-  checkpointKey: string;
-  content: string;
+export class CreateTipRequestDto {
+  @IsString()
+  @IsNotEmpty({ message: '체크포인트 키는 필수입니다.' })
+  @MaxLength(200)
+  checkpointKey!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '팁 내용은 필수입니다.' })
+  @MaxLength(500)
+  content!: string;
 }
 
 export interface CreateTipResponseDto {
