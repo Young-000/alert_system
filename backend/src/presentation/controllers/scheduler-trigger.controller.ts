@@ -9,15 +9,22 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { IsArray, IsString, IsUUID } from 'class-validator';
 import { timingSafeEqual } from 'crypto';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { Public } from '@infrastructure/auth/public.decorator';
 
-interface SchedulerTriggerPayload {
-  alertId: string;
-  userId: string;
-  alertTypes: string[];
+class SchedulerTriggerPayload {
+  @IsUUID()
+  alertId!: string;
+
+  @IsUUID()
+  userId!: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  alertTypes!: string[];
 }
 
 /**
