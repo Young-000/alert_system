@@ -1,3 +1,5 @@
+import { IsString, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
+
 // ========== GET /community/neighbors ==========
 
 export type NeighborDataStatus = 'sufficient' | 'insufficient' | 'no_route';
@@ -32,8 +34,6 @@ export interface TipsListResponseDto {
 
 // ========== POST /community/tips ==========
 
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
-
 export class CreateTipRequestDto {
   @IsString()
   @IsNotEmpty()
@@ -42,6 +42,7 @@ export class CreateTipRequestDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(2)
   @MaxLength(500)
   content!: string;
 }

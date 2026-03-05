@@ -155,10 +155,18 @@ describe('SchedulerTriggerController', () => {
   });
 
   describe('healthCheck', () => {
-    it('status ok 반환', () => {
-      const result = controller.healthCheck();
+    it('올바른 시크릿으로 status ok 반환', () => {
+      const result = controller.healthCheck(VALID_SECRET);
 
       expect(result).toEqual({ status: 'ok' });
+    });
+
+    it('시크릿 헤더 없이 호출 시 UnauthorizedException', () => {
+      expect(() => controller.healthCheck(undefined as any)).toThrow(UnauthorizedException);
+    });
+
+    it('잘못된 시크릿으로 호출 시 UnauthorizedException', () => {
+      expect(() => controller.healthCheck('wrong-secret')).toThrow(UnauthorizedException);
     });
   });
 });

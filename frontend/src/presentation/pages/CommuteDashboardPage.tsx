@@ -124,29 +124,47 @@ export function CommuteDashboardPage(): JSX.Element {
             />
           )}
 
-          {activeTab === 'history' && history && (
-            <HistoryTab
-              history={history}
-              onLoadMore={async () => {
-                const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
-                setHistory(prev => {
-                  if (!prev) return moreHistory;
-                  return {
-                    ...prev,
-                    sessions: [...prev.sessions, ...moreHistory.sessions],
-                    hasMore: moreHistory.hasMore,
-                  };
-                });
-              }}
-            />
+          {activeTab === 'history' && (
+            history ? (
+              <HistoryTab
+                history={history}
+                onLoadMore={async () => {
+                  const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
+                  setHistory(prev => {
+                    if (!prev) return moreHistory;
+                    return {
+                      ...prev,
+                      sessions: [...prev.sessions, ...moreHistory.sessions],
+                      hasMore: moreHistory.hasMore,
+                    };
+                  });
+                }}
+              />
+            ) : (
+              <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>기록을 불러올 수 없습니다.</div>
+            )
           )}
 
-          {activeTab === 'stopwatch' && stopwatchRecords.length > 0 && (
-            <StopwatchTab records={stopwatchRecords} />
+          {activeTab === 'stopwatch' && (
+            stopwatchRecords.length > 0 ? (
+              <StopwatchTab records={stopwatchRecords} />
+            ) : (
+              <EmptyState
+                icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+                title="스톱워치 기록이 없어요"
+                description="출퇴근 버튼을 눌러 스톱워치 모드로 기록해보세요."
+                actionLink="/commute?mode=stopwatch"
+                actionText="스톱워치 시작"
+              />
+            )
           )}
 
-          {activeTab === 'analytics' && routeAnalytics.length > 0 && (
-            <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} />
+          {activeTab === 'analytics' && (
+            routeAnalytics.length > 0 ? (
+              <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} />
+            ) : (
+              <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>{analyticsError || '분석 데이터가 아직 없습니다.'}</div>
+            )
           )}
 
           {activeTab === 'behavior' && (

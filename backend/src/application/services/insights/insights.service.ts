@@ -155,11 +155,11 @@ export class InsightsService {
    * Compare user's commute stats with their region's average.
    */
   async getMyComparison(userId: string): Promise<MyComparisonDto> {
-    // Step 1: Get user's average commute duration
-    const userStats = await this.getUserStats(userId);
-
-    // Step 2: Determine the user's region
-    const userRegionId = await this.getUserRegionId(userId);
+    // Steps 1 & 2: Fetch user stats and region in parallel (independent queries)
+    const [userStats, userRegionId] = await Promise.all([
+      this.getUserStats(userId),
+      this.getUserRegionId(userId),
+    ]);
 
     // Step 3: Fetch regional stats
     let regionalAvg = 0;

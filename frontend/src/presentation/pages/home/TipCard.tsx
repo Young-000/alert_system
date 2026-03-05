@@ -55,7 +55,7 @@ export function TipCard({
             aria-label={tip.isHelpfulByMe ? '도움이 됐어요 취소' : '도움이 됐어요'}
             aria-pressed={tip.isHelpfulByMe}
           >
-            {tip.isHelpfulByMe ? '\u{1F44D}' : '\u{1F44C}'} {tip.helpfulCount > 0 && tip.helpfulCount}
+            {tip.isHelpfulByMe ? '\u{1F44D}' : '\u{1F90D}'} {tip.helpfulCount > 0 && tip.helpfulCount}
           </button>
 
           {showReportConfirm ? (

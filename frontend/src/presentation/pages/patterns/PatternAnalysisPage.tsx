@@ -8,7 +8,6 @@ import type {
   DaySegment,
   SensitivityLevel,
 } from '@infrastructure/api';
-import '../../styles/pages/patterns.css';
 
 type TabId = 'overview' | 'by-day' | 'weather';
 
@@ -285,8 +284,8 @@ export function PatternAnalysisPage(): JSX.Element {
   const { userId } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
-  const { data: prediction, isLoading: predLoading } = usePredictionQuery(userId);
-  const { data: insights, isLoading: insLoading } = usePatternInsightsQuery(userId);
+  const { data: prediction, isLoading: predLoading, refetch: refetchPrediction } = usePredictionQuery(userId);
+  const { data: insights, isLoading: insLoading, refetch: refetchInsights } = usePatternInsightsQuery(userId);
 
   const isLoading = predLoading || insLoading;
 
@@ -359,6 +358,13 @@ export function PatternAnalysisPage(): JSX.Element {
           <button
             type="button"
             className="btn btn-sm"
+            onClick={() => { void refetchPrediction(); void refetchInsights(); }}
+          >
+            다시 시도
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
             onClick={() => navigate('/')}
           >
             홈으로 돌아가기

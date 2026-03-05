@@ -14,6 +14,7 @@ import { UserEntity } from './user.entity';
 @Index(['category'])
 @Index(['enabled'])
 @Index(['isSystemRule'])
+@Index(['userId'])
 export class NotificationRuleEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
