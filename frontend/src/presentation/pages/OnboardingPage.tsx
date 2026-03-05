@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
@@ -31,7 +31,7 @@ const DURATION_PRESETS = [15, 30, 45, 60, 90];
 export function OnboardingPage(): JSX.Element {
   const navigate = useNavigate();
   const { userId, userName } = useAuth();
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const commuteApi = getCommuteApiClient();
 
   useEffect(() => {
     if (!userId) {

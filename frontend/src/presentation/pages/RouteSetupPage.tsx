@@ -30,7 +30,7 @@ export function RouteSetupPage(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { userId } = useAuth();
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const commuteApi = getCommuteApiClient();
   const toast = useToast();
 
   // Shared route banner
