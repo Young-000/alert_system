@@ -303,8 +303,22 @@ export function AlertSettingsPage(): JSX.Element {
         </div>
       )}
 
+      {/* 알림 로드 실패 시 에러 UI */}
+      {!alertCrud.isLoadingAlerts && alertCrud.alertsLoadError && (
+        <div className="error-container" role="alert">
+          <p>알림 목록을 불러오지 못했습니다.</p>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={alertCrud.retryLoadAlerts}
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+
       {/* Existing Alerts */}
-      {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && (
+      {!alertCrud.isLoadingAlerts && !alertCrud.alertsLoadError && alertCrud.alerts.length > 0 && (
         <AlertList
           alerts={alertCrud.alerts}
           savedRoutes={alertCrud.savedRoutes}
@@ -326,7 +340,7 @@ export function AlertSettingsPage(): JSX.Element {
         </button>
       )}
 
-      {!alertCrud.isLoadingAlerts && shouldShowWizard && (
+      {!alertCrud.isLoadingAlerts && !alertCrud.alertsLoadError && shouldShowWizard && (
       <div id="wizard-content" className="wizard-container">
         <WizardStepIndicator
           progress={progress}
