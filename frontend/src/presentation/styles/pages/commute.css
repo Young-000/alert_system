@@ -3041,7 +3041,7 @@
 }
 
 .route-point-mini.stop.transfer .stop-label-mini {
-  color: #f59e0b;
+  color: var(--warning, #b45309);
 }
 
 .line-info-mini {

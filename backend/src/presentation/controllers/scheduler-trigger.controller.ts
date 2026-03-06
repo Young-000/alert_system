@@ -10,14 +10,23 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 import { SendNotificationUseCase } from '@application/use-cases/send-notification.use-case';
 import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { Public } from '@infrastructure/auth/public.decorator';
 
-interface SchedulerTriggerPayload {
-  alertId: string;
-  userId: string;
-  alertTypes: string[];
+class SchedulerTriggerPayload {
+  @IsString()
+  @IsNotEmpty()
+  alertId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userId!: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  alertTypes!: string[];
 }
 
 /**
@@ -136,10 +145,25 @@ export class SchedulerTriggerController {
 
   /**
    * 헬스체크 엔드포인트 (EventBridge Target 검증용)
+   * Header: x-scheduler-secret (검증용)
    */
   @Post('health')
   @HttpCode(HttpStatus.OK)
-  healthCheck(): { status: string } {
+  healthCheck(
+    @Headers('x-scheduler-secret') schedulerSecret: string,
+  ): { status: string } {
+    const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
+    if (!expectedSecret || !schedulerSecret) {
+      throw new UnauthorizedException('Authentication failed');
+    }
+
+    const expected = Buffer.from(expectedSecret, 'utf8');
+    const received = Buffer.from(schedulerSecret, 'utf8');
+    if (expected.length !== received.length ||
+        !timingSafeEqual(expected, received)) {
+      throw new UnauthorizedException('Authentication failed');
+    }
+
     return { status: 'ok' };
   }
 }
