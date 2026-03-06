@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['robots.txt', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
+          lang: 'ko',
           name: '출퇴근 메이트',
           short_name: '출퇴근',
           description: '출근/퇴근 시 필요한 정보를 통합 제공하는 알림 시스템',

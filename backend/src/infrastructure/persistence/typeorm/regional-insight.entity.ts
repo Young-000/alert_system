@@ -49,7 +49,7 @@ export class RegionalInsightEntity {
   @Column({ name: 'month_trend', type: 'real', default: 0 })
   monthTrend: number;
 
-  @Column({ name: 'last_calculated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'last_calculated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   lastCalculatedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

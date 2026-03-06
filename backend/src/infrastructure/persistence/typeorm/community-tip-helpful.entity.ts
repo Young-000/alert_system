@@ -6,12 +6,15 @@ import {
   ManyToOne,
   JoinColumn,
   Unique,
+  Index,
 } from 'typeorm';
 import { CommunityTipEntity } from './community-tip.entity';
 import { UserEntity } from './user.entity';
 
 @Entity('community_tip_helpfuls', { schema: 'alert_system' })
 @Unique('community_tip_helpfuls_unique', ['tipId', 'userId'])
+@Index('community_tip_helpfuls_tip_id_idx', ['tipId'])
+@Index('community_tip_helpfuls_user_id_idx', ['userId'])
 export class CommunityTipHelpfulEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -30,6 +33,6 @@ export class CommunityTipHelpfulEntity {
   @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

@@ -21,11 +21,11 @@ function SummaryTabSkeleton(): JSX.Element {
 
 function getGradeColor(grade: string): string {
   const colors: Record<string, string> = {
-    S: 'var(--success, #10b981)',
-    A: 'var(--primary, #6366f1)',
+    S: 'var(--success, #047857)',
+    A: 'var(--primary, #5b5ee0)',
     B: 'var(--info, #3b82f6)',
-    C: 'var(--warning, #f59e0b)',
-    D: 'var(--error, #ef4444)',
+    C: 'var(--warning, #b45309)',
+    D: 'var(--error, #c81e1e)',
   };
   return colors[grade] ?? 'var(--ink-secondary)';
 }
