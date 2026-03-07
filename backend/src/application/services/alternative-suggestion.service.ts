@@ -58,20 +58,42 @@ export class AlternativeSuggestionService {
       return [];
     }
 
+    const validMappings = mappings
+      .map((mapping) => ({
+        mapping,
+        alt: mapping.getAlternativeFor(stationName, segment.lineInfo),
+      }))
+      .filter(
+        (entry): entry is typeof entry & { alt: NonNullable<typeof entry.alt> } =>
+          entry.alt != null,
+      );
+
+    if (validMappings.length === 0) return [];
+
+    // Fetch all alternative station arrivals in parallel
+    const arrivalResults = await Promise.all(
+      validMappings.map(async ({ alt }) => {
+        try {
+          return await this.subwayApiClient.getSubwayArrival(alt.stationName);
+        } catch {
+          this.logger.warn(
+            `Failed to fetch alternative arrival data for ${alt.stationName}`,
+          );
+          return null;
+        }
+      }),
+    );
+
     const results: AlternativeSuggestionDto[] = [];
 
-    for (const mapping of mappings) {
-      const alt = mapping.getAlternativeFor(stationName, segment.lineInfo);
-      if (!alt) continue;
+    for (let i = 0; i < validMappings.length; i++) {
+      const { mapping, alt } = validMappings[i];
+      const altArrivals = arrivalResults[i];
 
-      // Try to get real-time data for the alternative station
       let altWaitMinutes = 3; // Default estimated wait
       let confidence: AlternativeConfidence = 'low';
 
-      try {
-        const altArrivals = await this.subwayApiClient.getSubwayArrival(
-          alt.stationName,
-        );
+      if (altArrivals) {
         const matchingArrivals = altArrivals.filter((a) =>
           this.lineMatches(a.lineId, alt.line),
         );
@@ -85,21 +107,12 @@ export class AlternativeSuggestionService {
         } else {
           confidence = 'medium';
         }
-      } catch {
-        this.logger.warn(
-          `Failed to fetch alternative arrival data for ${alt.stationName}`,
-        );
-        confidence = 'low';
       }
 
-      // Calculate time comparison
-      // Current: wait at delayed station (estimatedWaitMinutes)
-      // Alternative: walk to alt station + wait at alt station
       const currentWait = segment.estimatedWaitMinutes;
       const alternativeTime = alt.walkingMinutes + altWaitMinutes;
       const savingsMinutes = currentWait - alternativeTime;
 
-      // Only suggest if alternative is actually faster
       if (savingsMinutes <= 0) continue;
 
       const steps: AlternativeStepDto[] = [
