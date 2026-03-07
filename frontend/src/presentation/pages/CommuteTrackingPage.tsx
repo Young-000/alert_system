@@ -55,22 +55,21 @@ export function CommuteTrackingPage(): JSX.Element {
         // Check for in-progress session first
         const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; });
 
-        if (inProgress && isMounted) {
+        // Load routes once (needed by all branches below)
+        const routes = await commuteApi.getUserRoutes(userId);
+        if (!isMounted) return;
+
+        if (inProgress) {
           setSession(inProgress);
-          // Load the route for this session
-          const routes = await commuteApi.getUserRoutes(userId);
           const matchingRoute = routes.find(r => r.id === inProgress.routeId);
           if (matchingRoute) setRoute(matchingRoute);
           return;
         }
 
-        // No in-progress session: check if we have a routeId to start
-        if (navRouteId && isMounted) {
-          const routes = await commuteApi.getUserRoutes(userId);
+        if (navRouteId) {
           const matchingRoute = routes.find(r => r.id === navRouteId);
           if (matchingRoute) {
             setRoute(matchingRoute);
-            // Auto-start session
             const newSession = await commuteApi.startSession({
               userId,
               routeId: matchingRoute.id,
@@ -80,9 +79,7 @@ export function CommuteTrackingPage(): JSX.Element {
           return;
         }
 
-        // PWA shortcut: auto-select route by mode (morning/evening)
-        if (searchMode && (searchMode === 'morning' || searchMode === 'evening') && isMounted) {
-          const routes = await commuteApi.getUserRoutes(userId);
+        if (searchMode && (searchMode === 'morning' || searchMode === 'evening')) {
           const matchingRoute = routes.find(r => r.routeType === searchMode);
           if (matchingRoute) {
             setRoute(matchingRoute);
@@ -96,9 +93,7 @@ export function CommuteTrackingPage(): JSX.Element {
         }
 
         // No route provided and no active session
-        if (isMounted) {
-          navigate('/', { replace: true });
-        }
+        navigate('/', { replace: true });
       } catch {
         if (isMounted) setError('데이터를 불러오는데 실패했습니다.');
       } finally {
