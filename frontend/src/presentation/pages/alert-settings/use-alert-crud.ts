@@ -13,6 +13,7 @@ import { TOAST_DURATION_MS } from './types';
 interface AlertCrudState {
   alerts: Alert[];
   isLoadingAlerts: boolean;
+  alertsLoadError: boolean;
   error: string;
   success: string;
   deleteTarget: { id: string; name: string } | null;
@@ -31,6 +32,7 @@ interface AlertCrudActions {
   setIsSubmitting: (value: boolean) => void;
   setDuplicateAlert: (alert: Alert | null) => void;
   reloadAlerts: () => Promise<void>;
+  retryLoadAlerts: () => void;
   handleDeleteClick: (alert: Alert) => void;
   handleDeleteConfirm: () => Promise<void>;
   handleDeleteCancel: () => void;
@@ -54,6 +56,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   // Local alerts state for optimistic mutations (synced from query)
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const isLoadingAlerts = alertsQuery.isLoading;
+  const alertsLoadError = alertsQuery.isError;
   const savedRoutes = routesQuery.data ?? [];
 
   // Sync query data to local state when query data changes
@@ -78,6 +81,10 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     if (!userId) return;
     await queryClient.invalidateQueries({ queryKey: queryKeys.alerts.byUser(userId) });
   }, [userId, queryClient]);
+
+  const retryLoadAlerts = useCallback((): void => {
+    void alertsQuery.refetch();
+  }, [alertsQuery]);
 
   const normalizeSchedule = useCallback((schedule: string): string => {
     const parts = schedule.split(' ');
@@ -254,6 +261,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   return {
     alerts,
     isLoadingAlerts,
+    alertsLoadError,
     error,
     success,
     deleteTarget,
@@ -269,6 +277,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setIsSubmitting,
     setDuplicateAlert,
     reloadAlerts,
+    retryLoadAlerts,
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteCancel,
