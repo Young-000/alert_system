@@ -13,6 +13,7 @@ import { TOAST_DURATION_MS } from './types';
 interface AlertCrudState {
   alerts: Alert[];
   isLoadingAlerts: boolean;
+  loadError: string;
   error: string;
   success: string;
   deleteTarget: { id: string; name: string } | null;
@@ -30,6 +31,7 @@ interface AlertCrudActions {
   setSuccess: (success: string) => void;
   setIsSubmitting: (value: boolean) => void;
   setDuplicateAlert: (alert: Alert | null) => void;
+  retryLoad: () => void;
   reloadAlerts: () => Promise<void>;
   handleDeleteClick: (alert: Alert) => void;
   handleDeleteConfirm: () => Promise<void>;
@@ -54,7 +56,13 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   // Local alerts state for optimistic mutations (synced from query)
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const isLoadingAlerts = alertsQuery.isLoading;
+  const loadError = alertsQuery.isError ? '알림 목록을 불러올 수 없습니다' : '';
   const savedRoutes = routesQuery.data ?? [];
+
+  const retryLoad = useCallback(() => {
+    void alertsQuery.refetch();
+    void routesQuery.refetch();
+  }, [alertsQuery, routesQuery]);
 
   // Sync query data to local state when query data changes
   useEffect(() => {
@@ -254,6 +262,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   return {
     alerts,
     isLoadingAlerts,
+    loadError,
     error,
     success,
     deleteTarget,
@@ -268,6 +277,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setSuccess,
     setIsSubmitting,
     setDuplicateAlert,
+    retryLoad,
     reloadAlerts,
     handleDeleteClick,
     handleDeleteConfirm,
