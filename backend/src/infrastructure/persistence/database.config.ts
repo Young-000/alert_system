@@ -53,6 +53,8 @@ import { SegmentCongestionEntity } from './typeorm/segment-congestion.entity';
 import { CommunityTipEntity } from './typeorm/community-tip.entity';
 import { CommunityTipReportEntity } from './typeorm/community-tip-report.entity';
 import { CommunityTipHelpfulEntity } from './typeorm/community-tip-helpful.entity';
+// Regional insights
+import { RegionalInsightEntity } from './typeorm/regional-insight.entity';
 
 export function buildDataSourceOptions(): DataSourceOptions {
   dotenv.config();
@@ -107,6 +109,8 @@ export function buildDataSourceOptions(): DataSourceOptions {
       CommunityTipEntity,
       CommunityTipReportEntity,
       CommunityTipHelpfulEntity,
+      // Regional insights
+      RegionalInsightEntity,
     ];
     const sqliteOptions: SqliteConnectionOptions = {
       type: 'sqlite',
@@ -175,6 +179,8 @@ export function buildDataSourceOptions(): DataSourceOptions {
     CommunityTipEntity,
     CommunityTipReportEntity,
     CommunityTipHelpfulEntity,
+    // Regional insights
+    RegionalInsightEntity,
   ];
 
   const baseOptions: PostgresConnectionOptions = {
