@@ -17,7 +17,7 @@ export class ChallengeSeedService implements OnModuleInit {
     try {
       await this.seedTemplates();
     } catch (error) {
-      this.logger.error(`Failed to seed challenge templates: ${error.message}`);
+      this.logger.error(`Failed to seed challenge templates: ${error instanceof Error ? error.message : error}`);
     }
   }
 

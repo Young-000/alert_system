@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { safeSetItem } from '@infrastructure/storage/safe-storage';
@@ -31,7 +31,7 @@ const DURATION_PRESETS = [15, 30, 45, 60, 90];
 export function OnboardingPage(): JSX.Element {
   const navigate = useNavigate();
   const { userId, userName } = useAuth();
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const commuteApi = getCommuteApiClient();
 
   useEffect(() => {
     if (!userId) {
@@ -350,7 +350,7 @@ export function OnboardingPage(): JSX.Element {
             {error && <div className="notice error" role="alert">{error}</div>}
 
             <div className="step-actions">
-              <button type="button" className="btn btn-ghost" onClick={goBack}>
+              <button type="button" className="btn btn-ghost" onClick={goBack} disabled={isCreating}>
                 ← 이전
               </button>
               <button
@@ -415,11 +415,11 @@ export function OnboardingPage(): JSX.Element {
                 </>
               ) : (
                 <>
-                  <Link to="/commute?mode=stopwatch" className="btn btn-primary btn-lg">
-                    스톱워치로 시작
-                  </Link>
-                  <Link to="/routes" className="btn btn-ghost">
+                  <Link to="/routes" className="btn btn-primary btn-lg">
                     경로 설정하기
+                  </Link>
+                  <Link to="/" className="btn btn-ghost">
+                    홈으로
                   </Link>
                 </>
               )}

@@ -70,7 +70,7 @@ export class TipsService {
       const tipIds = tips.map((t) => t.id);
 
       const [reportedIds, helpfulIds] = await Promise.all([
-        this.reportRepo.findUserReportedTipIds(userId, tipIds),
+        this.getReportedTipIds(userId, tipIds),
         this.helpfulRepo.findUserHelpfulTipIds(userId, tipIds),
       ]);
 
@@ -213,6 +213,13 @@ export class TipsService {
     };
   }
 
+  /**
+   * Batch-check which tips a user has reported (single IN query).
+   */
+  private async getReportedTipIds(userId: string, tipIds: string[]): Promise<string[]> {
+    if (tipIds.length === 0) return [];
+    return this.reportRepo.findReportedTipIds(userId, tipIds);
+  }
 }
 
 /**

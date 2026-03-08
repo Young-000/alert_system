@@ -28,7 +28,7 @@ describe('TipsService', () => {
 
     mockReportRepo = {
       findByTipAndReporter: jest.fn(),
-      findUserReportedTipIds: jest.fn().mockResolvedValue([]),
+      findReportedTipIds: jest.fn().mockResolvedValue([]),
       save: jest.fn(),
     };
 
@@ -90,7 +90,7 @@ describe('TipsService', () => {
       ];
       mockTipRepo.findByCheckpointKey.mockResolvedValue(tips);
       mockTipRepo.countByCheckpointKey.mockResolvedValue(2);
-      mockReportRepo.findUserReportedTipIds.mockResolvedValue(['tip-1']);
+      mockReportRepo.findReportedTipIds.mockResolvedValue(['tip-1']);
       mockHelpfulRepo.findUserHelpfulTipIds.mockResolvedValue(['tip-2']);
 
       const result = await service.getTips('station:1', 'user-1', 1, 20);

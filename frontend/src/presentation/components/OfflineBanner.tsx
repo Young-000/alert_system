@@ -10,12 +10,12 @@ export function OfflineBanner(): JSX.Element | null {
     <div
       className={cn(
         'fixed top-0 left-0 right-0',
-        'bg-gradient-to-r from-[#f59e0b] to-[#d97706]',
+        'bg-gradient-to-r from-[#92400e] to-[#78350f]',
         'text-white px-4 py-3',
         'flex items-center justify-center gap-2.5',
         'text-sm font-medium',
         'z-[1002] animate-slide-down',
-        'shadow-[0_2px_8px_rgba(245,158,11,0.3)]'
+        'shadow-[0_2px_8px_rgba(146,64,14,0.3)]'
       )}
       role="alert"
       aria-live="assertive"

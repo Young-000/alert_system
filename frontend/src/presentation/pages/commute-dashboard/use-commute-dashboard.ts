@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -44,7 +44,7 @@ interface UseCommuteDashboardReturn {
 
 export function useCommuteDashboard(): UseCommuteDashboardReturn {
   const { userId } = useAuth();
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const commuteApi = getCommuteApiClient();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // State

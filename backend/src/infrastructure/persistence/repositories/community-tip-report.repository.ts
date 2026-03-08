@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CommunityTipReportEntity } from '../typeorm/community-tip-report.entity';
 import { ICommunityTipReportRepository } from '@domain/repositories/community-tip-report.repository';
 import { CommunityTipReport } from '@domain/entities/community-tip-report.entity';
@@ -19,17 +19,12 @@ export class CommunityTipReportRepositoryImpl implements ICommunityTipReportRepo
     return entity ? this.toDomain(entity) : null;
   }
 
-  async findUserReportedTipIds(reporterId: string, tipIds: string[]): Promise<string[]> {
+  async findReportedTipIds(reporterId: string, tipIds: string[]): Promise<string[]> {
     if (tipIds.length === 0) return [];
-
     const entities = await this.repository.find({
-      where: {
-        reporterId,
-        tipId: In(tipIds),
-      },
+      where: { reporterId, tipId: In(tipIds) },
       select: ['tipId'],
     });
-
     return entities.map((e) => e.tipId);
   }
 
