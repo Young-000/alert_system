@@ -217,17 +217,7 @@ export class TipsService {
    * Batch-check which tips a user has reported.
    */
   private async getReportedTipIds(userId: string, tipIds: string[]): Promise<string[]> {
-    if (tipIds.length === 0) return [];
-
-    // Use the report repository's underlying repo via raw query
-    const results: Array<{ tip_id: string }> = [];
-    for (const tipId of tipIds) {
-      const existing = await this.reportRepo.findByTipAndReporter(tipId, userId);
-      if (existing) {
-        results.push({ tip_id: tipId });
-      }
-    }
-    return results.map((r) => r.tip_id);
+    return this.reportRepo.findUserReportedTipIds(userId, tipIds);
   }
 }
 
