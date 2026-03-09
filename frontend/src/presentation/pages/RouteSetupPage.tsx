@@ -107,12 +107,18 @@ export function RouteSetupPage(): JSX.Element {
   // 검색 훅 (clearSearch는 onStopSelected 콜백 후 훅 내부에서 자동 호출)
   const search = useStationSearch(currentTransport, selectedStops, handleSelectStopDirect);
 
+  // 로드 에러 (초기 데이터 로드용, CRUD 에러와 분리)
+  const [loadError, setLoadError] = useState('');
+
   // 기존 경로 로드
-  useEffect(() => {
+  const loadRoutes = useCallback(() => {
     if (!userId) {
       setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
+    setLoadError('');
 
     let isMounted = true;
     Promise.all([
@@ -129,13 +135,17 @@ export function RouteSetupPage(): JSX.Element {
       }
     }).catch(() => {
       if (isMounted) {
-        setError('경로 목록을 불러올 수 없습니다');
+        setLoadError('경로 목록을 불러올 수 없습니다');
         setIsLoading(false);
       }
     });
 
     return () => { isMounted = false; };
   }, [userId, commuteApi]);
+
+  useEffect(() => {
+    loadRoutes();
+  }, [loadRoutes]);
 
   // Parse shared route from URL
   useEffect(() => {
@@ -612,6 +622,8 @@ export function RouteSetupPage(): JSX.Element {
       isSaving={isSaving}
       deleteTarget={deleteTarget}
       isDeleting={isDeleting}
+      loadError={loadError}
+      onRetryLoad={loadRoutes}
       onTabChange={setRouteTab}
       onStartCreating={startCreating}
       onEditRoute={handleEditRoute}
