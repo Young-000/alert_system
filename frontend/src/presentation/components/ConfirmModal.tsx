@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
 
@@ -29,6 +30,8 @@ export function ConfirmModal({
     onEscape: isLoading ? undefined : onCancel,
   });
 
+  const titleId = useId();
+
   if (!open) return null;
 
   return (
@@ -37,14 +40,14 @@ export function ConfirmModal({
       onClick={isLoading ? undefined : onCancel}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="confirm-modal-title"
+      aria-labelledby={titleId}
     >
       <div
         ref={trapRef}
         className="confirm-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirm-modal-title" className="confirm-modal-title">
+        <h2 id={titleId} className="confirm-modal-title">
           {title}
         </h2>
         <div className="confirm-modal-body">{children}</div>
