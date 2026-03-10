@@ -622,8 +622,8 @@ export function RouteSetupPage(): JSX.Element {
       isSaving={isSaving}
       deleteTarget={deleteTarget}
       isDeleting={isDeleting}
-      loadError={loadError}
-      onRetryLoad={loadRoutes}
+      loadError={loadError || error}
+      onRetryLoad={loadError ? loadRoutes : undefined}
       onTabChange={setRouteTab}
       onStartCreating={startCreating}
       onEditRoute={handleEditRoute}
