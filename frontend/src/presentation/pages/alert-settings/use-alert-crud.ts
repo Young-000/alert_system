@@ -120,7 +120,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setIsDeleting(true);
     try {
       await alertApiClient.deleteAlert(deleteTarget.id);
-      reloadAlerts();
+      await reloadAlerts();
       setDeleteTarget(null);
     } catch {
       setError('삭제에 실패했습니다.');
@@ -160,7 +160,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
         name: editForm.name,
         schedule: cronSchedule,
       });
-      reloadAlerts();
+      await reloadAlerts();
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
       setTimeout(() => setSuccess(''), TOAST_DURATION_MS);

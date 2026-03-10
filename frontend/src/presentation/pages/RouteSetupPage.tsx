@@ -144,7 +144,8 @@ export function RouteSetupPage(): JSX.Element {
   }, [userId, commuteApi]);
 
   useEffect(() => {
-    loadRoutes();
+    const cleanup = loadRoutes();
+    return cleanup;
   }, [loadRoutes]);
 
   // Parse shared route from URL
