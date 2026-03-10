@@ -150,7 +150,11 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setIsEditing(true);
     try {
       const [hour, minute] = editForm.schedule.split(':');
-      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} * * *`;
+      const originalParts = editTarget.schedule.split(' ');
+      const dayOfMonth = originalParts[2] ?? '*';
+      const month = originalParts[3] ?? '*';
+      const dayOfWeek = originalParts[4] ?? '*';
+      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} ${dayOfMonth} ${month} ${dayOfWeek}`;
 
       await alertApiClient.updateAlert(editTarget.id, {
         name: editForm.name,

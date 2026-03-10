@@ -70,6 +70,11 @@
   gap: 10px;
 }
 
+.nav-actions .btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 /* ========== CARDS ========== */
 .card {
   background: var(--bg-card);
@@ -1213,8 +1218,8 @@ textarea.input:focus {
 .input-addon {
   position: absolute;
   right: 4px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   background: transparent;
@@ -1503,8 +1508,8 @@ textarea.input:focus {
 }
 
 .toast-close {
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   background: transparent;

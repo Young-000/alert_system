@@ -19,10 +19,12 @@ export function StopwatchTab({ records }: StopwatchTabProps): JSX.Element {
           <div className="stat-card">
             <span className="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
             <span className="stat-value">
-              {Math.round(
-                records.reduce((sum, r) => sum + r.totalDurationSeconds, 0) /
-                records.length / 60
-              )}분
+              {records.length > 0
+                ? Math.round(
+                    records.reduce((sum, r) => sum + r.totalDurationSeconds, 0) /
+                    records.length / 60
+                  )
+                : 0}분
             </span>
             <span className="stat-label">평균 소요 시간</span>
           </div>
