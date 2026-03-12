@@ -7,8 +7,15 @@ interface NeighborSectionProps {
 export function NeighborSection({ routeId }: NeighborSectionProps): JSX.Element | null {
   const { data, isLoading, isError } = useNeighborStats(routeId);
 
-  // Don't render anything while loading or on error (subtle, optional feature)
-  if (isLoading || isError || !data) return null;
+  if (isLoading || !data) return null;
+
+  if (isError) {
+    return (
+      <section className="neighbor-section" aria-label="경로 이웃 정보">
+        <p className="neighbor-error muted">이웃 정보를 불러올 수 없습니다</p>
+      </section>
+    );
+  }
 
   // Hide entirely if user has no route
   if (data.dataStatus === 'no_route') return null;

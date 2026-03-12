@@ -30,10 +30,13 @@ export function CheckpointTips({
   const reportTipMutation = useReportTip();
 
   const handleCreateTip = useCallback(
-    (cpKey: string, content: string): void => {
+    (cpKey: string, content: string, clearForm: () => void): void => {
       createTipMutation.mutate(
         { checkpointKey: cpKey, content },
         {
+          onSuccess: () => {
+            clearForm();
+          },
           onError: (error) => {
             // 429 rate limit error
             if (error.message.includes('429') || error.message.includes('Too Many')) {

@@ -28,7 +28,7 @@ export function PeakHoursChart({
         </span>
       </div>
 
-      <div className="insight-peak-chart" role="img" aria-label="시간대별 출퇴근 세션 분포 차트">
+      <div className="insight-peak-chart" role="img" aria-label={`시간대별 출퇴근 분포. 피크: ${peakHour}시, 총 ${totalSessions}회 기록`}>
         {hours.map(({ hour, count }) => {
           const heightPercent = maxCount > 0 ? (count / maxCount) * 100 : 0;
           const isPeak = hour === peakHour;

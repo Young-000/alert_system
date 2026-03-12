@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { TipForm } from './TipForm';
 
 describe('TipForm', () => {
@@ -45,14 +45,19 @@ describe('TipForm', () => {
     const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
     fireEvent.change(textarea, { target: { value: '  팁 내용  ' } });
     fireEvent.click(screen.getByRole('button', { name: '등록' }));
-    expect(onSubmit).toHaveBeenCalledWith('station:1', '팁 내용');
+    expect(onSubmit).toHaveBeenCalledWith('station:1', '팁 내용', expect.any(Function));
   });
 
-  it('clears input after submission', () => {
+  it('clears input when clearForm callback is called', () => {
     render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
     const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: '팁 내용' } });
     fireEvent.click(screen.getByRole('button', { name: '등록' }));
+    // Form should NOT clear immediately (waits for onSuccess)
+    expect(textarea.value).toBe('팁 내용');
+    // Call clearForm callback to simulate onSuccess
+    const clearForm = onSubmit.mock.calls[0][2];
+    act(() => { clearForm(); });
     expect(textarea.value).toBe('');
   });
 
@@ -92,7 +97,7 @@ describe('TipForm', () => {
     const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
     fireEvent.change(textarea, { target: { value: '팁 내용' } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
-    expect(onSubmit).toHaveBeenCalledWith('station:1', '팁 내용');
+    expect(onSubmit).toHaveBeenCalledWith('station:1', '팁 내용', expect.any(Function));
   });
 
   it('does not submit on Shift+Enter', () => {

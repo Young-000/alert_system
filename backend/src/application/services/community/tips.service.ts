@@ -218,7 +218,7 @@ export class TipsService {
    */
   private async getReportedTipIds(userId: string, tipIds: string[]): Promise<string[]> {
     if (tipIds.length === 0) return [];
-    return this.reportRepo.findReportedTipIds(userId, tipIds);
+    return this.reportRepo.findUserReportedTipIds(userId, tipIds);
   }
 }
 

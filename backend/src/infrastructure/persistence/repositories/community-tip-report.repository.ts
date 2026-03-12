@@ -19,7 +19,7 @@ export class CommunityTipReportRepositoryImpl implements ICommunityTipReportRepo
     return entity ? this.toDomain(entity) : null;
   }
 
-  async findReportedTipIds(reporterId: string, tipIds: string[]): Promise<string[]> {
+  async findUserReportedTipIds(reporterId: string, tipIds: string[]): Promise<string[]> {
     if (tipIds.length === 0) return [];
     const entities = await this.repository.find({
       where: { reporterId, tipId: In(tipIds) },
