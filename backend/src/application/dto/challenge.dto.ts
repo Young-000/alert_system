@@ -1,8 +1,15 @@
+import { IsNotEmpty, IsString } from 'class-validator';
 import { ChallengeTemplate } from '@domain/entities/challenge-template.entity';
 import { UserChallengeStatus } from '@domain/entities/user-challenge.entity';
 import { UserBadge } from '@domain/entities/user-badge.entity';
 
 export const MAX_ACTIVE_CHALLENGES = 3;
+
+export class JoinChallengeDto {
+  @IsString()
+  @IsNotEmpty()
+  templateId!: string;
+}
 
 // --- EvaluateChallengeUseCase types ---
 

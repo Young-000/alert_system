@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -13,7 +13,7 @@ export function CommuteTrackingPage(): JSX.Element {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { userId } = useAuth();
-  const commuteApi = useMemo(() => getCommuteApiClient(), []);
+  const commuteApi = getCommuteApiClient();
 
   // State from navigation (홈에서 전달)
   const navState = location.state as {
@@ -351,7 +351,7 @@ export function CommuteTrackingPage(): JSX.Element {
       {error && (
         <div className="commute-v2-error" role="alert">
           {error}
-          {error.includes('로그인') && (
+          {error.includes('로그인') ? (
             <button
               type="button"
               className="btn btn-ghost btn-sm"
@@ -359,6 +359,15 @@ export function CommuteTrackingPage(): JSX.Element {
               style={{ marginLeft: '0.5rem' }}
             >
               로그인
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => { setError(''); void handleComplete(); }}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              다시 시도
             </button>
           )}
         </div>

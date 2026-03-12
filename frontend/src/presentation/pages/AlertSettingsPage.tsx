@@ -303,6 +303,16 @@ export function AlertSettingsPage(): JSX.Element {
         </div>
       )}
 
+      {/* 초기 로드 에러 */}
+      {!alertCrud.isLoadingAlerts && alertCrud.loadError && (
+        <div className="notice error" role="alert">
+          <p>{alertCrud.loadError}</p>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={alertCrud.retryLoad}>
+            다시 시도
+          </button>
+        </div>
+      )}
+
       {/* Existing Alerts */}
       {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && (
         <AlertList

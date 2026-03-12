@@ -16,6 +16,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ManageChallengeUseCase } from '@application/use-cases/manage-challenge.use-case';
 import { ChallengeConflictError } from '@application/use-cases/manage-challenge.use-case';
+import { JoinChallengeDto } from '@application/dto/challenge.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('challenges')
@@ -84,7 +85,7 @@ export class ChallengeController {
   @HttpCode(HttpStatus.CREATED)
   async joinChallenge(
     @Request() req: AuthenticatedRequest,
-    @Body() body: { templateId: string },
+    @Body() body: JoinChallengeDto,
   ): Promise<{
     id: string;
     templateId: string;

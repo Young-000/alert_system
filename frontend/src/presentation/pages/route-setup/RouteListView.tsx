@@ -16,6 +16,8 @@ interface RouteListViewProps {
   isSaving: boolean;
   deleteTarget: { id: string; name: string } | null;
   isDeleting: boolean;
+  loadError?: string;
+  onRetryLoad?: () => void;
   onTabChange: (tab: 'all' | 'morning' | 'evening') => void;
   onStartCreating: () => void;
   onEditRoute: (route: RouteResponse) => void;
@@ -36,6 +38,8 @@ export function RouteListView({
   isSaving,
   deleteTarget,
   isDeleting,
+  loadError,
+  onRetryLoad,
   onTabChange,
   onStartCreating,
   onEditRoute,
@@ -62,7 +66,19 @@ export function RouteListView({
         />
       )}
 
-      {sortedRoutes.length === 0 ? (
+      {/* 로드 에러 */}
+      {loadError && (
+        <div className="notice error" role="alert">
+          <p>{loadError}</p>
+          {onRetryLoad && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onRetryLoad}>
+              다시 시도
+            </button>
+          )}
+        </div>
+      )}
+
+      {sortedRoutes.length === 0 && !loadError ? (
         <div className="route-empty-v2">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="6" cy="19" r="3" />

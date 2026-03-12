@@ -13,6 +13,7 @@ import { TOAST_DURATION_MS } from './types';
 interface AlertCrudState {
   alerts: Alert[];
   isLoadingAlerts: boolean;
+  loadError: string;
   error: string;
   success: string;
   deleteTarget: { id: string; name: string } | null;
@@ -30,6 +31,7 @@ interface AlertCrudActions {
   setSuccess: (success: string) => void;
   setIsSubmitting: (value: boolean) => void;
   setDuplicateAlert: (alert: Alert | null) => void;
+  retryLoad: () => void;
   reloadAlerts: () => Promise<void>;
   handleDeleteClick: (alert: Alert) => void;
   handleDeleteConfirm: () => Promise<void>;
@@ -54,7 +56,13 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   // Local alerts state for optimistic mutations (synced from query)
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const isLoadingAlerts = alertsQuery.isLoading;
+  const loadError = alertsQuery.isError ? '알림 목록을 불러올 수 없습니다' : '';
   const savedRoutes = routesQuery.data ?? [];
+
+  const retryLoad = useCallback(() => {
+    void alertsQuery.refetch();
+    void routesQuery.refetch();
+  }, [alertsQuery, routesQuery]);
 
   // Sync query data to local state when query data changes
   useEffect(() => {
@@ -112,7 +120,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setIsDeleting(true);
     try {
       await alertApiClient.deleteAlert(deleteTarget.id);
-      reloadAlerts();
+      await reloadAlerts();
       setDeleteTarget(null);
     } catch {
       setError('삭제에 실패했습니다.');
@@ -142,13 +150,17 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setIsEditing(true);
     try {
       const [hour, minute] = editForm.schedule.split(':');
-      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} * * *`;
+      const originalParts = editTarget.schedule.split(' ');
+      const dayOfMonth = originalParts[2] ?? '*';
+      const month = originalParts[3] ?? '*';
+      const dayOfWeek = originalParts[4] ?? '*';
+      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} ${dayOfMonth} ${month} ${dayOfWeek}`;
 
       await alertApiClient.updateAlert(editTarget.id, {
         name: editForm.name,
         schedule: cronSchedule,
       });
-      reloadAlerts();
+      await reloadAlerts();
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
       setTimeout(() => setSuccess(''), TOAST_DURATION_MS);
@@ -172,6 +184,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     } catch {
       setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
       setError('알림 상태 변경에 실패했습니다.');
+      setTimeout(() => setError(''), TOAST_DURATION_MS);
     } finally {
       setTogglingIds(prev => {
         const next = new Set(prev);
@@ -253,6 +266,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   return {
     alerts,
     isLoadingAlerts,
+    loadError,
     error,
     success,
     deleteTarget,
@@ -267,6 +281,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setSuccess,
     setIsSubmitting,
     setDuplicateAlert,
+    retryLoad,
     reloadAlerts,
     handleDeleteClick,
     handleDeleteConfirm,
