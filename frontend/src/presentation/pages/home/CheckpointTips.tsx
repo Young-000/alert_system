@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   useCheckpointTips,
   useCreateTip,
@@ -21,7 +21,7 @@ export function CheckpointTips({
   isLoggedIn = false,
   isEligible = true,
 }: CheckpointTipsProps): JSX.Element {
-  const [page] = useState(1);
+  const page = 1;
   const [isRateLimited, setIsRateLimited] = useState(false);
 
   const { data, isLoading, isError, refetch } = useCheckpointTips(checkpointKey, page);
