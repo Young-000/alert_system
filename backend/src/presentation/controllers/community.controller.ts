@@ -57,8 +57,8 @@ export class CommunityController {
     @Query('page') pageStr?: string,
     @Query('limit') limitStr?: string,
   ): Promise<TipsListResponseDto> {
-    const page = pageStr ? parseInt(pageStr, 10) : 1;
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
+    const page = pageStr ? (parseInt(pageStr, 10) || 1) : 1;
+    const limit = limitStr ? (parseInt(limitStr, 10) || 20) : 20;
 
     return this.tipsService.getTips(
       checkpointKey,

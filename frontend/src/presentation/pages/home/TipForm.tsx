@@ -5,7 +5,7 @@ const MAX_DAILY_TIPS = 3;
 
 interface TipFormProps {
   checkpointKey: string;
-  onSubmit: (checkpointKey: string, content: string) => void;
+  onSubmit: (checkpointKey: string, content: string, clearForm: () => void) => void;
   isSubmitting?: boolean;
   isEligible?: boolean;
   isRateLimited?: boolean;
@@ -23,11 +23,12 @@ export function TipForm({
   const isOverLimit = charCount > MAX_TIP_LENGTH;
   const canSubmit = content.trim().length > 0 && !isOverLimit && !isSubmitting && !isRateLimited;
 
+  const clearForm = useCallback((): void => setContent(''), []);
+
   const handleSubmit = useCallback((): void => {
     if (!canSubmit) return;
-    onSubmit(checkpointKey, content.trim());
-    setContent('');
-  }, [canSubmit, checkpointKey, content, onSubmit]);
+    onSubmit(checkpointKey, content.trim(), clearForm);
+  }, [canSubmit, checkpointKey, content, onSubmit, clearForm]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {

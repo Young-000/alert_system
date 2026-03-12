@@ -49,8 +49,8 @@ export class InsightsController {
       ? (sortBy as InsightSortBy)
       : undefined;
 
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
-    const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+    const limit = limitStr ? (parseInt(limitStr, 10) || 20) : 20;
+    const offset = offsetStr ? (parseInt(offsetStr, 10) || 0) : 0;
 
     return this.insightsService.getRegions({
       sortBy: validSortBy,
