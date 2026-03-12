@@ -82,10 +82,10 @@ describe('LiveActivityController', () => {
       );
     });
 
-    it('기존 activityId가 있으면 업데이트 (upsert)', async () => {
+    it('기존 activityId가 같은 사용자에게 있으면 업데이트 (upsert)', async () => {
       const existing = {
         id: 'existing-token-1',
-        userId: 'old-user',
+        userId: OWNER_ID,
         activityId: 'activity-001',
         pushToken: 'old-token',
         mode: 'return',
@@ -111,6 +111,33 @@ describe('LiveActivityController', () => {
       expect(existing.pushToken).toBe('base64-push-token-abc123');
       expect(existing.mode).toBe('commute');
       expect(existing.isActive).toBe(true);
+      expect(tokenRepo.findOne).toHaveBeenCalledWith({
+        where: { activityId: 'activity-001', userId: OWNER_ID },
+      });
+    });
+
+    it('다른 사용자의 activityId는 업데이트하지 않고 새로 생성', async () => {
+      tokenRepo.update.mockResolvedValue({ affected: 0 } as any);
+      tokenRepo.findOne.mockResolvedValue(null); // userId 불일치로 검색 안됨
+      tokenRepo.save.mockResolvedValue({
+        id: 'new-token-1',
+        userId: OWNER_ID,
+        ...registerDto,
+        isActive: true,
+        settingId: registerDto.settingId ?? null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+
+      const result = await controller.register(
+        mockRequest(OWNER_ID),
+        registerDto as any,
+      );
+
+      expect(result).toEqual({
+        id: 'new-token-1',
+        registered: true,
+      });
     });
 
     it('settingId 없이도 등록 가능', async () => {

@@ -55,13 +55,12 @@ export class LiveActivityController {
       { isActive: false },
     );
 
-    // Upsert: check if activityId already exists
+    // Upsert: check if activityId already exists for this user
     const existing = await this.tokenRepo.findOne({
-      where: { activityId: dto.activityId },
+      where: { activityId: dto.activityId, userId },
     });
 
     if (existing) {
-      existing.userId = userId;
       existing.pushToken = dto.pushToken;
       existing.mode = dto.mode;
       existing.settingId = dto.settingId ?? null;
