@@ -184,7 +184,7 @@ export function CommuteTrackingPage(): JSX.Element {
         const unrecorded = route.checkpoints.filter(cp => !recordedIds.has(cp.id));
 
         if (unrecorded.length > 0) {
-          await Promise.all(unrecorded.map(cp =>
+          await Promise.allSettled(unrecorded.map(cp =>
             commuteApi.recordCheckpoint({
               sessionId: session.id,
               checkpointId: cp.id,
