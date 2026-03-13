@@ -15,6 +15,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { IsString, IsNotEmpty, IsOptional, IsIn, IsNumber, IsObject, Min } from 'class-validator';
 import {
   TrackBehaviorUseCase,
   TrackDepartureDto,
@@ -38,19 +39,47 @@ import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
-interface TrackEventDto {
+class TrackEventDto {
+  @IsString()
+  @IsNotEmpty({ message: '사용자 ID는 필수입니다.' })
   userId: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '이벤트 유형은 필수입니다.' })
   eventType: string;
+
+  @IsOptional()
+  @IsString()
   alertId?: string;
+
+  @IsOptional()
+  @IsObject()
   metadata?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsIn(['push', 'app'], { message: 'source는 push 또는 app이어야 합니다.' })
   source?: 'push' | 'app';
 }
 
-interface DepartureConfirmedDto {
+class DepartureConfirmedDto {
+  @IsString()
+  @IsNotEmpty({ message: '사용자 ID는 필수입니다.' })
   userId: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '알림 ID는 필수입니다.' })
   alertId: string;
+
+  @IsIn(['push', 'app'], { message: 'source는 push 또는 app이어야 합니다.' })
   source: 'push' | 'app';
+
+  @IsOptional()
+  @IsString()
   weatherCondition?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: '교통 지연 시간은 숫자여야 합니다.' })
+  @Min(0, { message: '교통 지연 시간은 0 이상이어야 합니다.' })
   transitDelayMinutes?: number;
 }
 
