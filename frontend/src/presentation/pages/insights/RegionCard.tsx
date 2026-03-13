@@ -1,4 +1,5 @@
 import type { RegionSummary, InsightTrendDirection } from '@infrastructure/api/commute-api.client';
+import { getTrendArrow } from '../../utils/trend';
 
 interface RegionCardProps {
   region: RegionSummary;
@@ -11,12 +12,6 @@ function getTrendLabel(direction: InsightTrendDirection, value: number): string 
   if (direction === 'improving') return `${absVal}% 개선`;
   if (direction === 'worsening') return `${absVal}% 악화`;
   return '변동 없음';
-}
-
-function getTrendArrow(direction: InsightTrendDirection): string {
-  if (direction === 'improving') return '\u2193'; // down arrow = commute time decreased = good
-  if (direction === 'worsening') return '\u2191'; // up arrow = commute time increased = bad
-  return '\u2192'; // right arrow = stable
 }
 
 function getConfidenceLabel(userCount: number): string {

@@ -98,12 +98,14 @@ export function StationSearchStep({
         {currentTransport === 'subway' && groupedSubwayResults.length > 0 && (
           <ul className="search-results-list" role="listbox" aria-label="지하철역 검색 결과">
             {groupedSubwayResults.map((grouped) => (
-              <li key={grouped.name} role="option" tabIndex={0}>
+              <li key={grouped.name} role="presentation">
                 <button
                   type="button"
+                  role="option"
+                  aria-selected={false}
                   className="search-result-item"
                   onClick={() => onStationClick(grouped)}
-                  aria-label={`${grouped.name}역 ${grouped.lines.length > 1 ? `(${grouped.lines.length}개 호선)` : grouped.lines[0].line}`}
+                  aria-label={`${grouped.name}역 ${grouped.lines.length > 1 ? `(${grouped.lines.length}개 호선)` : grouped.lines[0]?.line ?? ''}`}
                 >
                   <span className="result-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></svg></span>
                   <span className="result-info">
@@ -127,9 +129,11 @@ export function StationSearchStep({
         {busResults.length > 0 && (
           <ul className="search-results-list" role="listbox" aria-label="버스 정류장 검색 결과">
             {busResults.map((stop) => (
-              <li key={stop.nodeId} role="option" tabIndex={0}>
+              <li key={stop.nodeId} role="presentation">
                 <button
                   type="button"
+                  role="option"
+                  aria-selected={false}
                   className="search-result-item"
                   onClick={() => onBusStopSelect(stop)}
                   aria-label={`${stop.name} 정류장 ${stop.stopNo ? `(${stop.stopNo})` : ''}`}

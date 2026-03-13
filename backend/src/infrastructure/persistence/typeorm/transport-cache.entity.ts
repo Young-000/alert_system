@@ -50,7 +50,7 @@ export class BusArrivalCacheEntity {
   expiresAt: Date;
 }
 
-@Entity('api_call_log', { schema: 'alert_system' })
+@Entity('api_call_logs', { schema: 'alert_system' })
 @Index(['apiName', 'calledAt'])
 export class ApiCallLogEntity {
   @PrimaryGeneratedColumn('uuid')
