@@ -1,8 +1,8 @@
-# Performance Review - Round 1 (Updated)
+# Performance Review - Round 1 (Updated 2026-03-14)
 
 **Status**: PASS
-**Fixes Applied**: 3 (backend API parallelization)
-**Date**: 2026-02-28
+**Fixes Applied**: 4 (3 from previous round + 1 new)
+**Date**: 2026-03-14
 
 ---
 
@@ -13,77 +13,77 @@
 | Chunk | Raw | Gzip |
 |-------|-----|------|
 | **vendor-react** (react+react-dom) | 142.21 KB | 45.56 KB |
-| **RouteSetupPage** (largest page) | 84.26 KB | 25.97 KB |
-| **HomePage** | 48.15 KB | 14.94 KB |
-| **AlertSettingsPage** | 45.98 KB | 12.24 KB |
-| **index.js** (main entry) | 40.81 KB | 13.54 KB |
-| **CommuteDashboardPage** | 41.48 KB | 9.16 KB |
+| **RouteSetupPage** (largest page) | 84.60 KB | 26.09 KB |
+| **HomePage** | 60.10 KB | 17.72 KB |
+| **AlertSettingsPage** | 46.43 KB | 12.40 KB |
+| **CommuteDashboardPage** | 42.05 KB | 9.30 KB |
+| **index.js** (main entry) | 42.04 KB | 13.75 KB |
 | **vendor-query** (@tanstack/react-query) | 38.99 KB | 11.64 KB |
-| **SettingsPage** | 28.68 KB | 7.40 KB |
+| **SettingsPage** | 29.57 KB | 7.62 KB |
 | **vendor-router** (react-router) | 21.12 KB | 7.91 KB |
-| **index.css** (all styles) | 280 KB raw | ~36 KB gzip |
+| **index.css** (all styles) | 305.92 KB raw | 49.13 KB gzip |
 | **sw.js** (service worker) | 67.35 KB | 18.12 KB |
-| **Total dist/** | **~1.0 MB raw** | **~230 KB gzip** |
+| **Total JS+CSS (gzip)** | — | **233.9 KB** |
 
 ### Assessment: PASS
 
-- Total gzip **~230 KB** -- well under the 500 KB target for PWA apps
+- Total gzip **233.9 KB** — well under the 500 KB target for PWA apps
 - `manualChunks` in `vite.config.ts` properly splits vendor-react, vendor-router, vendor-query for long-term caching
-- PWA precache: 41 entries, 883 KB -- acceptable for offline-capable PWA
-- RouteSetupPage is the largest page chunk (26 KB gzip) due to @dnd-kit, but it is lazy-loaded so no impact on initial load
+- PWA precache: 43 entries, 933.83 KB — acceptable for offline-capable PWA
+- RouteSetupPage is the largest page chunk (26 KB gzip) due to @dnd-kit, but it is lazy-loaded
 
 ---
 
 ## 2. Lazy Loading / Code Splitting
 
-### Assessment: PASS -- properly implemented
+### Assessment: PASS — properly implemented
 
-All 13 pages are lazy-loaded via `React.lazy()`:
+All 14 pages are lazy-loaded via `React.lazy()`:
 - HomePage, LoginPage, AlertSettingsPage, AuthCallbackPage, NotFoundPage, SettingsPage
 - RouteSetupPage, CommuteTrackingPage, CommuteDashboardPage, OnboardingPage
-- NotificationHistoryPage, MissionsPage, MissionSettingsPage, ReportPage
+- NotificationHistoryPage, MissionsPage, MissionSettingsPage, ReportPage, PatternAnalysisPage, InsightsPage
 
 Additional optimizations present:
-- **Idle preload** (`useIdlePreload`): After 3 seconds, preloads RouteSetupPage, AlertSettingsPage, SettingsPage, MissionsPage, ReportPage in background
+- **Idle preload** (`useIdlePreload`): After 3 seconds, preloads RouteSetupPage, AlertSettingsPage, SettingsPage, MissionsPage, ReportPage, InsightsPage in background
 - **BottomNavigation prefetch**: `handlePrefetch` on hover/touchstart preloads the target page
 - **Skeleton fallback**: `PageLoader` component renders skeleton UI during lazy chunk loading
 - **react-router v7 future flags**: `v7_startTransition` and `v7_relativeSplatPath` enabled
+- `DelayAlertBanner.tsx` imports `delay-alert.css` directly, correctly code-splitting that CSS into the `HomePage` chunk
 
 ---
 
 ## 3. Re-render Analysis (useMemo/useCallback)
 
-### Assessment: PASS -- well balanced
+### Assessment: PASS — well balanced
 
-Reviewed all `useMemo`/`useCallback`/`React.memo` usage across the codebase:
+Reviewed all `useMemo`/`useCallback`/`React.memo` usage:
 
-**Proper usage (not excessive):**
-- `useMemo` for derived/computed state: `filteredRoutes`, `sortedRoutes`, `activeRoute`, `nextAlert`, `airQuality`, `briefing`, `weekData`, `filteredLogs`, `commuteMissions`, `returnMissions`
-- `useMemo` for API client stabilization: `getCommuteApiClient()` wrapped in useMemo across pages
-- `useCallback` for event handlers passed to child components or used in dependency arrays
-- Custom hooks properly use `useCallback`/`useMemo` for their return values
+**Proper usage:**
+- `useMemo` for derived state: `filteredRoutes`, `sortedRoutes`, `filteredLogs`, `commuteMissions`, `returnMissions`, `schedule`, `alertName`, `notificationTimes`, `weekData`, `groupedSubwayResults`, `routeNameMap`
+- `useCallback` for stable event handlers passed to child components (`handleSelectStopDirect`, `handleDragEnd`, `loadRoutes`, `handleSubmit`, `handlePrefetch`, etc.)
+- `React.memo` used on re-render-sensitive components: `SortableStopItem`, `AlertSection`, `DeparturePrediction`, `StreakBadge`, `PatternInsightsCard`
 
-**No signs of:**
-- Unnecessary `useMemo` on primitive values or trivial computations
-- `useCallback` wrapping every function indiscriminately
-- Missing memoization causing measurable re-render problems
+**Notable observations:**
+- `getTransferInfo` useCallback with empty deps (`[]`) is a pure utility passed as prop — appropriate
+- `getCommuteApiClient()` is a singleton (module-level instance) — safe to call in component bodies without useMemo
+- No unnecessary memoization of primitive values detected
+- `eslint-disable-line react-hooks/exhaustive-deps` used in 2 places (`HomePage.tsx` and `NotificationHistoryPage.tsx`) with justifying comments — both intentional
 
 ---
 
 ## 4. Image Optimization
 
-### Assessment: PASS -- not applicable
+### Assessment: PASS — not applicable
 
-- No `<img>` tags found in the codebase
+- No `<img>` tags found in the codebase (confirmed: `grep -rn '<img '` returns no results)
 - All visuals are inline SVGs, CSS-based graphics, or emoji characters
 - No external image assets to optimize
-- Font loading uses non-blocking pattern with preconnect for cdn.jsdelivr.net
 
 ---
 
 ## 5. Backend N+1 Query Patterns
 
-### Assessment: PASS -- with 3 fixes applied
+### Assessment: PASS — 1 new fix applied this round
 
 **Already well-structured:**
 - `commute-route.repository.ts`: All queries use `relations: ['checkpoints']` (eager JOIN)
@@ -91,145 +91,119 @@ Reviewed all `useMemo`/`useCallback`/`React.memo` usage across the codebase:
 - `widget-data.service.ts`: Uses `Promise.allSettled` for parallel weather/transit/departure fetches
 - `calculate-route-analytics.use-case.ts`: Uses `Promise.allSettled` for parallel route analytics
 - `export-user-data.use-case.ts`: Uses `Promise.all` for parallel data fetching
-- `daily-check.use-case.ts`: Uses `Promise.all` for parallel mission/records/streak loading
+- `enhanced-pattern-analysis.service.ts`: Loops are over in-memory data only (no DB calls inside loops)
+- `analytics.controller.ts`: Loops over in-memory arrays only
 
-**Fixed -- sequential API calls parallelized (3 fixes):**
+**Noted but acceptable (background/low-frequency operations):**
+- `congestion-aggregation.service.ts#updateForSession`: N+1 pattern in incremental session update
+  (`findBySegmentKeyAndTimeSlot` + optional `fetchObservationsForSegment` + `save` per segment).
+  Context: background analysis service, triggered after session completion, loop size is 3–8 items (checkpoints per session). Impact is minimal.
+- `alternative-suggestion.service.ts#findAlternatives`: DB query per significant-delay segment.
+  Context: only triggered for segments with ≥5 min delay, loop size typically 1–3 items.
 
-See Section 8 below for details.
+**Fixed this round (Fix 4):**
+- `challenge-seed.service.ts#seedTemplates`: Was performing `findOneBy` + optional `save` per seed template (6 templates × 2 queries = 12 queries at startup). Fixed to single query for all existing IDs + batch insert.
 
----
-
-## 6. Caching Strategy (React Query)
-
-### Assessment: PASS -- well configured
-
-**Global defaults** (`query-client.ts`):
-- `staleTime`: 5 min (reasonable default)
-- `gcTime`: 30 min (garbage collection)
-- `retry`: 1 (avoids stacking with api-client retries)
-- `refetchOnWindowFocus`: true (auto-refresh on tab return)
-- `refetchOnReconnect`: true (refresh after network recovery)
-
-**Per-query overrides** (appropriate granularity):
-
-| Query | staleTime | Rationale |
-|-------|-----------|-----------|
-| Routes | 10 min | Routes rarely change |
-| Weather | 10 min | Weather updates slowly |
-| Air quality | 10 min | Same cadence as weather |
-| Briefing | 10 min | Same cadence as weather |
-| Commute stats | 15 min | Only changes after session completion |
-| Weekly report | 15 min | Weekly data, rarely changes |
-| Alerts | 2 min | User may change alerts frequently |
-| Mission daily records | 30 sec | Needs to reflect check-ins quickly |
-| Mission score | 30 sec | Same as daily records |
-| Streak | 5 min | Changes on session completion |
-| Places | 5 min | Rarely modified |
-| Smart departure | 2-5 min | Departure times need freshness |
-
-All queries properly use `invalidateQueries` on mutations, ensuring cache freshness.
+**Previously fixed (rounds 1–2):**
+- `send-notification.use-case.ts`: Sequential weather/transit/route collection → parallelized with `Promise.all`
+- `send-notification.use-case.ts (collectSubwayData)`: Sequential for-loop → `Promise.allSettled`
+- `send-notification.use-case.ts (collectBusData)`: Sequential for-loop → `Promise.allSettled`
 
 ---
 
-## 7. CSS Performance
+## 6. Large Library Imports
 
-### Assessment: PASS -- acceptable with note
+### Assessment: PASS — clean dependencies
 
-- **20,391 total CSS lines** across 12 files -- output gzip ~36 KB
-- CSS is **not** code-split per page (all bundled into single `index.css`)
-- This is a known trade-off: single CSS file caches well, but initial load includes unused styles
-- `prefers-reduced-motion` media query is implemented for accessibility
-- No `will-change` abuse, no heavy box-shadow animations
-- **Future optimization**: Consider CSS code splitting per lazy-loaded page (not urgent at current size)
+No banned/large libraries detected:
+- No `lodash` full import (`lodash-es` or direct implementation used)
+- No `moment.js` (standard `Date` used throughout)
+- No heavy UI library imports
+- `@dnd-kit` used for drag-and-drop (necessary, included in RouteSetupPage chunk only)
+- `@supabase/supabase-js` in dependencies — used for DB client
+- All imports use named exports (tree-shaking compatible)
 
 ---
 
-## 8. Fixes Applied
+## 7. Search Debounce
 
-### Fix 1: Parallelize main data collection in SendNotificationUseCase
+### Assessment: PASS — correctly implemented
 
-**File**: `backend/src/application/use-cases/send-notification.use-case.ts`
+Both station search hooks use 300ms debounce:
 
-**Before** (sequential -- each await blocks the next):
+- `use-station-search.ts` (RouteSetupPage): `SEARCH_DEBOUNCE_MS = 300` with `useRef`-based timer
+- `use-transport-search.ts` (AlertSettingsPage): `SEARCH_DEBOUNCE_MS` constant via `useEffect` cleanup + `controller.abort()` for request cancellation
+
+---
+
+## 8. List Virtualization
+
+### Assessment: PASS — not needed at current data volumes
+
+All list sizes are bounded by pagination:
+- Notification history: max 20 items per page (load-more with `history.hasMore`)
+- Commute sessions: paginated with `hasMore` flag
+- Routes: typically 2–5 per user
+- Alerts: typically 1–5 per user
+- Missions: max 3 per type (enforced by `MAX_MISSIONS_PER_TYPE = 3`)
+
+No list exceeds 50 visible items. Virtualization (`react-virtual`) not required.
+
+---
+
+## 9. CSS Performance
+
+### Assessment: PASS — acceptable with note
+
+- **22,418 total CSS lines** across 15 files — output gzip 49.13 KB
+- CSS is not code-split per page (all bundled into single `index.css` via global import in main.tsx)
+- Single CSS bundle cached long-term; only `delay-alert.css` is split into `HomePage` chunk via component-level import
+- No `will-change` abuse, no heavy CSS animations
+- `prefers-reduced-motion` implemented
+- **Future optimization**: migrate remaining page CSS to component-level imports for per-route code splitting
+
+---
+
+## 10. useEffect Dependencies
+
+### Assessment: PASS — with verified exceptions
+
+Two `eslint-disable` on `react-hooks/exhaustive-deps`:
+
+1. **`HomePage.tsx:35`**: Excludes `data.setForceRouteType` — this is a `setState` setter (stable reference). Correct.
+2. **`NotificationHistoryPage.tsx:157`**: Excludes `periodFilter` from first useEffect — intentional two-effect pattern where second useEffect handles period changes. Correct.
+
+---
+
+## 11. Fixes Applied This Round
+
+### Fix 4: ChallengeSeedService — N+1 → batch query
+
+**File**: `backend/src/infrastructure/persistence/seeds/challenge-seed.service.ts`
+
+**Before** (N+1: 2 queries × 6 seeds = 12 DB calls at startup):
 ```typescript
-await this.collectWeatherData(alert, user.location, data, contextBuilder);
-await this.collectTransitData(alert, data);
-await this.collectSmartNotificationData(alert, contextBuilder.build(), data);
-await this.collectRouteData(alert, data);
-```
-
-**After** (parallel where possible):
-```typescript
-await Promise.all([
-  this.collectWeatherData(alert, user.location, data, contextBuilder),
-  this.collectTransitData(alert, data),
-  this.collectRouteData(alert, data),
-]);
-// smart notification depends on weather context, so runs after
-await this.collectSmartNotificationData(alert, contextBuilder.build(), data);
-```
-
-**Impact**: Weather API (~500ms), transit API (~300ms), and route lookup (~100ms) now run concurrently instead of sequentially. Estimated savings: ~400-600ms per notification.
-
-### Fix 2: Parallelize subway station lookups
-
-**File**: `backend/src/application/use-cases/send-notification.use-case.ts` (collectSubwayData)
-
-**Before** (sequential for loop with await):
-```typescript
-for (const id of ids.slice(0, 2)) {
-  const station = await this.subwayStationRepository.findById(id);
-  if (station) {
-    const arrivals = await this.subwayApiClient.getSubwayArrival(station.name);
-    results.push({ ... });
+for (const seed of CHALLENGE_TEMPLATE_SEEDS) {
+  const exists = await this.templateRepo.findOneBy({ id: seed.id });
+  if (!exists) {
+    await this.templateRepo.save({ ... });
   }
 }
 ```
 
-**After** (parallel with Promise.allSettled):
+**After** (1 SELECT + 1 batch INSERT):
 ```typescript
-const settled = await Promise.allSettled(
-  ids.map(async (id) => {
-    const station = await this.subwayStationRepository.findById(id);
-    if (!station) return null;
-    const arrivals = await this.subwayApiClient.getSubwayArrival(station.name);
-    return { name: station.name, line: station.line || '', arrivals: arrivals.slice(0, 1) };
-  }),
-);
+const existingIds = await this.templateRepo
+  .createQueryBuilder('t').select('t.id').getMany()
+  .then((rows) => new Set(rows.map((r) => r.id)));
+
+const toInsert = CHALLENGE_TEMPLATE_SEEDS.filter((s) => !existingIds.has(s.id));
+if (toInsert.length === 0) return;
+
+await this.templateRepo.save(toInsert.map((seed) => ({ ... })));
 ```
 
-**Impact**: When a user has 2 subway stations, both lookups + API calls run concurrently. Estimated savings: ~200-400ms.
-
-### Fix 3: Parallelize bus stop lookups
-
-**File**: `backend/src/application/use-cases/send-notification.use-case.ts` (collectBusData)
-
-**Before**: Same sequential for-loop pattern as subway.
-
-**After**: Same `Promise.allSettled` pattern, running bus arrival API calls concurrently.
-
-**Impact**: Similar to subway -- concurrent API calls for 2 bus stops.
-
-### Fix 4 (within Fix 1): Parallelize weather + air quality API calls
-
-**File**: `backend/src/application/use-cases/send-notification.use-case.ts` (collectWeatherData)
-
-**Before**: Sequential `await` for weather API, then air quality API.
-
-**After**: Both API calls collected into `tasks[]` array and run with `Promise.all(tasks)`.
-
-**Impact**: Weather API and air quality API now run concurrently. Estimated savings: ~200-300ms when both alert types are active.
-
----
-
-## 9. Verification
-
-| Check | Result |
-|-------|--------|
-| Backend tests (send-notification) | 13/13 passed |
-| Backend type check (`tsc --noEmit`) | 0 errors |
-| Frontend build | Success (1.74s) |
-| Frontend bundle size | ~230 KB gzip (under 500 KB target) |
+**Impact**: Reduces startup DB queries from 12 → 2 (1 SELECT + 1 batch INSERT when new seeds exist, or 1 SELECT when all seeded).
 
 ---
 
@@ -237,11 +211,13 @@ const settled = await Promise.allSettled(
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Bundle size | PASS | ~230 KB gzip, well under 500 KB target |
-| Lazy loading | PASS | All 13 pages lazy-loaded + idle preload + prefetch on hover |
-| Re-render optimization | PASS | Appropriate useMemo/useCallback usage, no excess or deficit |
-| Image optimization | N/A | No images in codebase (all SVG/CSS/emoji) |
-| Backend N+1 queries | PASS | TypeORM relations properly used; sequential API calls parallelized |
-| Caching strategy | PASS | Per-query staleTime tuned appropriately; proper invalidation on mutations |
-| CSS performance | PASS | ~36 KB gzip; single bundle tradeoff acceptable at this size |
-| PWA caching | PASS | Workbox precache (41 entries) + runtime cache (fonts, API) |
+| Bundle size | PASS | 233.9 KB gzip (JS+CSS), under 500 KB target |
+| Lazy loading | PASS | All 14 pages lazy-loaded + idle preload + hover prefetch |
+| Re-render optimization | PASS | Appropriate useMemo/useCallback/memo usage |
+| Image optimization | N/A | No images — all SVG/CSS/emoji |
+| Large library imports | PASS | No lodash, moment.js, or banned packages |
+| Search debounce | PASS | 300ms debounce on both station search hooks |
+| List virtualization | N/A | All lists paginated, max 20 items visible |
+| Backend N+1 queries | PASS | Challenge seed N+1 fixed; background services acceptable |
+| CSS performance | PASS | 49 KB gzip; single bundle tradeoff acceptable |
+| useEffect dependencies | PASS | Two intentional eslint-disables with justification |

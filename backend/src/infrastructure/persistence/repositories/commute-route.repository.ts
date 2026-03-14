@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { CommuteRouteEntity } from '../typeorm/commute-route.entity';
 import { RouteCheckpointEntity } from '../typeorm/route-checkpoint.entity';
 import { ICommuteRouteRepository } from '@domain/repositories/commute-route.repository';
@@ -19,6 +19,7 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
     private readonly routeRepository: Repository<CommuteRouteEntity>,
     @InjectRepository(RouteCheckpointEntity)
     private readonly checkpointRepository: Repository<RouteCheckpointEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async save(route: CommuteRoute): Promise<CommuteRoute> {
@@ -85,19 +86,21 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
   }
 
   async update(route: CommuteRoute): Promise<void> {
-    const entity = this.toEntity(route);
-    await this.routeRepository.save(entity);
+    await this.dataSource.transaction(async (manager) => {
+      const entity = this.toEntity(route);
+      await manager.save(CommuteRouteEntity, entity);
 
-    // Delete existing checkpoints and save new ones
-    await this.checkpointRepository.delete({ routeId: route.id });
-    if (route.checkpoints.length > 0) {
-      const checkpointEntities = route.checkpoints.map((cp) => {
-        const cpEntity = this.checkpointToEntity(cp);
-        cpEntity.routeId = route.id;
-        return cpEntity;
-      });
-      await this.checkpointRepository.save(checkpointEntities);
-    }
+      // Delete existing checkpoints and save new ones atomically
+      await manager.delete(RouteCheckpointEntity, { routeId: route.id });
+      if (route.checkpoints.length > 0) {
+        const checkpointEntities = route.checkpoints.map((cp) => {
+          const cpEntity = this.checkpointToEntity(cp);
+          cpEntity.routeId = route.id;
+          return cpEntity;
+        });
+        await manager.save(RouteCheckpointEntity, checkpointEntities);
+      }
+    });
   }
 
   async delete(id: string): Promise<void> {

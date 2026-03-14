@@ -264,9 +264,9 @@ export function CommuteTrackingPage(): JSX.Element {
           <button
             type="button"
             className="btn btn-primary completed-home-btn"
-            onClick={() => navigate('/', { replace: true })}
+            onClick={() => navigate('/commute/dashboard', { replace: true })}
           >
-            홈으로
+            결과 보기
           </button>
         </div>
       </main>

@@ -154,7 +154,9 @@ export function NotificationHistoryPage(): JSX.Element {
 
     load();
     return () => { isMounted = false; };
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // periodFilter intentionally excluded: period changes are handled by the second useEffect below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   // Skip initial mount — stats already fetched by the first useEffect
   const isInitialMount = useRef(true);

@@ -22,27 +22,34 @@ export class ChallengeSeedService implements OnModuleInit {
   }
 
   private async seedTemplates(): Promise<void> {
-    for (const seed of CHALLENGE_TEMPLATE_SEEDS) {
-      const exists = await this.templateRepo.findOneBy({ id: seed.id });
-      if (!exists) {
-        await this.templateRepo.save({
-          id: seed.id,
-          category: seed.category,
-          name: seed.name,
-          description: seed.description,
-          targetValue: seed.targetValue,
-          conditionType: seed.conditionType,
-          conditionValue: seed.conditionValue,
-          durationDays: seed.durationDays,
-          badgeId: seed.badgeId,
-          badgeName: seed.badgeName,
-          badgeEmoji: seed.badgeEmoji,
-          difficulty: seed.difficulty,
-          sortOrder: seed.sortOrder,
-          isActive: seed.isActive,
-        });
-        this.logger.log(`Seeded challenge template: ${seed.id}`);
-      }
-    }
+    // Fetch all existing IDs in a single query to avoid N+1 pattern
+    const existingIds = await this.templateRepo
+      .createQueryBuilder('t')
+      .select('t.id')
+      .getMany()
+      .then((rows) => new Set(rows.map((r) => r.id)));
+
+    const toInsert = CHALLENGE_TEMPLATE_SEEDS.filter((s) => !existingIds.has(s.id));
+    if (toInsert.length === 0) return;
+
+    await this.templateRepo.save(
+      toInsert.map((seed) => ({
+        id: seed.id,
+        category: seed.category,
+        name: seed.name,
+        description: seed.description,
+        targetValue: seed.targetValue,
+        conditionType: seed.conditionType,
+        conditionValue: seed.conditionValue,
+        durationDays: seed.durationDays,
+        badgeId: seed.badgeId,
+        badgeName: seed.badgeName,
+        badgeEmoji: seed.badgeEmoji,
+        difficulty: seed.difficulty,
+        sortOrder: seed.sortOrder,
+        isActive: seed.isActive,
+      })),
+    );
+    this.logger.log(`Seeded ${toInsert.length} challenge template(s)`);
   }
 }

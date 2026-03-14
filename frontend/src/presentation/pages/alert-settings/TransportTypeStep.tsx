@@ -21,7 +21,7 @@ export function TransportTypeStep({
 }: TransportTypeStepProps): JSX.Element {
   return (
     <section className="wizard-step">
-      <h1>어떤 교통수단을 이용하세요?</h1>
+      <h2>어떤 교통수단을 이용하세요?</h2>
       <p className="muted">복수 선택 가능해요</p>
 
       {/* 경로에서 가져오기 옵션 */}

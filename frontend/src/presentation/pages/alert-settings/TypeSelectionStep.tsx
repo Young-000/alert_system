@@ -106,7 +106,7 @@ export function TypeSelectionStep({
         <span>또는 직접 설정</span>
       </div>
 
-      <h1>어떤 정보를 받고 싶으세요?</h1>
+      <h2>어떤 정보를 받고 싶으세요?</h2>
       <p className="muted">복수 선택 가능해요</p>
 
       <div className="choice-grid" role="group" aria-label="알림 유형 선택">

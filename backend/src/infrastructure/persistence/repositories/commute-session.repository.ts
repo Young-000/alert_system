@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { DataSource, Repository, Between } from 'typeorm';
 import { CommuteSessionEntity } from '../typeorm/commute-session.entity';
 import { CheckpointRecordEntity } from '../typeorm/checkpoint-record.entity';
 import { ICommuteSessionRepository } from '@domain/repositories/commute-session.repository';
@@ -14,6 +14,7 @@ export class CommuteSessionRepositoryImpl implements ICommuteSessionRepository {
     private readonly sessionRepository: Repository<CommuteSessionEntity>,
     @InjectRepository(CheckpointRecordEntity)
     private readonly recordRepository: Repository<CheckpointRecordEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async save(session: CommuteSession): Promise<CommuteSession> {
@@ -96,14 +97,16 @@ export class CommuteSessionRepositoryImpl implements ICommuteSessionRepository {
   }
 
   async update(session: CommuteSession): Promise<void> {
-    const entity = this.toEntity(session);
-    await this.sessionRepository.save(entity);
+    await this.dataSource.transaction(async (manager) => {
+      const entity = this.toEntity(session);
+      await manager.save(CommuteSessionEntity, entity);
 
-    // Update checkpoint records
-    if (session.checkpointRecords.length > 0) {
-      const recordEntities = session.checkpointRecords.map((r) => this.recordToEntity(r));
-      await this.recordRepository.save(recordEntities);
-    }
+      // Save checkpoint records atomically with session update
+      if (session.checkpointRecords.length > 0) {
+        const recordEntities = session.checkpointRecords.map((r) => this.recordToEntity(r));
+        await manager.save(CheckpointRecordEntity, recordEntities);
+      }
+    });
   }
 
   async delete(id: string): Promise<void> {

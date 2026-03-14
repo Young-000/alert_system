@@ -24,7 +24,7 @@ export function ConfirmStep({
 }: ConfirmStepProps): JSX.Element {
   return (
     <section className="wizard-step">
-      <h1>설정을 확인해주세요</h1>
+      <h2>설정을 확인해주세요</h2>
 
       <div className="confirm-card">
         <div className="confirm-section">

@@ -22,7 +22,7 @@ export function RoutineStep({
 }: RoutineStepProps): JSX.Element {
   return (
     <section className="wizard-step">
-      <h1>하루 루틴을 알려주세요</h1>
+      <h2>하루 루틴을 알려주세요</h2>
       <p className="muted">알림 시간을 자동으로 설정해드려요</p>
 
       <div className="routine-form">

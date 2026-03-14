@@ -462,6 +462,7 @@
 .preview-input:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* 경로 시각화 */
@@ -788,6 +789,7 @@
 .checkpoint-name-input:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* 이동 수단 표시 */
@@ -3441,6 +3443,7 @@
 .route-name-field:focus {
   border-color: var(--primary);
   outline: none;
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .route-name-input .char-count {
