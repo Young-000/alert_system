@@ -488,6 +488,7 @@ export function RouteSetupPage(): JSX.Element {
       await commuteApi.deleteRoute(deleteTarget.id);
       setExistingRoutes(prev => prev.filter(r => r.id !== deleteTarget.id));
       setDeleteTarget(null);
+      toast.success('경로가 삭제되었습니다');
     } catch {
       setError('삭제에 실패했습니다.');
     } finally {
@@ -613,26 +614,29 @@ export function RouteSetupPage(): JSX.Element {
 
   // 메인 화면: 경로 목록
   return (
-    <RouteListView
-      sortedRoutes={sortedRoutes}
-      filteredRoutes={filteredRoutes}
-      userAlerts={userAlerts}
-      routeTab={routeTab}
-      sharedRoute={sharedRoute}
-      userId={userId}
-      isSaving={isSaving}
-      deleteTarget={deleteTarget}
-      isDeleting={isDeleting}
-      loadError={loadError || error}
-      onRetryLoad={loadError ? loadRoutes : undefined}
-      onTabChange={setRouteTab}
-      onStartCreating={startCreating}
-      onEditRoute={handleEditRoute}
-      onDeleteClick={handleDeleteClick}
-      onDeleteConfirm={handleDeleteConfirm}
-      onDeleteCancel={() => setDeleteTarget(null)}
-      onImportSharedRoute={handleImportSharedRoute}
-      onDismissSharedRoute={() => setSharedRoute(null)}
-    />
+    <>
+      <RouteListView
+        sortedRoutes={sortedRoutes}
+        filteredRoutes={filteredRoutes}
+        userAlerts={userAlerts}
+        routeTab={routeTab}
+        sharedRoute={sharedRoute}
+        userId={userId}
+        isSaving={isSaving}
+        deleteTarget={deleteTarget}
+        isDeleting={isDeleting}
+        loadError={loadError || error}
+        onRetryLoad={loadError ? loadRoutes : undefined}
+        onTabChange={setRouteTab}
+        onStartCreating={startCreating}
+        onEditRoute={handleEditRoute}
+        onDeleteClick={handleDeleteClick}
+        onDeleteConfirm={handleDeleteConfirm}
+        onDeleteCancel={() => setDeleteTarget(null)}
+        onImportSharedRoute={handleImportSharedRoute}
+        onDismissSharedRoute={() => setSharedRoute(null)}
+      />
+      <ToastContainer toasts={toast.toasts} onDismiss={handleToastDismiss} />
+    </>
   );
 }

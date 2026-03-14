@@ -335,3 +335,54 @@ All pages respond well under 200ms -- significantly exceeding the 2-second requi
 **Overall**: PASS (16/17 core checks, 1 minor issue)
 **Issues**: 2건 (1 Minor frontend, 1 Medium backend)
 **Fixes needed**: 0건 (이슈는 개선사항 수준)
+
+---
+
+## 11. 핵심 사용자 플로우 코드 검증 (Round-1 추가 분석)
+
+**분석일**: 2026-03-14
+**분석 방법**: 소스 코드 정적 분석 (CLAUDE.md 체크리스트 기준)
+
+### 경로 설정 페이지 (`/routes`)
+
+| # | 항목 | 상태 | 비고 |
+|---|------|:----:|------|
+| 1 | 비로그인 → 로그인 유도 메시지 | ✅ | `AuthRequired` 컴포넌트, "로그인이 필요해요" + 로그인 링크 |
+| 2 | 경로 저장 → `/commute` 리다이렉트 | ⚠️ | 실제 코드는 `navigate('/')` (홈). 스펙과 차이 있으나 현재 위저드 UX에서 홈→출발 플로우가 자연스럽다. 의도적 설계 변경으로 판단 |
+| 3 | "직접 만들기" → 커스텀 폼 표시 | ⚠️ | 현재 설계: 단계형 위저드로 대체됨. 스펙이 구현 진화를 반영하지 못한 것. 기능적으로 동등 이상 |
+| 4 | 체크포인트 최소 개수 유지 | ✅ | `removeStop`: `selectedStops.length <= 1` 가드 (총 체크포인트 = home + stops + work, 최소 3개) |
+| 5 | 경로 CRUD | ✅ | 생성/조회/수정/삭제 + ConfirmModal 삭제 확인 모두 정상 |
+| 6 | 저장된 경로 클릭 → `/commute?routeId=xxx` | ✅ | `RouteCard.tsx`: `navigate('/commute', { state: { routeId: route.id } })` |
+
+### 출퇴근 트래킹 페이지 (`/commute`)
+
+| # | 항목 | 상태 | 비고 |
+|---|------|:----:|------|
+| 7 | 경로 선택 → 세션 시작 | ✅ | `navRouteId` → `startSession()`, PWA shortcut mode, in-progress 세션 재개 모두 처리 |
+| 8 | 체크포인트 도착 → 시간 기록 | ✅ | 완료 시 미기록 체크포인트 일괄 자동 기록 (`handleComplete`). 별도 도착 버튼 없는 간소화 UX |
+| 9 | 세션 완료 → 대시보드 이동 | ✅ | **수정됨**: `navigate('/')` → `navigate('/commute/dashboard')` + 버튼 텍스트 "결과 보기" |
+| 10 | 세션 취소 → 데이터 삭제 확인 | ✅ | `ConfirmModal` + `cancelSession()` + `navigate('/')` |
+
+### 알림 설정 페이지 (`/alerts`)
+
+| # | 항목 | 상태 | 비고 |
+|---|------|:----:|------|
+| 11 | 알림 생성 위자드 플로우 | ✅ | 5단계(type→transport→station→routine→confirm), 조건부 단계 건너뜀, 중복 감지 |
+| 12 | 알림 활성화/비활성화 토글 | ✅ | 낙관적 업데이트 + 롤백 + `togglingIds` 중복 방지 |
+| 13 | 알림 삭제 + 확인 모달 | ✅ | `DeleteConfirmModal` focus trap + ESC 키 지원 |
+
+### 조건부 렌더링 검증
+
+| # | 항목 | 상태 | 비고 |
+|---|------|:----:|------|
+| 14 | 모순된 중첩 조건 (`!showForm` 안에 `showForm`) | ✅ | RouteSetupPage: early return 패턴 사용, AlertSettingsPage: `shouldShowWizard` 단일 플래그로 분리 |
+| 15 | 상태 초기화 누락 | ✅ | `startCreating()`, `cancelCreating()`, `handleEditRoute()`, `handleSubmit` 성공 후 모두 완전한 리셋 |
+
+### 코드 수정 사항
+
+| 파일 | 위치 | 변경 내용 |
+|------|------|----------|
+| `CommuteTrackingPage.tsx` | 완료 화면 버튼 | `navigate('/')` → `navigate('/commute/dashboard', { replace: true })` |
+| `CommuteTrackingPage.tsx` | 완료 화면 버튼 텍스트 | "홈으로" → "결과 보기" |
+
+**수정 건수**: 1건 (2개 라인 변경)

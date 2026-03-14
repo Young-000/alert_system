@@ -153,8 +153,8 @@ export function CommuteDashboardPage(): JSX.Element {
                 icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
                 title="스톱워치 기록이 없어요"
                 description="출퇴근 버튼을 눌러 스톱워치 모드로 기록해보세요."
-                actionLink="/commute?mode=stopwatch"
-                actionText="스톱워치 시작"
+                actionLink="/commute"
+                actionText="트래킹 시작하기"
               />
             )
           )}

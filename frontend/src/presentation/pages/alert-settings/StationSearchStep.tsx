@@ -30,7 +30,7 @@ export function StationSearchStep({
 }: StationSearchStepProps): JSX.Element {
   return (
     <section className="wizard-step">
-      <h1>자주 이용하는 역/정류장을 검색하세요</h1>
+      <h2>자주 이용하는 역/정류장을 검색하세요</h2>
       <p className="muted">출근길에 이용하는 곳을 선택해주세요</p>
 
       {/* 경로에서 빠른 선택 */}

@@ -26,8 +26,9 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
         <div
           className={`analytics-grade grade-${analytics.grade.toLowerCase()}`}
           style={{ backgroundColor: gradeColors[analytics.grade] || '#888' }}
+          aria-label={`등급 ${analytics.grade}`}
         >
-          {analytics.grade}
+          <span aria-hidden="true">{analytics.grade}</span>
         </div>
       </div>
 

@@ -1,15 +1,10 @@
 import type { TrendDirection } from '@infrastructure/api/commute-api.client';
+import { getTrendArrow } from '../../utils/trend';
 
 interface TrendIndicatorProps {
   changeFromPrevious: number | null;
   changePercentage: number | null;
   trend: TrendDirection | null;
-}
-
-function getTrendArrow(trend: TrendDirection): string {
-  if (trend === 'improving') return '\u2193'; // ↓
-  if (trend === 'worsening') return '\u2191'; // ↑
-  return '\u2192'; // →
 }
 
 function getTrendClassName(trend: TrendDirection): string {

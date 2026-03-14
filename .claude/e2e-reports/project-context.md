@@ -1,7 +1,7 @@
 # Project Context — Alert System
 
-Generated: 2026-02-28
-Branch: `feature/e2e-full-20260228`
+Generated: 2026-03-14
+Branch: `feature/e2e-auto-review-20260314`
 
 ---
 
@@ -12,7 +12,7 @@ Branch: `feature/e2e-full-20260228`
 | **프로젝트명** | Alert System |
 | **설명** | 출근/퇴근 시 날씨, 미세먼지, 버스/지하철 도착시간 통합 알림 시스템 |
 | **구조** | Monorepo (frontend + backend) |
-| **Git 브랜치** | `feature/e2e-full-20260228` (base: `main`) |
+| **Git 브랜치** | `feature/e2e-auto-review-20260314` (base: `main`) |
 
 ---
 

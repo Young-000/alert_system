@@ -1,14 +1,16 @@
 import { ApiClient } from '../api/api-client';
 
-export enum BehaviorEventType {
-  NOTIFICATION_RECEIVED = 'notification_received',
-  NOTIFICATION_OPENED = 'notification_opened',
-  NOTIFICATION_DISMISSED = 'notification_dismissed',
-  DEPARTURE_CONFIRMED = 'departure_confirmed',
-  TRANSIT_INFO_VIEWED = 'transit_info_viewed',
-  ALERT_CREATED = 'alert_created',
-  ALERT_MODIFIED = 'alert_modified',
-}
+export const BEHAVIOR_EVENT_TYPE = {
+  NOTIFICATION_RECEIVED: 'notification_received',
+  NOTIFICATION_OPENED: 'notification_opened',
+  NOTIFICATION_DISMISSED: 'notification_dismissed',
+  DEPARTURE_CONFIRMED: 'departure_confirmed',
+  TRANSIT_INFO_VIEWED: 'transit_info_viewed',
+  ALERT_CREATED: 'alert_created',
+  ALERT_MODIFIED: 'alert_modified',
+} as const;
+
+export type BehaviorEventType = typeof BEHAVIOR_EVENT_TYPE[keyof typeof BEHAVIOR_EVENT_TYPE];
 
 interface TrackEventOptions {
   alertId?: string;
@@ -124,7 +126,7 @@ class BehaviorCollector {
    * Track transit info viewed (user checked bus/subway times)
    */
   async trackTransitInfoViewed(alertId?: string): Promise<void> {
-    await this.trackEvent(BehaviorEventType.TRANSIT_INFO_VIEWED, {
+    await this.trackEvent(BEHAVIOR_EVENT_TYPE.TRANSIT_INFO_VIEWED, {
       alertId,
       source: 'app',
     });

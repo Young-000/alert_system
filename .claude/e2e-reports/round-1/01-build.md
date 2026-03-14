@@ -1,7 +1,7 @@
 # Build Check Report
 
-Generated: 2026-02-28
-Branch: `main`
+Generated: 2026-03-14
+Branch: `feature/e2e-auto-review-20260314`
 
 ---
 
@@ -9,12 +9,12 @@ Branch: `main`
 
 | Check | Result | Duration | Notes |
 |-------|:------:|----------|-------|
-| Frontend `tsc --noEmit` | PASS | ~3s | No type errors |
-| Frontend `npm run build` | PASS | ~1.3s (vite) | 245 modules, 41 precache entries |
-| Backend `tsc --noEmit` | PASS | ~3s | No type errors |
-| Backend `npm run build` | PASS | ~3s | `nest build` clean |
+| Frontend `tsc --noEmit` | ✅ PASS | ~3s | No type errors |
+| Frontend `npm run build` | ✅ PASS | ~9.65s (vite) | 260 modules, 43 precache entries |
+| Backend `tsc --noEmit` | ✅ PASS | ~3s | No type errors |
+| Backend `npm run build` | ✅ PASS | ~3s | `nest build` clean |
 
-**Overall: PASS (4/4)**
+**Overall: ✅ PASS (4/4)**
 
 ---
 
@@ -28,22 +28,22 @@ Branch: `main`
 
 - **Result**: PASS
 - **Bundler**: Vite 5.4.21
-- **Modules transformed**: 245
-- **PWA**: v0.17.5, injectManifest mode, 41 precache entries (882.59 KiB)
+- **Modules transformed**: 260
+- **PWA**: v0.17.5, injectManifest mode, 43 precache entries (933.83 KiB)
 
 ### Bundle Size Summary
 
 | Asset | Size | Gzip |
 |-------|------|------|
 | `vendor-react` | 142.21 kB | 45.56 kB |
-| `index.css` | 283.33 kB | 45.88 kB |
-| `RouteSetupPage` | 84.26 kB | 25.97 kB |
-| `HomePage` | 48.15 kB | 14.94 kB |
-| `AlertSettingsPage` | 45.98 kB | 12.24 kB |
-| `CommuteDashboardPage` | 41.48 kB | 9.16 kB |
-| `index (app)` | 40.81 kB | 13.54 kB |
+| `index.css` | 305.92 kB | 49.13 kB |
+| `RouteSetupPage` | 84.60 kB | 26.09 kB |
+| `HomePage` | 60.10 kB | 17.72 kB |
+| `AlertSettingsPage` | 46.43 kB | 12.40 kB |
+| `CommuteDashboardPage` | 42.05 kB | 9.30 kB |
+| `index (app)` | 42.04 kB | 13.75 kB |
 | `vendor-query` | 38.99 kB | 11.64 kB |
-| `SettingsPage` | 28.68 kB | 7.40 kB |
+| `SettingsPage` | 29.57 kB | 7.62 kB |
 | `vendor-router` | 21.12 kB | 7.91 kB |
 | `sw.js` | 67.35 kB | 18.12 kB |
 
@@ -74,4 +74,4 @@ None required. All checks passed on first run.
 
 ## Verdict
 
-**PASS** -- Both frontend and backend type-check and build cleanly with zero errors.
+**✅ PASS** -- Both frontend and backend type-check and build cleanly with zero errors.

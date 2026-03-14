@@ -1,3 +1,12 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  Min,
+} from 'class-validator';
+
 export type OverallDelayStatus =
   | 'normal'
   | 'minor_delay'
@@ -72,13 +81,37 @@ export interface AlternativeMappingResponseDto {
   isActive: boolean;
 }
 
-export interface CreateAlternativeMappingDto {
+export class CreateAlternativeMappingDto {
+  @IsString()
+  @IsNotEmpty({ message: '출발역 이름은 필수입니다.' })
   fromStationName: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '출발 노선은 필수입니다.' })
   fromLine: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '도착역 이름은 필수입니다.' })
   toStationName: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '도착 노선은 필수입니다.' })
   toLine: string;
+
+  @IsNumber({}, { message: '도보 소요 시간은 숫자여야 합니다.' })
+  @Min(0, { message: '도보 소요 시간은 0 이상이어야 합니다.' })
   walkingMinutes: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: '도보 거리는 숫자여야 합니다.' })
+  @Min(0, { message: '도보 거리는 0 이상이어야 합니다.' })
   walkingDistanceMeters?: number;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsBoolean({ message: '양방향 여부는 불린이어야 합니다.' })
   isBidirectional?: boolean;
 }

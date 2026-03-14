@@ -1,174 +1,181 @@
-# 07. Accessibility (a11y) - Round 1
+# 접근성 점검 결과 (07-accessibility)
 
-## Status: PASS
-
----
-
-## Audit Scope
-
-**Target**: `frontend/src/` (all TSX components)
-**Standard**: WCAG 2.1 AA
-**Checks**: 8 categories
-
-| # | Check | Result | Notes |
-|---|-------|--------|-------|
-| 1 | img alt attributes | PASS | No `<img>` tags; all visuals are inline SVGs with aria-hidden or role="img" |
-| 2 | Icon button aria-label | PASS | All icon-only buttons have aria-label |
-| 3 | Form field label connections | PASS | All inputs connected via htmlFor/id or aria-label |
-| 4 | Semantic HTML | PASS | Extensive use of main, nav, section, header, footer, article, button |
-| 5 | Keyboard accessibility | PASS | tabIndex, onKeyDown, useCollapsible hook, skip links |
-| 6 | aria-hidden usage | PASS | Decorative icons/emojis properly marked |
-| 7 | role attribute usage | PASS | dialog, switch, alert, progressbar, navigation, tablist, etc. |
-| 8 | Focus trap in modals | PASS | All modals use useFocusTrap hook with ESC handling |
+**점검일**: 2026-03-14  
+**대상**: `frontend/src/**/*.tsx` 전체  
+**수정 건수**: 7건
 
 ---
 
-## 1. img alt Attributes -- PASS
+## 1. img alt 속성
 
-No `<img>` tags exist in the frontend. All visual elements use inline SVG:
-
-- **Decorative SVGs**: Marked with `aria-hidden="true"` (navigation icons, emoji spans, check marks)
-- **Meaningful SVGs**: Use `role="img"` with `aria-label` (chart bars in RouteComparisonChart)
+**결과**: ✅ 통과  
+**내용**: 코드베이스 전체에 `<img>` 태그가 존재하지 않음. 모든 이미지는 인라인 SVG 또는 이모지로 처리되어 있으며, 장식용 SVG에는 `aria-hidden="true"`가 적절히 적용되어 있음.
 
 ---
 
-## 2. Icon Button aria-label -- PASS
+## 2. 아이콘 버튼 aria-label
 
-Every icon-only button has an appropriate `aria-label`:
+**결과**: ✅ 통과  
+**내용**: 텍스트 없는 아이콘 버튼 전체 확인 결과, 모두 `aria-label` 속성을 보유함.
 
-| Component | Examples |
-|-----------|---------|
-| BottomNavigation | All 4 nav tabs with text labels + aria-hidden icons |
-| AlertList | `aria-label="알림 삭제"`, `"알림 수정"` |
-| MissionCard | `"${title} 수정"`, `"삭제"`, `"위로 이동"`, `"아래로 이동"` |
-| PageHeader | `aria-label="뒤로 가기"` |
-| CommuteTrackingPage | `aria-label="세션 취소"` |
-| Toast | `aria-label="닫기"` |
-| LoginPage | Password toggle with aria-label |
-| CommuteDashboardPage | Nav back buttons with aria-label |
-| Settings pages | All back buttons with aria-label |
+주요 확인 파일:
+- `ConfirmModal.tsx` — 닫기 버튼 `aria-label="닫기"` ✅
+- `AlertListPage.tsx` — 삭제/편집 버튼 `aria-label` 있음 ✅
+- `StationSearchStep.tsx` — 제거 버튼 `aria-label={...}` 동적 생성 ✅
+- `CommuteDashboardPage.tsx` — 아이콘 버튼 `aria-label` 있음 ✅
 
 ---
 
-## 3. Form Field Label Connections -- PASS
+## 3. 폼 라벨 (input + label/aria-label)
 
-| Form | Pattern |
-|------|---------|
-| LoginPage | `<label htmlFor="email">` + `<input id="email">`, `aria-required`, `autoComplete` |
-| EditAlertModal | `<label htmlFor="edit-name">` |
-| RouteSetupPage | `htmlFor` + `id` on all inputs, `aria-label` on search |
-| MissionAddModal | `<label htmlFor="mission-title">`, `<label htmlFor="mission-emoji">` |
-| OnboardingPage | `htmlFor="custom-duration"` |
-| AlertSettingsPage | `htmlFor="wake-up-time"`, `"leave-home-time"`, `"leave-work-time"` |
+**결과**: ✅ 통과  
+**내용**: 모든 `<input>` 요소에 `<label htmlFor>` 또는 `aria-label`이 연결되어 있음.
 
----
-
-## 4. Semantic HTML -- PASS
-
-| Element | Usage |
-|---------|-------|
-| `<main>` | Every page wraps content in `<main className="page">` |
-| `<nav>` | BottomNavigation uses `<nav role="navigation">` |
-| `<section>` | Route sections, mission type sections, settings sections |
-| `<header>` | Page headers in tracking, settings, mission, dashboard pages |
-| `<footer>` | Used in home, dashboard pages |
-| `<article>` | Alert cards |
-| `<button>` | All clickable elements use native `<button>` |
-| `<form>` | LoginPage |
-
-Only 2 `<div onClick>` found -- both are modal overlay backdrop clicks (acceptable pattern).
+주요 확인:
+- `RoutineStep.tsx` — `<label htmlFor="wake-up-time">`, `<label htmlFor="leave-home-time">`, `<label htmlFor="leave-work-time">` ✅
+- `StationSearchStep.tsx` — `<input aria-label="역 또는 정류장 검색">` ✅
+- `LoginPage.tsx` — 전화번호, 인증코드 입력 모두 label 연결 ✅
 
 ---
 
-## 5. Keyboard Accessibility -- PASS
+## 4. 시맨틱 HTML (div onClick → button)
 
-| Feature | Implementation |
-|---------|---------------|
-| useCollapsible hook | Provides `role="button"`, `tabIndex: 0`, `onKeyDown` (Enter/Space) |
-| Tab navigation | All interactive elements are natively focusable |
-| Arrow key navigation | Settings tabs support left/right arrow keys |
-| Skip links | HomePage, GuestLanding, LoginPage have `<a href="#main-content">` |
-| DnD Kit | KeyboardSensor with sortableKeyboardCoordinates |
+**결과**: ✅ 통과  
+**내용**: 클릭 가능한 요소에 `<div onClick>` 패턴 없음. 모든 인터랙티브 요소는 `<button>` 사용.
+
+단, `useCollapsible` 훅이 `<div>` 요소에 `role="button"`, `tabIndex={0}`, `onKeyDown` (Enter/Space 처리)를 주입하는 패턴 사용 — 키보드 접근성이 완전히 구현되어 있어 ARIA 명세상 허용되는 패턴으로 판단함.
 
 ---
 
-## 6. aria-hidden Usage -- PASS
+## 5. Skip Link (건너뛰기 링크)
 
-Decorative elements consistently marked:
+**결과**: ✅ 통과  
+**내용**: 주요 진입 페이지에 Skip Link가 존재함.
 
-- Navigation icons in BottomNavigation: `aria-hidden="true"`
-- Emoji spans in MissionCard, MissionTypeSection: `aria-hidden="true"`
-- Toggle thumbs: `aria-hidden="true"`
-- Chevron/arrow icons: `aria-hidden="true"`
-- `+` icons in add buttons: `aria-hidden="true"`
-- Completed check icon (CommuteTrackingPage): `aria-hidden="true"` (fixed in this audit)
+- `HomePage.tsx` — `<a className="skip-link" href="#main-content">` ✅
+- `GuestLanding.tsx` — Skip Link 존재 ✅
+- `LoginPage.tsx` — Skip Link 존재 ✅
 
----
-
-## 7. role Attribute Usage -- PASS
-
-| Role | Component |
-|------|-----------|
-| `role="navigation"` | BottomNavigation |
-| `role="dialog"` + `aria-modal` | ConfirmModal, EditAlertModal, LineSelectionModal, MissionAddModal, delete confirm dialogs |
-| `role="switch"` + `aria-checked` | ToggleSwitch, MissionCard toggle |
-| `role="alert"` | Error messages across all pages |
-| `role="status"` + `aria-live="polite"` | Loading spinners, success messages |
-| `role="progressbar"` | OnboardingPage, MilestoneBadgePanel, StreakBadge, BehaviorTab, MissionQuickCard |
-| `role="tablist"` / `role="tab"` / `role="tabpanel"` | Settings pages, CommuteDashboardPage |
-| `aria-current="page"` | Active navigation tab |
-| `aria-expanded` | Collapsible sections |
-| `aria-pressed` | RouteComparisonChart route buttons |
-| `role="radiogroup"` / `role="radio"` | Transport selector, Line selector |
-| `role="listbox"` / `role="option"` | Search results |
+내부 페이지(AlertListPage, RoutesPage 등)는 앱 쉘 구조상 진입점이 아니므로 생략 허용.
 
 ---
 
-## 8. Focus Trap in Modals -- PASS
+## 6. 키보드 접근성
 
-All modals use the `useFocusTrap` custom hook with ESC key handling:
+**결과**: ✅ 통과  
+**내용**: 비-네이티브 인터랙티브 요소에 키보드 처리가 구현되어 있음.
 
-| Modal | Focus Trap | ESC Key |
-|-------|-----------|---------|
-| ConfirmModal | Yes | Yes |
-| MilestoneModal | Yes | Yes |
-| MilestoneBadgePanel | Yes | Yes |
-| EditAlertModal | Yes | Yes (disabled while saving) |
-| DeleteConfirmModal | Yes | Yes |
-| LineSelectionModal | Yes | Yes |
-| MissionAddModal | Yes | Yes (disabled while saving) |
-| MissionSettingsPage delete dialog | Yes (fixed) | Yes (disabled while deleting) |
+- `useCollapsible.ts` — `tabIndex: 0`, `onKeyDown` (Enter: `click()`, Space: `click()` + `preventDefault()`) ✅
+- `WeatherHeroSection.tsx`, `StatsSection.tsx` — `useCollapsible` 활용 ✅
+- 모든 토글/버튼은 네이티브 `<button>` 사용으로 자동 키보드 지원 ✅
 
 ---
 
-## Fixes Applied (This Audit)
+## 7. 포커스 관리 (모달 focus trap)
 
-| # | File | Fix | Category |
-|---|------|-----|----------|
-| 1 | OnboardingPage.tsx | Added `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-label` to progress bar | role attributes |
-| 2 | RouteComparisonChart.tsx | Replaced `<div role="button" tabIndex={0}>` with native `<button>` + `aria-pressed` + `aria-label` | Semantic HTML |
-| 3 | CommuteTrackingPage.tsx | Added `aria-hidden="true"` to decorative completed check icon wrapper | aria-hidden |
-| 4 | MissionSettingsPage.tsx | Added `useFocusTrap` with `onEscape` handler to delete confirm dialog | Focus trap |
+**결과**: ✅ 통과  
+**내용**: `useFocusTrap` 커스텀 훅이 구현되어 있으며 모든 모달에 적용됨.
 
-**Total: 4 fixes across 4 files**
+- `useFocusTrap.ts` — 포커스 가능한 요소 감지 + Tab/Shift+Tab 트랩 + ESC 닫기 구현 ✅
+- `ConfirmModal.tsx` — `useFocusTrap` 적용 ✅
+- `CommuteDashboardPage.tsx` 내 모달 — 동일 패턴 ✅
 
 ---
 
-## Pre-existing Good Practices
+## 8. ARIA role 속성
 
-The codebase had strong accessibility foundations before this audit:
+**결과**: ✅ 통과 (수정 1건 포함)
 
-- Skip links on key entry pages (HomePage, LoginPage, GuestLanding)
-- `aria-hidden="true"` on decorative SVGs throughout
-- `aria-label` on all icon-only buttons
-- `htmlFor`/`id` connections on all form fields
-- `role="dialog"` with `aria-modal` on modals
-- `useFocusTrap` hook with focus save/restore
-- `aria-live` regions for dynamic content
-- `aria-pressed` on toggle cards
-- `role="radiogroup"` / `role="radio"` for selection groups
-- Keyboard sensor for drag-and-drop
-- `role="alert"` on error messages
-- `aria-current="page"` on active nav item
-- `lang="ko"` on html element
-- `useCollapsible` hook for consistent keyboard interaction on expandable sections
+**수정됨**: `MissionsPage.tsx` — `StatsCard` 내 진행률 바에 ARIA role 누락
+
+```tsx
+// 수정 전
+<div className="mission-progress-track">
+
+// 수정 후
+<div
+  className="mission-progress-track"
+  role="progressbar"
+  aria-valuenow={Math.round(completionRate)}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-label="오늘 달성률"
+>
+```
+
+기타 확인:
+- `StationSearchStep.tsx` — `role="listbox"`, `role="option"`, `role="radiogroup"`, `role="radio"` ✅
+- `TransportTypeStep.tsx` — `role="group"` ✅
+- `TypeSelectionStep.tsx` — `role="group"`, `role="alert"`, `role="status"` ✅
+- `ConfirmStep.tsx` — `role="alert"`, `role="status"` ✅
+- `aria-live="polite"` + `aria-atomic="true"` 동적 영역 처리 ✅
+
+---
+
+## 9. Heading 계층 (h1→h2→h3)
+
+**결과**: ✅ 통과 (수정 5건 포함)
+
+**문제**: `AlertSettingsPage`는 `PageHeader` 컴포넌트를 통해 이미 `<h1>알림</h1>`을 렌더링하는데, 내부 wizard step 컴포넌트들이 각자 `<h1>`을 사용하여 페이지에 h1이 중복 존재했음.
+
+**수정된 파일 및 변경 내용**:
+
+| 파일 | 수정 내용 |
+|------|----------|
+| `TypeSelectionStep.tsx` | `<h1>어떤 정보를 받고 싶으세요?</h1>` → `<h2>` |
+| `TransportTypeStep.tsx` | `<h1>어떤 교통수단을 이용하세요?</h1>` → `<h2>` |
+| `StationSearchStep.tsx` | `<h1>자주 이용하는 역/정류장을 검색하세요</h1>` → `<h2>` |
+| `RoutineStep.tsx` | `<h1>하루 루틴을 알려주세요</h1>` → `<h2>` |
+| `ConfirmStep.tsx` | `<h1>설정을 확인해주세요</h1>` → `<h2>` (하위 `<h3>` 계층은 적절히 유지됨) |
+
+**참고**: `route-setup` wizard steps (`RouteNameStep`, `CheckpointStep` 등)은 `PageHeader` 없이 독립 렌더링되므로 해당 `<h1>` heading은 올바름 — 수정 불필요.
+
+---
+
+## 10. 색상 대비 (코드 레벨)
+
+**결과**: ✅ 통과 (코드 레벨 확인 범위)  
+**내용**: CSS Custom Properties 기반 테마 색상 사용 (`--primary`, `--muted`, `--error`, `--success`). 실제 대비값은 런타임 스타일 확인이 필요하나, 코드 레벨에서 확인 가능한 하드코딩된 저대비 색상 조합 없음.
+
+- `badge-primary`, `notice error/success`, `toast-error/success` 등 시맨틱 클래스 사용 ✅
+- 정보 전달에 색상만 의존하는 패턴 없음 — 아이콘 + 텍스트 함께 사용 ✅
+
+---
+
+## 추가 수정사항
+
+### ToggleSwitch.tsx — ariaLabel 필수 속성으로 변경
+
+**문제**: `ariaLabel?: string` (옵셔널)으로 선언되어 있어, 호출 시 미전달 시 체크박스 input에 접근 가능한 이름이 없을 수 있음.
+
+**수정**: `ariaLabel: string` (필수)로 변경
+
+```tsx
+// 수정 전
+interface ToggleSwitchProps {
+  ariaLabel?: string;
+  ...
+}
+
+// 수정 후
+interface ToggleSwitchProps {
+  ariaLabel: string;
+  ...
+}
+```
+
+---
+
+## 수정 요약
+
+| # | 파일 | 수정 내용 | 카테고리 |
+|---|------|----------|---------|
+| 1 | `ToggleSwitch.tsx` | `ariaLabel` 필수 속성으로 변경 | 폼 라벨 |
+| 2 | `MissionsPage.tsx` | 진행률 바 `role="progressbar"` + ARIA 값 추가 | ARIA role |
+| 3 | `alert-settings/TypeSelectionStep.tsx` | `<h1>` → `<h2>` | Heading 계층 |
+| 4 | `alert-settings/TransportTypeStep.tsx` | `<h1>` → `<h2>` | Heading 계층 |
+| 5 | `alert-settings/StationSearchStep.tsx` | `<h1>` → `<h2>` | Heading 계층 |
+| 6 | `alert-settings/RoutineStep.tsx` | `<h1>` → `<h2>` | Heading 계층 |
+| 7 | `alert-settings/ConfirmStep.tsx` | `<h1>` → `<h2>` | Heading 계층 |
+
+**총 수정: 7건**

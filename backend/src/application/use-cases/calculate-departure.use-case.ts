@@ -66,17 +66,21 @@ export class CalculateDepartureUseCase {
     const today = this.getTodayDateString();
     const dayOfWeek = new Date().getDay();
 
+    const activeSettings = settings.filter((s) => s.activeDays.includes(dayOfWeek));
+
+    // Process all active settings in parallel (independent calculations)
+    const settled = await Promise.allSettled(
+      activeSettings.map((setting) => this.calculateForSetting(setting, today)),
+    );
+
     const results: SmartDepartureSnapshotResponseDto[] = [];
-
-    for (const setting of settings) {
-      if (!setting.activeDays.includes(dayOfWeek)) continue;
-
-      try {
-        const snapshot = await this.calculateForSetting(setting, today);
-        results.push(this.toSnapshotDto(snapshot));
-      } catch (error) {
+    for (let i = 0; i < settled.length; i++) {
+      const result = settled[i];
+      if (result.status === 'fulfilled') {
+        results.push(this.toSnapshotDto(result.value));
+      } else {
         this.logger.error(
-          `Failed to calculate departure for setting ${setting.id}: ${error}`,
+          `Failed to calculate departure for setting ${activeSettings[i]!.id}: ${result.reason}`,
         );
       }
     }
@@ -100,15 +104,12 @@ export class CalculateDepartureUseCase {
       return existing;
     }
 
-    // 2. Get route baseline
-    const route = await this.routeRepo.findById(setting.routeId);
+    // 2 & 3. Get route baseline and history average in parallel (independent queries)
+    const [route, historyAvgMin] = await Promise.all([
+      this.routeRepo.findById(setting.routeId),
+      this.getHistoryAverage(setting.userId, setting.routeId),
+    ]);
     const baselineMin = route?.totalExpectedDuration ?? 30;
-
-    // 3. Get history average
-    const historyAvgMin = await this.getHistoryAverage(
-      setting.userId,
-      setting.routeId,
-    );
 
     // 4. Realtime adjustment (placeholder: 0 for now, to be fed by realtime API)
     const realtimeAdj = 0;
