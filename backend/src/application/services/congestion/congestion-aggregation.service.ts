@@ -118,6 +118,9 @@ export class CongestionAggregationService {
 
     const groups = this.groupObservations(observations);
 
+    // Pre-fetch all observations once (avoid N+1 inside loop)
+    let allObsCache: RawObservation[] | null = null;
+
     for (const [key, group] of groups.entries()) {
       const [segmentKey, timeSlot] = key.split('||') as [string, TimeSlot];
 
@@ -128,10 +131,11 @@ export class CongestionAggregationService {
       );
 
       if (existing) {
-        // Merge new observations: re-fetch all observations for this segment+slot
-        // to get accurate Bayesian posterior
-        const allObs = await this.fetchObservationsForSegment(segmentKey, timeSlot);
-        const allGroups = this.groupObservations(allObs);
+        // Lazy-load all observations once for Bayesian posterior recalculation
+        if (!allObsCache) {
+          allObsCache = await this.fetchAllObservations();
+        }
+        const allGroups = this.groupObservations(allObsCache);
         const mergedGroup = allGroups.get(key);
         if (mergedGroup) {
           const updated = this.computeSingleCongestion(mergedGroup);
