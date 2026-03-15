@@ -184,13 +184,17 @@ export function CommuteTrackingPage(): JSX.Element {
         const unrecorded = route.checkpoints.filter(cp => !recordedIds.has(cp.id));
 
         if (unrecorded.length > 0) {
-          await Promise.all(unrecorded.map(cp =>
+          const results = await Promise.allSettled(unrecorded.map(cp =>
             commuteApi.recordCheckpoint({
               sessionId: session.id,
               checkpointId: cp.id,
               actualWaitTime: 0,
             })
           ));
+          const failedCount = results.filter(r => r.status === 'rejected').length;
+          if (failedCount > 0) {
+            console.warn(`${failedCount}/${unrecorded.length} checkpoints failed to record`);
+          }
         }
       }
 
