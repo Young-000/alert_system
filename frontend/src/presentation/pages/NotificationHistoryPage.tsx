@@ -146,6 +146,8 @@ export function NotificationHistoryPage(): JSX.Element {
 
       if (statsResult.status === 'fulfilled') {
         setStats(statsResult.value);
+      } else {
+        console.warn('통계 데이터 로드 실패:', statsResult.reason);
       }
 
       setIsLoading(false);
