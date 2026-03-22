@@ -39,6 +39,7 @@ export function RouteSetupPage(): JSX.Element {
   // 기존 경로
   const [existingRoutes, setExistingRoutes] = useState<RouteResponse[]>([]);
   const [userAlerts, setUserAlerts] = useState<Alert[]>([]);
+  const [alertLoadFailed, setAlertLoadFailed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // 정렬 및 편집
@@ -124,7 +125,7 @@ export function RouteSetupPage(): JSX.Element {
     Promise.all([
       commuteApi.getUserRoutes(userId),
       alertApiClient.getAlertsByUser(userId).catch(() => {
-        console.warn('Failed to load alerts for route setup');
+        setAlertLoadFailed(true);
         return [] as Alert[];
       }),
     ]).then(([routes, alerts]) => {
@@ -624,6 +625,7 @@ export function RouteSetupPage(): JSX.Element {
       deleteTarget={deleteTarget}
       isDeleting={isDeleting}
       loadError={loadError || error}
+      alertLoadFailed={alertLoadFailed}
       onRetryLoad={loadError ? loadRoutes : undefined}
       onTabChange={setRouteTab}
       onStartCreating={startCreating}
