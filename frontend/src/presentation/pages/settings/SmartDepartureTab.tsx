@@ -99,13 +99,18 @@ export function SmartDepartureTab(): JSX.Element {
       setActionError('먼저 경로를 등록해주세요.');
       return;
     }
+    if (!formTarget) {
+      setActionError('도착 목표 시간을 입력해주세요.');
+      return;
+    }
+    const safePrepTime = Number.isNaN(formPrep) ? 15 : Math.max(10, Math.min(60, formPrep));
     setActionError('');
     try {
       await createMutation.mutateAsync({
         routeId,
         departureType: formType,
         arrivalTarget: formTarget,
-        prepTimeMinutes: formPrep,
+        prepTimeMinutes: safePrepTime,
         activeDays: [1, 2, 3, 4, 5], // Mon-Fri default
       });
       setShowForm(false);
@@ -216,7 +221,10 @@ export function SmartDepartureTab(): JSX.Element {
                 min={10}
                 max={60}
                 value={formPrep}
-                onChange={(e) => setFormPrep(parseInt(e.target.value) || 15)}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  setFormPrep(Number.isNaN(v) ? 15 : Math.max(10, Math.min(60, v)));
+                }}
               />
             </div>
             <button

@@ -17,6 +17,7 @@ interface RouteListViewProps {
   deleteTarget: { id: string; name: string } | null;
   isDeleting: boolean;
   loadError?: string;
+  alertLoadFailed?: boolean;
   onRetryLoad?: () => void;
   onTabChange: (tab: 'all' | 'morning' | 'evening') => void;
   onStartCreating: () => void;
@@ -39,6 +40,7 @@ export function RouteListView({
   deleteTarget,
   isDeleting,
   loadError,
+  alertLoadFailed,
   onRetryLoad,
   onTabChange,
   onStartCreating,
@@ -75,6 +77,11 @@ export function RouteListView({
               다시 시도
             </button>
           )}
+        </div>
+      )}
+      {alertLoadFailed && !loadError && (
+        <div className="notice warning" role="status">
+          <p>알림 정보를 불러오지 못했습니다. 경로별 알림 수가 표시되지 않을 수 있어요.</p>
         </div>
       )}
 
