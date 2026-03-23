@@ -190,7 +190,7 @@ export class WidgetDataService {
 
     for (const alert of enabledAlerts) {
       const [hourStr, minuteStr] = alert.notificationTime!.split(':');
-      const alertMinutes = parseInt(hourStr, 10) * 60 + parseInt(minuteStr, 10);
+      const alertMinutes = (parseInt(hourStr, 10) || 0) * 60 + (parseInt(minuteStr, 10) || 0);
 
       let minutesUntil = alertMinutes - kstMinutes;
       let isTomorrow = false;
