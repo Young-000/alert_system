@@ -227,8 +227,8 @@ export function RouteSetupPage(): JSX.Element {
   // 정류장 삭제
   const removeStop = useCallback((index: number) => {
     setSelectedStops(prev => {
-      if (prev.length <= 1) {
-        setError('경유지는 최소 1개 필요합니다.');
+      if (prev.length <= 2) {
+        setError('경유지는 최소 2개 필요합니다.');
         return prev;
       }
       return prev.filter((_, i) => i !== index);
