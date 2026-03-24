@@ -114,7 +114,7 @@ export function RouteSetupPage(): JSX.Element {
   const loadRoutes = useCallback(() => {
     if (!userId) {
       setIsLoading(false);
-      return;
+      return () => {};
     }
 
     setIsLoading(true);

@@ -223,6 +223,15 @@ export function useHomeData(): UseHomeDataReturn {
     }
   }, [activeRoute, isCommuteStarting, userId, navigate]);
 
+  // Only depend on stable .refetch functions, not the full query objects
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const retryLoad = useCallback(() => {
+    void alertsQuery.refetch();
+    void routesQuery.refetch();
+    void statsQuery.refetch();
+    void weeklyReportQuery.refetch();
+  }, [alertsQuery.refetch, routesQuery.refetch, statsQuery.refetch, weeklyReportQuery.refetch]);
+
   return {
     isLoggedIn,
     userId,
@@ -261,12 +270,7 @@ export function useHomeData(): UseHomeDataReturn {
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,
-    retryLoad: useCallback(() => {
-      void alertsQuery.refetch();
-      void routesQuery.refetch();
-      void statsQuery.refetch();
-      void weeklyReportQuery.refetch();
-    }, [alertsQuery, routesQuery, statsQuery, weeklyReportQuery]),
+    retryLoad,
     navigate,
   };
 }
