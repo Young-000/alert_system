@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
@@ -121,48 +121,34 @@ export function NotificationHistoryPage(): JSX.Element {
     }
   }, [userId]);
 
+  // History: depends only on userId
   useEffect(() => {
     let isMounted = true;
 
-    const load = async (): Promise<void> => {
+    const loadHistory = async (): Promise<void> => {
       if (!userId) return;
       setIsLoading(true);
-      setIsStatsLoading(true);
       setError('');
 
-      const [historyResult, statsResult] = await Promise.allSettled([
-        notificationApiClient.getHistory(20, 0),
-        notificationApiClient.getStats(PERIOD_DAYS[periodFilter]),
-      ]);
-
-      if (!isMounted) return;
-
-      if (historyResult.status === 'fulfilled') {
-        setLogs(historyResult.value.items);
-        setTotal(historyResult.value.total);
-      } else {
-        setError('알림 기록을 불러올 수 없습니다.');
+      try {
+        const result = await notificationApiClient.getHistory(20, 0);
+        if (isMounted) {
+          setLogs(result.items);
+          setTotal(result.total);
+        }
+      } catch {
+        if (isMounted) setError('알림 기록을 불러올 수 없습니다.');
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-
-      if (statsResult.status === 'fulfilled') {
-        setStats(statsResult.value);
-      }
-
-      setIsLoading(false);
-      setIsStatsLoading(false);
     };
 
-    load();
+    loadHistory();
     return () => { isMounted = false; };
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]);
 
-  // Skip initial mount — stats already fetched by the first useEffect
-  const isInitialMount = useRef(true);
+  // Stats: depends on userId + periodFilter
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
     if (!userId) return;
     let isMounted = true;
 

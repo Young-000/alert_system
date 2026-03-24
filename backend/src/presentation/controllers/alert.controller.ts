@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Param, Delete, Patch, Inject, Request, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, Patch, Inject, Request, ForbiddenException, NotFoundException, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CreateAlertUseCase } from '@application/use-cases/create-alert.use-case';
 import { DeleteAlertUseCase } from '@application/use-cases/delete-alert.use-case';
 import { UpdateAlertUseCase } from '@application/use-cases/update-alert.use-case';
@@ -8,6 +9,7 @@ import { IAlertRepository } from '@domain/repositories/alert.repository';
 import { AuthenticatedRequest } from '@infrastructure/auth/auth.service';
 
 @Controller('alerts')
+@UseGuards(AuthGuard('jwt'))
 export class AlertController {
   constructor(
     private createAlertUseCase: CreateAlertUseCase,

@@ -53,7 +53,11 @@ export function CommuteTrackingPage(): JSX.Element {
       setIsLoading(true);
       try {
         // Check for in-progress session first
-        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; });
+        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => {
+          console.warn('Failed to check in-progress session:', err);
+          if (isMounted) setError('진행 중인 기록을 확인할 수 없습니다. 새로고침해 주세요.');
+          return null;
+        });
 
         if (inProgress && isMounted) {
           setSession(inProgress);

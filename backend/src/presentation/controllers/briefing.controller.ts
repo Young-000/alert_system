@@ -1,4 +1,5 @@
-import { Controller, Get, Query, Request } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { WidgetDataService } from '@application/services/widget-data.service';
 import { BriefingAdviceService } from '@application/services/briefing-advice.service';
@@ -27,6 +28,7 @@ type BriefingEndpointResponse = {
 };
 
 @Controller('briefing')
+@UseGuards(AuthGuard('jwt'))
 export class BriefingController {
   constructor(
     private readonly widgetDataService: WidgetDataService,
@@ -38,8 +40,10 @@ export class BriefingController {
     @Query() query: BriefingQueryDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<BriefingEndpointResponse> {
-    const lat = query.lat ? parseFloat(query.lat) : undefined;
-    const lng = query.lng ? parseFloat(query.lng) : undefined;
+    const parsedLat = query.lat ? parseFloat(query.lat) : undefined;
+    const parsedLng = query.lng ? parseFloat(query.lng) : undefined;
+    const lat = parsedLat !== undefined && isNaN(parsedLat) ? undefined : parsedLat;
+    const lng = parsedLng !== undefined && isNaN(parsedLng) ? undefined : parsedLng;
 
     const widgetData = await this.widgetDataService.getData(
       req.user.userId,

@@ -209,8 +209,8 @@ export class CommuteController {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 통근 기록에 접근할 수 없습니다.');
     }
-    const limitNum = limit ? parseInt(limit, 10) : 20;
-    const offsetNum = offset ? parseInt(offset, 10) : 0;
+    const limitNum = Math.min(limit ? (parseInt(limit, 10) || 20) : 20, 50);
+    const offsetNum = Math.max(offset ? (parseInt(offset, 10) || 0) : 0, 0);
     return this.manageSessionUseCase.getHistory(userId, limitNum, offsetNum);
   }
 

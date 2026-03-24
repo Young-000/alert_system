@@ -332,8 +332,8 @@ export class CalculateDepartureUseCase {
     dateStr: string,
   ): Date {
     const [hourStr, minuteStr] = arrivalTarget.split(':');
-    const hour = parseInt(hourStr, 10);
-    const minute = parseInt(minuteStr, 10);
+    const hour = parseInt(hourStr, 10) || 0;
+    const minute = parseInt(minuteStr, 10) || 0;
 
     // Parse date string
     const [year, month, day] = dateStr.split('-').map(Number);
