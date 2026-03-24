@@ -97,6 +97,7 @@ export function SmartDepartureTab(): JSX.Element {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
       setActionError('먼저 경로를 등록해주세요.');
+      setTimeout(() => setActionError(''), 3000);
       return;
     }
     setActionError('');
@@ -111,6 +112,7 @@ export function SmartDepartureTab(): JSX.Element {
       setShowForm(false);
     } catch {
       setActionError('스마트 출발 설정에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     }
   }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
 
@@ -131,6 +133,7 @@ export function SmartDepartureTab(): JSX.Element {
       setDeleteTarget(null);
     } catch {
       setActionError('삭제에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     } finally {
       setDeletingId(null);
     }

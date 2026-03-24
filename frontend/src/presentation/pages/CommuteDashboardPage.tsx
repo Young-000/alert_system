@@ -141,7 +141,7 @@ export function CommuteDashboardPage(): JSX.Element {
                 }}
               />
             ) : (
-              <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>기록을 불러올 수 없습니다.</div>
+              <div className="muted" role="alert" style={{ padding: '2rem', textAlign: 'center' }}>기록을 불러올 수 없습니다.</div>
             )
           )}
 
