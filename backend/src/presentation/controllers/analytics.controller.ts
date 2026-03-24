@@ -139,6 +139,9 @@ export class AnalyticsController {
     @Query('routeIds') routeIds: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<RouteComparisonResponseDto> {
+    if (!routeIds) {
+      throw new BadRequestException('routeIds 쿼리 파라미터가 필요합니다.');
+    }
     const ids = routeIds.split(',').map((id) => id.trim());
 
     if (ids.length < 2) {
