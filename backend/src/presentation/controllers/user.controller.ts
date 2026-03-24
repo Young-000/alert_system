@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Param, Patch, Request, ForbiddenException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Request, ForbiddenException, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CreateUserUseCase } from '@application/use-cases/create-user.use-case';
 import { GetUserUseCase } from '@application/use-cases/get-user.use-case';
 import { UpdateUserLocationUseCase } from '@application/use-cases/update-user-location.use-case';
@@ -9,6 +10,7 @@ import { Public } from '@infrastructure/auth/public.decorator';
 import { AuthenticatedRequest } from '@infrastructure/auth/auth.service';
 
 @Controller('users')
+@UseGuards(AuthGuard('jwt'))
 export class UserController {
   constructor(
     private createUserUseCase: CreateUserUseCase,

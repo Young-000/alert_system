@@ -8,7 +8,9 @@ import {
   HttpStatus,
   Logger,
   Request,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { InsightsService } from '@application/services/insights/insights.service';
 import { InsightsAggregationService } from '@application/services/insights/insights-aggregation.service';
@@ -27,6 +29,7 @@ import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request
 const VALID_SORT_BY: InsightSortBy[] = ['userCount', 'sessionCount', 'avgDuration', 'regionName'];
 
 @Controller('insights')
+@UseGuards(AuthGuard('jwt'))
 export class InsightsController {
   private readonly logger = new Logger(InsightsController.name);
 
