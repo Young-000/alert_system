@@ -146,11 +146,11 @@ export function useSettings(): UseSettingsReturn {
     setPrivacyMessage('');
     try {
       await userApiClient.deleteAllData(userId);
-      setShowDeleteAllData(false);
       setPrivacyMessage('추적 데이터가 삭제되었습니다.');
     } catch {
       setPrivacyMessage('데이터 삭제에 실패했습니다.');
     } finally {
+      setShowDeleteAllData(false);
       setIsDeletingAllData(false);
       setTimeout(() => setPrivacyMessage(''), TOAST_DURATION_MS);
     }

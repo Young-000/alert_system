@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -13,7 +13,7 @@ export function CommuteTrackingPage(): JSX.Element {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { userId } = useAuth();
-  const commuteApi = getCommuteApiClient();
+  const commuteApi = useMemo(() => getCommuteApiClient(), []);
 
   // State from navigation (홈에서 전달)
   const navState = location.state as {
@@ -112,31 +112,31 @@ export function CommuteTrackingPage(): JSX.Element {
 
   // Timer effect
   useEffect(() => {
-    if (session && session.status === 'in_progress') {
-      const startTime = new Date(session.startedAt).getTime();
-      const updateTimer = (): void => {
-        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-      };
+    if (!session || session.status !== 'in_progress') return;
 
-      updateTimer();
-      timerRef.current = setInterval(updateTimer, 1000);
+    const startTime = new Date(session.startedAt).getTime();
+    const updateTimer = (): void => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    };
 
-      // Page Visibility API: 백그라운드에서 돌아올 때 즉시 타이머 갱신
-      const handleVisibility = (): void => {
-        if (document.visibilityState === 'visible') {
-          updateTimer();
-        }
-      };
-      document.addEventListener('visibilitychange', handleVisibility);
+    updateTimer();
+    timerRef.current = setInterval(updateTimer, 1000);
 
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        document.removeEventListener('visibilitychange', handleVisibility);
-      };
-    }
+    // Page Visibility API: 백그라운드에서 돌아올 때 즉시 타이머 갱신
+    const handleVisibility = (): void => {
+      if (document.visibilityState === 'visible') {
+        updateTimer();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [session]);
 
   // Warn on browser close during active session
