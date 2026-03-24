@@ -193,7 +193,7 @@ function LineSelection({
         &larr; {selectedStation.name}역
       </button>
       <h3 className="line-selection-title">노선을 선택하세요</h3>
-      <div className="line-grid" role="radiogroup" aria-label="노선 선택">
+      <div className="line-grid" role="group" aria-label="노선 선택">
         {selectedStation.lines.map((line) => {
           const isSelected = selectedTransports.some(
             (t) => t.id === line.id && t.type === line.type
@@ -202,8 +202,7 @@ function LineSelection({
             <button
               key={`${line.type}-${line.id}`}
               type="button"
-              role="radio"
-              aria-checked={isSelected}
+              aria-pressed={isSelected}
               className={`line-chip-btn ${isSelected ? 'selected' : ''}`}
               onClick={() => {
                 onToggleTransport(line);
@@ -272,12 +271,11 @@ function SearchSection({
 
       {/* 지하철만 선택 시: 역 그룹 먼저 표시 */}
       {groupedStations.length > 0 && transportTypes.length === 1 && transportTypes[0] === 'subway' ? (
-        <div className="search-results station-groups" role="listbox" aria-label="역 검색 결과">
+        <div className="search-results station-groups" role="list" aria-label="역 검색 결과">
           {groupedStations.map((station) => (
             <button
               key={station.name}
               type="button"
-              role="option"
               className="search-result-item station-group-item"
               onClick={() => {
                 if (station.lines.length === 1) {
@@ -309,7 +307,7 @@ function SearchSection({
           ))}
         </div>
       ) : searchResults.length > 0 ? (
-        <div className="search-results" role="listbox" aria-label="검색 결과">
+        <div className="search-results" role="list" aria-label="검색 결과">
           {searchResults.map((item) => {
             const isSelected = selectedTransports.some(
               (t) => t.id === item.id && t.type === item.type
@@ -318,8 +316,7 @@ function SearchSection({
               <button
                 key={`${item.type}-${item.id}`}
                 type="button"
-                role="option"
-                aria-selected={isSelected}
+                aria-pressed={isSelected}
                 className={`search-result-item ${isSelected ? 'selected' : ''}`}
                 onClick={() => onToggleTransport(item)}
               >

@@ -347,7 +347,7 @@ export function MissionsPage(): JSX.Element {
               onClick={() => navigate(-1)}
               aria-label="뒤로 가기"
             >
-              &lt;
+              ←
             </button>
             <h1 className="missions-title">오늘의 미션</h1>
           </div>
@@ -375,7 +375,7 @@ export function MissionsPage(): JSX.Element {
               onClick={() => navigate(-1)}
               aria-label="뒤로 가기"
             >
-              &lt;
+              ←
             </button>
             <h1 className="missions-title">오늘의 미션</h1>
           </div>
