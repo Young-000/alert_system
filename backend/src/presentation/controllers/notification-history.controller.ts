@@ -37,7 +37,7 @@ export class NotificationHistoryController {
     const qb = this.logRepo
       .createQueryBuilder('log')
       .select('log.status', 'status')
-      .addSelect('COUNT(*)::int', 'count')
+      .addSelect('COUNT(*)', 'count')
       .where('log.userId = :userId', { userId: req.user.userId });
 
     if (daysNum > 0) {

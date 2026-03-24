@@ -10,7 +10,9 @@ import {
   HttpStatus,
   Logger,
   Request,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ManageMissionUseCase } from '@application/use-cases/manage-mission.use-case';
 import { DailyCheckUseCase } from '@application/use-cases/daily-check.use-case';
 import { MissionStatsUseCase } from '@application/use-cases/mission-stats.use-case';
@@ -23,6 +25,7 @@ import {
 } from '../dto/mission.dto';
 
 @Controller('missions')
+@UseGuards(AuthGuard('jwt'))
 export class MissionController {
   private readonly logger = new Logger(MissionController.name);
 

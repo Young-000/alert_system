@@ -153,7 +153,9 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     return () => {
       isMounted = false;
     };
-  }, [userId, commuteApi, retryKey]);
+  // commuteApi is a module-level singleton — stable reference, omitted from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, retryKey]);
 
   return {
     userId,

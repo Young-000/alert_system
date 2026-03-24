@@ -10,7 +10,9 @@ import {
   HttpStatus,
   HttpException,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CommunityService } from '@application/services/community/community.service';
 import { TipsService, TooManyTipsException } from '@application/services/community/tips.service';
 import {
@@ -24,6 +26,7 @@ import {
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
 @Controller('community')
+@UseGuards(AuthGuard('jwt'))
 export class CommunityController {
   private readonly logger = new Logger(CommunityController.name);
 
