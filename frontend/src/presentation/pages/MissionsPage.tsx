@@ -223,8 +223,8 @@ function WeeklyOverview({
     <div className="weekly-overview">
       <h3 className="weekly-overview-title">이번 주</h3>
       <div className="weekly-grid" role="list" aria-label="이번 주 달성 현황">
-        {weekData.map((day, i) => (
-          <div key={i} className="weekly-day" role="listitem">
+        {weekData.map((day) => (
+          <div key={day.label} className="weekly-day" role="listitem">
             <span className={`weekly-day-label ${day.isToday ? 'today' : ''}`}>
               {day.label}
             </span>

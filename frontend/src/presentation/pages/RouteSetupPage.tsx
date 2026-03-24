@@ -148,6 +148,15 @@ export function RouteSetupPage(): JSX.Element {
     return cleanup;
   }, [loadRoutes]);
 
+  // Cleanup navigate timer on unmount
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+      }
+    };
+  }, []);
+
   // Parse shared route from URL
   useEffect(() => {
     const shared = searchParams.get('shared');
