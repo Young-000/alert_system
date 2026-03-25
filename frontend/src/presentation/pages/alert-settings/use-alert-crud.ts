@@ -59,10 +59,12 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const loadError = alertsQuery.isError ? '알림 목록을 불러올 수 없습니다' : '';
   const savedRoutes = routesQuery.data ?? [];
 
+  // Only depend on stable .refetch functions, not the full query objects
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const retryLoad = useCallback(() => {
     void alertsQuery.refetch();
     void routesQuery.refetch();
-  }, [alertsQuery, routesQuery]);
+  }, [alertsQuery.refetch, routesQuery.refetch]);
 
   // Sync query data to local state when query data changes
   useEffect(() => {

@@ -154,7 +154,9 @@ export function NotificationHistoryPage(): JSX.Element {
 
     load();
     return () => { isMounted = false; };
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // periodFilter intentionally excluded — subsequent changes handled by the dedicated effect below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, notificationApiClient]);
 
   // Skip initial mount — stats already fetched by the first useEffect
   const isInitialMount = useRef(true);
@@ -206,7 +208,7 @@ export function NotificationHistoryPage(): JSX.Element {
       {error && (
         <div className="error-banner" role="alert">
           {error}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => loadHistory(0)} aria-label="다시 시도">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => loadHistory(0)} disabled={isLoading} aria-label="다시 시도">
             다시 시도
           </button>
           <button type="button" className="error-dismiss" onClick={() => setError('')} aria-label="오류 닫기">

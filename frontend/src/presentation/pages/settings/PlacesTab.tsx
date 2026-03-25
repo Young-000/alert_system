@@ -96,6 +96,7 @@ export function PlacesTab(): JSX.Element {
       setShowForm(false);
     } catch {
       setActionError('장소 등록에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     }
   }, [formLabel, formType, formAddress, createMutation]);
 
@@ -113,6 +114,7 @@ export function PlacesTab(): JSX.Element {
       setDeleteTarget(null);
     } catch {
       setActionError('장소 삭제에 실패했습니다.');
+      setTimeout(() => setActionError(''), 3000);
     } finally {
       setDeletingId(null);
     }

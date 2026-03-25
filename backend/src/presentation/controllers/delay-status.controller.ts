@@ -94,12 +94,16 @@ export class DelayStatusController {
   }
 
   /**
-   * Create a new alternative mapping
+   * Create a new alternative mapping (admin-only operation).
+   * Restricted to non-production environments.
    */
   @Post('alternatives/mappings')
   async createMapping(
     @Body() dto: CreateAlternativeMappingDto,
   ): Promise<AlternativeMappingResponseDto> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('이 엔드포인트는 프로덕션에서 사용할 수 없습니다.');
+    }
     this.logger.log(
       `Creating alternative mapping: ${dto.fromStationName} ${dto.fromLine} -> ${dto.toStationName} ${dto.toLine}`,
     );

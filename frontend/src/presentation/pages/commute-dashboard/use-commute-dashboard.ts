@@ -75,13 +75,16 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     if (!urlTab) return;
     const validTabs: TabId[] = ['overview', 'routes', 'history', 'stopwatch', 'analytics', 'behavior'];
     if (!validTabs.includes(urlTab as TabId)) return;
-    // 'behavior' tab requires hasEnoughData -- if not available yet, fall back to overview
-    if (urlTab === 'behavior' && !behaviorAnalytics?.hasEnoughData) {
-      setActiveTab('overview');
-      return;
+    // 'behavior' tab requires hasEnoughData -- wait for data to load before falling back
+    if (urlTab === 'behavior') {
+      if (isLoading) return; // data not loaded yet, don't prematurely fall back
+      if (!behaviorAnalytics?.hasEnoughData) {
+        setActiveTab('overview');
+        return;
+      }
     }
     setActiveTab(urlTab as TabId);
-  }, [searchParams, behaviorAnalytics]);
+  }, [searchParams, behaviorAnalytics, isLoading]);
 
   // Load stopwatch records from localStorage (no auto tab switch)
   useEffect(() => {

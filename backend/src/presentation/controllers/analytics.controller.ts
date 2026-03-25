@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  BadRequestException,
   HttpCode,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -138,14 +139,17 @@ export class AnalyticsController {
     @Query('routeIds') routeIds: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<RouteComparisonResponseDto> {
+    if (!routeIds) {
+      throw new BadRequestException('routeIds 쿼리 파라미터가 필요합니다.');
+    }
     const ids = routeIds.split(',').map((id) => id.trim());
 
     if (ids.length < 2) {
-      throw new Error('비교할 경로를 2개 이상 선택해주세요.');
+      throw new BadRequestException('비교할 경로를 2개 이상 선택해주세요.');
     }
 
     if (ids.length > 5) {
-      throw new Error('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
+      throw new BadRequestException('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
     }
 
     // 권한 검사: 요청한 모든 경로가 사용자 소유인지 확인

@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/EmptyState';
 import { AuthRequired } from '../components/AuthRequired';
@@ -37,6 +38,10 @@ export function CommuteDashboardPage(): JSX.Element {
     retryLoad,
     setSearchParams,
   } = useCommuteDashboard();
+
+  // Keep a ref to avoid stale closure in onLoadMore callback
+  const historyRef = useRef(history);
+  useEffect(() => { historyRef.current = history; }, [history]);
 
   if (!userId) {
     return (
@@ -129,7 +134,8 @@ export function CommuteDashboardPage(): JSX.Element {
               <HistoryTab
                 history={history}
                 onLoadMore={async () => {
-                  const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
+                  const currentLen = historyRef.current?.sessions.length ?? 0;
+                  const moreHistory = await commuteApi.getHistory(userId, 10, currentLen);
                   setHistory(prev => {
                     if (!prev) return moreHistory;
                     return {
@@ -141,7 +147,7 @@ export function CommuteDashboardPage(): JSX.Element {
                 }}
               />
             ) : (
-              <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>기록을 불러올 수 없습니다.</div>
+              <div className="muted" role="alert" style={{ padding: '2rem', textAlign: 'center' }}>기록을 불러올 수 없습니다.</div>
             )
           )}
 

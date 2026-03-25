@@ -9,6 +9,7 @@ import {
   Logger,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
@@ -80,11 +81,15 @@ export class CongestionController {
 
   /**
    * Trigger full recalculation of all congestion data.
+   * Restricted to non-production environments (admin operation).
    */
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 1, ttl: 300000 } })
   async recalculate(): Promise<RecalculateResponseDto> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('이 엔드포인트는 프로덕션에서 사용할 수 없습니다.');
+    }
     this.logger.log('Triggering full congestion recalculation');
 
     const result = await this.aggregationService.recalculateAll();
