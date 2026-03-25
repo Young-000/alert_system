@@ -109,6 +109,10 @@ export function SmartDepartureTab(): JSX.Element {
         activeDays: [1, 2, 3, 4, 5], // Mon-Fri default
       });
       setShowForm(false);
+      setFormType('commute');
+      setFormTarget('09:00');
+      setFormPrep(15);
+      setFormRouteId('');
     } catch {
       setActionError('스마트 출발 설정에 실패했습니다.');
     }
@@ -216,7 +220,7 @@ export function SmartDepartureTab(): JSX.Element {
                 min={10}
                 max={60}
                 value={formPrep}
-                onChange={(e) => setFormPrep(parseInt(e.target.value) || 15)}
+                onChange={(e) => setFormPrep(Math.min(60, Math.max(10, parseInt(e.target.value, 10) || 15)))}
               />
             </div>
             <button

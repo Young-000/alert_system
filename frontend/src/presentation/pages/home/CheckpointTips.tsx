@@ -23,6 +23,7 @@ export function CheckpointTips({
 }: CheckpointTipsProps): JSX.Element {
   const page = 1;
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [createError, setCreateError] = useState('');
 
   const { data, isLoading, isError, refetch } = useCheckpointTips(checkpointKey, page);
   const createTipMutation = useCreateTip();
@@ -31,6 +32,7 @@ export function CheckpointTips({
 
   const handleCreateTip = useCallback(
     (cpKey: string, content: string, clearForm: () => void): void => {
+      setCreateError('');
       createTipMutation.mutate(
         { checkpointKey: cpKey, content },
         {
@@ -38,9 +40,10 @@ export function CheckpointTips({
             clearForm();
           },
           onError: (error) => {
-            // 429 rate limit error
             if (error.message.includes('429') || error.message.includes('Too Many')) {
               setIsRateLimited(true);
+            } else {
+              setCreateError('팁 등록에 실패했습니다. 다시 시도해주세요.');
             }
           },
         },
@@ -117,6 +120,9 @@ export function CheckpointTips({
         </div>
       )}
 
+      {createError && (
+        <div className="tips-error" role="alert">{createError}</div>
+      )}
       {isLoggedIn && (
         <TipForm
           checkpointKey={checkpointKey}

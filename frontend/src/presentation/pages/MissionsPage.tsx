@@ -173,7 +173,14 @@ function StatsCard({
         </div>
       </div>
       <div className="mission-progress">
-        <div className="mission-progress-track">
+        <div
+          className="mission-progress-track"
+          role="progressbar"
+          aria-valuenow={Math.round(completionRate)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="오늘 미션 달성률"
+        >
           <div
             className={`mission-progress-fill ${isComplete ? 'complete' : ''}`}
             style={{ width: `${Math.min(100, Math.max(0, completionRate))}%` }}
