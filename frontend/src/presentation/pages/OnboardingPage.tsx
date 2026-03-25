@@ -384,22 +384,6 @@ export function OnboardingPage(): JSX.Element {
               </p>
             )}
 
-            {/* 알림 설정 추천 배너 */}
-            {data.hasCommute && (
-              <div className="alert-recommend-banner">
-                <div className="recommend-content">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                  <div className="recommend-text">
-                    <strong>출근 전 알림 받기</strong>
-                    <span>날씨·교통 알림을 카카오톡으로 받아보세요</span>
-                  </div>
-                </div>
-                <Link to="/alerts" className="btn btn-primary btn-sm">
-                  알림 설정 →
-                </Link>
-              </div>
-            )}
-
             <div className="complete-actions">
               {data.hasCommute ? (
                 <>
