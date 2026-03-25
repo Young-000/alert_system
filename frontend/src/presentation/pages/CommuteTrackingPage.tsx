@@ -52,13 +52,14 @@ export function CommuteTrackingPage(): JSX.Element {
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
-        // Check for in-progress session first
-        const inProgress = await commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; });
+        // Fetch routes once and reuse across all branches
+        const [inProgress, routes] = await Promise.all([
+          commuteApi.getInProgressSession(userId).catch((err) => { console.warn('Failed to check in-progress session:', err); return null; }),
+          commuteApi.getUserRoutes(userId),
+        ]);
 
         if (inProgress && isMounted) {
           setSession(inProgress);
-          // Load the route for this session
-          const routes = await commuteApi.getUserRoutes(userId);
           const matchingRoute = routes.find(r => r.id === inProgress.routeId);
           if (matchingRoute) setRoute(matchingRoute);
           return;
@@ -66,11 +67,9 @@ export function CommuteTrackingPage(): JSX.Element {
 
         // No in-progress session: check if we have a routeId to start
         if (navRouteId && isMounted) {
-          const routes = await commuteApi.getUserRoutes(userId);
           const matchingRoute = routes.find(r => r.id === navRouteId);
           if (matchingRoute) {
             setRoute(matchingRoute);
-            // Auto-start session
             const newSession = await commuteApi.startSession({
               userId,
               routeId: matchingRoute.id,
@@ -82,7 +81,6 @@ export function CommuteTrackingPage(): JSX.Element {
 
         // PWA shortcut: auto-select route by mode (morning/evening)
         if (searchMode && (searchMode === 'morning' || searchMode === 'evening') && isMounted) {
-          const routes = await commuteApi.getUserRoutes(userId);
           const matchingRoute = routes.find(r => r.routeType === searchMode);
           if (matchingRoute) {
             setRoute(matchingRoute);
