@@ -12,6 +12,7 @@ import { UserEntity } from './user.entity';
 @Entity('notification_logs', { schema: 'alert_system' })
 @Index(['userId', 'sentAt'])
 @Index(['sentAt'])
+@Index(['alertId'])
 export class NotificationLogEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

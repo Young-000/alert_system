@@ -137,7 +137,9 @@ export function SmartDepartureTab(): JSX.Element {
   }, [deleteTarget, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
+    toggleMutation.mutate(id, {
+      onError: () => setActionError('상태 변경에 실패했습니다.'),
+    });
   }, [toggleMutation]);
 
   if (isLoading) {
@@ -216,7 +218,7 @@ export function SmartDepartureTab(): JSX.Element {
                 min={10}
                 max={60}
                 value={formPrep}
-                onChange={(e) => setFormPrep(parseInt(e.target.value) || 15)}
+                onChange={(e) => setFormPrep(parseInt(e.target.value, 10) || 15)}
               />
             </div>
             <button

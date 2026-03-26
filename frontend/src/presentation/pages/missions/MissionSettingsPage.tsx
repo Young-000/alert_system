@@ -72,7 +72,7 @@ function MissionCard({
   const handleMoveUp = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onMoveUp(mission);
+      void onMoveUp(mission);
     },
     [mission, onMoveUp],
   );
@@ -80,7 +80,7 @@ function MissionCard({
   const handleMoveDown = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onMoveDown(mission);
+      void onMoveDown(mission);
     },
     [mission, onMoveDown],
   );
@@ -362,26 +362,33 @@ export function MissionSettingsPage(): JSX.Element {
   }, [deletingMission, deleteMutation]);
 
   const handleMoveUp = useCallback(
-    (mission: Mission) => {
+    async (mission: Mission) => {
       const list = mission.missionType === 'commute' ? commuteMissions : returnMissions;
       const idx = list.findIndex((m) => m.id === mission.id);
       if (idx <= 0) return;
       const prevMission = list[idx - 1];
-      // Swap sort orders
-      reorderMutation.mutate({ id: mission.id, sortOrder: prevMission.sortOrder });
-      reorderMutation.mutate({ id: prevMission.id, sortOrder: mission.sortOrder });
+      try {
+        await reorderMutation.mutateAsync({ id: mission.id, sortOrder: prevMission.sortOrder });
+        await reorderMutation.mutateAsync({ id: prevMission.id, sortOrder: mission.sortOrder });
+      } catch {
+        setSaveError('순서 변경에 실패했습니다.');
+      }
     },
     [commuteMissions, returnMissions, reorderMutation],
   );
 
   const handleMoveDown = useCallback(
-    (mission: Mission) => {
+    async (mission: Mission) => {
       const list = mission.missionType === 'commute' ? commuteMissions : returnMissions;
       const idx = list.findIndex((m) => m.id === mission.id);
       if (idx < 0 || idx >= list.length - 1) return;
       const nextMission = list[idx + 1];
-      reorderMutation.mutate({ id: mission.id, sortOrder: nextMission.sortOrder });
-      reorderMutation.mutate({ id: nextMission.id, sortOrder: mission.sortOrder });
+      try {
+        await reorderMutation.mutateAsync({ id: mission.id, sortOrder: nextMission.sortOrder });
+        await reorderMutation.mutateAsync({ id: nextMission.id, sortOrder: mission.sortOrder });
+      } catch {
+        setSaveError('순서 변경에 실패했습니다.');
+      }
     },
     [commuteMissions, returnMissions, reorderMutation],
   );
@@ -479,6 +486,10 @@ export function MissionSettingsPage(): JSX.Element {
       <p className="msettings-description">
         출퇴근 시간에 할 미션을 설정하세요. 각 유형별 최대 {MAX_MISSIONS_PER_TYPE}개까지 가능해요.
       </p>
+
+      {saveError && !modalOpen && (
+        <div className="notice error" role="alert">{saveError}</div>
+      )}
 
       {/* Commute missions */}
       <MissionTypeSection
