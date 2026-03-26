@@ -71,7 +71,12 @@ export function SettingsPage(): JSX.Element {
 
       {/* Tab Content */}
       {!settings.isLoading && (
-        <div className="settings-content">
+        <div
+          className="settings-content"
+          role="tabpanel"
+          id={`tabpanel-${settings.activeTab}`}
+          aria-labelledby={`tab-${settings.activeTab}`}
+        >
           {settings.activeTab === 'profile' && (
             <ProfileTab
               phoneNumber={settings.phoneNumber}

@@ -20,6 +20,15 @@ export function EditAlertModal({
     onEscape: isEditing ? undefined : onCancel,
   });
 
+  const isValid = editForm.name.trim() !== '' && editForm.schedule !== '';
+
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    if (e.key === 'Enter' && !isEditing && isValid) {
+      e.preventDefault();
+      onConfirm();
+    }
+  };
+
   return (
     <div
       className="modal-overlay"
@@ -46,6 +55,7 @@ export function EditAlertModal({
               type="text"
               value={editForm.name}
               onChange={(e) => onFormChange({ ...editForm, name: e.target.value })}
+              onKeyDown={handleKeyDown}
               className="form-input"
               placeholder="알림 이름"
             />
@@ -77,7 +87,7 @@ export function EditAlertModal({
             type="button"
             className="btn btn-primary"
             onClick={onConfirm}
-            disabled={isEditing || !editForm.name.trim()}
+            disabled={isEditing || !isValid}
           >
             {isEditing ? (
               <>

@@ -77,7 +77,13 @@ export function LoginPage(): JSX.Element {
         navigate('/');
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '오류가 발생했습니다.';
-        if (mode === 'register') {
+        const isNetworkError = err instanceof TypeError
+          || (err instanceof DOMException && err.name === 'AbortError')
+          || errorMessage.includes('timeout')
+          || errorMessage.includes('Failed to fetch');
+        if (isNetworkError) {
+          setError('서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.');
+        } else if (mode === 'register') {
           setError(errorMessage.includes('409') ? '이미 등록된 이메일입니다.' : '회원가입에 실패했습니다.');
         } else {
           setError('이메일 또는 비밀번호가 일치하지 않습니다.');

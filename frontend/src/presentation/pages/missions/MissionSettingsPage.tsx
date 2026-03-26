@@ -362,28 +362,35 @@ export function MissionSettingsPage(): JSX.Element {
   }, [deletingMission, deleteMutation]);
 
   const handleMoveUp = useCallback(
-    (mission: Mission) => {
+    async (mission: Mission) => {
       const list = mission.missionType === 'commute' ? commuteMissions : returnMissions;
       const idx = list.findIndex((m) => m.id === mission.id);
       if (idx <= 0) return;
       const prevMission = list[idx - 1];
-      // Swap sort orders
-      reorderMutation.mutate({ id: mission.id, sortOrder: prevMission.sortOrder });
-      reorderMutation.mutate({ id: prevMission.id, sortOrder: mission.sortOrder });
+      try {
+        await reorderMutation.mutateAsync({ id: mission.id, sortOrder: prevMission.sortOrder });
+        await reorderMutation.mutateAsync({ id: prevMission.id, sortOrder: mission.sortOrder });
+      } catch {
+        void refetch();
+      }
     },
-    [commuteMissions, returnMissions, reorderMutation],
+    [commuteMissions, returnMissions, reorderMutation, refetch],
   );
 
   const handleMoveDown = useCallback(
-    (mission: Mission) => {
+    async (mission: Mission) => {
       const list = mission.missionType === 'commute' ? commuteMissions : returnMissions;
       const idx = list.findIndex((m) => m.id === mission.id);
       if (idx < 0 || idx >= list.length - 1) return;
       const nextMission = list[idx + 1];
-      reorderMutation.mutate({ id: mission.id, sortOrder: nextMission.sortOrder });
-      reorderMutation.mutate({ id: nextMission.id, sortOrder: mission.sortOrder });
+      try {
+        await reorderMutation.mutateAsync({ id: mission.id, sortOrder: nextMission.sortOrder });
+        await reorderMutation.mutateAsync({ id: nextMission.id, sortOrder: mission.sortOrder });
+      } catch {
+        void refetch();
+      }
     },
-    [commuteMissions, returnMissions, reorderMutation],
+    [commuteMissions, returnMissions, reorderMutation, refetch],
   );
 
   const isSaving = createMutation.isPending || updateMutation.isPending;

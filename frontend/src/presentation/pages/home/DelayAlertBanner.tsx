@@ -42,8 +42,21 @@ function getDelayedSegments(segments: readonly DelaySegmentResponse[]): DelaySeg
 }
 
 export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Element | null {
-  const { data, isLoading } = useRouteDelayStatus(routeId);
+  const { data, isLoading, isError } = useRouteDelayStatus(routeId);
   const [expanded, setExpanded] = useState(false);
+
+  if (isError) {
+    return (
+      <section className="delay-banner delay-banner--unavailable" role="alert">
+        <div className="delay-banner-header">
+          <span className="delay-banner-icon" aria-hidden="true">⚠️</span>
+          <div className="delay-banner-content">
+            <p className="delay-banner-subtitle">지연 정보를 확인할 수 없습니다</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (isLoading || !data) return null;
 
