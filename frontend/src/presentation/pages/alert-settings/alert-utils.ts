@@ -1,6 +1,16 @@
 import type { TransportItem, Routine } from './types';
 import { TRANSPORT_NOTIFY_OFFSET_MIN } from './types';
 
+function safeParseInt(s: string): number {
+  const n = parseInt(s, 10);
+  return isNaN(n) ? 0 : n;
+}
+
+function parseHHMM(time: string): [number, number] {
+  const parts = time.split(':');
+  return [safeParseInt(parts[0] ?? ''), safeParseInt(parts[1] ?? '')];
+}
+
 export function generateSchedule(
   wantsWeather: boolean,
   wantsTransport: boolean,
@@ -9,12 +19,12 @@ export function generateSchedule(
   const times: number[] = [];
 
   if (wantsWeather) {
-    const [h] = routine.wakeUp.split(':');
-    times.push(parseInt(h, 10));
+    const [h] = parseHHMM(routine.wakeUp);
+    times.push(h);
   }
 
   if (wantsTransport) {
-    const [leaveH, leaveM] = routine.leaveHome.split(':').map(Number);
+    const [leaveH, leaveM] = parseHHMM(routine.leaveHome);
     let notifyH = leaveH;
     let notifyM = leaveM - TRANSPORT_NOTIFY_OFFSET_MIN;
     if (notifyM < 0) {
@@ -27,7 +37,7 @@ export function generateSchedule(
     }
     times.push(notifyH);
 
-    const [workH, workM] = routine.leaveWork.split(':').map(Number);
+    const [workH, workM] = parseHHMM(routine.leaveWork);
     let workNotifyH = workH;
     let workNotifyM = workM - TRANSPORT_NOTIFY_OFFSET_MIN;
     if (workNotifyM < 0) {
@@ -78,7 +88,7 @@ export function getNotificationTimes(
   }
 
   if (wantsTransport && selectedTransports.length > 0) {
-    const [h, m] = routine.leaveHome.split(':').map(Number);
+    const [h, m] = parseHHMM(routine.leaveHome);
     let notifyM = m - TRANSPORT_NOTIFY_OFFSET_MIN;
     let notifyH = h;
     if (notifyM < 0) { notifyM += 60; notifyH -= 1; }
@@ -88,7 +98,7 @@ export function getNotificationTimes(
       content: `출근길 교통 (${selectedTransports.map((t) => t.name).join(', ')})`,
     });
 
-    const [wh, wm] = routine.leaveWork.split(':').map(Number);
+    const [wh, wm] = parseHHMM(routine.leaveWork);
     let workNotifyM = wm - TRANSPORT_NOTIFY_OFFSET_MIN;
     let workNotifyH = wh;
     if (workNotifyM < 0) { workNotifyM += 60; workNotifyH -= 1; }

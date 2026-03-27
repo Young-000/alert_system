@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { PageHeader } from '../components/PageHeader';
@@ -48,6 +48,13 @@ export function AlertSettingsPage(): JSX.Element {
   // Ref to break circular dependency: handleSubmit needs wizard.setStep,
   // but wizard needs handleSubmit as onSubmit prop.
   const wizardSetStepRef = useRef<(step: 'type' | 'transport' | 'station' | 'routine' | 'confirm') => void>(() => {});
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
 
   // Alert CRUD operations
   const alertCrud = useAlertCrud(userId);
@@ -131,7 +138,7 @@ export function AlertSettingsPage(): JSX.Element {
       setCrudSuccess('알림이 설정되었습니다! 알림톡으로 받아요.');
       reloadAlerts();
 
-      setTimeout(() => {
+      resetTimerRef.current = setTimeout(() => {
         wizardSetStepRef.current('type');
         setWantsWeather(false);
         setWantsTransport(false);
