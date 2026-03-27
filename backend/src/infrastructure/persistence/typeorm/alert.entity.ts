@@ -19,6 +19,7 @@ export enum AlertTypeEnum {
 
 @Entity('alerts', { schema: 'alert_system' })
 @Index(['userId'])
+@Index(['enabled'])
 export class AlertEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
