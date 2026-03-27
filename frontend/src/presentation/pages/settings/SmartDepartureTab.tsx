@@ -216,7 +216,10 @@ export function SmartDepartureTab(): JSX.Element {
                 min={10}
                 max={60}
                 value={formPrep}
-                onChange={(e) => setFormPrep(parseInt(e.target.value) || 15)}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  setFormPrep(isNaN(v) ? 15 : v);
+                }}
               />
             </div>
             <button
