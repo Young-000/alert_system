@@ -33,7 +33,7 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
 
       <div className="analytics-card-body">
         <div className="analytics-score-ring">
-          <svg viewBox="0 0 36 36" className="score-circle">
+          <svg viewBox="0 0 36 36" className="score-circle" aria-hidden="true">
             <path
               className="score-bg"
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -67,21 +67,21 @@ export function RouteAnalyticsCard({ analytics }: RouteAnalyticsCardProps): JSX.
         <div className="score-factors">
           <div className="factor-bar">
             <span className="factor-label">속도</span>
-            <div className="factor-track">
+            <div className="factor-track" role="progressbar" aria-valuenow={analytics.scoreFactors.speed} aria-valuemin={0} aria-valuemax={100} aria-label="속도 점수">
               <div className="factor-fill" style={{ width: `${analytics.scoreFactors.speed}%` }} />
             </div>
             <span className="factor-value">{analytics.scoreFactors.speed}</span>
           </div>
           <div className="factor-bar">
             <span className="factor-label">일관성</span>
-            <div className="factor-track">
+            <div className="factor-track" role="progressbar" aria-valuenow={analytics.scoreFactors.reliability} aria-valuemin={0} aria-valuemax={100} aria-label="일관성 점수">
               <div className="factor-fill" style={{ width: `${analytics.scoreFactors.reliability}%` }} />
             </div>
             <span className="factor-value">{analytics.scoreFactors.reliability}</span>
           </div>
           <div className="factor-bar">
             <span className="factor-label">편의</span>
-            <div className="factor-track">
+            <div className="factor-track" role="progressbar" aria-valuenow={analytics.scoreFactors.comfort} aria-valuemin={0} aria-valuemax={100} aria-label="편의 점수">
               <div className="factor-fill" style={{ width: `${analytics.scoreFactors.comfort}%` }} />
             </div>
             <span className="factor-value">{analytics.scoreFactors.comfort}</span>

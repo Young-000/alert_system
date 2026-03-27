@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useHomeData } from './use-home-data';
 import { getModeGreeting } from './weather-utils';
 import { useCommuteMode } from './use-commute-mode';
@@ -33,6 +33,15 @@ export function HomePage(): JSX.Element {
       data.setForceRouteType('auto');
     }
   }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleDismissRouteRec = useCallback(() => {
+    data.setRouteRecDismissed(true);
+    sessionStorage.setItem('routeRecDismissed', 'true');
+  }, [data.setRouteRecDismissed]);
+
+  const handleNavigateToRoutes = useCallback(() => {
+    data.navigate('/routes');
+  }, [data.navigate]);
 
   if (!data.isLoggedIn) return <GuestLanding />;
 
@@ -128,10 +137,7 @@ export function HomePage(): JSX.Element {
       {data.routeRecommendation && data.routeRecommendation.recommendation && !data.routeRecDismissed && (
         <RouteRecommendation
           recommendation={data.routeRecommendation}
-          onDismiss={() => {
-            data.setRouteRecDismissed(true);
-            sessionStorage.setItem('routeRecDismissed', 'true');
-          }}
+          onDismiss={handleDismissRouteRec}
         />
       )}
 
@@ -157,7 +163,7 @@ export function HomePage(): JSX.Element {
         commuteStats={data.commuteStats}
         routes={data.routes}
         activeRouteId={data.activeRoute?.id}
-        onNavigateToRoutes={() => data.navigate('/routes')}
+        onNavigateToRoutes={handleNavigateToRoutes}
       />
     </main>
   );

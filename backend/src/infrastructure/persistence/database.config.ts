@@ -190,6 +190,11 @@ export function buildDataSourceOptions(): DataSourceOptions {
     schema: 'alert_system', // Supabase 전용 스키마 사용
   };
 
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && !hasUrl) {
+    throw new Error('DATABASE_URL is required in production');
+  }
+
   const connectionOptions: Partial<PostgresConnectionOptions> = hasUrl
     ? { url: databaseUrl }
     : {
@@ -205,7 +210,6 @@ export function buildDataSourceOptions(): DataSourceOptions {
     : { ssl: false };
 
   // Connection pool 설정
-  const isProduction = process.env.NODE_ENV === 'production';
   const poolSize = parseInt(process.env.DB_POOL_SIZE || (isProduction ? '10' : '5'));
   const poolOptions = {
     max: poolSize,

@@ -148,6 +148,13 @@ export function RouteSetupPage(): JSX.Element {
     return cleanup;
   }, [loadRoutes]);
 
+  // Cleanup navigate timer on unmount
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) clearTimeout(navigateTimerRef.current);
+    };
+  }, []);
+
   // Parse shared route from URL
   useEffect(() => {
     const shared = searchParams.get('shared');
@@ -321,7 +328,7 @@ export function RouteSetupPage(): JSX.Element {
       await alertApiClient.createAlert(alertDto);
     } catch {
       // 알림 생성 실패해도 경로 저장은 성공으로 처리
-      setWarning('경로는 저장되었지만 알림 생성에 실패했습니다');
+      toast.error('경로는 저장되었지만 알림 생성에 실패했습니다. 알림 설정에서 수동으로 추가해주세요.');
     }
   };
 
