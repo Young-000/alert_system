@@ -147,14 +147,26 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
 
   const handleEditConfirm = async (): Promise<void> => {
     if (!editTarget) return;
+
+    const timeParts = editForm.schedule.split(':');
+    if (timeParts.length !== 2) {
+      setError('시간 형식이 올바르지 않습니다. (HH:MM)');
+      return;
+    }
+    const parsedHour = parseInt(timeParts[0], 10);
+    const parsedMinute = parseInt(timeParts[1], 10);
+    if (isNaN(parsedHour) || isNaN(parsedMinute) || parsedHour < 0 || parsedHour > 23 || parsedMinute < 0 || parsedMinute > 59) {
+      setError('유효하지 않은 시간입니다.');
+      return;
+    }
+
     setIsEditing(true);
     try {
-      const [hour, minute] = editForm.schedule.split(':');
       const originalParts = editTarget.schedule.split(' ');
       const dayOfMonth = originalParts[2] ?? '*';
       const month = originalParts[3] ?? '*';
       const dayOfWeek = originalParts[4] ?? '*';
-      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} ${dayOfMonth} ${month} ${dayOfWeek}`;
+      const cronSchedule = `${parsedMinute} ${parsedHour} ${dayOfMonth} ${month} ${dayOfWeek}`;
 
       await alertApiClient.updateAlert(editTarget.id, {
         name: editForm.name,
