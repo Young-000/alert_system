@@ -7,6 +7,7 @@ interface StationSearchStepProps {
   readonly searchResults: TransportItem[];
   readonly selectedTransports: TransportItem[];
   readonly isSearching: boolean;
+  readonly searchError: string | null;
   readonly groupedStations: GroupedStation[];
   readonly selectedStation: GroupedStation | null;
   readonly savedRoutes: RouteResponse[];
@@ -21,6 +22,7 @@ export function StationSearchStep({
   searchResults,
   selectedTransports,
   isSearching,
+  searchError,
   groupedStations,
   selectedStation,
   savedRoutes,
@@ -55,6 +57,7 @@ export function StationSearchStep({
         <SearchSection
           searchQuery={searchQuery}
           isSearching={isSearching}
+          searchError={searchError}
           groupedStations={groupedStations}
           searchResults={searchResults}
           selectedTransports={selectedTransports}
@@ -224,6 +227,7 @@ function LineSelection({
 interface SearchSectionProps {
   readonly searchQuery: string;
   readonly isSearching: boolean;
+  readonly searchError: string | null;
   readonly groupedStations: GroupedStation[];
   readonly searchResults: TransportItem[];
   readonly selectedTransports: TransportItem[];
@@ -236,6 +240,7 @@ interface SearchSectionProps {
 function SearchSection({
   searchQuery,
   isSearching,
+  searchError,
   groupedStations,
   searchResults,
   selectedTransports,
@@ -268,6 +273,9 @@ function SearchSection({
 
       <div aria-live="polite" aria-busy={isSearching}>
         {isSearching && <p className="muted">검색 중...</p>}
+        {searchError && !isSearching && (
+          <p className="error-text" role="alert">{searchError}</p>
+        )}
       </div>
 
       {/* 지하철만 선택 시: 역 그룹 먼저 표시 */}

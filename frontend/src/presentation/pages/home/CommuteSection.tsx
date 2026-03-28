@@ -103,6 +103,15 @@ export function CommuteSection({
           </div>
 
           {/* Transit Arrivals */}
+          {transitInfos.length === 0 && !isTransitRefreshing && activeRoute.checkpoints.some(
+            cp => cp.checkpointType === 'subway' || cp.checkpointType === 'bus_stop',
+          ) && (
+            <div className="today-transit today-transit--empty" aria-live="polite">
+              <p className="muted" style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+                실시간 교통 정보가 없습니다
+              </p>
+            </div>
+          )}
           {transitInfos.length > 0 && (
             <div className="today-transit" aria-live="polite">
               {/* Header with last update timestamp */}

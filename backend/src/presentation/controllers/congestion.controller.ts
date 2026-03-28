@@ -49,7 +49,7 @@ export class CongestionController {
       ? (level as CongestionLevel)
       : undefined;
 
-    const limit = limitStr ? parseInt(limitStr, 10) : 50;
+    const limit = parseInt(limitStr ?? '', 10) || 50;
 
     return this.congestionService.getSegments({
       timeSlot: validTimeSlot,

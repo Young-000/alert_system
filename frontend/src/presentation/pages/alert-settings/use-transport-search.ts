@@ -12,6 +12,7 @@ interface TransportSearchState {
   searchResults: TransportItem[];
   selectedTransports: TransportItem[];
   isSearching: boolean;
+  searchError: string | null;
   groupedStations: GroupedStation[];
   selectedStation: GroupedStation | null;
 }
@@ -30,6 +31,7 @@ export function useTransportSearch(
   const [searchResults, setSearchResults] = useState<TransportItem[]>([]);
   const [selectedTransports, setSelectedTransports] = useState<TransportItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [groupedStations, setGroupedStations] = useState<GroupedStation[]>([]);
   const [selectedStation, setSelectedStation] = useState<GroupedStation | null>(null);
 
@@ -47,6 +49,7 @@ export function useTransportSearch(
       }
 
       setIsSearching(true);
+      setSearchError(null);
       try {
         const results: TransportItem[] = [];
 
@@ -98,6 +101,7 @@ export function useTransportSearch(
         if (!controller.signal.aborted) {
           setSearchResults([]);
           setGroupedStations([]);
+          setSearchError('검색 중 오류가 발생했습니다. 다시 시도해주세요.');
           setIsSearching(false);
         }
       }
@@ -124,6 +128,7 @@ export function useTransportSearch(
     searchResults,
     selectedTransports,
     isSearching,
+    searchError,
     groupedStations,
     selectedStation,
     setSearchQuery,

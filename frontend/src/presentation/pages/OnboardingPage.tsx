@@ -323,6 +323,7 @@ export function OnboardingPage(): JSX.Element {
                   type="button"
                   className={`preset-btn ${data.estimatedDuration === preset ? 'active' : ''}`}
                   onClick={() => handleDurationChange(preset)}
+                  disabled={isCreating}
                 >
                   {preset}분
                 </button>
@@ -339,6 +340,7 @@ export function OnboardingPage(): JSX.Element {
                 step="5"
                 value={data.estimatedDuration}
                 onChange={(e) => handleDurationChange(Number(e.target.value))}
+                disabled={isCreating}
                 aria-label="예상 소요 시간"
               />
               <div className="slider-labels">
