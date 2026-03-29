@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -289,6 +289,7 @@ export function MissionsPage(): JSX.Element {
   } = useWeeklyStatsQuery();
 
   const toggleMutation = useToggleCheckMutation();
+  const [toggleError, setToggleError] = useState('');
 
   const togglingId = toggleMutation.isPending
     ? (toggleMutation.variables ?? null)
@@ -297,7 +298,10 @@ export function MissionsPage(): JSX.Element {
   const handleToggle = useCallback(
     (missionId: string) => {
       if (toggleMutation.isPending) return;
-      toggleMutation.mutate(missionId);
+      setToggleError('');
+      toggleMutation.mutate(missionId, {
+        onError: () => setToggleError('미션 상태 변경에 실패했습니다.'),
+      });
     },
     [toggleMutation],
   );
@@ -411,6 +415,10 @@ export function MissionsPage(): JSX.Element {
         </div>
         <span className="missions-date">{formatToday()}</span>
       </header>
+
+      {toggleError && (
+        <div className="notice error" role="alert">{toggleError}</div>
+      )}
 
       {/* Empty state or mission content */}
       {!hasMissions ? (

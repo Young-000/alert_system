@@ -276,6 +276,26 @@ export function CommuteTrackingPage(): JSX.Element {
   // Active tracking
   const time = formatTime(elapsedTime);
 
+  // Guard: route가 삭제되었지만 세션이 활성 상태인 경우
+  if (!route && session?.status === 'in_progress') {
+    return (
+      <main className="page commute-page-v2">
+        <div className="commute-v2-completed">
+          <p className="completed-emoji" aria-hidden="true">⚠️</p>
+          <h2 className="completed-title">경로를 찾을 수 없습니다</h2>
+          <p className="completed-subtitle">경로가 삭제되었거나 불러올 수 없습니다.</p>
+          <button
+            type="button"
+            className="btn btn-primary completed-home-btn"
+            onClick={() => navigate('/', { replace: true })}
+          >
+            홈으로
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="page commute-page-v2">
       {/* Header */}

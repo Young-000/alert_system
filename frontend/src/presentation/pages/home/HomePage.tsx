@@ -65,6 +65,12 @@ export function HomePage(): JSX.Element {
         </div>
       )}
 
+      {data.commuteStartError && (
+        <div className="home-error-notice notice error" role="alert">
+          {data.commuteStartError}
+        </div>
+      )}
+
       <header className="home-header">
         <div>
           <h1 className="home-greeting">{getModeGreeting(mode)}</h1>

@@ -137,7 +137,9 @@ export function SmartDepartureTab(): JSX.Element {
   }, [deleteTarget, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
+    toggleMutation.mutate(id, {
+      onError: () => setActionError('상태 변경에 실패했습니다.'),
+    });
   }, [toggleMutation]);
 
   if (isLoading) {

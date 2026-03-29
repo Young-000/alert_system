@@ -81,7 +81,10 @@ export function PlacesTab(): JSX.Element {
   const [actionError, setActionError] = useState('');
 
   const handleCreate = useCallback(async () => {
-    if (!formLabel.trim()) return;
+    if (!formLabel.trim()) {
+      setActionError('장소 이름을 입력해주세요.');
+      return;
+    }
     setActionError('');
     try {
       await createMutation.mutateAsync({
@@ -119,7 +122,9 @@ export function PlacesTab(): JSX.Element {
   }, [deleteTarget, deleteMutation]);
 
   const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
+    toggleMutation.mutate(id, {
+      onError: () => setActionError('상태 변경에 실패했습니다.'),
+    });
   }, [toggleMutation]);
 
   if (isLoading) {
