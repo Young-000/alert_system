@@ -67,6 +67,7 @@ export interface UseHomeDataReturn {
   isDefaultLocation: boolean;
   isCommuteStarting: boolean;
   handleStartCommute: () => Promise<void>;
+  commuteStartError: string;
   retryLoad: () => void;
   navigate: ReturnType<typeof useNavigate>;
 }
@@ -86,6 +87,7 @@ export function useHomeData(): UseHomeDataReturn {
 
   // F-2: Weekly Report
   const [weekOffset, setWeekOffset] = useState(0);
+  const [commuteStartError, setCommuteStartError] = useState('');
   const weeklyReportQuery = useWeeklyReportQuery(userId, weekOffset);
 
   const locationReady = !!userId && !userLocation.isLoading;
@@ -209,6 +211,7 @@ export function useHomeData(): UseHomeDataReturn {
   const handleStartCommute = useCallback(async (): Promise<void> => {
     if (!activeRoute || isCommuteStarting) return;
     setIsCommuteStarting(true);
+    setCommuteStartError('');
     try {
       const commuteApi = getCommuteApiClient();
       const session = await commuteApi.startSession({
@@ -217,7 +220,7 @@ export function useHomeData(): UseHomeDataReturn {
       });
       navigate('/commute', { state: { sessionId: session.id, routeId: activeRoute.id } });
     } catch {
-      navigate('/commute', { state: { routeId: activeRoute.id } });
+      setCommuteStartError('출발 시작에 실패했습니다. 네트워크 연결을 확인해주세요.');
     } finally {
       setIsCommuteStarting(false);
     }
@@ -261,6 +264,7 @@ export function useHomeData(): UseHomeDataReturn {
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,
+    commuteStartError,
     retryLoad: useCallback(() => {
       void alertsQuery.refetch();
       void routesQuery.refetch();

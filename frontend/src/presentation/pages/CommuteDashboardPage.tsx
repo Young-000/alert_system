@@ -132,6 +132,7 @@ export function CommuteDashboardPage(): JSX.Element {
                   const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
                   setHistory(prev => {
                     if (!prev) return moreHistory;
+                    if (!moreHistory?.sessions) return prev;
                     return {
                       ...prev,
                       sessions: [...prev.sessions, ...moreHistory.sessions],

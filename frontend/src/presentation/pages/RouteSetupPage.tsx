@@ -328,7 +328,7 @@ export function RouteSetupPage(): JSX.Element {
       await alertApiClient.createAlert(alertDto);
     } catch {
       // 알림 생성 실패해도 경로 저장은 성공으로 처리
-      setWarning('경로는 저장되었지만 알림 생성에 실패했습니다');
+      toast.warning('경로는 저장되었지만 알림 생성에 실패했습니다');
     }
   };
 
