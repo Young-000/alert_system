@@ -22,19 +22,28 @@ export class EvaluateChallengeUseCase {
       await this.challengeRepo.findActiveChallengesByUserId(userId);
     if (activeChallenges.length === 0) return [];
 
+    // Batch fetch all templates (N+1 → 1 query)
+    const templateIds = [
+      ...new Set(activeChallenges.map((c) => c.challengeTemplateId)),
+    ];
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
+
+    // Batch fetch existing badges for this user
+    const existingBadges =
+      await this.challengeRepo.findBadgesByUserId(userId);
+    const existingBadgeIds = new Set(existingBadges.map((b) => b.badgeId));
+
     const updates: ChallengeUpdate[] = [];
 
     for (const challenge of activeChallenges) {
-      // First check expiry
       const checkedChallenge = challenge.checkExpiry(new Date());
       if (checkedChallenge.status === 'failed') {
         await this.challengeRepo.saveChallenge(checkedChallenge);
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       const shouldIncrement = this.evaluateCondition(template, sessionData);
@@ -43,24 +52,17 @@ export class EvaluateChallengeUseCase {
       const updated = checkedChallenge.incrementProgress();
       await this.challengeRepo.saveChallenge(updated);
 
-      // If completed, award badge
       let badgeEarned: UserBadge | null = null;
-      if (updated.status === 'completed') {
-        const existingBadge =
-          await this.challengeRepo.findBadgeByUserAndBadgeId(
-            userId,
-            template.badgeId,
-          );
-        if (!existingBadge) {
-          badgeEarned = UserBadge.create(
-            userId,
-            template.badgeId,
-            template.badgeName,
-            template.badgeEmoji,
-            updated.id,
-          );
-          await this.challengeRepo.saveBadge(badgeEarned);
-        }
+      if (updated.status === 'completed' && !existingBadgeIds.has(template.badgeId)) {
+        badgeEarned = UserBadge.create(
+          userId,
+          template.badgeId,
+          template.badgeName,
+          template.badgeEmoji,
+          updated.id,
+        );
+        await this.challengeRepo.saveBadge(badgeEarned);
+        existingBadgeIds.add(template.badgeId);
       }
 
       updates.push({
