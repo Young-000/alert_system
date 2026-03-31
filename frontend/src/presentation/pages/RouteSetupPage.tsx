@@ -72,6 +72,14 @@ export function RouteSetupPage(): JSX.Element {
   // 저장 후 네비게이션 타이머 ref (토스트 dismiss 시 즉시 이동용)
   const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+      }
+    };
+  }, []);
+
   // 경로 검증 훅
   const { validation, validateRoute } = useRouteValidation(selectedStops);
 
@@ -226,8 +234,8 @@ export function RouteSetupPage(): JSX.Element {
   // 정류장 삭제
   const removeStop = useCallback((index: number) => {
     setSelectedStops(prev => {
-      if (prev.length <= 1) {
-        setError('경유지는 최소 1개 필요합니다.');
+      if (prev.length <= 2) {
+        setError('경유지는 최소 2개 필요합니다.');
         return prev;
       }
       return prev.filter((_, i) => i !== index);

@@ -15,6 +15,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { IsString, IsNotEmpty, IsOptional, IsObject, IsIn, IsNumber } from 'class-validator';
 import {
   TrackBehaviorUseCase,
   TrackDepartureDto,
@@ -38,20 +39,49 @@ import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 
-interface TrackEventDto {
+class TrackEventDto {
+  @IsString() @IsNotEmpty()
   userId: string;
+
+  @IsString() @IsNotEmpty()
   eventType: string;
+
+  @IsString() @IsOptional()
   alertId?: string;
+
+  @IsObject() @IsOptional()
   metadata?: Record<string, unknown>;
+
+  @IsIn(['push', 'app']) @IsOptional()
   source?: 'push' | 'app';
 }
 
-interface DepartureConfirmedDto {
+class DepartureConfirmedDto {
+  @IsString() @IsNotEmpty()
   userId: string;
+
+  @IsString() @IsNotEmpty()
   alertId: string;
+
+  @IsIn(['push', 'app'])
   source: 'push' | 'app';
+
+  @IsString() @IsOptional()
   weatherCondition?: string;
+
+  @IsNumber() @IsOptional()
   transitDelayMinutes?: number;
+}
+
+class NotificationOpenedDto {
+  @IsString() @IsNotEmpty()
+  userId: string;
+
+  @IsString() @IsNotEmpty()
+  alertId: string;
+
+  @IsString() @IsOptional()
+  notificationId?: string;
 }
 
 @Controller('behavior')
@@ -131,7 +161,7 @@ export class BehaviorController {
   @Post('notification-opened')
   @HttpCode(HttpStatus.OK)
   async notificationOpened(
-    @Body() dto: { userId: string; alertId: string; notificationId?: string },
+    @Body() dto: NotificationOpenedDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
     // 권한 검사: 자신의 알림 열기만 기록 가능

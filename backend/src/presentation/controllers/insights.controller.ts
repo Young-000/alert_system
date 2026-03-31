@@ -4,11 +4,14 @@ import {
   Post,
   Param,
   Query,
+  Headers,
   HttpCode,
   HttpStatus,
   Logger,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { InsightsService } from '@application/services/insights/insights.service';
 import { InsightsAggregationService } from '@application/services/insights/insights-aggregation.service';
@@ -33,6 +36,7 @@ export class InsightsController {
   constructor(
     private readonly insightsService: InsightsService,
     private readonly aggregationService: InsightsAggregationService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -103,12 +107,18 @@ export class InsightsController {
   }
 
   /**
-   * Trigger full recalculation of all regional insights (requires auth).
+   * Trigger full recalculation of all regional insights (admin only — requires scheduler secret).
    */
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 1, ttl: 300000 } })
-  async recalculate(): Promise<InsightsRecalculateResponseDto> {
+  async recalculate(
+    @Headers('x-scheduler-secret') schedulerSecret?: string,
+  ): Promise<InsightsRecalculateResponseDto> {
+    const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
+    if (!schedulerSecret || schedulerSecret !== expectedSecret) {
+      throw new ForbiddenException('관리자 권한이 필요합니다.');
+    }
     this.logger.log('Triggering full regional insights recalculation');
 
     const result = await this.aggregationService.recalculateAll();
