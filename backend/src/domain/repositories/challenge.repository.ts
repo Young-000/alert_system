@@ -2,10 +2,13 @@ import { ChallengeTemplate } from '@domain/entities/challenge-template.entity';
 import { UserChallenge } from '@domain/entities/user-challenge.entity';
 import { UserBadge } from '@domain/entities/user-badge.entity';
 
+export type TemplateMap = Map<string, ChallengeTemplate>;
+
 export interface ChallengeRepository {
   // Templates
   findAllTemplates(): Promise<ChallengeTemplate[]>;
   findTemplateById(id: string): Promise<ChallengeTemplate | null>;
+  findTemplatesByIds(ids: string[]): Promise<ChallengeTemplate[]>;
 
   // User Challenges
   findActiveChallengesByUserId(userId: string): Promise<UserChallenge[]>;

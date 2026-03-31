@@ -9,9 +9,10 @@ import {
   HttpStatus,
   Logger,
   Request,
-  ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { timingSafeEqual } from 'crypto';
 import { Throttle } from '@nestjs/throttler';
 import { InsightsService } from '@application/services/insights/insights.service';
 import { InsightsAggregationService } from '@application/services/insights/insights-aggregation.service';
@@ -107,18 +108,29 @@ export class InsightsController {
   }
 
   /**
-   * Trigger full recalculation of all regional insights (admin only — requires scheduler secret).
+   * Trigger full recalculation of all regional insights.
+   * Protected by scheduler secret header (admin-only operation).
    */
+  @Public()
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 1, ttl: 300000 } })
   async recalculate(
-    @Headers('x-scheduler-secret') schedulerSecret?: string,
+    @Headers('x-scheduler-secret') schedulerSecret: string,
   ): Promise<InsightsRecalculateResponseDto> {
     const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
-    if (!schedulerSecret || schedulerSecret !== expectedSecret) {
-      throw new ForbiddenException('관리자 권한이 필요합니다.');
+    if (!expectedSecret || !schedulerSecret) {
+      throw new UnauthorizedException('Authentication failed');
     }
+
+    const expected = Buffer.from(expectedSecret, 'utf8');
+    const received = Buffer.from(schedulerSecret, 'utf8');
+    if (expected.length !== received.length ||
+        !timingSafeEqual(expected, received)) {
+      this.logger.warn('Invalid scheduler secret for insights recalculate');
+      throw new UnauthorizedException('Authentication failed');
+    }
+
     this.logger.log('Triggering full regional insights recalculation');
 
     const result = await this.aggregationService.recalculateAll();

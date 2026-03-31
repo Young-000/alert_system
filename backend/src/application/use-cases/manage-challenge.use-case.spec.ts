@@ -74,6 +74,7 @@ describe('ManageChallengeUseCase', () => {
       findBadgeByUserAndBadgeId: jest.fn(),
       saveBadge: jest.fn().mockImplementation((b) => Promise.resolve(b)),
       countTotalBadges: jest.fn(),
+      findTemplatesByIds: jest.fn(),
     };
     useCase = new ManageChallengeUseCase(challengeRepo);
   });
