@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ChallengeRepository } from '@domain/repositories/challenge.repository';
 import { ChallengeTemplate } from '@domain/entities/challenge-template.entity';
 import { UserChallenge } from '@domain/entities/user-challenge.entity';
@@ -33,6 +33,14 @@ export class TypeormChallengeRepository implements ChallengeRepository {
   async findTemplateById(id: string): Promise<ChallengeTemplate | null> {
     const entity = await this.templateRepo.findOneBy({ id });
     return entity ? this.templateToDomain(entity) : null;
+  }
+
+  async findTemplatesByIds(ids: string[]): Promise<ChallengeTemplate[]> {
+    if (ids.length === 0) return [];
+    const entities = await this.templateRepo.find({
+      where: { id: In(ids) },
+    });
+    return entities.map((e) => this.templateToDomain(e));
   }
 
   // --- User Challenges ---
