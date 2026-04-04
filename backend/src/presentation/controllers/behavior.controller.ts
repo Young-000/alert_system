@@ -170,7 +170,7 @@ export class BehaviorController {
       return { records: [], message: 'Commute record repository not available' };
     }
 
-    const recordLimit = limit ? parseInt(limit, 10) : 30;
+    const recordLimit = limit ? (parseInt(limit, 10) || 30) : 30;
     const records = await this.commuteRecordRepository.findByUserId(userId, recordLimit);
     return { records };
   }

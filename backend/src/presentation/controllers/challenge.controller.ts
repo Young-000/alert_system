@@ -233,8 +233,8 @@ export class ChallengeController {
     this.logger.log(`Getting challenge history for user ${userId}`);
     const result = await this.manageChallengeUseCase.getChallengeHistory(
       userId,
-      parseInt(limit || '20', 10),
-      parseInt(offset || '0', 10),
+      parseInt(limit || '20', 10) || 20,
+      parseInt(offset || '0', 10) || 0,
     );
 
     return {
