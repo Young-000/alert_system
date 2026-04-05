@@ -184,7 +184,7 @@ export class BehaviorController {
       return { records: [], message: 'Commute record repository not available' };
     }
 
-    const recordLimit = limit ? parseInt(limit, 10) : 30;
+    const recordLimit = parseInt(limit || '', 10) || 30;
     const records = await this.commuteRecordRepository.findByUserId(userId, recordLimit);
     return { records };
   }
@@ -212,9 +212,9 @@ export class BehaviorController {
 
     const conditions: CurrentConditions = {};
     if (weather) conditions.weather = weather;
-    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10);
+    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10) || 0;
     if (isRaining) conditions.isRaining = isRaining === 'true';
-    if (temperature) conditions.temperature = parseInt(temperature, 10);
+    if (temperature) conditions.temperature = parseInt(temperature, 10) || 0;
 
     return this.predictOptimalDepartureUseCase.execute(userId, alertId, conditions);
   }
@@ -283,8 +283,8 @@ export class BehaviorController {
     } = {};
 
     if (weather) conditions.weather = weather;
-    if (temperature) conditions.temperature = parseInt(temperature, 10);
-    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10);
+    if (temperature) conditions.temperature = parseInt(temperature, 10) || 0;
+    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10) || 0;
     if (date) conditions.targetDate = new Date(date);
 
     return this.predictionEngine.predict(userId, conditions);

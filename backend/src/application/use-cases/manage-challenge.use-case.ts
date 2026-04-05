@@ -91,24 +91,28 @@ export class ManageChallengeUseCase {
     const activeChallenges =
       await this.challengeRepo.findActiveChallengesByUserId(userId);
     const now = new Date();
-    const details: ActiveChallengeDetail[] = [];
 
+    // Lazy expiry check + collect non-expired challenges
+    const validChallenges: typeof activeChallenges = [];
     for (const challenge of activeChallenges) {
-      // Lazy expiry check
       const checked = challenge.checkExpiry(now);
       if (checked.status === 'failed') {
         await this.challengeRepo.saveChallenge(checked);
         continue;
       }
+      validChallenges.push(checked);
+    }
 
-      const template = await this.challengeRepo.findTemplateById(
-        checked.challengeTemplateId,
-      );
-      if (!template) continue;
+    // Batch fetch templates (N+1 → 1 query)
+    const templateIds = validChallenges.map((c) => c.challengeTemplateId);
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
 
-      details.push({
+    return validChallenges
+      .filter((c) => templateMap.has(c.challengeTemplateId))
+      .map((checked) => ({
         id: checked.id,
-        template,
+        template: templateMap.get(checked.challengeTemplateId)!,
         status: checked.status,
         startedAt: checked.startedAt,
         deadlineAt: checked.deadlineAt,
@@ -117,10 +121,7 @@ export class ManageChallengeUseCase {
         progressPercent: checked.progressPercent,
         daysRemaining: checked.daysRemaining,
         isCloseToCompletion: checked.isCloseToCompletion,
-      });
-    }
-
-    return details;
+      }));
   }
 
   async getChallengeHistory(
@@ -131,15 +132,18 @@ export class ManageChallengeUseCase {
     const { challenges, totalCount } =
       await this.challengeRepo.findChallengeHistory(userId, limit, offset);
 
+    // Batch fetch templates (N+1 → 1 query)
+    const templateIds = challenges.map((c) => c.challengeTemplateId);
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
+
     const details: ActiveChallengeDetail[] = [];
     let totalCompleted = 0;
     let totalFailed = 0;
     let totalAbandoned = 0;
 
     for (const challenge of challenges) {
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       details.push({

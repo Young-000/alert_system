@@ -175,7 +175,7 @@ export class AnalyticsController {
       throw new ForbiddenException('다른 사용자의 추천 데이터에 접근할 수 없습니다.');
     }
 
-    const limitNum = limit ? parseInt(limit, 10) : 3;
+    const limitNum = parseInt(limit || '', 10) || 3;
     this.logger.log(`Getting top ${limitNum} recommended routes for user ${userId}`);
 
     const analyticsArray = await this.calculateAnalyticsUseCase.executeForUser(userId);

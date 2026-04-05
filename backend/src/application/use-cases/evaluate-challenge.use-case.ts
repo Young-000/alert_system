@@ -22,6 +22,11 @@ export class EvaluateChallengeUseCase {
       await this.challengeRepo.findActiveChallengesByUserId(userId);
     if (activeChallenges.length === 0) return [];
 
+    // Batch fetch templates (N+1 → 1 query)
+    const templateIds = activeChallenges.map((c) => c.challengeTemplateId);
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
+
     const updates: ChallengeUpdate[] = [];
 
     for (const challenge of activeChallenges) {
@@ -32,9 +37,7 @@ export class EvaluateChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       const shouldIncrement = this.evaluateCondition(template, sessionData);
