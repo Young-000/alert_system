@@ -100,6 +100,22 @@ describe('TipForm', () => {
     expect(onSubmit).toHaveBeenCalledWith('station:1', '팁 내용', expect.any(Function));
   });
 
+  it('shows submit error message', () => {
+    render(
+      <TipForm checkpointKey="station:1" onSubmit={onSubmit} submitError="팁 등록에 실패했습니다. 다시 시도해주세요." />,
+    );
+    expect(screen.getByText(/팁 등록에 실패했습니다/)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('shows submitError over rate limit message', () => {
+    render(
+      <TipForm checkpointKey="station:1" onSubmit={onSubmit} submitError="에러 메시지" isRateLimited />,
+    );
+    expect(screen.getByText('에러 메시지')).toBeInTheDocument();
+    expect(screen.queryByText(/오늘은 팁을/)).not.toBeInTheDocument();
+  });
+
   it('does not submit on Shift+Enter', () => {
     render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
     const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
