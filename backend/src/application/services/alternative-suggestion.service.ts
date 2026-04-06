@@ -35,14 +35,11 @@ export class AlternativeSuggestionService {
       return [];
     }
 
-    const alternatives: AlternativeSuggestionDto[] = [];
+    const results = await Promise.all(
+      significantDelays.map((segment) => this.findAlternativesForSegment(segment)),
+    );
 
-    for (const segment of significantDelays) {
-      const segmentAlts = await this.findAlternativesForSegment(segment);
-      alternatives.push(...segmentAlts);
-    }
-
-    return alternatives;
+    return results.flat();
   }
 
   private async findAlternativesForSegment(
