@@ -23,7 +23,7 @@ export function DeleteConfirmModal({
   return (
     <div
       className="modal-overlay"
-      onClick={onCancel}
+      onClick={isDeleting ? undefined : onCancel}
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-modal-title"

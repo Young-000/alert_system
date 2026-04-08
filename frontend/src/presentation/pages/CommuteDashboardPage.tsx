@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/EmptyState';
 import { AuthRequired } from '../components/AuthRequired';
@@ -47,6 +48,19 @@ export function CommuteDashboardPage(): JSX.Element {
       />
     );
   }
+
+  const handleLoadMore = useCallback(async () => {
+    const currentLength = history?.sessions.length ?? 0;
+    const moreHistory = await commuteApi.getHistory(userId, 10, currentLength);
+    setHistory(prev => {
+      if (!prev) return moreHistory;
+      return {
+        ...prev,
+        sessions: [...prev.sessions, ...moreHistory.sessions],
+        hasMore: moreHistory.hasMore,
+      };
+    });
+  }, [commuteApi, userId, history?.sessions.length, setHistory]);
 
   if (isLoading) {
     return (
@@ -128,17 +142,7 @@ export function CommuteDashboardPage(): JSX.Element {
             history ? (
               <HistoryTab
                 history={history}
-                onLoadMore={async () => {
-                  const moreHistory = await commuteApi.getHistory(userId, 10, history.sessions.length);
-                  setHistory(prev => {
-                    if (!prev) return moreHistory;
-                    return {
-                      ...prev,
-                      sessions: [...prev.sessions, ...moreHistory.sessions],
-                      hasMore: moreHistory.hasMore,
-                    };
-                  });
-                }}
+                onLoadMore={handleLoadMore}
               />
             ) : (
               <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>기록을 불러올 수 없습니다.</div>
