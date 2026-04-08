@@ -14,6 +14,7 @@ import { RouteCheckpointEntity } from './route-checkpoint.entity';
 @Index(['sessionId'])
 @Index(['checkpointId'])
 @Index(['sessionId', 'arrivedAt'])
+@Index(['sessionId', 'checkpointId'])
 export class CheckpointRecordEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

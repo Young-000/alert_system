@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { RouteStats } from '@infrastructure/api/commute-api.client';
 
 interface RouteComparisonChartProps {
@@ -15,6 +16,11 @@ export function RouteComparisonChart({
     (route.averageTotalDuration || 999) < (min.averageTotalDuration || 999) ? route : min
   );
 
+  const maxDuration = useMemo(
+    () => Math.max(...routeStats.map(r => r.averageTotalDuration || 1)),
+    [routeStats],
+  );
+
   return (
     <section className="route-comparison-section">
       <h2>경로별 비교</h2>
@@ -22,7 +28,6 @@ export function RouteComparisonChart({
 
       <div className="route-comparison-chart">
         {routeStats.map((route) => {
-          const maxDuration = Math.max(...routeStats.map(r => r.averageTotalDuration || 1));
           const barWidth = ((route.averageTotalDuration || 0) / maxDuration) * 100;
 
           return (
