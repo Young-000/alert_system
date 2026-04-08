@@ -397,6 +397,7 @@ export function CommuteTrackingPage(): JSX.Element {
           type="button"
           className="commute-v2-cancel-btn"
           onClick={() => setShowCancelConfirm(true)}
+          disabled={isCompleting}
         >
           기록 취소
         </button>
