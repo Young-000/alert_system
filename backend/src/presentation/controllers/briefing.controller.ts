@@ -38,8 +38,10 @@ export class BriefingController {
     @Query() query: BriefingQueryDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<BriefingEndpointResponse> {
-    const lat = query.lat ? parseFloat(query.lat) : undefined;
-    const lng = query.lng ? parseFloat(query.lng) : undefined;
+    const latParsed = query.lat ? parseFloat(query.lat) : NaN;
+    const lngParsed = query.lng ? parseFloat(query.lng) : NaN;
+    const lat = isNaN(latParsed) ? undefined : latParsed;
+    const lng = isNaN(lngParsed) ? undefined : lngParsed;
 
     const widgetData = await this.widgetDataService.getData(
       req.user.userId,
