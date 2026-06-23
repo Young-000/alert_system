@@ -283,7 +283,7 @@ export function RouteSetupPage(): JSX.Element {
   };
 
   // 경로 생성 후 기본 알림 자동 생성
-  const autoCreateAlerts = async (route: RouteResponse): Promise<void> => {
+  const autoCreateAlerts = async (route: RouteResponse): Promise<boolean> => {
     try {
       const types: AlertType[] = [];
       let subwayStationId: string | undefined;
@@ -304,7 +304,7 @@ export function RouteSetupPage(): JSX.Element {
         }
       }
 
-      if (types.length === 0) return;
+      if (types.length === 0) return true;
 
       const schedule = route.routeType === 'morning' ? '0 7 * * *' : '30 17 * * *';
 
@@ -319,9 +319,11 @@ export function RouteSetupPage(): JSX.Element {
       };
 
       await alertApiClient.createAlert(alertDto);
+      return true;
     } catch {
       // 알림 생성 실패해도 경로 저장은 성공으로 처리
       setWarning('경로는 저장되었지만 알림 생성에 실패했습니다');
+      return false;
     }
   };
 
@@ -356,7 +358,7 @@ export function RouteSetupPage(): JSX.Element {
         toast.success('경로가 수정되었습니다');
       } else {
         const saved = await commuteApi.createRoute(dto);
-        await autoCreateAlerts(saved);
+        const alertCreated = await autoCreateAlerts(saved);
 
         if (routeType === 'morning' && createReverse) {
           const reversedStops = [...selectedStops].reverse().map((stop, i) => ({
@@ -373,10 +375,14 @@ export function RouteSetupPage(): JSX.Element {
           };
 
           const savedReverse = await commuteApi.createRoute(reverseDto);
-          await autoCreateAlerts(savedReverse);
-          toast.success('출근/퇴근 경로가 저장되었습니다');
+          const reverseAlertCreated = await autoCreateAlerts(savedReverse);
+          if (!alertCreated || !reverseAlertCreated) {
+            toast.success('경로는 저장되었지만 일부 알림 생성에 실패했습니다');
+          } else {
+            toast.success('출근/퇴근 경로가 저장되었습니다');
+          }
         } else {
-          toast.success('경로가 저장되었습니다');
+          toast.success(alertCreated ? '경로가 저장되었습니다' : '경로는 저장되었지만 알림 생성에 실패했습니다');
         }
       }
 

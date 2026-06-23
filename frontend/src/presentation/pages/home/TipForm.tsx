@@ -9,6 +9,7 @@ interface TipFormProps {
   isSubmitting?: boolean;
   isEligible?: boolean;
   isRateLimited?: boolean;
+  submitError?: string;
 }
 
 export function TipForm({
@@ -17,6 +18,7 @@ export function TipForm({
   isSubmitting = false,
   isEligible = true,
   isRateLimited = false,
+  submitError = '',
 }: TipFormProps): JSX.Element {
   const [content, setContent] = useState('');
   const charCount = content.length;
@@ -73,10 +75,12 @@ export function TipForm({
       </div>
 
       <div className="tip-form-footer">
-        <span className="tip-form-rate-limit">
-          {isRateLimited
-            ? `오늘은 팁을 ${MAX_DAILY_TIPS}개까지 남길 수 있어요`
-            : ''}
+        <span className="tip-form-rate-limit" role={submitError || isRateLimited ? 'alert' : undefined}>
+          {submitError
+            ? submitError
+            : isRateLimited
+              ? `오늘은 팁을 ${MAX_DAILY_TIPS}개까지 남길 수 있어요`
+              : ''}
         </span>
         <button
           type="button"

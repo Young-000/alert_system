@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import type { TransportItem, GroupedStation } from './types';
 
@@ -110,34 +111,37 @@ function RouteQuickSelect({
     return null;
   }
 
-  const routeStops: { route: RouteResponse; stop: TransportItem }[] = [];
-  savedRoutes.forEach(route => {
-    const firstSubway = route.checkpoints.find(c => c.checkpointType === 'subway' && c.linkedStationId);
-    const firstBus = route.checkpoints.find(c => c.checkpointType === 'bus_stop' && c.linkedBusStopId);
+  const routeStops = useMemo(() => {
+    const stops: { route: RouteResponse; stop: TransportItem }[] = [];
+    savedRoutes.forEach(route => {
+      const firstSubway = route.checkpoints.find(c => c.checkpointType === 'subway' && c.linkedStationId);
+      const firstBus = route.checkpoints.find(c => c.checkpointType === 'bus_stop' && c.linkedBusStopId);
 
-    if (transportTypes.includes('subway') && firstSubway && firstSubway.linkedStationId) {
-      routeStops.push({
-        route,
-        stop: {
-          type: 'subway',
-          id: firstSubway.linkedStationId,
-          name: firstSubway.name,
-          detail: firstSubway.lineInfo || '',
-        },
-      });
-    }
-    if (transportTypes.includes('bus') && firstBus && firstBus.linkedBusStopId) {
-      routeStops.push({
-        route,
-        stop: {
-          type: 'bus',
-          id: firstBus.linkedBusStopId,
-          name: firstBus.name,
-          detail: '',
-        },
-      });
-    }
-  });
+      if (transportTypes.includes('subway') && firstSubway && firstSubway.linkedStationId) {
+        stops.push({
+          route,
+          stop: {
+            type: 'subway',
+            id: firstSubway.linkedStationId,
+            name: firstSubway.name,
+            detail: firstSubway.lineInfo || '',
+          },
+        });
+      }
+      if (transportTypes.includes('bus') && firstBus && firstBus.linkedBusStopId) {
+        stops.push({
+          route,
+          stop: {
+            type: 'bus',
+            id: firstBus.linkedBusStopId,
+            name: firstBus.name,
+            detail: '',
+          },
+        });
+      }
+    });
+    return stops;
+  }, [savedRoutes, transportTypes]);
 
   if (routeStops.length === 0) return null;
 
