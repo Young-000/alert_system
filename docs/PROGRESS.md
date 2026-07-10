@@ -2,6 +2,9 @@
 
 ## 현재 상태
 
+- 2026-07-10 `17b9022` chore(repo): auto-review 리포트 gitignore + PROGRESS 동기화
+
+
 - 2026-03-13 `37e1a18` fix(e2e): auto-review 20260313 - 2건 수정 (#123)
 - 2026-03-12 `e46c7ba` fix(e2e): auto-review 20260312 (#122)
 - 2026-03-11 `e1fb624` chore(e2e): auto-review 20260311 - 전 Phase 통과 (#121)
