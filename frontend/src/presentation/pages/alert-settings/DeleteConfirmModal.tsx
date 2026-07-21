@@ -3,6 +3,7 @@ import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
 interface DeleteConfirmModalProps {
   readonly targetName: string;
   readonly isDeleting: boolean;
+  readonly deleteError?: string;
   readonly onConfirm: () => void;
   readonly onCancel: () => void;
 }
@@ -10,6 +11,7 @@ interface DeleteConfirmModalProps {
 export function DeleteConfirmModal({
   targetName,
   isDeleting,
+  deleteError,
   onConfirm,
   onCancel,
 }: DeleteConfirmModalProps): JSX.Element {
@@ -37,11 +39,18 @@ export function DeleteConfirmModal({
           </div>
           <h2 id="delete-modal-title" className="modal-title">알림 삭제</h2>
         </div>
-        <p className="modal-body">
-          &quot;{targetName}&quot; 알림을 삭제하시겠습니까?
-          <br />
-          삭제 후에는 복구할 수 없습니다.
-        </p>
+        <div className="modal-body">
+          <p>
+            &quot;{targetName}&quot; 알림을 삭제하시겠습니까?
+            <br />
+            삭제 후에는 복구할 수 없습니다.
+          </p>
+          {deleteError && (
+            <p className="notice error" role="alert" style={{ marginTop: '0.5rem' }}>
+              {deleteError}
+            </p>
+          )}
+        </div>
         <div className="modal-actions">
           <button
             type="button"
