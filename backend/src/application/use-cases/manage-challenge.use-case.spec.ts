@@ -64,6 +64,7 @@ describe('ManageChallengeUseCase', () => {
     challengeRepo = {
       findAllTemplates: jest.fn(),
       findTemplateById: jest.fn(),
+      findTemplatesByIds: jest.fn(),
       findActiveChallengesByUserId: jest.fn(),
       findChallengeById: jest.fn(),
       findActiveByUserAndTemplate: jest.fn(),
