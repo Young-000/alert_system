@@ -72,3 +72,6 @@ database.sqlite
 
 # Local MCP config
 .mcp.json
+
+# Claude auto-review reports (generated)
+.claude/e2e-reports/

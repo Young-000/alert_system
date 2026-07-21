@@ -1,6 +1,36 @@
 # Alert System - 진행 기록
 
 ## 현재 상태
+
+- 2026-07-10 `17b9022` chore(repo): auto-review 리포트 gitignore + PROGRESS 동기화
+
+
+- 2026-03-13 `37e1a18` fix(e2e): auto-review 20260313 - 2건 수정 (#123)
+- 2026-03-12 `e46c7ba` fix(e2e): auto-review 20260312 (#122)
+- 2026-03-11 `e1fb624` chore(e2e): auto-review 20260311 - 전 Phase 통과 (#121)
+- 2026-03-11 `dffc393` fix(e2e): auto-review 20260311 (#120)
+- 2026-03-11 `55a29a2` fix(frontend): useEffect cleanup 및 reloadAlerts await 수정 (#118)
+- 2026-03-11 `d1e9ca4` fix(frontend): 코드 품질 체크리스트 7건 수정 (#117)
+- 2026-03-11 `bde8b7a` fix(e2e): auto-review 20260311 - 1건 수정 (#116)
+- 2026-03-11 `c8a8039` chore(e2e): auto-review 20260311 - 0건 수정 (#115)
+- 2026-03-10 `6f8d162` chore(e2e): auto-review 20260310 - 0건 수정 (#112)
+- 2026-03-09 `b223ed3` fix(e2e): auto-review 20260309 - 3건 수정 (#110)
+- 2026-03-08 `32b97b2` fix(e2e): auto-review 20260308 - 1건 수정 (#109)
+- 2026-03-08 `c08301b` chore(e2e): auto-review 20260308 - 0건 수정 (코드 변경 없음) (#108)
+- 2026-03-08 `e6b5d09` chore(e2e): auto-review 20260308 - all pass (#107)
+- 2026-03-07 `3fffe7f` chore(e2e): auto-review 20260307 - 0건 수정 (#105)
+- 2026-03-06 `a0b92fb` fix(e2e): auto-review 20260306 - 1건 수정 (#104)
+- 2026-03-05 `1f27385` fix(e2e): auto-review 20260305 - 9건 수정 (#101)
+- 2026-03-04 `3ace139` fix(e2e): auto-review 20260304 - 18건 수정 (#99)
+- 2026-03-02 `503154b` fix(e2e): auto-review 20260302 - 3건 수정 (#97)
+- 2026-03-02 `36cd139` feat(community): add anonymous route community + checkpoint tips — P4-3 (#96)
+- 2026-03-02 `a09dea7` feat(insights): add regional commute insights — P4-2 full-stack (#95)
+- 2026-03-02 `109d8a5` feat(frontend): add congestion chips + route overlay UI (E1~E4) (#P4-1) (#94)
+- 2026-03-02 `1ca1ee8` feat(backend): add segment congestion pipeline — Bayesian aggregation (A1~G1) (#P4-1) (#93)
+- 2026-03-02 `711bfce` feat(frontend): add delay alert banner + alternative route UI (FE-1~FE-9) (#P3-5) (#92)
+- 2026-03-02 `d1c0cbd` feat(backend): add alternative route suggestion engine (BE-1~BE-11) (#P3-5) (#91)
+- 2026-03-02 `78eb08d` feat(frontend): add pattern insights card + analysis page (FE-1~FE-9) (#90)
+
 - 완성도: 95%
 - 상태: 활성 (active) - 워크스페이스 내 가장 복잡한 프로젝트
 - Phase 4 (4/4) 진행 중 — P4-4만 남음
