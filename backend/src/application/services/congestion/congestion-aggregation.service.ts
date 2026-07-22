@@ -118,11 +118,10 @@ export class CongestionAggregationService {
 
     const groups = this.groupObservations(observations);
 
-    // Fetch ALL historical observations once and group them up front, so an existing
-    // segment's Bayesian posterior is recomputed over full history without re-scanning
-    // the entire dataset per segment inside the loop (previously N full-table scans
-    // for a session with N checkpoints).
-    const allGroups = this.groupObservations(await this.fetchAllObservations());
+    // Historical observations grouped by segment+slot. Fetched at most once per
+    // call (lazily, only when a group already has a stored record) instead of a
+    // full-table scan per group — previously O(groups) scans of all completed sessions.
+    let historicalGroups: Map<string, SegmentGroup> | null = null;
 
     for (const [key, group] of groups.entries()) {
       const [segmentKey, timeSlot] = key.split('||') as [string, TimeSlot];
@@ -134,8 +133,12 @@ export class CongestionAggregationService {
       );
 
       if (existing) {
-        // Merge with full history (already fetched above) for an accurate posterior
-        const mergedGroup = allGroups.get(key);
+        // Merge new observations: use all historical observations for this
+        // segment+slot to get accurate Bayesian posterior.
+        if (historicalGroups === null) {
+          historicalGroups = this.groupObservations(await this.fetchAllObservations());
+        }
+        const mergedGroup = historicalGroups.get(key);
         if (mergedGroup) {
           const updated = this.computeSingleCongestion(mergedGroup);
           await this.congestionRepo.save(new SegmentCongestion({

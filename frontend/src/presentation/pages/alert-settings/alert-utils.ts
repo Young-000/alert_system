@@ -10,7 +10,8 @@ export function generateSchedule(
 
   if (wantsWeather) {
     const [h] = routine.wakeUp.split(':');
-    times.push(parseInt(h, 10));
+    const parsed = parseInt(h, 10);
+    if (!isNaN(parsed)) times.push(parsed);
   }
 
   if (wantsTransport) {

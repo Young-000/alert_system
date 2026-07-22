@@ -9,7 +9,6 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
-  BadRequestException,
   HttpCode,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -139,20 +138,14 @@ export class AnalyticsController {
     @Query('routeIds') routeIds: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<RouteComparisonResponseDto> {
-    if (!routeIds) {
-      throw new BadRequestException('비교할 경로 ID(routeIds)를 전달해주세요.');
-    }
-    const ids = routeIds
-      .split(',')
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0);
+    const ids = routeIds.split(',').map((id) => id.trim());
 
     if (ids.length < 2) {
-      throw new BadRequestException('비교할 경로를 2개 이상 선택해주세요.');
+      throw new Error('비교할 경로를 2개 이상 선택해주세요.');
     }
 
     if (ids.length > 5) {
-      throw new BadRequestException('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
+      throw new Error('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
     }
 
     // 권한 검사: 요청한 모든 경로가 사용자 소유인지 확인
@@ -182,7 +175,7 @@ export class AnalyticsController {
       throw new ForbiddenException('다른 사용자의 추천 데이터에 접근할 수 없습니다.');
     }
 
-    const limitNum = parseInt(limit ?? '', 10) || 3;
+    const limitNum = limit ? (parseInt(limit, 10) || 3) : 3;
     this.logger.log(`Getting top ${limitNum} recommended routes for user ${userId}`);
 
     const analyticsArray = await this.calculateAnalyticsUseCase.executeForUser(userId);

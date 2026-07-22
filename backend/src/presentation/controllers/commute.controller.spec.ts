@@ -246,8 +246,7 @@ describe('CommuteController', () => {
 
       await controller.getHistory(OWNER_ID, 'abc', 'xyz', mockRequest(OWNER_ID));
 
-      // parseInt('abc', 10) → NaN → `|| default` falls back to the safe defaults (20/0),
-      // preventing NaN from reaching the use-case / TypeORM.
+      // parseInt('abc', 10) returns NaN → || fallback으로 기본값 적용
       expect(manageSessionUseCase.getHistory).toHaveBeenCalledWith(OWNER_ID, 20, 0);
     });
 

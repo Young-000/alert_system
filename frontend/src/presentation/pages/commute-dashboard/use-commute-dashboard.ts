@@ -105,7 +105,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
           commuteApi.getStats(userId, 30),
           commuteApi.getHistory(userId, 10),
           commuteApi.getUserAnalytics(userId).catch(() => {
-            setAnalyticsError('분석 데이터를 불러올 수 없습니다');
+            if (isMounted) setAnalyticsError('분석 데이터를 불러올 수 없습니다');
             return [] as RouteAnalyticsResponse[];
           }),
         ]);
