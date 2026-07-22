@@ -118,6 +118,12 @@ export class CongestionAggregationService {
 
     const groups = this.groupObservations(observations);
 
+    // Fetch ALL historical observations once and group them up front, so an existing
+    // segment's Bayesian posterior is recomputed over full history without re-scanning
+    // the entire dataset per segment inside the loop (previously N full-table scans
+    // for a session with N checkpoints).
+    const allGroups = this.groupObservations(await this.fetchAllObservations());
+
     for (const [key, group] of groups.entries()) {
       const [segmentKey, timeSlot] = key.split('||') as [string, TimeSlot];
 
@@ -128,10 +134,7 @@ export class CongestionAggregationService {
       );
 
       if (existing) {
-        // Merge new observations: re-fetch all observations for this segment+slot
-        // to get accurate Bayesian posterior
-        const allObs = await this.fetchObservationsForSegment(segmentKey, timeSlot);
-        const allGroups = this.groupObservations(allObs);
+        // Merge with full history (already fetched above) for an accurate posterior
         const mergedGroup = allGroups.get(key);
         if (mergedGroup) {
           const updated = this.computeSingleCongestion(mergedGroup);
@@ -217,29 +220,6 @@ export class CongestionAggregationService {
       linkedBusStopId: r.linkedBusStopId || null,
       sessionStartedAt: new Date(r.sessionStartedAt),
     }));
-  }
-
-  /**
-   * Fetch all observations matching a specific segment key + time slot.
-   */
-  private async fetchObservationsForSegment(
-    _segmentKey: string,
-    _timeSlot: TimeSlot,
-  ): Promise<RawObservation[]> {
-    // For incremental updates, we re-fetch all observations and filter in memory.
-    // This is acceptable since we only do this for individual segments.
-    const allObs = await this.fetchAllObservations();
-    return allObs.filter((obs) => {
-      const key = normalizeSegmentKey({
-        linkedStationId: obs.linkedStationId,
-        linkedBusStopId: obs.linkedBusStopId,
-        name: obs.checkpointName,
-        lineInfo: obs.lineInfo,
-        checkpointType: obs.checkpointType,
-      });
-      const slot = classifyTimeSlot(obs.sessionStartedAt);
-      return key === _segmentKey && slot === _timeSlot;
-    });
   }
 
   /**
