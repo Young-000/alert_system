@@ -186,7 +186,7 @@ export function AlertSettingsPage(): JSX.Element {
   wizardSetStepRef.current = wizard.setStep;
 
   // Wizard visibility: show when no alerts (automatic) or user clicked "+" (explicit)
-  const shouldShowWizard = alertCrud.alerts.length === 0 || wizard.showWizard;
+  const shouldShowWizard = (alertCrud.alerts.length === 0 && !alertCrud.loadError) || wizard.showWizard;
 
   // Import from route handler
   const importFromRoute = (route: RouteResponse): void => {
@@ -442,6 +442,7 @@ export function AlertSettingsPage(): JSX.Element {
         <DeleteConfirmModal
           targetName={alertCrud.deleteTarget.name}
           isDeleting={alertCrud.isDeleting}
+          deleteError={alertCrud.error}
           onConfirm={alertCrud.handleDeleteConfirm}
           onCancel={alertCrud.handleDeleteCancel}
         />
