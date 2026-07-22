@@ -381,12 +381,14 @@ export function AlertSettingsPage(): JSX.Element {
             searchResults={transportSearch.searchResults}
             selectedTransports={transportSearch.selectedTransports}
             isSearching={transportSearch.isSearching}
+            searchError={transportSearch.searchError}
             groupedStations={transportSearch.groupedStations}
             selectedStation={transportSearch.selectedStation}
             savedRoutes={alertCrud.savedRoutes}
             onSearchChange={transportSearch.setSearchQuery}
             onToggleTransport={transportSearch.toggleTransport}
             onSelectStation={transportSearch.setSelectedStation}
+            onRetrySearch={transportSearch.retrySearch}
           />
         )}
 
