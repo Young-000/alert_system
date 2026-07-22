@@ -38,8 +38,11 @@ export class BriefingController {
     @Query() query: BriefingQueryDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<BriefingEndpointResponse> {
-    const lat = query.lat ? parseFloat(query.lat) : undefined;
-    const lng = query.lng ? parseFloat(query.lng) : undefined;
+    // 잘못된 lat/lng(예: ?lat=abc)는 NaN 대신 undefined로 폴백 — NaN이 서비스로 전파되지 않도록 방지
+    const parsedLat = query.lat ? parseFloat(query.lat) : undefined;
+    const parsedLng = query.lng ? parseFloat(query.lng) : undefined;
+    const lat = parsedLat !== undefined && !Number.isNaN(parsedLat) ? parsedLat : undefined;
+    const lng = parsedLng !== undefined && !Number.isNaN(parsedLng) ? parsedLng : undefined;
 
     const widgetData = await this.widgetDataService.getData(
       req.user.userId,
