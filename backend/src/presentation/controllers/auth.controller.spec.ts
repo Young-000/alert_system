@@ -174,7 +174,7 @@ describe('AuthController', () => {
   describe('googleCallback with GoogleOAuthUseCase', () => {
     it('Google OAuth 성공 시 프론트엔드로 토큰과 함께 리다이렉트', async () => {
       const googleOAuthUseCase = { execute: jest.fn() };
-      googleOAuthUseCase.execute.mockResolvedValue(mockUser);
+      googleOAuthUseCase.execute.mockResolvedValue({ user: mockUser, isNewUser: false });
 
       const enabledConfigService = {
         get: jest.fn().mockImplementation((key: string) => {

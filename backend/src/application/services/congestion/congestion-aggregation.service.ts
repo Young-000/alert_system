@@ -118,6 +118,11 @@ export class CongestionAggregationService {
 
     const groups = this.groupObservations(observations);
 
+    // Historical observations grouped by segment+slot. Fetched at most once per
+    // call (lazily, only when a group already has a stored record) instead of a
+    // full-table scan per group — previously O(groups) scans of all completed sessions.
+    let historicalGroups: Map<string, SegmentGroup> | null = null;
+
     for (const [key, group] of groups.entries()) {
       const [segmentKey, timeSlot] = key.split('||') as [string, TimeSlot];
 
@@ -128,11 +133,12 @@ export class CongestionAggregationService {
       );
 
       if (existing) {
-        // Merge new observations: re-fetch all observations for this segment+slot
-        // to get accurate Bayesian posterior
-        const allObs = await this.fetchObservationsForSegment(segmentKey, timeSlot);
-        const allGroups = this.groupObservations(allObs);
-        const mergedGroup = allGroups.get(key);
+        // Merge new observations: use all historical observations for this
+        // segment+slot to get accurate Bayesian posterior.
+        if (historicalGroups === null) {
+          historicalGroups = this.groupObservations(await this.fetchAllObservations());
+        }
+        const mergedGroup = historicalGroups.get(key);
         if (mergedGroup) {
           const updated = this.computeSingleCongestion(mergedGroup);
           await this.congestionRepo.save(new SegmentCongestion({
@@ -217,29 +223,6 @@ export class CongestionAggregationService {
       linkedBusStopId: r.linkedBusStopId || null,
       sessionStartedAt: new Date(r.sessionStartedAt),
     }));
-  }
-
-  /**
-   * Fetch all observations matching a specific segment key + time slot.
-   */
-  private async fetchObservationsForSegment(
-    _segmentKey: string,
-    _timeSlot: TimeSlot,
-  ): Promise<RawObservation[]> {
-    // For incremental updates, we re-fetch all observations and filter in memory.
-    // This is acceptable since we only do this for individual segments.
-    const allObs = await this.fetchAllObservations();
-    return allObs.filter((obs) => {
-      const key = normalizeSegmentKey({
-        linkedStationId: obs.linkedStationId,
-        linkedBusStopId: obs.linkedBusStopId,
-        name: obs.checkpointName,
-        lineInfo: obs.lineInfo,
-        checkpointType: obs.checkpointType,
-      });
-      const slot = classifyTimeSlot(obs.sessionStartedAt);
-      return key === _segmentKey && slot === _timeSlot;
-    });
   }
 
   /**

@@ -72,7 +72,7 @@ export class AuthController {
       }
 
       const googleProfile = req.user as GoogleProfile;
-      const user = await this.googleOAuthUseCase.execute(googleProfile);
+      const { user, isNewUser } = await this.googleOAuthUseCase.execute(googleProfile);
       const authResponse = this.authService.generateToken(user);
 
       // 프론트엔드로 토큰과 함께 리다이렉트 (fragment 사용 — URL query는 서버 로그/referrer에 노출됨)
@@ -81,6 +81,7 @@ export class AuthController {
         userId: authResponse.user.id,
         email: authResponse.user.email,
         name: authResponse.user.name,
+        isNewUser: String(isNewUser),
       });
 
       return res.redirect(`${this.frontendUrl}/auth/callback#${params.toString()}`);
