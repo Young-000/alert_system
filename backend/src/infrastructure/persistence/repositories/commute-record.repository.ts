@@ -105,10 +105,20 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
     return entity;
   }
 
+  /**
+   * TypeORM hydrates Postgres `date` columns as 'YYYY-MM-DD' strings even though
+   * the entity field is declared as Date (PostgresDriver.prepareHydratedValue →
+   * DateUtils.mixedDateToDateString). Domain services call getDay()/getMonth()/
+   * toISOString() on commuteDate, so normalize it back to a Date here.
+   */
+  private toDate(value: Date | string): Date {
+    return value instanceof Date ? value : new Date(value);
+  }
+
   private toDomain(entity: CommuteRecordEntity): CommuteRecord {
     return new CommuteRecord(
       entity.userId,
-      entity.commuteDate,
+      this.toDate(entity.commuteDate),
       entity.commuteType as CommuteType,
       {
         id: entity.id,

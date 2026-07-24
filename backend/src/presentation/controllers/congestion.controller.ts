@@ -4,13 +4,17 @@ import {
   Post,
   Param,
   Query,
+  Headers,
   HttpCode,
   HttpStatus,
   Logger,
   UseGuards,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
+import { timingSafeEqual } from 'crypto';
 import { Throttle } from '@nestjs/throttler';
 import { CongestionService } from '@application/services/congestion/congestion.service';
 import { CongestionAggregationService } from '@application/services/congestion/congestion-aggregation.service';
@@ -30,6 +34,7 @@ export class CongestionController {
   constructor(
     private readonly congestionService: CongestionService,
     private readonly aggregationService: CongestionAggregationService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -80,11 +85,28 @@ export class CongestionController {
 
   /**
    * Trigger full recalculation of all congestion data.
+   * Protected by scheduler secret header (admin-only operation), matching
+   * POST /insights/recalculate — a JWT alone must not let any signed-in user
+   * kick off a full-table aggregation.
    */
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 1, ttl: 300000 } })
-  async recalculate(): Promise<RecalculateResponseDto> {
+  async recalculate(
+    @Headers('x-scheduler-secret') schedulerSecret: string,
+  ): Promise<RecalculateResponseDto> {
+    const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
+    if (!expectedSecret || !schedulerSecret) {
+      throw new UnauthorizedException('Authentication failed');
+    }
+
+    const expected = Buffer.from(expectedSecret, 'utf8');
+    const received = Buffer.from(schedulerSecret, 'utf8');
+    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
+      this.logger.warn('Invalid scheduler secret for congestion recalculate');
+      throw new UnauthorizedException('Authentication failed');
+    }
+
     this.logger.log('Triggering full congestion recalculation');
 
     const result = await this.aggregationService.recalculateAll();
