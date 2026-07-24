@@ -112,6 +112,8 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   }, [alerts, normalizeSchedule]);
 
   const handleDeleteClick = (alert: Alert): void => {
+    // 다른 작업(토글·수정·이전 삭제)에서 남은 공유 error가 삭제 모달에 새어 나오는 것 방지
+    setError('');
     setDeleteTarget({ id: alert.id, name: alert.name });
   };
 
@@ -130,6 +132,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   };
 
   const handleDeleteCancel = useCallback((): void => {
+    setError('');
     setDeleteTarget(null);
   }, []);
 
