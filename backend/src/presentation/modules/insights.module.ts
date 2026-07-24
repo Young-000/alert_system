@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // TypeORM Entities
@@ -21,6 +22,9 @@ import { InsightsController } from '../controllers/insights.controller';
 
 @Module({
   imports: [
+    // InsightsController reads SCHEDULER_SECRET via ConfigService; ConfigModule is
+    // not global in this app, so each feature module must import it explicitly.
+    ConfigModule,
     TypeOrmModule.forFeature([
       RegionalInsightEntity,
       CommuteSessionEntity,

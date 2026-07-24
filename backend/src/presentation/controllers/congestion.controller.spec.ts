@@ -1,7 +1,11 @@
+import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CongestionController } from './congestion.controller';
 import { CongestionService } from '@application/services/congestion/congestion.service';
 import { CongestionAggregationService } from '@application/services/congestion/congestion-aggregation.service';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+
+const SCHEDULER_SECRET = 'test-scheduler-secret';
 
 describe('CongestionController', () => {
   let controller: CongestionController;
@@ -23,9 +27,14 @@ describe('CongestionController', () => {
       recalculateAll: mockRecalculateAll,
     } as unknown as CongestionAggregationService;
 
+    const mockConfigService = {
+      get: jest.fn().mockReturnValue(SCHEDULER_SECRET),
+    } as unknown as ConfigService;
+
     controller = new CongestionController(
       mockCongestionService,
       mockAggregationService,
+      mockConfigService,
     );
   });
 
@@ -136,17 +145,31 @@ describe('CongestionController', () => {
   });
 
   describe('POST /congestion/recalculate', () => {
-    it('전체 재계산을 트리거하고 결과를 반환한다', async () => {
+    it('올바른 스케줄러 시크릿이면 전체 재계산을 트리거하고 결과를 반환한다', async () => {
       mockRecalculateAll.mockResolvedValue({
         segmentCount: 42,
         elapsed: 1234,
       });
 
-      const result = await controller.recalculate();
+      const result = await controller.recalculate(SCHEDULER_SECRET);
 
       expect(result.status).toBe('completed');
       expect(result.segmentCount).toBe(42);
       expect(result.elapsedMs).toBe(1234);
+    });
+
+    it('시크릿이 없으면 401을 던지고 재계산하지 않는다', async () => {
+      await expect(controller.recalculate(undefined as unknown as string)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockRecalculateAll).not.toHaveBeenCalled();
+    });
+
+    it('시크릿이 틀리면 401을 던지고 재계산하지 않는다', async () => {
+      await expect(controller.recalculate('wrong-secret-value')).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockRecalculateAll).not.toHaveBeenCalled();
     });
   });
 });

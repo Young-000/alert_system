@@ -101,13 +101,16 @@ export class ApiClient {
     return this.withRetry(() => this.request<T>(url));
   }
 
+  /**
+   * POST is not retried: a network error or timeout does not tell us whether the
+   * server already processed the request, so a retry can create a duplicate
+   * resource (alert, commute session, community tip...).
+   */
   async post<T, D = unknown>(url: string, data?: D): Promise<T> {
-    return this.withRetry(() =>
-      this.request<T>(url, {
-        method: 'POST',
-        body: data !== undefined ? JSON.stringify(data) : undefined,
-      }),
-    );
+    return this.request<T>(url, {
+      method: 'POST',
+      body: data !== undefined ? JSON.stringify(data) : undefined,
+    });
   }
 
   async put<T, D = unknown>(url: string, data?: D): Promise<T> {
@@ -123,12 +126,11 @@ export class ApiClient {
     return this.withRetry(() => this.request<T>(url, { method: 'DELETE' }));
   }
 
+  /** PATCH is not retried either — partial updates are not guaranteed idempotent. */
   async patch<T, D = unknown>(url: string, data?: D): Promise<T> {
-    return this.withRetry(() =>
-      this.request<T>(url, {
-        method: 'PATCH',
-        body: data !== undefined ? JSON.stringify(data) : undefined,
-      }),
-    );
+    return this.request<T>(url, {
+      method: 'PATCH',
+      body: data !== undefined ? JSON.stringify(data) : undefined,
+    });
   }
 }
