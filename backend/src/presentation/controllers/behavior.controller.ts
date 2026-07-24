@@ -37,22 +37,11 @@ import { ICommuteRecordRepository } from '@domain/repositories/commute-record.re
 import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
-
-interface TrackEventDto {
-  userId: string;
-  eventType: string;
-  alertId?: string;
-  metadata?: Record<string, unknown>;
-  source?: 'push' | 'app';
-}
-
-interface DepartureConfirmedDto {
-  userId: string;
-  alertId: string;
-  source: 'push' | 'app';
-  weatherCondition?: string;
-  transitDelayMinutes?: number;
-}
+import {
+  TrackEventDto,
+  DepartureConfirmedDto,
+  NotificationOpenedDto,
+} from '../dto/behavior.dto';
 
 @Controller('behavior')
 @UseGuards(AuthGuard('jwt'))
@@ -131,7 +120,7 @@ export class BehaviorController {
   @Post('notification-opened')
   @HttpCode(HttpStatus.OK)
   async notificationOpened(
-    @Body() dto: { userId: string; alertId: string; notificationId?: string },
+    @Body() dto: NotificationOpenedDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
     // 권한 검사: 자신의 알림 열기만 기록 가능
