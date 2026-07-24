@@ -22,6 +22,10 @@ export interface LoginDto {
   password: string;
 }
 
+export interface GoogleOAuthStatus {
+  enabled: boolean;
+}
+
 export class AuthApiClient {
   private client: ApiClient;
 
@@ -35,5 +39,9 @@ export class AuthApiClient {
 
   async login(dto: LoginDto): Promise<AuthResponse> {
     return this.client.post<AuthResponse>('/auth/login', dto);
+  }
+
+  async getGoogleOAuthStatus(): Promise<GoogleOAuthStatus> {
+    return this.client.get<GoogleOAuthStatus>('/auth/google/status');
   }
 }
