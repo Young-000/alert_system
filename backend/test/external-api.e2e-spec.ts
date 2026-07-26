@@ -35,6 +35,7 @@ describe('External API Service (e2e)', () => {
         email,
         password: 'SecurePass123!',
         name: 'API Test User',
+        phoneNumber: '01012345678',
       });
 
     return {

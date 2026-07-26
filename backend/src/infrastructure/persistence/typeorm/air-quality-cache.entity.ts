@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('air_quality_cache', { schema: 'alert_system' })
 @Index(['sidoName'])
@@ -27,6 +28,6 @@ export class AirQualityCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamptz' })
+  @Column({ name: 'expires_at', type: TIMESTAMPTZ })
   expiresAt: Date;
 }

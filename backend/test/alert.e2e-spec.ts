@@ -35,6 +35,7 @@ describe('Alert Service (e2e)', () => {
         email,
         password: 'SecurePass123!',
         name: 'Alert Test User',
+        phoneNumber: '01012345678',
       });
 
     return {

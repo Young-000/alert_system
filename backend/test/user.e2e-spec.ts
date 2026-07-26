@@ -35,6 +35,7 @@ describe('User Service (e2e)', () => {
         email,
         password: 'SecurePass123!',
         name: 'Test User',
+        phoneNumber: '01012345678',
       });
 
     return {
