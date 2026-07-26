@@ -34,7 +34,7 @@ describe('AppController (e2e)', () => {
   async function registerAndLogin(email: string, password: string, name: string) {
     const registerRes = await request(app.getHttpServer())
       .post('/auth/register')
-      .send({ email, password, name });
+      .send({ email, password, name, phoneNumber: '01012345678' });
 
     // 이미 존재하면 로그인만
     if (registerRes.status === 409) {
@@ -122,6 +122,7 @@ describe('AppController (e2e)', () => {
           email: uniqueEmail,
           password: 'SecurePass123!',
           name: 'Test User',
+          phoneNumber: '01012345678',
         })
         .expect(201)
         .expect((res: request.Response) => {
