@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { UserChallengeEntity } from './user-challenge.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('user_badges', { schema: 'alert_system' })
 @Index(['userId'])
@@ -33,7 +34,7 @@ export class UserBadgeEntity {
   @Column({ type: 'uuid', name: 'challenge_id' })
   challengeId: string;
 
-  @Column({ name: 'earned_at', type: 'timestamptz' })
+  @Column({ name: 'earned_at', type: TIMESTAMPTZ })
   earnedAt: Date;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })

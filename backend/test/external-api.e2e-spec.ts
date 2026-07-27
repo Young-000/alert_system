@@ -2,14 +2,26 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { TestAppModule } from './test-app.module';
+import { resetThrottler } from './throttler-reset';
+import {
+  FakeAirQualityApiClient,
+  FakeBusStopApiClient,
+} from './fake-external-api.providers';
 
 describe('External API Service (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    // 외부 공공 API는 대역으로 대체한다 — 서비스키·네트워크·일일 쿼터에
+    // 의존하지 않으면서 컨트롤러~유스케이스 경로를 그대로 검증하기 위함.
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [TestAppModule],
-    }).compile();
+    })
+      .overrideProvider('IAirQualityApiClient')
+      .useClass(FakeAirQualityApiClient)
+      .overrideProvider('IBusStopApiClient')
+      .useClass(FakeBusStopApiClient)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -20,6 +32,11 @@ describe('External API Service (e2e)', () => {
       }),
     );
     await app.init();
+  });
+
+  // 테스트 간 rate limit 누적 제거 (register 3회/분 제한이 스위트를 무너뜨림)
+  beforeEach(() => {
+    resetThrottler(app);
   });
 
   afterAll(async () => {
@@ -98,8 +115,11 @@ describe('External API Service (e2e)', () => {
         .get(`/air-quality/user/${userId}`)
         .set('Authorization', `Bearer ${token}`);
 
-      // Expect either 400 (bad request) or 500 (internal error) when location is missing
-      expect([400, 500]).toContain(response.status);
+      // 위치 미설정은 NotFoundException(404)이 계약이다.
+      // 기존 기대값 [400, 500]은 500(서버 오류)까지 정상으로 받아들여
+      // 실제 계약을 검증하지 못했다.
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('사용자 위치 정보가 설정되지 않았습니다.');
     });
   });
 
