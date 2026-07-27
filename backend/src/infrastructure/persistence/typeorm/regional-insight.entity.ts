@@ -6,6 +6,7 @@ import {
   Index,
   Unique,
 } from 'typeorm';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('regional_insights', { schema: 'alert_system' })
 @Unique('regional_insights_region_id_unique', ['regionId'])
@@ -49,7 +50,7 @@ export class RegionalInsightEntity {
   @Column({ name: 'month_trend', type: 'real', default: 0 })
   monthTrend: number;
 
-  @Column({ name: 'last_calculated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'last_calculated_at', type: TIMESTAMPTZ, default: () => 'CURRENT_TIMESTAMP' })
   lastCalculatedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

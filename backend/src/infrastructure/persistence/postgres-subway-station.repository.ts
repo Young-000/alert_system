@@ -27,13 +27,16 @@ export class PostgresSubwayStationRepository implements ISubwayStationRepository
     const dbType = this.dataSource.options.type;
     const queryBuilder = this.repository.createQueryBuilder('station');
 
-    // SQLite uses LIKE with LOWER(), PostgreSQL uses ILIKE
-    if (dbType === 'sqlite' || dbType === 'better-sqlite3') {
-      queryBuilder.where('LOWER(station.name) LIKE LOWER(:name)', {
+    // ILIKE는 PostgreSQL 전용 문법이다. 나머지 드라이버(sqlite/better-sqlite3/sqljs)는
+    // 모두 이식 가능한 LOWER() + LIKE로 처리한다.
+    // 화이트리스트가 아니라 postgres만 분기하는 이유: sqljs가 빠져 있어 e2e에서
+    // `near "ILIKE": syntax error`로 검색이 통째로 500이 났었다.
+    if (dbType === 'postgres') {
+      queryBuilder.where('station.name ILIKE :name', {
         name: `%${normalized}%`,
       });
     } else {
-      queryBuilder.where('station.name ILIKE :name', {
+      queryBuilder.where('LOWER(station.name) LIKE LOWER(:name)', {
         name: `%${normalized}%`,
       });
     }

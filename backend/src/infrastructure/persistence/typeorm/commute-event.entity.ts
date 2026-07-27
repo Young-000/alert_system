@@ -10,6 +10,7 @@ import {
 import { UserEntity } from './user.entity';
 import { UserPlaceEntity } from './user-place.entity';
 import { CommuteSessionEntity } from './commute-session.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('commute_events', { schema: 'alert_system' })
 @Index(['userId'])
@@ -30,10 +31,10 @@ export class CommuteEventEntity {
   @Column({ name: 'event_type', type: 'varchar', length: 20 })
   eventType: string;
 
-  @Column({ name: 'triggered_at', type: 'timestamptz' })
+  @Column({ name: 'triggered_at', type: TIMESTAMPTZ })
   triggeredAt: Date;
 
-  @Column({ name: 'recorded_at', type: 'timestamptz', default: () => 'now()' })
+  @Column({ name: 'recorded_at', type: TIMESTAMPTZ, default: () => 'now()' })
   recordedAt: Date;
 
   @Column({ type: 'double precision', nullable: true })

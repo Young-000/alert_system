@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { AlertEntity } from './alert.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('commute_records', { schema: 'alert_system' })
 @Index(['userId'])
@@ -33,7 +34,7 @@ export class CommuteRecordEntity {
   @Column({ name: 'scheduled_departure', type: 'time', nullable: true })
   scheduledDeparture?: string;
 
-  @Column({ name: 'actual_departure', type: 'timestamptz', nullable: true })
+  @Column({ name: 'actual_departure', type: TIMESTAMPTZ, nullable: true })
   actualDeparture?: Date;
 
   @Column({ name: 'weather_condition', length: 50, nullable: true })
