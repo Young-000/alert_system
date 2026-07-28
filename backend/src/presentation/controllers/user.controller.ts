@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Get, Param, Patch, Request, ForbiddenException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CreateUserUseCase } from '@application/use-cases/create-user.use-case';
 import { GetUserUseCase } from '@application/use-cases/get-user.use-case';
 import { UpdateUserLocationUseCase } from '@application/use-cases/update-user-location.use-case';
@@ -17,6 +18,7 @@ export class UserController {
   ) {}
 
   @Public() // 회원가입은 auth/register 사용 권장, 하위 호환성 유지
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post()
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const user = await this.createUserUseCase.execute(createUserDto);

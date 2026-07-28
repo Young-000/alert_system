@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('notification_logs', { schema: 'alert_system' })
 @Index(['userId', 'sentAt'])
@@ -34,7 +35,7 @@ export class NotificationLogEntity {
   @Column({ type: 'text', nullable: true })
   summary: string;
 
-  @Column({ name: 'sent_at', type: 'timestamptz', default: () => 'NOW()' })
+  @Column({ name: 'sent_at', type: TIMESTAMPTZ, default: () => 'NOW()' })
   sentAt: Date;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })

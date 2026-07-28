@@ -9,6 +9,7 @@ import {
   Index,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('user_patterns', { schema: 'alert_system' })
 @Index(['userId'])
@@ -39,7 +40,7 @@ export class UserPatternEntity {
   @Column({ name: 'sample_count', type: 'integer', default: 0 })
   sampleCount: number;
 
-  @Column({ name: 'last_updated', type: 'timestamptz', default: () => 'NOW()' })
+  @Column({ name: 'last_updated', type: TIMESTAMPTZ, default: () => 'NOW()' })
   lastUpdated: Date;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
