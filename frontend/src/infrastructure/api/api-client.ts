@@ -101,13 +101,16 @@ export class ApiClient {
     return this.withRetry(() => this.request<T>(url));
   }
 
+  /**
+   * 비멱등 메서드(POST/PATCH)는 재시도하지 않는다.
+   * 서버가 이미 처리한 뒤 응답만 유실된 경우(타임아웃·네트워크 단절) 재시도가
+   * 리소스를 중복 생성하기 때문이다. GET/PUT/DELETE만 withRetry로 감싼다.
+   */
   async post<T, D = unknown>(url: string, data?: D): Promise<T> {
-    return this.withRetry(() =>
-      this.request<T>(url, {
-        method: 'POST',
-        body: data !== undefined ? JSON.stringify(data) : undefined,
-      }),
-    );
+    return this.request<T>(url, {
+      method: 'POST',
+      body: data !== undefined ? JSON.stringify(data) : undefined,
+    });
   }
 
   async put<T, D = unknown>(url: string, data?: D): Promise<T> {
@@ -124,11 +127,9 @@ export class ApiClient {
   }
 
   async patch<T, D = unknown>(url: string, data?: D): Promise<T> {
-    return this.withRetry(() =>
-      this.request<T>(url, {
-        method: 'PATCH',
-        body: data !== undefined ? JSON.stringify(data) : undefined,
-      }),
-    );
+    return this.request<T>(url, {
+      method: 'PATCH',
+      body: data !== undefined ? JSON.stringify(data) : undefined,
+    });
   }
 }
