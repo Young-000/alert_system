@@ -64,7 +64,7 @@ describe('ManageChallengeUseCase', () => {
     challengeRepo = {
       findAllTemplates: jest.fn(),
       findTemplateById: jest.fn(),
-      findTemplatesByIds: jest.fn(),
+      findTemplatesByIds: jest.fn().mockResolvedValue([]),
       findActiveChallengesByUserId: jest.fn(),
       findChallengeById: jest.fn(),
       findActiveByUserAndTemplate: jest.fn(),
@@ -169,7 +169,7 @@ describe('ManageChallengeUseCase', () => {
       const template = makeTemplate();
 
       challengeRepo.findActiveChallengesByUserId.mockResolvedValue([challenge]);
-      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findTemplatesByIds.mockResolvedValue([template]);
 
       const result = await useCase.getActiveChallenges(userId);
 
@@ -291,11 +291,10 @@ describe('ManageChallengeUseCase', () => {
         challenges: [completed, failed],
         totalCount: 2,
       });
-      challengeRepo.findTemplateById.mockImplementation(async (id) => {
-        if (id === 'time-under-40') return template1;
-        if (id === 'streak-3d') return template2;
-        return null;
-      });
+      challengeRepo.findTemplatesByIds.mockResolvedValue([
+        template1,
+        template2,
+      ]);
 
       const result = await useCase.getChallengeHistory(userId, 10, 0);
 
@@ -305,6 +304,38 @@ describe('ManageChallengeUseCase', () => {
       expect(result.stats.totalFailed).toBe(1);
       expect(result.stats.totalAbandoned).toBe(0);
       expect(result.stats.completionRate).toBe(50);
+    });
+
+    it('템플릿을 챌린지 수와 무관하게 한 번만 조회한다 (N+1 방지)', async () => {
+      const template = makeTemplate({ id: 'time-under-40' });
+      const makeFinished = (id: string) =>
+        new UserChallenge({
+          id,
+          userId,
+          challengeTemplateId: 'time-under-40',
+          status: 'completed',
+          startedAt: new Date(),
+          deadlineAt: new Date(),
+          completedAt: new Date(),
+          currentProgress: 3,
+          targetProgress: 3,
+        });
+
+      challengeRepo.findChallengeHistory.mockResolvedValue({
+        challenges: [makeFinished('ch-1'), makeFinished('ch-2'), makeFinished('ch-3')],
+        totalCount: 3,
+      });
+      challengeRepo.findTemplatesByIds.mockResolvedValue([template]);
+
+      const result = await useCase.getChallengeHistory(userId, 10, 0);
+
+      expect(result.challenges).toHaveLength(3);
+      expect(challengeRepo.findTemplatesByIds).toHaveBeenCalledTimes(1);
+      // 같은 템플릿 3건 → 중복 제거된 id 1개만 조회
+      expect(challengeRepo.findTemplatesByIds).toHaveBeenCalledWith([
+        'time-under-40',
+      ]);
+      expect(challengeRepo.findTemplateById).not.toHaveBeenCalled();
     });
 
     it('히스토리가 없으면 빈 결과를 반환한다', async () => {

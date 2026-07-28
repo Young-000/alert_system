@@ -362,15 +362,6 @@ export function CommuteTrackingPage(): JSX.Element {
             >
               로그인
             </button>
-          ) : !session ? (
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => { setError(''); window.location.reload(); }}
-              style={{ marginLeft: '0.5rem' }}
-            >
-              다시 시도
-            </button>
           ) : (
             <button
               type="button"
