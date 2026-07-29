@@ -8,6 +8,7 @@ import {
   CONFIDENCE_LEVELS,
 } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
+import { getDayOfWeekFromDateOnly } from '@domain/utils/kst-date';
 import {
   IUserPatternRepository,
   USER_PATTERN_REPOSITORY,
@@ -95,7 +96,8 @@ export class PatternAnalysisService implements IPatternAnalysisService {
       return;
     }
 
-    const isWeekday = record.commuteDate.getDay() >= 1 && record.commuteDate.getDay() <= 5;
+    const dayOfWeek = getDayOfWeekFromDateOnly(record.commuteDate);
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
 
     // Get existing pattern or create new
     const existingPattern = await this.patternRepository.findByUserIdTypeAndDay(
@@ -178,7 +180,7 @@ export class PatternAnalysisService implements IPatternAnalysisService {
 
     // Filter by weekday/weekend
     return records.filter(r => {
-      const day = r.commuteDate.getDay();
+      const day = getDayOfWeekFromDateOnly(r.commuteDate);
       const recordIsWeekday = day >= 1 && day <= 5;
       return recordIsWeekday === isWeekday;
     });

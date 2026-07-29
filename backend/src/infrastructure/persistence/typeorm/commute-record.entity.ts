@@ -26,7 +26,7 @@ export class CommuteRecordEntity {
   alertId?: string;
 
   @Column({ name: 'commute_date', type: 'date' })
-  commuteDate: Date;
+  commuteDate: string;
 
   @Column({ name: 'commute_type', length: 20 })
   commuteType: string;

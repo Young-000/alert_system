@@ -241,4 +241,60 @@ describe('PatternAnalysisService', () => {
       expect(value.optimalMinutes).toBe(DEFAULT_PATTERNS.notificationLeadTime);
     });
   });
+
+  /**
+   * 회귀 방지: 리포지토리에서 온 기록의 commuteDate는 TypeORM이 문자열로 hydrate한다.
+   * 기존 스펙은 항상 `new Date(...)`를 넣어 프로덕션 경로를 재현하지 못했고,
+   * 그 결과 `commuteDate.getDay()` TypeError가 테스트를 통과해 배포됐다.
+   */
+  describe('DB에서 hydrate된 날짜 전용 문자열 처리', () => {
+    const hydratedRecord = (dateStr: string, hour: number, minute: number): CommuteRecord =>
+      new CommuteRecord('user-1', dateStr, CommuteType.MORNING, {
+        id: `rec-${dateStr}`,
+        actualDeparture: new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`),
+      });
+
+    it('문자열 날짜로도 평일 기록을 걸러내 패턴을 계산한다', async () => {
+      // 2026-07-27(월) ~ 2026-07-31(금)
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([
+        hydratedRecord('2026-07-27', 8, 0),
+        hydratedRecord('2026-07-28', 8, 5),
+        hydratedRecord('2026-07-29', 8, 10),
+        hydratedRecord('2026-07-30', 8, 15),
+        hydratedRecord('2026-07-31', 8, 20),
+      ]);
+
+      const result = await service.analyzeDeparturePattern('user-1', CommuteType.MORNING, true);
+
+      expect(result.sampleCount).toBe(5);
+      expect(result.confidence).toBe(CONFIDENCE_LEVELS.LEARNING);
+    });
+
+    it('주말 기록은 평일 분석에서 제외한다', async () => {
+      // 2026-08-01(토), 2026-08-02(일)
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([
+        hydratedRecord('2026-08-01', 9, 0),
+        hydratedRecord('2026-08-02', 9, 30),
+      ]);
+
+      const result = await service.analyzeDeparturePattern('user-1', CommuteType.MORNING, true);
+
+      expect(result.sampleCount).toBe(0);
+    });
+
+    it('updatePatternFromRecord가 문자열 날짜에서 평일 여부를 판정한다', async () => {
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([]);
+      mockPatternRepo.findByUserIdTypeAndDay.mockResolvedValue(undefined);
+      mockPatternRepo.save.mockResolvedValue(undefined);
+
+      await service.updatePatternFromRecord(hydratedRecord('2026-07-27', 8, 0));
+
+      expect(mockPatternRepo.findByUserIdTypeAndDay).toHaveBeenCalledWith(
+        'user-1',
+        PatternType.DEPARTURE_TIME,
+        undefined,
+        true, // 2026-07-27은 월요일
+      );
+    });
+  });
 });

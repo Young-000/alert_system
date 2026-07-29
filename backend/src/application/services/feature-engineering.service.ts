@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { CommuteSession } from '@domain/entities/commute-session.entity';
 import { timeToMinutes } from './statistics/descriptive-stats';
+import { getDayOfWeekFromDateOnly } from '@domain/utils/kst-date';
 
 /**
  * Features extracted per commute record for regression analysis.
@@ -36,16 +37,16 @@ export interface CommuteFeatureRow {
   isRaining: number;            // 0 or 1
   isSnowing: number;            // 0 or 1
   temperatureDeviation: number;
-  commuteDate: Date;
+  commuteDate: string;
 }
 
 @Injectable()
 export class FeatureEngineeringService {
   /**
-   * Extract day-of-week features from a Date.
+   * Extract day-of-week features from a KST calendar date ('YYYY-MM-DD').
    */
-  extractDayFeatures(date: Date): DayFeatures {
-    const dayOfWeek = date.getDay();
+  extractDayFeatures(date: string): DayFeatures {
+    const dayOfWeek = getDayOfWeekFromDateOnly(date);
     return {
       dayOfWeek,
       isWeekday: dayOfWeek >= 1 && dayOfWeek <= 5,
