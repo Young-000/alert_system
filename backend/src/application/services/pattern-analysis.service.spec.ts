@@ -3,6 +3,7 @@ import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.enti
 import { PatternType, CONFIDENCE_LEVELS, DEFAULT_PATTERNS, UserPattern } from '@domain/entities/user-pattern.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
+import { atTimeKST, toDateOnlyKST } from '@domain/utils/kst-date';
 
 describe('PatternAnalysisService', () => {
   let service: PatternAnalysisService;
@@ -23,8 +24,8 @@ describe('PatternAnalysisService', () => {
       date.setDate(date.getDate() + (6 - date.getDay()));
     }
 
-    const departure = new Date(date);
-    departure.setHours(hour, minute, 0, 0);
+    // hour/minute은 KST 벽시계 시각 (프로덕션 서버 TZ는 UTC다).
+    const departure = atTimeKST(toDateOnlyKST(date), hour, minute);
 
     return new CommuteRecord('user-1', date, CommuteType.MORNING, {
       id: `record-${dayOffset}`,
@@ -83,8 +84,8 @@ describe('PatternAnalysisService', () => {
         // Create dates that are always weekdays (Mon-Fri of the same week)
         const date = new Date('2026-02-16T00:00:00'); // Monday
         date.setDate(date.getDate() + i); // Mon, Tue, Wed, Thu, Fri
-        const departure = new Date(date);
-        departure.setHours(8, i * 5, 0, 0); // 08:00, 08:05, 08:10, 08:15, 08:20
+        // KST 08:00, 08:05, 08:10, 08:15, 08:20
+        const departure = atTimeKST(toDateOnlyKST(date), 8, i * 5);
         weekdayRecords.push(new CommuteRecord('user-1', date, CommuteType.MORNING, {
           id: `rec-${i}`,
           actualDeparture: departure,

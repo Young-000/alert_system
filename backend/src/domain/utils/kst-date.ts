@@ -119,6 +119,40 @@ export function getMonthFromDateOnly(dateStr: string): number {
   return Number(dateStr.slice(5, 7));
 }
 
+/** 한국 시간 기준 분(0-59) — 서버 TZ와 무관 */
+export function getMinutesKST(date: Date = new Date()): number {
+  return toKSTWallClock(date).getUTCMinutes();
+}
+
+/**
+ * 한국 시간 기준 'HH:mm' 표기 — 서버 TZ와 무관.
+ * 사용자에게 보여줄 시각은 항상 이 함수로 만든다.
+ */
+export function formatTimeKST(date: Date): string {
+  const hours = String(getHoursKST(date)).padStart(2, '0');
+  const minutes = String(getMinutesKST(date)).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * 한국 시간 기준 'YYYYMMDD' 표기 — 서버 TZ와 무관.
+ * 기상청(KMA) API의 base_date·fcstDate는 KST 달력 날짜다.
+ */
+export function formatDateCompactKST(date: Date = new Date()): string {
+  return toDateOnlyKST(date).replace(/-/g, '');
+}
+
+/**
+ * KST 달력 날짜('YYYY-MM-DD')의 특정 시각에 해당하는 절대 시각(Date).
+ *
+ * KST는 UTC+9이므로 UTC 기준으로 9시간을 뺀다. hour가 9보다 작으면
+ * `Date.UTC`가 자동으로 전날로 롤백한다 (KST 08:00 = UTC 전날 23:00).
+ */
+export function atTimeKST(dateStr: string, hour: number, minute = 0): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour - 9, minute));
+}
+
 /** YYYY-MM-DD 문자열을 KST Date 객체로 변환 */
 export function toDateKST(dateStr: string, endOfDay = false): Date {
   const time = endOfDay ? 'T23:59:59+09:00' : 'T00:00:00+09:00';

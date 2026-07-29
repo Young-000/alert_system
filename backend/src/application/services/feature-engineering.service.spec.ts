@@ -1,6 +1,7 @@
 import { FeatureEngineeringService } from './feature-engineering.service';
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
 import { CommuteSession, SessionStatus } from '@domain/entities/commute-session.entity';
+import { atTimeKST, toDateOnlyKST } from '@domain/utils/kst-date';
 
 describe('FeatureEngineeringService', () => {
   let service: FeatureEngineeringService;
@@ -15,8 +16,9 @@ describe('FeatureEngineeringService', () => {
     date: Date,
     weather?: string,
   ): CommuteRecord => {
-    const departure = new Date(date);
-    departure.setHours(hour, minute, 0, 0);
+    // hour/minute은 사용자가 체감하는 KST 벽시계 시각이다.
+    // setHours()(서버 로컬)로 만들면 프로덕션(TZ=UTC)의 실제 instant와 달라진다.
+    const departure = atTimeKST(toDateOnlyKST(date), hour, minute);
     return new CommuteRecord('user-1', date, CommuteType.MORNING, {
       id: `rec-${Date.now()}-${Math.random()}`,
       actualDeparture: departure,

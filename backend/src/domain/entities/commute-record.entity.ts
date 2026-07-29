@@ -1,4 +1,4 @@
-import { getHoursKST, toDateOnlyKST } from '@domain/utils/kst-date';
+import { formatTimeKST, getHoursKST, toDateOnlyKST } from '@domain/utils/kst-date';
 
 export enum CommuteType {
   MORNING = 'morning',
@@ -74,8 +74,7 @@ export class CommuteRecord {
 
   getActualDepartureTime(): string | undefined {
     if (!this.actualDeparture) return undefined;
-    const hours = this.actualDeparture.getHours().toString().padStart(2, '0');
-    const minutes = this.actualDeparture.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    // 사용자에게 보여줄 시각 — 서버 TZ가 UTC여도 KST로 표기한다.
+    return formatTimeKST(this.actualDeparture);
   }
 }
