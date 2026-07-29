@@ -28,6 +28,7 @@ import {
   ILiveActivityPushService,
   LIVE_ACTIVITY_PUSH_SERVICE,
 } from '@application/services/live-activity-push.service';
+import { getDayOfWeekKST, getTodayKST } from '@domain/utils/kst-date';
 
 const HISTORY_DAYS = 14;
 const MIN_HISTORY_RECORDS = 3;
@@ -63,8 +64,8 @@ export class CalculateDepartureUseCase {
    */
   async calculateForToday(userId: string): Promise<SmartDepartureSnapshotResponseDto[]> {
     const settings = await this.settingRepo.findActiveByUserId(userId);
-    const today = this.getTodayDateString();
-    const dayOfWeek = new Date().getDay();
+    const today = getTodayKST();
+    const dayOfWeek = getDayOfWeekKST();
 
     const results: SmartDepartureSnapshotResponseDto[] = [];
 
@@ -346,13 +347,6 @@ export class CalculateDepartureUseCase {
 
     const totalOffset = (estimatedTravelMin + prepTimeMinutes) * 60_000;
     return new Date(arrivalDate.getTime() - totalOffset);
-  }
-
-  private getTodayDateString(): string {
-    // Get today's date in KST
-    const now = new Date();
-    const kst = new Date(now.getTime() + 9 * 60 * 60_000);
-    return kst.toISOString().slice(0, 10);
   }
 
   toSnapshotDto(snapshot: SmartDepartureSnapshot): SmartDepartureSnapshotResponseDto {
