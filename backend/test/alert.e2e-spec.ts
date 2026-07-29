@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { TestAppModule } from './test-app.module';
+import { resetThrottler } from './throttler-reset';
 
 describe('Alert Service (e2e)', () => {
   let app: INestApplication;
@@ -22,6 +23,11 @@ describe('Alert Service (e2e)', () => {
     await app.init();
   });
 
+  // 테스트 간 rate limit 누적 제거 (register 3회/분 제한이 스위트를 무너뜨림)
+  beforeEach(() => {
+    resetThrottler(app);
+  });
+
   afterAll(async () => {
     await app.close();
   });
@@ -35,6 +41,7 @@ describe('Alert Service (e2e)', () => {
         email,
         password: 'SecurePass123!',
         name: 'Alert Test User',
+        phoneNumber: '01012345678',
       });
 
     return {

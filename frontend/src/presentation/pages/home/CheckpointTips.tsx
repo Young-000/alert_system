@@ -23,6 +23,8 @@ export function CheckpointTips({
 }: CheckpointTipsProps): JSX.Element {
   const page = 1;
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [actionError, setActionError] = useState('');
 
   const { data, isLoading, isError, refetch } = useCheckpointTips(checkpointKey, page);
   const createTipMutation = useCreateTip();
@@ -31,6 +33,7 @@ export function CheckpointTips({
 
   const handleCreateTip = useCallback(
     (cpKey: string, content: string, clearForm: () => void): void => {
+      setSubmitError('');
       createTipMutation.mutate(
         { checkpointKey: cpKey, content },
         {
@@ -41,6 +44,9 @@ export function CheckpointTips({
             // 429 rate limit error
             if (error.message.includes('429') || error.message.includes('Too Many')) {
               setIsRateLimited(true);
+            } else {
+              // 500/네트워크 등 그 외 실패 — 조용히 무시하지 말고 사용자에게 알림 (입력은 보존됨)
+              setSubmitError('팁 등록에 실패했어요. 잠시 후 다시 시도해주세요.');
             }
           },
         },
@@ -51,14 +57,24 @@ export function CheckpointTips({
 
   const handleHelpful = useCallback(
     (tipId: string): void => {
-      markHelpfulMutation.mutate(tipId);
+      setActionError('');
+      markHelpfulMutation.mutate(tipId, {
+        onError: () => {
+          setActionError('처리에 실패했어요. 다시 시도해주세요.');
+        },
+      });
     },
     [markHelpfulMutation],
   );
 
   const handleReport = useCallback(
     (tipId: string): void => {
-      reportTipMutation.mutate(tipId);
+      setActionError('');
+      reportTipMutation.mutate(tipId, {
+        onError: () => {
+          setActionError('신고에 실패했어요. 다시 시도해주세요.');
+        },
+      });
     },
     [reportTipMutation],
   );
@@ -101,6 +117,12 @@ export function CheckpointTips({
         </div>
       )}
 
+      {actionError && (
+        <div className="tips-action-error" role="alert">
+          {actionError}
+        </div>
+      )}
+
       {!isLoading && !isError && data && data.tips.length > 0 && (
         <div role="list" aria-label="팁 목록">
           {data.tips.map((tip) => (
@@ -124,6 +146,7 @@ export function CheckpointTips({
           isSubmitting={createTipMutation.isPending}
           isEligible={isEligible}
           isRateLimited={isRateLimited}
+          errorMessage={submitError}
         />
       )}
     </section>

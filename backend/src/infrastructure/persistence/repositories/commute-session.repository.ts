@@ -37,14 +37,19 @@ export class CommuteSessionRepositoryImpl implements ICommuteSessionRepository {
     return entity ? this.toDomain(entity) : undefined;
   }
 
-  async findByUserId(userId: string, limit = 50): Promise<CommuteSession[]> {
+  async findByUserId(userId: string, limit = 50, offset = 0): Promise<CommuteSession[]> {
     const entities = await this.sessionRepository.find({
       where: { userId },
       relations: ['checkpointRecords'],
       order: { startedAt: 'DESC' },
       take: limit,
+      skip: offset,
     });
     return entities.map((e) => this.toDomain(e));
+  }
+
+  async countByUserId(userId: string): Promise<number> {
+    return this.sessionRepository.count({ where: { userId } });
   }
 
   async findByUserIdAndStatus(

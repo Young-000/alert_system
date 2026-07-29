@@ -190,7 +190,8 @@ describe('CheckpointTips', () => {
 
     const helpfulBtns = screen.getAllByLabelText(/도움이 됐어요/);
     fireEvent.click(helpfulBtns[0]);
-    expect(mockMarkHelpfulMutate).toHaveBeenCalledWith('tip-1');
+    // mutate(tipId, { onError }) — 첫 인자만 검증 (에러 콜백은 별도)
+    expect(mockMarkHelpfulMutate).toHaveBeenCalledWith('tip-1', expect.any(Object));
   });
 
   it('calls reportTip mutation on report confirm', () => {
@@ -208,7 +209,32 @@ describe('CheckpointTips', () => {
     const reportBtns = screen.getAllByLabelText('이 팁 신고하기');
     fireEvent.click(reportBtns[0]);
     fireEvent.click(screen.getByText('확인'));
-    expect(mockReportTipMutate).toHaveBeenCalledWith('tip-1');
+    // mutate(tipId, { onError }) — 첫 인자만 검증 (에러 콜백은 별도)
+    expect(mockReportTipMutate).toHaveBeenCalledWith('tip-1', expect.any(Object));
+  });
+
+  it('신고 실패 시 에러 메시지를 노출한다 (silent failure 방지)', () => {
+    mockUseCheckpointTips.mockReturnValue({
+      data: { tips: sampleTips, total: 2, page: 1, limit: 20, hasNext: false },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    // mutate가 onError 콜백을 호출하도록 구현 (500/네트워크 실패 시뮬레이션)
+    mockReportTipMutate.mockImplementation(
+      (_tipId: string, opts?: { onError?: (e: Error) => void }) => {
+        opts?.onError?.(new Error('500'));
+      },
+    );
+
+    renderWithProviders(
+      <CheckpointTips checkpointKey="station:1" checkpointName="강남역" />,
+    );
+
+    fireEvent.click(screen.getAllByLabelText('이 팁 신고하기')[0]);
+    fireEvent.click(screen.getByText('확인'));
+
+    expect(screen.getByText(/신고에 실패했어요/)).toBeInTheDocument();
   });
 
   it('has proper aria-label on section', () => {

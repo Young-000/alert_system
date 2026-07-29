@@ -11,6 +11,7 @@ import {
 import { UserEntity } from './user.entity';
 import { CommuteRouteEntity } from './commute-route.entity';
 import { CheckpointRecordEntity } from './checkpoint-record.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 export type SessionStatus = 'in_progress' | 'completed' | 'cancelled';
 
@@ -30,10 +31,10 @@ export class CommuteSessionEntity {
   @Column({ type: 'uuid', name: 'route_id' })
   routeId: string;
 
-  @Column({ name: 'started_at', type: 'timestamptz' })
+  @Column({ name: 'started_at', type: TIMESTAMPTZ })
   startedAt: Date;
 
-  @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
+  @Column({ name: 'completed_at', type: TIMESTAMPTZ, nullable: true })
   completedAt?: Date;
 
   // 총 소요 시간 (분)
