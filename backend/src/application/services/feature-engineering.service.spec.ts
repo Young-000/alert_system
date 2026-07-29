@@ -26,7 +26,7 @@ describe('FeatureEngineeringService', () => {
 
   describe('extractDayFeatures', () => {
     it('월요일의 특성을 추출한다', () => {
-      const monday = new Date('2026-03-02'); // Monday
+      const monday = '2026-03-02'; // Monday
       const features = service.extractDayFeatures(monday);
 
       expect(features.dayOfWeek).toBe(1);
@@ -36,7 +36,7 @@ describe('FeatureEngineeringService', () => {
     });
 
     it('금요일의 특성을 추출한다', () => {
-      const friday = new Date('2026-03-06'); // Friday
+      const friday = '2026-03-06'; // Friday
       const features = service.extractDayFeatures(friday);
 
       expect(features.dayOfWeek).toBe(5);
@@ -46,7 +46,7 @@ describe('FeatureEngineeringService', () => {
     });
 
     it('일요일은 주말이다', () => {
-      const sunday = new Date('2026-03-01'); // Sunday
+      const sunday = '2026-03-01'; // Sunday
       const features = service.extractDayFeatures(sunday);
 
       expect(features.dayOfWeek).toBe(0);

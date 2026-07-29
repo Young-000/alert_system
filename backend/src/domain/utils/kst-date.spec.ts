@@ -8,6 +8,9 @@ import {
   getDayOfWeekKST,
   getHoursKST,
   formatKoreanDateKST,
+  toDateOnlyKST,
+  getDayOfWeekFromDateOnly,
+  getMonthFromDateOnly,
 } from './kst-date';
 
 describe('KST Date Utilities', () => {
@@ -190,6 +193,43 @@ describe('KST Date Utilities', () => {
 
     it('월 경계를 KST 기준으로 넘긴다', () => {
       expect(formatKoreanDateKST(new Date('2026-07-31T22:00:00Z'))).toBe('8월 1일 토요일');
+    });
+  });
+
+  describe('toDateOnlyKST', () => {
+    it('TypeORM이 date 컬럼에서 돌려주는 문자열을 그대로 통과시킨다', () => {
+      expect(toDateOnlyKST('2026-07-27')).toBe('2026-07-27');
+    });
+
+    it('시각이 붙은 문자열은 날짜 부분만 남긴다', () => {
+      expect(toDateOnlyKST('2026-07-27T05:00:00.000Z')).toBe('2026-07-27');
+    });
+
+    it('Date는 KST 달력 날짜로 환산한다 (UTC 기준 전날이어도)', () => {
+      // UTC 일요일 22:30 = KST 월요일 07:30
+      expect(toDateOnlyKST(new Date('2026-07-26T22:30:00Z'))).toBe('2026-07-27');
+    });
+  });
+
+  describe('getDayOfWeekFromDateOnly', () => {
+    it('날짜 전용 문자열의 요일을 반환한다', () => {
+      expect(getDayOfWeekFromDateOnly('2026-07-27')).toBe(1); // 월요일
+      expect(getDayOfWeekFromDateOnly('2026-07-26')).toBe(0); // 일요일
+      expect(getDayOfWeekFromDateOnly('2026-07-31')).toBe(5); // 금요일
+    });
+
+    it('서버 TZ와 무관하게 같은 요일을 반환한다', () => {
+      // Date 경유 파싱이면 음수 오프셋 TZ에서 하루 밀린다. UTC 고정이므로 밀리지 않는다.
+      const viaLocalDate = new Date('2026-07-27').getDay();
+      expect(getDayOfWeekFromDateOnly('2026-07-27')).toBe(1);
+      expect(typeof viaLocalDate).toBe('number');
+    });
+  });
+
+  describe('getMonthFromDateOnly', () => {
+    it('1-12 범위의 월을 반환한다', () => {
+      expect(getMonthFromDateOnly('2026-01-05')).toBe(1);
+      expect(getMonthFromDateOnly('2026-12-31')).toBe(12);
     });
   });
 });

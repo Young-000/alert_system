@@ -118,7 +118,7 @@ export class ExportUserDataUseCase {
         metadata: event.metadata,
       })),
       commuteRecords: commuteRecords.map((record: CommuteRecord) => ({
-        commuteDate: record.commuteDate.toISOString().split('T')[0],
+        commuteDate: record.commuteDate,
         commuteType: record.commuteType,
         scheduledDeparture: record.scheduledDeparture,
         actualDeparture: record.actualDeparture?.toISOString(),

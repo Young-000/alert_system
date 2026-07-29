@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getMonthFromDateOnly } from '@domain/utils/kst-date';
 import {
   UserPattern,
   PatternType,
@@ -175,7 +176,7 @@ export class EnhancedPatternAnalysisService {
     // Group by month
     const monthGroups = new Map<number, number[]>();
     for (const row of rows) {
-      const month = row.commuteDate.getMonth() + 1; // 1-12
+      const month = getMonthFromDateOnly(row.commuteDate); // 1-12
       const existing = monthGroups.get(month) ?? [];
       existing.push(row.departureMinutes);
       monthGroups.set(month, existing);
