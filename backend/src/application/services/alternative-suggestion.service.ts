@@ -35,14 +35,14 @@ export class AlternativeSuggestionService {
       return [];
     }
 
-    const alternatives: AlternativeSuggestionDto[] = [];
+    // Each segment's lookup is independent — run them concurrently instead of
+    // serially awaiting one DB/API round-trip per delayed segment. Promise.all
+    // preserves order, so the flattened result matches the previous ordering.
+    const perSegment = await Promise.all(
+      significantDelays.map((segment) => this.findAlternativesForSegment(segment)),
+    );
 
-    for (const segment of significantDelays) {
-      const segmentAlts = await this.findAlternativesForSegment(segment);
-      alternatives.push(...segmentAlts);
-    }
-
-    return alternatives;
+    return perSegment.flat();
   }
 
   private async findAlternativesForSegment(

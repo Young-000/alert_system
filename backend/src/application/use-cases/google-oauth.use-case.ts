@@ -3,6 +3,11 @@ import { IUserRepository } from '@domain/repositories/user.repository';
 import { User } from '@domain/entities/user.entity';
 import { GoogleProfile } from '@infrastructure/auth/google.strategy';
 
+export interface GoogleOAuthResult {
+  user: User;
+  isNewUser: boolean;
+}
+
 @Injectable()
 export class GoogleOAuthUseCase {
   private readonly logger = new Logger(GoogleOAuthUseCase.name);
@@ -11,14 +16,14 @@ export class GoogleOAuthUseCase {
     @Inject('IUserRepository') private userRepository: IUserRepository,
   ) {}
 
-  async execute(googleProfile: GoogleProfile): Promise<User> {
+  async execute(googleProfile: GoogleProfile): Promise<GoogleOAuthResult> {
     const { googleId, email, name } = googleProfile;
 
     // 1. Google ID로 기존 사용자 검색
     let user = await this.userRepository.findByGoogleId(googleId);
     if (user) {
       this.logger.log(`Existing user found by Google ID: ${email}`);
-      return user;
+      return { user, isNewUser: false };
     }
 
     // 2. 이메일로 기존 사용자 검색 (기존 이메일 계정과 연동)
@@ -27,7 +32,8 @@ export class GoogleOAuthUseCase {
       // 기존 이메일 계정에 Google ID 연동
       this.logger.log(`Linking Google ID to existing email account: ${email}`);
       await this.userRepository.updateGoogleId(user.id, googleId);
-      return await this.userRepository.findById(user.id) as User;
+      const linkedUser = await this.userRepository.findById(user.id) as User;
+      return { user: linkedUser, isNewUser: false };
     }
 
     // 3. 새 사용자 생성 (Google 로그인으로 신규 가입)
@@ -41,6 +47,7 @@ export class GoogleOAuthUseCase {
       googleId,
     );
 
-    return this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
+    return { user: savedUser, isNewUser: true };
   }
 }

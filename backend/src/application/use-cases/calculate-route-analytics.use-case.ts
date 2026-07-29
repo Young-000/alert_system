@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
 import {
   ICommuteSessionRepository,
   COMMUTE_SESSION_REPOSITORY,
@@ -286,7 +287,7 @@ export class CalculateRouteAnalyticsUseCase {
     // 요일별 그룹화
     const dayGroups = new Map<number, number[]>();
     for (const session of sessions) {
-      const dayOfWeek = session.startedAt.getDay();
+      const dayOfWeek = getDayOfWeekKST(session.startedAt);
       if (!dayGroups.has(dayOfWeek)) {
         dayGroups.set(dayOfWeek, []);
       }

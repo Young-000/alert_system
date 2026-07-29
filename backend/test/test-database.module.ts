@@ -1,51 +1,24 @@
 import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from '../src/infrastructure/persistence/typeorm/user.entity';
-import { AlertEntity } from '../src/infrastructure/persistence/typeorm/alert.entity';
-import { PushSubscriptionEntity } from '../src/infrastructure/persistence/typeorm/push-subscription.entity';
-import { SubwayStationEntity } from '../src/infrastructure/persistence/typeorm/subway-station.entity';
-import { WeatherCacheEntity } from '../src/infrastructure/persistence/typeorm/weather-cache.entity';
-import { AirQualityCacheEntity } from '../src/infrastructure/persistence/typeorm/air-quality-cache.entity';
-import {
-  SubwayArrivalCacheEntity,
-  BusArrivalCacheEntity,
-  ApiCallLogEntity,
-} from '../src/infrastructure/persistence/typeorm/transport-cache.entity';
+import { ALL_ENTITIES } from '../src/infrastructure/persistence/typeorm/entities';
 
 /**
  * 테스트용 데이터베이스 모듈
  * SQLite 인메모리 데이터베이스를 사용하여 E2E 테스트 실행
+ *
+ * 엔티티 목록은 프로덕션과 동일한 `ALL_ENTITIES`를 쓴다.
+ * 여기서 목록을 따로 관리하면 새 엔티티가 추가될 때마다 e2e만 뒤처진다.
  */
 @Global()
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqljs',
-      entities: [
-        UserEntity,
-        AlertEntity,
-        PushSubscriptionEntity,
-        SubwayStationEntity,
-        WeatherCacheEntity,
-        AirQualityCacheEntity,
-        SubwayArrivalCacheEntity,
-        BusArrivalCacheEntity,
-        ApiCallLogEntity,
-      ],
+      entities: ALL_ENTITIES,
       synchronize: true,
       dropSchema: true,
     }),
-    TypeOrmModule.forFeature([
-      UserEntity,
-      AlertEntity,
-      PushSubscriptionEntity,
-      SubwayStationEntity,
-      WeatherCacheEntity,
-      AirQualityCacheEntity,
-      SubwayArrivalCacheEntity,
-      BusArrivalCacheEntity,
-      ApiCallLogEntity,
-    ]),
+    TypeOrmModule.forFeature(ALL_ENTITIES),
   ],
   exports: [TypeOrmModule],
 })

@@ -86,6 +86,7 @@ const createMockRepos = (): {
     findById: jest.fn(),
     findByIdWithRecords: jest.fn(),
     findByUserId: jest.fn(),
+    countByUserId: jest.fn(),
     findByUserIdAndStatus: jest.fn(),
     findInProgressByUserId: jest.fn(),
     findByUserIdInDateRange: jest.fn(),

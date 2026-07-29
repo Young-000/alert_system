@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
 import {
   PatternType,
   DayOfWeekDepartureValue,
@@ -89,7 +90,7 @@ export class PredictionEngineService {
     conditions?: PredictionConditions,
   ): Promise<PredictionResult> {
     const targetDate = conditions?.targetDate ?? new Date();
-    const dayOfWeek = targetDate.getDay();
+    const dayOfWeek = getDayOfWeekKST(targetDate);
 
     // 1. Get record count & determine tier
     const records = this.commuteRepository

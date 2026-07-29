@@ -5,6 +5,16 @@
 
 const KST_OFFSET_MINUTES = 9 * 60;
 
+const DAY_NAMES_KO = ['일', '월', '화', '수', '목', '금', '토'];
+
+/**
+ * 주어진 시각을 KST 벽시계로 옮긴 Date.
+ * 반환값은 getUTC* 계열로만 읽어야 한다 (서버 로컬 TZ 영향 배제).
+ */
+function toKSTWallClock(date: Date): Date {
+  return new Date(date.getTime() + KST_OFFSET_MINUTES * 60_000);
+}
+
 /** 한국 시간 기준 오늘 날짜 (YYYY-MM-DD) */
 export function getTodayKST(): string {
   const now = new Date();
@@ -56,6 +66,26 @@ export function formatWeekLabel(weekStartDate: string): string {
   const month = date.getMonth() + 1;
   const weekOfMonth = Math.ceil(date.getDate() / 7);
   return `${month}월 ${weekOfMonth}주차`;
+}
+
+/**
+ * 한국 시간 기준 요일 (0=일, 1=월, ..., 6=토)
+ * 서버 TZ가 UTC여도 KST 요일을 반환한다.
+ */
+export function getDayOfWeekKST(date: Date = new Date()): number {
+  return toKSTWallClock(date).getUTCDay();
+}
+
+/** 한국 시간 기준 시(0-23) — 서버 TZ와 무관 */
+export function getHoursKST(date: Date = new Date()): number {
+  return toKSTWallClock(date).getUTCHours();
+}
+
+/** 알림 문구용 한국어 날짜: "7월 29일 화요일" */
+export function formatKoreanDateKST(date: Date = new Date()): string {
+  const kst = toKSTWallClock(date);
+  const dayName = DAY_NAMES_KO[kst.getUTCDay()];
+  return `${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 ${dayName}요일`;
 }
 
 /** YYYY-MM-DD 문자열을 KST Date 객체로 변환 */

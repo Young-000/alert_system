@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { AlertEntity } from './alert.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('behavior_events', { schema: 'alert_system' })
 @Index(['userId'])
@@ -28,7 +29,7 @@ export class BehaviorEventEntity {
   @Column({ name: 'event_type', length: 50 })
   eventType: string;
 
-  @Column({ type: 'timestamptz', default: () => 'NOW()' })
+  @Column({ type: TIMESTAMPTZ, default: () => 'NOW()' })
   timestamp: Date;
 
   @Column({ name: 'day_of_week', type: 'smallint' })

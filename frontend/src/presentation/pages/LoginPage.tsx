@@ -26,12 +26,9 @@ export function LoginPage(): JSX.Element {
 
     const checkGoogleStatus = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/google/status`);
+        const data = await authApiClient.getGoogleOAuthStatus();
         if (!isMounted) return;
-        if (response.ok) {
-          const data = await response.json();
-          setIsGoogleEnabled(data.enabled);
-        }
+        setIsGoogleEnabled(data.enabled);
       } catch {
         // Google 상태 확인 실패 시 무시
       }
