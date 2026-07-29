@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('community_tips', { schema: 'alert_system' })
 @Index('community_tips_checkpoint_key_idx', ['checkpointKey', 'isHidden', 'createdAt'])
@@ -38,6 +39,6 @@ export class CommunityTipEntity {
   @JoinColumn({ name: 'author_id' })
   author?: UserEntity;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: TIMESTAMPTZ })
   createdAt: Date;
 }

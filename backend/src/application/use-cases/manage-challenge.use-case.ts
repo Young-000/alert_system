@@ -1,5 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ChallengeRepository } from '@domain/repositories/challenge.repository';
+import {
+  ChallengeRepository,
+  TemplateMap,
+} from '@domain/repositories/challenge.repository';
 import { UserChallenge } from '@domain/entities/user-challenge.entity';
 import {
   MAX_ACTIVE_CHALLENGES,
@@ -93,6 +96,9 @@ export class ManageChallengeUseCase {
     const now = new Date();
     const details: ActiveChallengeDetail[] = [];
 
+    // Batch fetch all templates (N+1 → 1 query)
+    const templateMap = await this.loadTemplateMap(activeChallenges);
+
     for (const challenge of activeChallenges) {
       // Lazy expiry check
       const checked = challenge.checkExpiry(now);
@@ -101,9 +107,7 @@ export class ManageChallengeUseCase {
         continue;
       }
 
-      const template = await this.challengeRepo.findTemplateById(
-        checked.challengeTemplateId,
-      );
+      const template = templateMap.get(checked.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -136,10 +140,11 @@ export class ManageChallengeUseCase {
     let totalFailed = 0;
     let totalAbandoned = 0;
 
+    // Batch fetch all templates (N+1 → 1 query)
+    const templateMap = await this.loadTemplateMap(challenges);
+
     for (const challenge of challenges) {
-      const template = await this.challengeRepo.findTemplateById(
-        challenge.challengeTemplateId,
-      );
+      const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
       details.push({
@@ -176,6 +181,16 @@ export class ManageChallengeUseCase {
         completionRate,
       },
     };
+  }
+
+  private async loadTemplateMap(
+    challenges: readonly UserChallenge[],
+  ): Promise<TemplateMap> {
+    const templateIds = [
+      ...new Set(challenges.map((c) => c.challengeTemplateId)),
+    ];
+    const templates = await this.challengeRepo.findTemplatesByIds(templateIds);
+    return new Map(templates.map((t) => [t.id, t]));
   }
 
   async getBadges(userId: string): Promise<BadgeCollectionResult> {

@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('subway_arrival_cache', { schema: 'alert_system' })
 @Index(['stationName'])
@@ -21,7 +22,7 @@ export class SubwayArrivalCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamptz' })
+  @Column({ name: 'expires_at', type: TIMESTAMPTZ })
   expiresAt: Date;
 }
 
@@ -46,7 +47,7 @@ export class BusArrivalCacheEntity {
   @CreateDateColumn({ name: 'fetched_at' })
   fetchedAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamptz' })
+  @Column({ name: 'expires_at', type: TIMESTAMPTZ })
   expiresAt: Date;
 }
 

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { CommunityTipEntity } from './community-tip.entity';
 import { UserEntity } from './user.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('community_tip_helpfuls', { schema: 'alert_system' })
 @Unique('community_tip_helpfuls_unique', ['tipId', 'userId'])
@@ -33,6 +34,6 @@ export class CommunityTipHelpfulEntity {
   @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: TIMESTAMPTZ })
   createdAt: Date;
 }

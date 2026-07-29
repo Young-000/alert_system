@@ -5,6 +5,9 @@ import {
   getWeekBounds,
   formatWeekLabel,
   toDateKST,
+  getDayOfWeekKST,
+  getHoursKST,
+  formatKoreanDateKST,
 } from './kst-date';
 
 describe('KST Date Utilities', () => {
@@ -145,6 +148,48 @@ describe('KST Date Utilities', () => {
     it('다른 날짜도 올바르게 변환한다', () => {
       const date = toDateKST('2026-01-01');
       expect(date.toISOString()).toBe('2025-12-31T15:00:00.000Z');
+    });
+  });
+
+  // 서버 TZ가 UTC인 ECS Fargate에서 KST 새벽~오전(UTC 전날 15:00~23:59) 구간의
+  // 요일/시각이 하루 밀리던 회귀를 고정한다.
+  describe('getDayOfWeekKST', () => {
+    it('UTC 기준 전날 밤이어도 KST 요일을 반환한다', () => {
+      // UTC 일요일 22:30 = KST 월요일 07:30 (출근 알림 시간대)
+      const instant = new Date('2026-07-26T22:30:00Z');
+      expect(instant.getUTCDay()).toBe(0); // UTC로는 일요일
+      expect(getDayOfWeekKST(instant)).toBe(1); // KST로는 월요일
+    });
+
+    it('KST 기준 토요일 새벽을 토요일로 판정한다', () => {
+      // UTC 금요일 22:00 = KST 토요일 07:00
+      expect(getDayOfWeekKST(new Date('2026-07-31T22:00:00Z'))).toBe(6);
+    });
+
+    it('UTC와 KST 날짜가 같은 낮 시간대는 그대로 반환한다', () => {
+      // UTC 화요일 03:00 = KST 화요일 12:00
+      expect(getDayOfWeekKST(new Date('2026-07-28T03:00:00Z'))).toBe(2);
+    });
+  });
+
+  describe('getHoursKST', () => {
+    it('UTC 전날 밤을 KST 오전 시각으로 반환한다', () => {
+      expect(getHoursKST(new Date('2026-07-26T22:30:00Z'))).toBe(7);
+    });
+
+    it('자정 경계를 넘겨도 올바른 시각을 반환한다', () => {
+      // UTC 15:00 = KST 다음날 00:00
+      expect(getHoursKST(new Date('2026-07-26T15:00:00Z'))).toBe(0);
+    });
+  });
+
+  describe('formatKoreanDateKST', () => {
+    it('KST 기준 날짜/요일 문구를 만든다', () => {
+      expect(formatKoreanDateKST(new Date('2026-07-26T22:30:00Z'))).toBe('7월 27일 월요일');
+    });
+
+    it('월 경계를 KST 기준으로 넘긴다', () => {
+      expect(formatKoreanDateKST(new Date('2026-07-31T22:00:00Z'))).toBe('8월 1일 토요일');
     });
   });
 });

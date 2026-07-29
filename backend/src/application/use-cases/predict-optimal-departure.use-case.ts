@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getDayOfWeekKST, getHoursKST } from '@domain/utils/kst-date';
 import { IUserPatternRepository } from '../../domain/repositories/user-pattern.repository';
 import { IAlertRepository } from '../../domain/repositories/alert.repository';
 import { PatternType, DEFAULT_PATTERNS } from '../../domain/entities/user-pattern.entity';
@@ -183,9 +184,9 @@ export class PredictOptimalDepartureUseCase {
     }
 
     // Default fallback
-    const now = new Date();
-    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
-    const isMorning = now.getHours() < 12;
+    const dayOfWeek = getDayOfWeekKST();
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const isMorning = getHoursKST() < 12;
 
     if (isMorning) {
       return isWeekday

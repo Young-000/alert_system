@@ -7,12 +7,14 @@ interface StationSearchStepProps {
   readonly searchResults: TransportItem[];
   readonly selectedTransports: TransportItem[];
   readonly isSearching: boolean;
+  readonly searchError: string | null;
   readonly groupedStations: GroupedStation[];
   readonly selectedStation: GroupedStation | null;
   readonly savedRoutes: RouteResponse[];
   readonly onSearchChange: (query: string) => void;
   readonly onToggleTransport: (item: TransportItem) => void;
   readonly onSelectStation: (station: GroupedStation | null) => void;
+  readonly onRetrySearch: () => void;
 }
 
 export function StationSearchStep({
@@ -21,12 +23,14 @@ export function StationSearchStep({
   searchResults,
   selectedTransports,
   isSearching,
+  searchError,
   groupedStations,
   selectedStation,
   savedRoutes,
   onSearchChange,
   onToggleTransport,
   onSelectStation,
+  onRetrySearch,
 }: StationSearchStepProps): JSX.Element {
   return (
     <section className="wizard-step">
@@ -55,6 +59,7 @@ export function StationSearchStep({
         <SearchSection
           searchQuery={searchQuery}
           isSearching={isSearching}
+          searchError={searchError}
           groupedStations={groupedStations}
           searchResults={searchResults}
           selectedTransports={selectedTransports}
@@ -62,6 +67,7 @@ export function StationSearchStep({
           onSearchChange={onSearchChange}
           onToggleTransport={onToggleTransport}
           onSelectStation={onSelectStation}
+          onRetrySearch={onRetrySearch}
         />
       )}
 
@@ -224,6 +230,7 @@ function LineSelection({
 interface SearchSectionProps {
   readonly searchQuery: string;
   readonly isSearching: boolean;
+  readonly searchError: string | null;
   readonly groupedStations: GroupedStation[];
   readonly searchResults: TransportItem[];
   readonly selectedTransports: TransportItem[];
@@ -231,11 +238,13 @@ interface SearchSectionProps {
   readonly onSearchChange: (query: string) => void;
   readonly onToggleTransport: (item: TransportItem) => void;
   readonly onSelectStation: (station: GroupedStation) => void;
+  readonly onRetrySearch: () => void;
 }
 
 function SearchSection({
   searchQuery,
   isSearching,
+  searchError,
   groupedStations,
   searchResults,
   selectedTransports,
@@ -243,6 +252,7 @@ function SearchSection({
   onSearchChange,
   onToggleTransport,
   onSelectStation,
+  onRetrySearch,
 }: SearchSectionProps): JSX.Element {
   return (
     <>
@@ -270,8 +280,23 @@ function SearchSection({
         {isSearching && <p className="muted">검색 중...</p>}
       </div>
 
-      {/* 지하철만 선택 시: 역 그룹 먼저 표시 */}
-      {groupedStations.length > 0 && transportTypes.length === 1 && transportTypes[0] === 'subway' ? (
+      {/* 검색 실패: '결과 없음'과 구분되는 에러 상태 + 재시도 */}
+      {searchError && !isSearching ? (
+        <div className="empty-state" role="alert">
+          <span className="empty-icon" aria-hidden="true">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </span>
+          <p className="empty-title">{searchError}</p>
+          <button type="button" className="btn-secondary" onClick={onRetrySearch}>
+            다시 시도
+          </button>
+        </div>
+      ) : /* 지하철만 선택 시: 역 그룹 먼저 표시 */
+      groupedStations.length > 0 && transportTypes.length === 1 && transportTypes[0] === 'subway' ? (
         <div className="search-results station-groups" role="listbox" aria-label="역 검색 결과">
           {groupedStations.map((station) => (
             <button

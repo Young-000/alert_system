@@ -6,6 +6,7 @@ import {
   Index,
   Unique,
 } from 'typeorm';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('segment_congestion', { schema: 'alert_system' })
 @Unique('segment_congestion_segment_slot_unique', ['segmentKey', 'timeSlot'])
@@ -55,7 +56,7 @@ export class SegmentCongestionEntity {
   @Column({ type: 'real', default: 0.3 })
   confidence: number;
 
-  @Column({ name: 'last_updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'last_updated_at', type: TIMESTAMPTZ, default: () => 'CURRENT_TIMESTAMP' })
   lastUpdatedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

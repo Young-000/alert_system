@@ -350,6 +350,54 @@ describe('AlertSettingsPage', () => {
     });
   });
 
+  it('should not leak a previous delete error into a newly reopened delete modal', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([
+      {
+        id: 'alert-1',
+        userId: 'user-1',
+        name: '테스트 알림',
+        schedule: '0 8 * * *',
+        alertTypes: ['weather'] as AlertType[],
+        enabled: true,
+      },
+    ]);
+    mockAlertApiClient.deleteAlert.mockRejectedValueOnce(new Error('network'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('삭제')).toBeInTheDocument();
+    });
+
+    // 1st attempt: open modal and confirm -> delete fails -> error shown in modal
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('알림 삭제')).toBeInTheDocument();
+    });
+    const deleteButtons = screen.getAllByRole('button', { name: '삭제' });
+    const confirmButton = deleteButtons.find(btn => btn.classList.contains('btn-danger'));
+    fireEvent.click(confirmButton!);
+
+    await waitFor(() => {
+      expect(screen.getByText('삭제에 실패했습니다.')).toBeInTheDocument();
+    });
+
+    // Cancel, then reopen the modal
+    fireEvent.click(screen.getByText('취소'));
+    await waitFor(() => {
+      expect(screen.queryByText('알림 삭제')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('알림 삭제')).toBeInTheDocument();
+    });
+
+    // The stale error from the previous failed attempt must NOT appear
+    expect(screen.queryByText('삭제에 실패했습니다.')).not.toBeInTheDocument();
+  });
+
   // --- Toggle alert ---
 
   it('should toggle alert enabled state', async () => {

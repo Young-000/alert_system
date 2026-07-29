@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IUserRepository } from '@domain/repositories/user.repository';
@@ -110,7 +111,7 @@ export class GenerateWeeklyReportUseCase {
     // Find best day (shortest average commute)
     const dayStats = new Map<number, { total: number; count: number }>();
     for (const session of completedSessions) {
-      const day = new Date(session.startedAt).getDay();
+      const day = getDayOfWeekKST(new Date(session.startedAt));
       const existing = dayStats.get(day) || { total: 0, count: 0 };
       existing.total += session.totalDurationMinutes || 0;
       existing.count++;

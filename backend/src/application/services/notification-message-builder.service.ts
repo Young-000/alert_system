@@ -5,6 +5,7 @@ import { BusArrival } from '@domain/entities/bus-arrival.entity';
 import { SubwayArrival } from '@domain/entities/subway-arrival.entity';
 import { CommuteRoute } from '@domain/entities/commute-route.entity';
 import { RouteScoreDto } from '@application/dto/route-recommendation.dto';
+import { formatKoreanDateKST } from '@domain/utils/kst-date';
 import {
   WeatherAlertVariables,
   TransitAlertVariables,
@@ -31,12 +32,9 @@ export class NotificationMessageBuilderService {
     const airQuality = data.airQuality;
     const forecast = weather.forecast;
 
-    const now = new Date();
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-
     return {
       userName,
-      date: `${now.getMonth() + 1}월 ${now.getDate()}일 ${dayNames[now.getDay()]}요일`,
+      date: formatKoreanDateKST(),
       currentTemp: `${Math.round(weather.temperature)}`,
       minTemp: forecast ? `${forecast.minTemp}` : `${Math.round(weather.temperature - 5)}`,
       weather: this.buildWeatherString(weather),
@@ -57,12 +55,9 @@ export class NotificationMessageBuilderService {
   buildCombinedVariables(userName: string, data: NotificationData): CombinedAlertVariables {
     const weather = data.weather!;
     const forecast = weather.forecast;
-    const now = new Date();
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-
     return {
       userName,
-      date: `${now.getMonth() + 1}월 ${now.getDate()}일 ${dayNames[now.getDay()]}요일`,
+      date: formatKoreanDateKST(),
       currentTemp: `${Math.round(weather.temperature)}`,
       minTemp: forecast ? `${forecast.minTemp}` : `${Math.round(weather.temperature - 5)}`,
       weather: this.buildWeatherString(weather),
