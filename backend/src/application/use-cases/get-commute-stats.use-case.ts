@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional } from '@nestjs/common';
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
 import {
   ICommuteSessionRepository,
   COMMUTE_SESSION_REPOSITORY,
@@ -243,7 +244,7 @@ export class GetCommuteStatsUseCase {
     const sessionsByDay = new Map<number, CommuteSession[]>();
 
     for (const session of sessions) {
-      const dayOfWeek = session.startedAt.getDay();
+      const dayOfWeek = getDayOfWeekKST(session.startedAt);
       const existing = sessionsByDay.get(dayOfWeek) || [];
       existing.push(session);
       sessionsByDay.set(dayOfWeek, existing);

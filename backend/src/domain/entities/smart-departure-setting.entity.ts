@@ -1,3 +1,5 @@
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
+
 export type DepartureType = 'commute' | 'return';
 
 export class SmartDepartureSetting {
@@ -124,7 +126,7 @@ export class SmartDepartureSetting {
 
   isActiveToday(): boolean {
     if (!this.isEnabled) return false;
-    const dayOfWeek = new Date().getDay();
+    const dayOfWeek = getDayOfWeekKST();
     return this.activeDays.includes(dayOfWeek);
   }
 
