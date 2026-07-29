@@ -202,6 +202,103 @@ describe('WeatherApiClient', () => {
     await expect(client.getWeather(37.5665, 126.9780)).rejects.toThrow('날씨 정보를 가져오는데 실패했습니다');
   });
 
+  /**
+   * 기상청 API의 base_date·base_time·fcstDate는 모두 KST 기준이다.
+   * 프로덕션(ECS)은 컨테이너 TZ가 없어 Node가 UTC로 동작하는데, 로컬 시각으로
+   * 기준 시각을 만들면 9시간 과거를 조회해 NO_DATA/과거 데이터를 받는다.
+   */
+  describe('기상청 기준 시각 — KST', () => {
+    const emptyResponse = {
+      data: {
+        response: {
+          header: { resultCode: '00', resultMsg: 'NORMAL_SERVICE' },
+          body: { items: { item: [] } },
+        },
+      },
+    };
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const paramsAt = async (utcInstant: string) => {
+      jest.useFakeTimers().setSystemTime(new Date(utcInstant));
+      mockGet.mockResolvedValue(emptyResponse);
+
+      await client.getWeather(37.5665, 126.9780);
+
+      const [ncstCall, fcstCall] = mockGet.mock.calls;
+      return { ncst: ncstCall[1].params, fcst: fcstCall[1].params };
+    };
+
+    it('KST 07:30(UTC 전날 22:30)에 KST 날짜/시각으로 실황을 조회한다', async () => {
+      const { ncst } = await paramsAt('2026-07-29T22:30:00Z');
+
+      // 40분 전 = KST 06:50 → base_date 2026-07-30, base_time 0600
+      expect(ncst.base_date).toBe('20260730');
+      expect(ncst.base_time).toBe('0600');
+    });
+
+    it('KST 자정 직후에도 당일 날짜로 조회한다', async () => {
+      // UTC 15:10 = KST 00:10 → 40분 전은 KST 전날 23:30
+      const { ncst } = await paramsAt('2026-07-29T15:10:00Z');
+
+      expect(ncst.base_date).toBe('20260729');
+      expect(ncst.base_time).toBe('2300');
+    });
+
+    it('KST 시각으로 단기예보 발표 시각을 고른다', async () => {
+      // UTC 전날 22:30 = KST 07:30 → 05시 발표분 사용
+      const { fcst } = await paramsAt('2026-07-29T22:30:00Z');
+
+      expect(fcst.base_date).toBe('20260730');
+      expect(fcst.base_time).toBe('0500');
+    });
+
+    it('KST 02시 이전에는 전날 23시 발표분을 사용한다', async () => {
+      // UTC 16:00 = KST 01:00
+      const { fcst } = await paramsAt('2026-07-29T16:00:00Z');
+
+      expect(fcst.base_date).toBe('20260729');
+      expect(fcst.base_time).toBe('2300');
+    });
+
+    it('KST 오늘 날짜의 예보만 시간대별 목록에 담는다', async () => {
+      // UTC 전날 22:30 = KST 2026-07-30 07:30
+      jest.useFakeTimers().setSystemTime(new Date('2026-07-29T22:30:00Z'));
+
+      const forecastResponse = {
+        data: {
+          response: {
+            header: { resultCode: '00', resultMsg: 'NORMAL_SERVICE' },
+            body: {
+              items: {
+                item: [
+                  // KST 오늘(7/30) — 포함돼야 한다.
+                  { category: 'TMP', fcstValue: '28', fcstDate: '20260730', fcstTime: '0900' },
+                  { category: 'SKY', fcstValue: '1', fcstDate: '20260730', fcstTime: '0900' },
+                  { category: 'POP', fcstValue: '10', fcstDate: '20260730', fcstTime: '0900' },
+                  // UTC 기준 '오늘'(7/29) — KST로는 어제라 제외돼야 한다.
+                  { category: 'TMP', fcstValue: '11', fcstDate: '20260729', fcstTime: '0900' },
+                ],
+              },
+            },
+          },
+        },
+      };
+
+      mockGet
+        .mockResolvedValueOnce(emptyResponse)
+        .mockResolvedValueOnce(forecastResponse);
+
+      const result = await client.getWeather(37.5665, 126.9780);
+
+      // formatDate()가 로컬(UTC) 날짜를 쓰면 7/30 예보가 전부 걸러져 목록이 빈다.
+      expect(result.forecast?.hourlyForecasts).toHaveLength(1);
+      expect(result.forecast?.hourlyForecasts[0].temperature).toBe(28);
+    });
+  });
+
   it('should handle empty API response gracefully', async () => {
     const mockEmptyResponse = {
       data: {

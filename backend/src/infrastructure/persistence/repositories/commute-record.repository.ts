@@ -4,6 +4,7 @@ import { Repository, LessThan, Between, MoreThanOrEqual } from 'typeorm';
 import { CommuteRecordEntity } from '../typeorm/commute-record.entity';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
+import { toDateOnlyKST } from '@domain/utils/kst-date';
 
 @Injectable()
 export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
@@ -52,7 +53,8 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
     const entities = await this.repository.find({
       where: {
         userId,
-        commuteDate: Between(startDate, endDate),
+        // commute_date는 날짜 전용 컬럼이므로 시각이 붙은 Date와 직접 비교하지 않는다.
+        commuteDate: Between(toDateOnlyKST(startDate), toDateOnlyKST(endDate)),
       },
       order: { commuteDate: 'DESC' },
     });
@@ -66,7 +68,7 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
     const entities = await this.repository.find({
       where: {
         userId,
-        commuteDate: MoreThanOrEqual(cutoffDate),
+        commuteDate: MoreThanOrEqual(toDateOnlyKST(cutoffDate)),
       },
       order: { commuteDate: 'DESC' },
     });
@@ -79,7 +81,7 @@ export class CommuteRecordRepositoryImpl implements ICommuteRecordRepository {
 
   async deleteOlderThan(cutoffDate: Date): Promise<number> {
     const result = await this.repository.delete({
-      commuteDate: LessThan(cutoffDate),
+      commuteDate: LessThan(toDateOnlyKST(cutoffDate)),
     });
 
     return result.affected || 0;

@@ -1,3 +1,5 @@
+import { formatTimeKST } from '@domain/utils/kst-date';
+
 export class CheckpointRecord {
   readonly id: string;
   readonly sessionId: string;
@@ -79,11 +81,9 @@ export class CheckpointRecord {
     });
   }
 
-  // 도착 시간 포맷 (HH:mm)
+  // 도착 시간 포맷 (HH:mm) — 서버 TZ가 UTC여도 KST로 표기한다.
   getArrivalTimeString(): string {
-    const hours = this.arrivedAt.getHours().toString().padStart(2, '0');
-    const minutes = this.arrivedAt.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    return formatTimeKST(this.arrivedAt);
   }
 
   // 지연 상태 텍스트

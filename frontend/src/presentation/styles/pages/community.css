@@ -261,7 +261,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
-  min-height: 32px;
+  /* 모바일 터치 타겟 최소 44px (Phase 6-6) */
+  min-height: 44px;
 }
 
 .tip-form-submit:hover:not(:disabled) {
