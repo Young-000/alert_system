@@ -82,13 +82,14 @@ export class AirQualityApiClient implements IAirQualityApiClient {
     if (lat >= 37.4 && lat <= 37.7 && lng >= 126.8 && lng <= 127.2) {
       return '서울';
     }
+    // 인천: 37.4~37.6, 126.5~126.8
+    // 경기 범위에 완전히 포함되므로 반드시 경기보다 먼저 판정해야 한다.
+    if (lat >= 37.4 && lat <= 37.6 && lng >= 126.5 && lng <= 126.8) {
+      return '인천';
+    }
     // 경기: 37.0~38.0, 126.5~127.5
     if (lat >= 37.0 && lat <= 38.0 && lng >= 126.5 && lng <= 127.5) {
       return '경기';
-    }
-    // 인천: 37.4~37.6, 126.5~126.8
-    if (lat >= 37.4 && lat <= 37.6 && lng >= 126.5 && lng <= 126.8) {
-      return '인천';
     }
     // 기본값: 서울
     return '서울';

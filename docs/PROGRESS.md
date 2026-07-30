@@ -1,5 +1,24 @@
 # Alert System - 진행 기록
 
+## [2026-07-31] Auto E2E Review — 4건 수정
+
+### Completed
+- fix(alert): `updateSchedule()`이 파생 필드 `notificationTime`을 갱신하도록 수정
+- fix(route): 최속 경로가 아닌데 "가장 짧아요"라고 단정하던 추천 문구 판정 교정
+- fix(air-quality): 경기 분기에 가려 도달 불가였던 인천 시도 판정 순서 교정
+- fix(missions): 순서 변경의 무음 실패 제거 — 순차 요청 + 실패 알림 + 재진입 가드
+- test: 회귀 방지 13건 추가 (620 FE / 1437 BE, TZ 3종 동일)
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요)
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 — 스마트 출발 사전 알림이 생성되지 않음
+- [ ] 터치 타겟 44px 미달 6건 (실화면 확인 필요)
+
+### Notes
+- worktree base가 21커밋 뒤처져 있어 rebase 후 착수 (4회 연속 재발)
+
+---
+
 ## 현재 상태
 
 - 2026-07-10 `17b9022` chore(repo): auto-review 리포트 gitignore + PROGRESS 동기화

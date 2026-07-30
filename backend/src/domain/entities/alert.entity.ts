@@ -187,6 +187,9 @@ export class Alert {
 
   updateSchedule(schedule: string): void {
     this._schedule = schedule;
+    // notificationTime은 schedule에서 파생된 값이다 — 함께 갱신하지 않으면
+    // 알림 문구·위젯·응답 DTO가 옛 시각을 그대로 노출한다.
+    this.notificationTime = this.extractTimeFromSchedule(schedule);
   }
 
   disable(): void {
