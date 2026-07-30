@@ -110,6 +110,16 @@ self.addEventListener('notificationclick', (event) => {
     url = event.notification.data.actionUrls[event.action];
   }
 
+  // Validate URL to prevent open-redirect via notification payload
+  try {
+    const parsed = new URL(url, self.location.origin);
+    if (parsed.origin !== self.location.origin) {
+      url = '/';
+    }
+  } catch {
+    url = '/';
+  }
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
