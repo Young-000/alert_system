@@ -137,9 +137,15 @@ export class ManageRouteUseCase {
       );
     }
 
-    // Handle isPreferred change
-    if (dto.isPreferred && !existing.isPreferred) {
-      const routeType = dto.routeType ?? existing.routeType;
+    // Handle isPreferred change.
+    // routeType이 바뀌면 이미 대표이던 경로도 "새 타입의 대표"가 되므로,
+    // 그 타입의 기존 대표를 해제해야 한다. 빠뜨리면 같은 타입에 대표가 둘 남고
+    // findPreferredByUserId()(findOne)가 비결정적으로 하나를 고른다.
+    const routeType = dto.routeType ?? existing.routeType;
+    const becomesPreferred = dto.isPreferred ?? existing.isPreferred;
+    const changesPreferredSlot = !existing.isPreferred || routeType !== existing.routeType;
+
+    if (becomesPreferred && changesPreferredSlot) {
       const existingPreferred = await this.routeRepository.findPreferredByUserId(
         existing.userId,
         routeType

@@ -68,22 +68,14 @@ describe('PatternAnalysisService', () => {
     });
 
     it('충분한 데이터가 있으면 가중 평균을 계산한다', async () => {
-      // 5 weekday records around 8:00-8:20
-      // Use offsets that land on weekdays (Mon Feb 16, then previous Mon-Fri)
-      const records = [
-        createRecord(8, 0, 0),     // Mon Feb 16
-        createRecord(8, 10, -7),   // Mon Feb 9
-        createRecord(8, 5, -8),    // Sun... need to be careful
-        createRecord(8, 15, -9),
-        createRecord(8, 20, -10),
-      ];
-      // Instead, mock the repo to return records that will pass the weekday filter
-      // The filter checks r.commuteDate.getDay() is 1-5
+      // 같은 주 월~금 5건. 날짜는 반드시 Date.UTC로 만든다 —
+      // `new Date('2026-02-16T00:00:00')`은 TZ 접미사가 없어 **로컬 시각**으로
+      // 파싱되므로, KST보다 앞선 TZ(예: Pacific/Auckland, UTC+13)에서는
+      // toDateOnlyKST()가 하루 앞 날짜를 돌려줘 월요일이 일요일이 된다.
+      // 그러면 평일 필터에 5건이 못 채워져 COLD_START로 떨어진다.
       const weekdayRecords: CommuteRecord[] = [];
       for (let i = 0; i < 5; i++) {
-        // Create dates that are always weekdays (Mon-Fri of the same week)
-        const date = new Date('2026-02-16T00:00:00'); // Monday
-        date.setDate(date.getDate() + i); // Mon, Tue, Wed, Thu, Fri
+        const date = new Date(Date.UTC(2026, 1, 16 + i)); // Mon Feb 16 ~ Fri Feb 20
         // KST 08:00, 08:05, 08:10, 08:15, 08:20
         const departure = atTimeKST(toDateOnlyKST(date), 8, i * 5);
         weekdayRecords.push(new CommuteRecord('user-1', date, CommuteType.MORNING, {

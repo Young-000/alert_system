@@ -88,8 +88,10 @@ export class ScheduleDepartureAlertsUseCase {
       }
     }
 
-    // Update snapshot with schedule IDs
-    if (scheduleIds.length > 0) {
+    // Persist whenever the stored IDs would change. Skipping the empty case
+    // would leave a rescheduled snapshot holding IDs of schedules that
+    // cancelAlerts() has already deleted.
+    if (scheduleIds.length > 0 || snapshot.scheduleIds.length > 0) {
       const updated = snapshot.withScheduleIds(scheduleIds);
       await this.snapshotRepo.update(updated);
     }
