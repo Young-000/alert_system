@@ -1,5 +1,31 @@
 # Alert System - 진행 기록
 
+## [2026-08-02] Auto E2E Review — 3건 수정
+
+### Completed
+- fix(route): 경로 수정이 `route_checkpoints`를 전량 삭제해 `ON DELETE CASCADE`로
+  도착 기록까지 지우던 데이터 유실 제거 — 이름만 바꿔도, 다른 경로를 대표로 지정해도 발생했다
+- fix(route): 대표 경로 해제 시 `totalExpectedDuration`·`createdAt`·checkpoint id를
+  떨어뜨려 건드리지도 않은 경로의 값이 유실되던 문제 교정
+- fix(stats): 날씨 미기록 세션을 '맑음'으로 채워 넣어 "비 오는 날이 더 빠르다"로
+  판정이 역전되던 문제 교정 (미기록 세션을 날씨별 통계에서 제외)
+- test: 회귀 방지 10건 추가 (634 FE / 1461 BE) — backend TZ 5종·frontend 4종 동일
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      이번 수정 2건이 DB 데이터 유실 방지라 배포 지연 비용이 크다
+- [ ] 체크포인트 목록 편집은 여전히 기록이 사라진다 — `CreateCheckpointDto`에 `id` 없음 (설계 판단)
+- [ ] 날씨 데이터 자체가 수집되지 않음 — 프론트가 `startSession`에 `weatherCondition` 미전송 (제품 판단)
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 — 스마트 출발 사전 알림이 생성되지 않음
+- [ ] 터치 타겟 44px 미달 6건 (실화면 확인 필요)
+
+### Notes
+- worktree base가 23커밋 뒤처져 있어 rebase 후 착수 (6회 연속 재발)
+- 신규 결함 3건 모두 spec 0개 모듈에서 나왔다 (4라운드 연속 같은 패턴)
+- 가설 1건은 테스트로 재현에 실패해 기각했다 (대시보드 탭 되돌림) — 불변조건 테스트로 대체
+
+---
+
 ## [2026-07-31] Auto E2E Review — 4건 수정
 
 ### Completed
