@@ -18,6 +18,7 @@ export function AuthCallbackPage(): JSX.Element {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     let timerId: ReturnType<typeof setTimeout>;
@@ -53,12 +54,16 @@ export function AuthCallbackPage(): JSX.Element {
         if (email) safeSetItem('userEmail', email);
         if (name) safeSetItem('userName', name);
 
+        // 신규 가입자는 이메일 회원가입과 동일하게 온보딩으로 진입
+        const newUser = params.get('isNewUser') === 'true';
+        setIsNewUser(newUser);
+
         // fragment에서 토큰 정보 제거 (브라우저 히스토리 보호)
         window.history.replaceState(null, '', window.location.pathname);
         notifyAuthChange();
 
         setStatus('success');
-        timerId = setTimeout(() => navigate('/alerts'), 500);
+        timerId = setTimeout(() => navigate(newUser ? '/onboarding' : '/alerts'), 500);
       } else {
         setStatus('error');
         setErrorMessage('인증 정보가 올바르지 않습니다.');
@@ -84,7 +89,9 @@ export function AuthCallbackPage(): JSX.Element {
             <>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
               <h2>로그인 성공!</h2>
-              <p className="muted">잠시 후 알림 설정 페이지로 이동합니다.</p>
+              <p className="muted">
+                {isNewUser ? '잠시 후 시작 설정으로 이동합니다.' : '잠시 후 알림 설정 페이지로 이동합니다.'}
+              </p>
             </>
           )}
           {status === 'error' && (

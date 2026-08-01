@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { CommuteRouteEntity } from '../typeorm/commute-route.entity';
 import { RouteCheckpointEntity } from '../typeorm/route-checkpoint.entity';
 import { ICommuteRouteRepository } from '@domain/repositories/commute-route.repository';
@@ -88,8 +88,20 @@ export class CommuteRouteRepositoryImpl implements ICommuteRouteRepository {
     const entity = this.toEntity(route);
     await this.routeRepository.save(entity);
 
-    // Delete existing checkpoints and save new ones
-    await this.checkpointRepository.delete({ routeId: route.id });
+    // `checkpoint_records.checkpoint_id`는 `route_checkpoints(id) ON DELETE CASCADE`다
+    // (20260208 마이그레이션 :108). 체크포인트를 통째로 지웠다가 같은 id로 다시 넣으면
+    // 체크포인트는 멀쩡해 보이지만 그 경로의 도착 기록 전체가 조용히 사라진다.
+    // 그래서 실제로 없어진 체크포인트만 지우고, 살아남는 것들은 save()로 UPDATE한다.
+    const survivingIds = route.checkpoints
+      .map((cp) => cp.id)
+      .filter((id): id is string => !!id);
+
+    await this.checkpointRepository.delete(
+      survivingIds.length > 0
+        ? { routeId: route.id, id: Not(In(survivingIds)) }
+        : { routeId: route.id },
+    );
+
     if (route.checkpoints.length > 0) {
       const checkpointEntities = route.checkpoints.map((cp) => {
         const cpEntity = this.checkpointToEntity(cp);

@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getDayOfWeekKST, getHoursKST } from '@domain/utils/kst-date';
 import {
   ICommuteSessionRepository,
   COMMUTE_SESSION_REPOSITORY,
@@ -286,7 +287,7 @@ export class CalculateRouteAnalyticsUseCase {
     // 요일별 그룹화
     const dayGroups = new Map<number, number[]>();
     for (const session of sessions) {
-      const dayOfWeek = session.startedAt.getDay();
+      const dayOfWeek = getDayOfWeekKST(session.startedAt);
       if (!dayGroups.has(dayOfWeek)) {
         dayGroups.set(dayOfWeek, []);
       }
@@ -302,7 +303,8 @@ export class CalculateRouteAnalyticsUseCase {
     // 시간대별 그룹화
     const timeSlotGroups = new Map<string, number[]>();
     for (const session of sessions) {
-      const hour = session.startedAt.getHours();
+      // 요일 그룹과 동일하게 KST 기준으로 묶는다 (서버 TZ가 UTC면 오전/오후/저녁이 밀린다).
+      const hour = getHoursKST(session.startedAt);
       const timeSlot = this.getTimeSlot(hour);
       if (!timeSlotGroups.has(timeSlot)) {
         timeSlotGroups.set(timeSlot, []);

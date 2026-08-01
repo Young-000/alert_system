@@ -9,6 +9,7 @@ interface TipFormProps {
   isSubmitting?: boolean;
   isEligible?: boolean;
   isRateLimited?: boolean;
+  errorMessage?: string;
 }
 
 export function TipForm({
@@ -17,6 +18,7 @@ export function TipForm({
   isSubmitting = false,
   isEligible = true,
   isRateLimited = false,
+  errorMessage = '',
 }: TipFormProps): JSX.Element {
   const [content, setContent] = useState('');
   const charCount = content.length;
@@ -71,6 +73,12 @@ export function TipForm({
           {charCount}/{MAX_TIP_LENGTH}
         </span>
       </div>
+
+      {errorMessage && (
+        <p className="tip-form-error" role="alert">
+          {errorMessage}
+        </p>
+      )}
 
       <div className="tip-form-footer">
         <span className="tip-form-rate-limit">

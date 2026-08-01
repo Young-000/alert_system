@@ -45,4 +45,7 @@ jobs:
       - run: npm run lint:check
       - run: npm run type-check
       - run: npm test -- --passWithNoTests
+      # e2e는 인메모리 sqljs + 외부 API 대역만 사용해 네트워크·서비스키에 의존하지 않는다.
+      # CI에서 빠져 있던 탓에 전 스위트가 실패하는 상태로 오래 방치됐다.
+      - run: npm run test:e2e
       - run: npm run build

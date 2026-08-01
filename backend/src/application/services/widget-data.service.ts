@@ -29,6 +29,47 @@ import { BriefingResponseDto } from '@application/dto/briefing.dto';
 const DEFAULT_LAT = 37.5665;
 const DEFAULT_LNG = 126.9780;
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const MINUTES_PER_DAY = 24 * 60;
+const DAYS_PER_WEEK = 7;
+const DAY_NAMES_KR = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const ALL_DAYS_OF_WEEK: ReadonlySet<number> = new Set([0, 1, 2, 3, 4, 5, 6]);
+
+/**
+ * Day-of-week set from a standard 5-field cron ("min hour dom month dow"),
+ * where dow is 0=Sunday..6=Saturday. Supports `*`, ranges ("1-5") and
+ * comma lists ("0,6") — the same forms `cron-utils.ts` renders on the client
+ * and `convertToEventBridgeCron()` forwards to EventBridge.
+ *
+ * Anything unparsable (e.g. a bare "08:00" schedule) falls back to every day,
+ * which preserves the previous behaviour rather than dropping the alert.
+ */
+function parseCronDaysOfWeek(schedule: string): ReadonlySet<number> {
+  const fields = schedule.trim().split(/\s+/);
+  if (fields.length !== 5) return ALL_DAYS_OF_WEEK;
+
+  const dowField = fields[4];
+  if (dowField === '*') return ALL_DAYS_OF_WEEK;
+
+  const days = new Set<number>();
+  for (const part of dowField.split(',')) {
+    const range = part.trim().match(/^(\d)-(\d)$/);
+    if (range) {
+      const start = Number(range[1]);
+      const end = Number(range[2]);
+      if (start > end || end > 6) return ALL_DAYS_OF_WEEK;
+      for (let day = start; day <= end; day++) days.add(day);
+      continue;
+    }
+
+    const day = Number(part.trim());
+    if (!Number.isInteger(day) || day < 0 || day > 6) return ALL_DAYS_OF_WEEK;
+    days.add(day);
+  }
+
+  return days.size > 0 ? days : ALL_DAYS_OF_WEEK;
+}
+
 @Injectable()
 export class WidgetDataService {
   private readonly logger = new Logger(WidgetDataService.name);
@@ -173,47 +214,78 @@ export class WidgetDataService {
    * computeNextAlert -- port of mobile app's computeNextAlert() logic.
    *
    * Finds the next enabled alert by comparing each alert's notificationTime
-   * to the current time (KST). If the time has passed today, it is treated
-   * as "tomorrow". Returns the earliest upcoming alert.
+   * to the current time (KST). The alert's cron day-of-week field is honored:
+   * EventBridge carries that field through to the real schedule
+   * (`eventbridge-scheduler.service.ts:276`), so ignoring it here would make the
+   * widget announce a day the alert never fires on.
    */
   computeNextAlert(alerts: Alert[]): WidgetNextAlertDto | null {
     const enabledAlerts = alerts.filter((a) => a.enabled && a.notificationTime);
     if (enabledAlerts.length === 0) return null;
 
-    const now = new Date();
-    // Convert to KST (UTC+9)
-    const kstOffset = 9 * 60;
-    const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const kstMinutes = (utcMinutes + kstOffset) % (24 * 60);
+    // Anchor everything to KST regardless of the container's own timezone.
+    const kstNow = new Date(Date.now() + KST_OFFSET_MS);
+    const kstDayOfWeek = kstNow.getUTCDay();
+    const kstMinutes = kstNow.getUTCHours() * 60 + kstNow.getUTCMinutes();
 
-    let earliest: { alert: Alert; minutesUntil: number; isTomorrow: boolean } | null = null;
+    let earliest: { alert: Alert; minutesUntil: number; dayOffset: number } | null = null;
 
     for (const alert of enabledAlerts) {
       const [hourStr, minuteStr] = alert.notificationTime!.split(':');
       const alertMinutes = parseInt(hourStr, 10) * 60 + parseInt(minuteStr, 10);
+      const activeDays = parseCronDaysOfWeek(alert.schedule);
 
-      let minutesUntil = alertMinutes - kstMinutes;
-      let isTomorrow = false;
+      const dayOffset = this.findNextActiveDayOffset(
+        activeDays,
+        kstDayOfWeek,
+        alertMinutes > kstMinutes,
+      );
+      if (dayOffset === null) continue;
 
-      if (minutesUntil <= 0) {
-        // Alert time has passed today; treat as tomorrow
-        minutesUntil += 24 * 60;
-        isTomorrow = true;
-      }
+      const minutesUntil = dayOffset * MINUTES_PER_DAY + alertMinutes - kstMinutes;
 
       if (!earliest || minutesUntil < earliest.minutesUntil) {
-        earliest = { alert, minutesUntil, isTomorrow };
+        earliest = { alert, minutesUntil, dayOffset };
       }
     }
 
     if (!earliest) return null;
 
     const dto = new WidgetNextAlertDto();
-    const timeStr = earliest.alert.notificationTime!;
-    dto.time = earliest.isTomorrow ? `내일 ${timeStr}` : timeStr;
+    dto.time = this.formatAlertTime(
+      earliest.alert.notificationTime!,
+      earliest.dayOffset,
+      kstDayOfWeek,
+    );
     dto.label = this.buildAlertLabel(earliest.alert);
     dto.alertTypes = earliest.alert.alertTypes;
     return dto;
+  }
+
+  /**
+   * Days ahead (0 = today) until the alert's next active weekday.
+   * Today only counts when the alert time has not passed yet.
+   */
+  private findNextActiveDayOffset(
+    activeDays: ReadonlySet<number>,
+    kstDayOfWeek: number,
+    isStillUpcomingToday: boolean,
+  ): number | null {
+    for (let offset = 0; offset < DAYS_PER_WEEK; offset++) {
+      if (offset === 0 && !isStillUpcomingToday) continue;
+      if (activeDays.has((kstDayOfWeek + offset) % DAYS_PER_WEEK)) return offset;
+    }
+    return null;
+  }
+
+  private formatAlertTime(
+    timeStr: string,
+    dayOffset: number,
+    kstDayOfWeek: number,
+  ): string {
+    if (dayOffset === 0) return timeStr;
+    if (dayOffset === 1) return `내일 ${timeStr}`;
+    return `${DAY_NAMES_KR[(kstDayOfWeek + dayOffset) % DAYS_PER_WEEK]} ${timeStr}`;
   }
 
   private buildAlertLabel(alert: Alert): string {

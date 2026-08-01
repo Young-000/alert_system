@@ -12,8 +12,8 @@ import { ALTERNATIVE_MAPPING_REPOSITORY } from '@domain/repositories/alternative
 import { RouteDelayCheckService } from '@application/services/route-delay-check.service';
 import { AlternativeSuggestionService } from '@application/services/alternative-suggestion.service';
 
-// Subway API Client
-import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
+// Subway API Client (캐시 래퍼 경유)
+import { ExternalApiModule } from './external-api.module';
 
 // Controller
 import { DelayStatusController } from '../controllers/delay-status.controller';
@@ -25,6 +25,7 @@ import { CommuteModule } from './commute.module';
   imports: [
     TypeOrmModule.forFeature([AlternativeMappingEntity]),
     CommuteModule,
+    ExternalApiModule,
   ],
   controllers: [DelayStatusController],
   providers: [
@@ -32,17 +33,6 @@ import { CommuteModule } from './commute.module';
     {
       provide: ALTERNATIVE_MAPPING_REPOSITORY,
       useClass: AlternativeMappingRepositoryImpl,
-    },
-    // Subway API Client
-    {
-      provide: 'ISubwayApiClient',
-      useFactory: () => {
-        const apiKey =
-          process.env.SUBWAY_REALTIME_API_KEY ||
-          process.env.SUBWAY_API_KEY ||
-          '';
-        return new SubwayApiClient(apiKey);
-      },
     },
     // Services
     RouteDelayCheckService,

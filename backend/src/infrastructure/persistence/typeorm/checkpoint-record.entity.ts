@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { CommuteSessionEntity } from './commute-session.entity';
 import { RouteCheckpointEntity } from './route-checkpoint.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('checkpoint_records', { schema: 'alert_system' })
 @Index(['sessionId'])
@@ -25,7 +26,7 @@ export class CheckpointRecordEntity {
   checkpointId: string;
 
   // 이 체크포인트 도착 시간
-  @Column({ name: 'arrived_at', type: 'timestamptz' })
+  @Column({ name: 'arrived_at', type: TIMESTAMPTZ })
   arrivedAt: Date;
 
   // 이전 체크포인트부터 실제 이동 시간 (분)

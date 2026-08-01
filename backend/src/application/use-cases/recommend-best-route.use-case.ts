@@ -293,12 +293,15 @@ export class RecommendBestRouteUseCase {
     speedScore: number,
     reliabilityScore: number,
     weatherScore: number,
-    allRouteStats: { minDuration: number; avgDuration: number }
+    allRouteStats: { minDuration: number; maxDuration: number; avgDuration: number }
   ): string[] {
     const reasons: string[] = [];
 
     // 속도 관련
-    if (speedScore >= 80) {
+    // "가장 짧아요"는 최속임이 사실일 때만 쓴다. speedScore 임계값(80)은
+    // 최속이 아닌 경로도 넘길 수 있어(3경로 30/34/50분이면 34분 경로가 90점) 근거가 못 된다.
+    const hasComparableRoutes = allRouteStats.minDuration < allRouteStats.maxDuration;
+    if (hasComparableRoutes && avgDuration <= allRouteStats.minDuration) {
       reasons.push(`평균 소요 시간이 가장 짧아요 (${Math.round(avgDuration)}분)`);
     } else if (avgDuration <= allRouteStats.avgDuration) {
       reasons.push(`평균 ${Math.round(avgDuration)}분 소요돼요`);

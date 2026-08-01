@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { CommuteRouteEntity } from './commute-route.entity';
 import { SegmentStats, ConditionAnalysis } from '@domain/entities/route-analytics.entity';
+import { TIMESTAMPTZ, JSONB } from './column-types';
 
 @Entity('route_analytics', { schema: 'alert_system' })
 @Index(['routeId'], { unique: true })
@@ -28,7 +29,7 @@ export class RouteAnalyticsEntity {
   @Column({ name: 'total_trips', type: 'integer', default: 0 })
   totalTrips: number;
 
-  @Column({ name: 'last_trip_date', type: 'timestamptz', nullable: true })
+  @Column({ name: 'last_trip_date', type: TIMESTAMPTZ, nullable: true })
   lastTripDate?: Date;
 
   // 시간 분석
@@ -45,11 +46,11 @@ export class RouteAnalyticsEntity {
   stdDevMinutes: number;
 
   // 구간별 분석 (JSON)
-  @Column({ name: 'segment_stats', type: 'jsonb', default: '[]' })
+  @Column({ name: 'segment_stats', type: JSONB, default: '[]' })
   segmentStats: SegmentStats[];
 
   // 조건별 분석 (JSON)
-  @Column({ name: 'condition_analysis', type: 'jsonb', default: '{}' })
+  @Column({ name: 'condition_analysis', type: JSONB, default: '{}' })
   conditionAnalysis: ConditionAnalysis;
 
   // 점수
@@ -66,7 +67,7 @@ export class RouteAnalyticsEntity {
   totalScore: number;
 
   // 마지막 계산 시간
-  @Column({ name: 'last_calculated_at', type: 'timestamptz', default: () => 'NOW()' })
+  @Column({ name: 'last_calculated_at', type: TIMESTAMPTZ, default: () => 'NOW()' })
   lastCalculatedAt: Date;
 
   // 관계

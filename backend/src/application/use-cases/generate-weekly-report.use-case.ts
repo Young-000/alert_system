@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { getDayOfWeekKST, toDateOnlyKST } from '@domain/utils/kst-date';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IUserRepository } from '@domain/repositories/user.repository';
@@ -110,7 +111,7 @@ export class GenerateWeeklyReportUseCase {
     // Find best day (shortest average commute)
     const dayStats = new Map<number, { total: number; count: number }>();
     for (const session of completedSessions) {
-      const day = new Date(session.startedAt).getDay();
+      const day = getDayOfWeekKST(new Date(session.startedAt));
       const existing = dayStats.get(day) || { total: 0, count: 0 };
       existing.total += session.totalDurationMinutes || 0;
       existing.count++;
@@ -130,8 +131,8 @@ export class GenerateWeeklyReportUseCase {
     // Generate tip
     const tip = this.generateWeeklyTip(totalCommutes, avgDuration, completedSessions);
 
-    // Format week range
-    const weekRange = `${weekStart.getMonth() + 1}/${weekStart.getDate()}~${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+    // Format week range — 알림톡 문구이므로 KST 달력 날짜로 표기한다.
+    const weekRange = `${this.formatMonthDayKST(weekStart)}~${this.formatMonthDayKST(weekEnd)}`;
 
     const variables: WeeklyReportVariables = {
       userName: user.name,
@@ -158,6 +159,12 @@ export class GenerateWeeklyReportUseCase {
 
     this.logger.log(`Weekly report sent for user ${userId}: ${totalCommutes} commutes, avg ${avgDuration}min`);
     return true;
+  }
+
+  /** 'M/D' 표기 — KST 달력 날짜 기준 (서버 TZ가 UTC면 새벽 시각이 전날로 밀린다). */
+  private formatMonthDayKST(date: Date): string {
+    const [, month, day] = toDateOnlyKST(date).split('-');
+    return `${Number(month)}/${Number(day)}`;
   }
 
   private generateWeeklyTip(

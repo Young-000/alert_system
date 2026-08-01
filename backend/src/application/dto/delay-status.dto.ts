@@ -1,3 +1,12 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  Min,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
+
 export type OverallDelayStatus =
   | 'normal'
   | 'minor_delay'
@@ -72,13 +81,37 @@ export interface AlternativeMappingResponseDto {
   isActive: boolean;
 }
 
-export interface CreateAlternativeMappingDto {
-  fromStationName: string;
-  fromLine: string;
-  toStationName: string;
-  toLine: string;
-  walkingMinutes: number;
+export class CreateAlternativeMappingDto {
+  @IsString()
+  @IsNotEmpty()
+  fromStationName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  fromLine!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  toStationName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  toLine!: string;
+
+  @IsInt()
+  @Min(0)
+  walkingMinutes!: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   walkingDistanceMeters?: number;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsBoolean()
   isBidirectional?: boolean;
 }

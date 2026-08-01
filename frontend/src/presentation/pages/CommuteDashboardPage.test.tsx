@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CommuteDashboardPage } from './CommuteDashboardPage';
 import {
@@ -261,6 +261,84 @@ describe('CommuteDashboardPage', () => {
     // RoutesTab should render route buttons
     await waitFor(() => {
       expect(screen.getByText('강남 출근길')).toBeInTheDocument();
+    });
+  });
+
+  // --- URL tab parameter ---
+
+  /**
+   * `?tab=` 반영 이펙트(`use-commute-dashboard.ts:73`)는 `behaviorAnalytics`에도 의존한다.
+   * 행동 분석 응답은 대시보드가 그려진 뒤에 따로 도착하므로 이펙트가 한 번 더 돈다.
+   * 그때 사용자가 눌러 둔 탭이 URL 값으로 되돌아가지 않아야 한다
+   * (탭 클릭이 `setSearchParams`로 URL도 함께 갱신하기 때문에 성립하는 불변조건 —
+   *  둘 중 하나만 바뀌면 곧바로 깨진다).
+   */
+  it('늦게 도착한 행동 분석이 사용자가 고른 탭을 URL 값으로 되돌리지 않는다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    let resolveAnalytics: (value: typeof mockBehaviorAnalytics) => void = () => {};
+    mockBehaviorApi.getAnalytics.mockReturnValue(
+      new Promise((resolve) => {
+        resolveAnalytics = resolve;
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/commute/dashboard?tab=history']}>
+        <CommuteDashboardPage />
+      </MemoryRouter>
+    );
+
+    // URL이 지정한 '기록' 탭으로 진입
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '기록' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    // 사용자가 '전체 요약'으로 직접 이동
+    fireEvent.click(screen.getByRole('tab', { name: '전체 요약' }));
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    // 이제서야 행동 분석 응답 도착
+    await act(async () => {
+      resolveAnalytics(mockBehaviorAnalytics);
+    });
+
+    expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: '기록' })).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('?tab=behavior는 행동 분석 데이터가 도착한 뒤에 열린다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    let resolveAnalytics: (value: typeof mockBehaviorAnalytics) => void = () => {};
+    mockBehaviorApi.getAnalytics.mockReturnValue(
+      new Promise((resolve) => {
+        resolveAnalytics = resolve;
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/commute/dashboard?tab=behavior']}>
+        <CommuteDashboardPage />
+      </MemoryRouter>
+    );
+
+    // 데이터가 없는 동안에는 '행동 패턴' 탭 자체가 없으므로 전체 요약으로 대기
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    });
+    expect(screen.queryByRole('tab', { name: '행동 패턴' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveAnalytics({ ...mockBehaviorAnalytics, hasEnoughData: true });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '행동 패턴' })).toHaveAttribute('aria-selected', 'true');
     });
   });
 

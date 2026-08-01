@@ -4,7 +4,8 @@ export interface ICommuteSessionRepository {
   save(session: CommuteSession): Promise<CommuteSession>;
   findById(id: string): Promise<CommuteSession | undefined>;
   findByIdWithRecords(id: string): Promise<CommuteSession | undefined>;
-  findByUserId(userId: string, limit?: number): Promise<CommuteSession[]>;
+  findByUserId(userId: string, limit?: number, offset?: number): Promise<CommuteSession[]>;
+  countByUserId(userId: string): Promise<number>;
   findByUserIdAndStatus(
     userId: string,
     status: SessionStatus,

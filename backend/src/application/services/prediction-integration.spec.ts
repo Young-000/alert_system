@@ -16,6 +16,7 @@ import { PatternType, UserPattern, DayOfWeekDepartureValue, WeatherSensitivityVa
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
 import { ICommuteSessionRepository } from '@domain/repositories/commute-session.repository';
+import { atTimeKST, toDateOnlyKST } from '@domain/utils/kst-date';
 
 // ---- Helpers ----
 
@@ -25,8 +26,8 @@ const createRecord = (
   date: Date,
   weather = 'clear',
 ): CommuteRecord => {
-  const departure = new Date(date);
-  departure.setHours(hour, minute, 0, 0);
+  // hour/minute은 KST 벽시계 시각 (프로덕션 서버 TZ는 UTC다).
+  const departure = atTimeKST(toDateOnlyKST(date), hour, minute);
   return new CommuteRecord('user-1', date, CommuteType.MORNING, {
     id: `rec-${date.getTime()}-${Math.random().toString(36).slice(2)}`,
     actualDeparture: departure,
@@ -86,6 +87,7 @@ const createMockRepos = (): {
     findById: jest.fn(),
     findByIdWithRecords: jest.fn(),
     findByUserId: jest.fn(),
+    countByUserId: jest.fn(),
     findByUserIdAndStatus: jest.fn(),
     findInProgressByUserId: jest.fn(),
     findByUserIdInDateRange: jest.fn(),

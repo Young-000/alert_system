@@ -7,6 +7,11 @@ import {
   useWeeklyStatsQuery,
 } from '@infrastructure/query';
 import type { MissionWithRecord, MissionScore } from '@infrastructure/api';
+import {
+  formatTodayKST,
+  getKstDayOfWeek,
+  getTodayKstDayIndex,
+} from './missions-date-utils';
 
 // ─── Constants ──────────────────────────────────────
 
@@ -20,31 +25,10 @@ const DAY_INDICATOR = {
 
 // ─── Helpers ────────────────────────────────────────
 
-function formatToday(): string {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const date = now.getDate();
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  const dayName = dayNames[now.getDay()];
-  return `${month}월 ${date}일 (${dayName})`;
-}
-
-function getKstDayOfWeek(dateStr: string): number {
-  const d = new Date(dateStr + 'T00:00:00+09:00');
-  const day = d.getDay();
-  return day === 0 ? 6 : day - 1; // Mon=0, Sun=6
-}
-
 function getDayIndicator(rate: number): { symbol: string; className: string } {
   if (rate >= 100) return { symbol: DAY_INDICATOR.full, className: 'full' };
   if (rate > 0) return { symbol: DAY_INDICATOR.partial, className: 'partial' };
   return { symbol: DAY_INDICATOR.empty, className: 'empty' };
-}
-
-function getTodayKstDayIndex(): number {
-  const now = new Date();
-  const day = now.getDay();
-  return day === 0 ? 6 : day - 1;
 }
 
 // ─── Sub-components ─────────────────────────────────
@@ -409,7 +393,7 @@ export function MissionsPage(): JSX.Element {
           </button>
           <h1 className="missions-title">오늘의 미션</h1>
         </div>
-        <span className="missions-date">{formatToday()}</span>
+        <span className="missions-date">{formatTodayKST()}</span>
       </header>
 
       {/* Empty state or mission content */}

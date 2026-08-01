@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NotificationContext } from '@domain/entities/notification-context.entity';
 import { Recommendation } from '@domain/entities/recommendation.entity';
 import { RulePriority } from '@domain/entities/notification-rule.entity';
+import { getHoursKST } from '@domain/utils/kst-date';
 
 export interface ISmartMessageBuilder {
   build(context: NotificationContext, recommendations: Recommendation[]): string;
@@ -67,7 +68,9 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
   }
 
   buildTitle(_context: NotificationContext): string {
-    const hour = new Date().getHours();
+    // 알림 제목은 KST 기준이다. 서버 TZ가 UTC면 KST 07:00 출근 알림이
+    // 22시로 읽혀 '🌙 퇴근 알림' 제목으로 발송된다.
+    const hour = getHoursKST();
 
     if (hour >= 5 && hour < 12) {
       return '☀️ 출근 알림';
