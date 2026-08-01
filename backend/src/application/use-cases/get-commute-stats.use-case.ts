@@ -280,11 +280,14 @@ export class GetCommuteStatsUseCase {
   }
 
   private calculateWeatherImpact(sessions: CommuteSession[]): WeatherImpactDto[] {
-    // Group sessions by weather condition
+    // 날씨가 기록되지 않은 세션은 어떤 날씨의 근거도 아니다.
+    // 이전 구현은 이들을 '맑음'으로 채워 넣어 맑은 날 표본과 baseline을 부풀렸고,
+    // 그 결과 "비 오는 날이 더 빠르다"는 거꾸로 된 판정까지 나왔다.
     const sessionsByWeather = new Map<string, CommuteSession[]>();
 
     for (const session of sessions) {
-      const weather = session.weatherCondition || '맑음';
+      const weather = session.weatherCondition;
+      if (!weather) continue;
       const existing = sessionsByWeather.get(weather) || [];
       existing.push(session);
       sessionsByWeather.set(weather, existing);

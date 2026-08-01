@@ -1,5 +1,10 @@
 import { ManageRouteUseCase } from './manage-route.use-case';
-import { CommuteRoute, RouteType } from '@domain/entities/commute-route.entity';
+import {
+  CommuteRoute,
+  RouteCheckpoint,
+  RouteType,
+  CheckpointType,
+} from '@domain/entities/commute-route.entity';
 import type { ICommuteRouteRepository } from '@domain/repositories/commute-route.repository';
 
 /**
@@ -123,5 +128,36 @@ describe('ManageRouteUseCase - 대표 경로 유일성', () => {
     await useCase.updateRoute('route-a', { routeType: RouteType.EVENING });
 
     expect(repo.findPreferredByUserId).not.toHaveBeenCalled();
+  });
+
+  /**
+   * 기존 대표를 해제할 때 그 경로를 새 CommuteRoute로 재구성한다.
+   * 이때 필드를 빠뜨리면 사용자가 건드리지도 않은 경로의 값이 유실된다.
+   * 특히 체크포인트 id를 잃으면 저장 시 전부 새 체크포인트로 취급돼
+   * `ON DELETE CASCADE`로 그 경로의 도착 기록까지 사라진다
+   * (`commute-route.repository.ts` update() 참조).
+   */
+  it('기존 대표를 해제할 때 그 경로의 다른 필드를 잃지 않는다', async () => {
+    const routeA = makeRoute('route-a', RouteType.MORNING, false);
+    const routeB = new CommuteRoute('user-1', '경로 route-b', RouteType.MORNING, {
+      id: 'route-b',
+      isPreferred: true,
+      totalExpectedDuration: 47,
+      checkpoints: [
+        new RouteCheckpoint(0, '집', CheckpointType.HOME, { id: 'cp-b1', routeId: 'route-b' }),
+        new RouteCheckpoint(1, '회사', CheckpointType.WORK, { id: 'cp-b2', routeId: 'route-b' }),
+      ],
+    });
+
+    repo.findById.mockResolvedValueOnce(routeA);
+    repo.findById.mockResolvedValue(makeRoute('route-a', RouteType.MORNING, true));
+    repo.findPreferredByUserId.mockResolvedValue(routeB);
+
+    await useCase.updateRoute('route-a', { isPreferred: true });
+
+    const unsetCall = repo.update.mock.calls.find(([route]) => route.id === 'route-b');
+    expect(unsetCall![0].isPreferred).toBe(false);
+    expect(unsetCall![0].totalExpectedDuration).toBe(47);
+    expect(unsetCall![0].checkpoints.map((cp) => cp.id)).toEqual(['cp-b1', 'cp-b2']);
   });
 });
