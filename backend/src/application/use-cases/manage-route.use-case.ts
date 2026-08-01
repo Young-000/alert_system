@@ -54,10 +54,15 @@ export class ManageRouteUseCase {
       );
       if (existingPreferred) {
         await this.routeRepository.update(
+          // isPreferred만 내리고 나머지는 그대로 — 사용자가 건드리지도 않은 경로다.
+          // 특히 checkpoints의 id를 잃으면 저장 시 전부 새 체크포인트로 취급돼
+          // ON DELETE CASCADE로 그 경로의 도착 기록까지 사라진다.
           new CommuteRoute(existingPreferred.userId, existingPreferred.name, existingPreferred.routeType, {
             id: existingPreferred.id,
             isPreferred: false,
+            totalExpectedDuration: existingPreferred.totalExpectedDuration,
             checkpoints: existingPreferred.checkpoints,
+            createdAt: existingPreferred.createdAt,
           })
         );
       }
@@ -152,10 +157,15 @@ export class ManageRouteUseCase {
       );
       if (existingPreferred && existingPreferred.id !== id) {
         await this.routeRepository.update(
+          // isPreferred만 내리고 나머지는 그대로 — 사용자가 건드리지도 않은 경로다.
+          // 특히 checkpoints의 id를 잃으면 저장 시 전부 새 체크포인트로 취급돼
+          // ON DELETE CASCADE로 그 경로의 도착 기록까지 사라진다.
           new CommuteRoute(existingPreferred.userId, existingPreferred.name, existingPreferred.routeType, {
             id: existingPreferred.id,
             isPreferred: false,
+            totalExpectedDuration: existingPreferred.totalExpectedDuration,
             checkpoints: existingPreferred.checkpoints,
+            createdAt: existingPreferred.createdAt,
           })
         );
       }
