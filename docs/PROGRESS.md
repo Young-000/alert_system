@@ -1,5 +1,38 @@
 # Alert System - 진행 기록
 
+## [2026-08-03] Auto E2E Review — 2건 수정 (PR #167 머지)
+
+### Completed
+- fix(mission): 새 미션의 `sortOrder`를 기존 "개수"로 잡아, 중간 미션을 지운 뒤
+  만들면 남아 있는 미션과 값이 겹치던 문제 교정 (`max(기존)+1`로 교체).
+  겹치면 목록 정렬이 DB 임의 순서가 되고, **순서 변경 버튼이 같은 값을 두 번 써서
+  200으로 성공하며 아무것도 하지 않았다** — 에러도 뜨지 않아 무반응으로 보였다
+- fix(mission): 유형별 3개 제한이 활성 미션만 세어, 하나를 끄고 새로 만든 뒤 다시 켜면
+  4개가 되던 우회 경로 차단 (프론트엔드는 비활성 포함 3개에서 막고 있었다 — 앞뒤 불일치)
+- fix(db): 등록 엔티티 36개 중 **11개에 `CREATE TABLE`이 아예 없어** 프로덕션
+  (`synchronize=false`)에서 42P01로 500나던 스키마 갭을 닫는 마이그레이션 신규 작성
+  (`20260803_add_mission_challenge_cache_tables.sql`) — `MissionController`
+  엔드포인트 10개 전부가 대상이었다. RLS 포함
+- refactor(mission): 버그 원인이던 `countByUserAndType`(활성만 카운트) 제거 — 호출부 0
+- test: 회귀 방지 7건 추가 (RED 7건 확인 후 작성). backend 1462 → 1466 passed
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      5라운드째 재확인 (`ecs list-clusters` 빈 배열 · ECR `RepositoryNotFoundException`).
+      **이번엔 마이그레이션이라 적용돼야 의미가 있다** — 미션 기능의 프로덕션 500이
+      파일만 추가된 채 남는다
+- [ ] 신규 마이그레이션을 실제 Postgres에서 실행 검증 (엔티티↔DDL 전수 대조와
+      구문 구조 검사는 통과했으나 DB 적용은 미실행 — 적용 자체가 게이트)
+- [ ] 미머지 auto-review PR **24건**으로 악화 (최고령 2026-03-04).
+      원인은 required status checks 이름 불일치(`CI / frontend` vs 실제 `frontend`) —
+      리포 설정 한 줄이라 인프라 게이트와 무관하게 풀 수 있다
+- [ ] 터치 타겟 44px 미달 6건 — 실화면 증거 필요
+
+### Notes
+- 테스트 DB가 `synchronize: true`(sqljs)라 **DDL 부재는 원리적으로 테스트가 못 잡는다.**
+  엔티티 목록과 마이그레이션 DDL의 집합 차이를 `comm -23`으로 대조하는 것이 유일한 탐지법
+- 미션 기능은 컨트롤러·리포지토리가 여전히 spec 0 — 다음 라운드 후보
+
 ## [2026-08-02] Auto E2E Review — 3건 수정
 
 ### Completed
