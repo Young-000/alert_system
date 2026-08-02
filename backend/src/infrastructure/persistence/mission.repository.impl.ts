@@ -35,10 +35,6 @@ export class MissionRepositoryImpl implements IMissionRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async countByUserAndType(userId: string, missionType: MissionType): Promise<number> {
-    return this.missionRepo.count({ where: { userId, missionType, isActive: true } });
-  }
-
   async saveMission(mission: Mission): Promise<Mission> {
     const entity = this.missionRepo.create({
       id: mission.id,
