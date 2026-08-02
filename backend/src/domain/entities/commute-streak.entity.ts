@@ -120,12 +120,12 @@ export class CommuteStreak {
 
     this.lastRecordDate = todayKST;
 
-    // 최고 기록 갱신
+    // 최고 기록 갱신 — 구간은 항상 지금 진행 중인 스트릭의 것이다.
+    // (옛 기록의 시작일을 남겨두면 새 스트릭이 기록을 경신하는 순간
+    //  bestStreakStart~bestStreakEnd가 실재하지 않는 긴 구간으로 날조된다)
     if (this.currentStreak > this.bestStreak) {
       this.bestStreak = this.currentStreak;
-      if (this.currentStreak === 1) {
-        this.bestStreakStart = todayKST;
-      }
+      this.bestStreakStart = this.streakStartDate ?? todayKST;
       this.bestStreakEnd = todayKST;
     }
 
@@ -146,8 +146,9 @@ export class CommuteStreak {
 
     if (this.lastRecordDate === todayKST) return 'active';
 
+    // 어제까지 기록했지만 오늘은 아직 — 스트릭은 살아 있으나 오늘 넘기면 끊긴다.
     const yesterday = subtractDays(todayKST, 1);
-    if (this.lastRecordDate === yesterday) return 'active';
+    if (this.lastRecordDate === yesterday) return 'at_risk';
 
     // 2일 이상 빠짐
     return 'broken';

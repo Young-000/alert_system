@@ -70,6 +70,26 @@ describe('CommuteStreak', () => {
       expect(streak.bestStreakEnd).toBe('2026-02-17');
     });
 
+    it('새 스트릭이 옛 기록을 넘으면 최고 기록 구간이 새 스트릭 구간으로 갱신된다', () => {
+      // 옛 최고 기록: 2026-01-01 ~ 2026-01-10 (10일)
+      // 새 스트릭: 2026-02-08 시작, 오늘로 11일째 → 최고 기록 경신
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 10,
+        bestStreak: 10,
+        bestStreakStart: '2026-01-01',
+        bestStreakEnd: '2026-01-10',
+        lastRecordDate: '2026-02-17',
+        streakStartDate: '2026-02-08',
+      });
+
+      streak.recordCompletion('2026-02-18');
+
+      expect(streak.bestStreak).toBe(11);
+      expect(streak.bestStreakEnd).toBe('2026-02-18');
+      // 옛 스트릭의 시작일이 남아 있으면 최고 기록 구간이 40일짜리로 날조된다
+      expect(streak.bestStreakStart).toBe('2026-02-08');
+    });
+
     it('현재 스트릭이 최고 기록보다 낮으면 최고 기록이 유지된다', () => {
       const streak = new CommuteStreak(userId, {
         currentStreak: 1,
@@ -181,12 +201,15 @@ describe('CommuteStreak', () => {
       expect(streak.getStatus('2026-02-17')).toBe('active');
     });
 
-    it('어제 기록이 있으면 active 상태다', () => {
+    it('어제까지 기록했고 오늘은 아직이면 at_risk 상태다', () => {
+      // 스트릭은 살아 있지만 오늘 기록하지 않으면 끊긴다.
+      // 프론트엔드가 이 값으로 "오늘 기록하면 스트릭 유지!" 경고를 띄운다
+      // (StreakBadge.tsx:21,27,58 · WeeklyProgress.tsx:36).
       const streak = new CommuteStreak(userId, {
         lastRecordDate: '2026-02-16',
         currentStreak: 5,
       });
-      expect(streak.getStatus('2026-02-17')).toBe('active');
+      expect(streak.getStatus('2026-02-17')).toBe('at_risk');
     });
 
     it('2일 이상 기록이 없으면 broken 상태다', () => {

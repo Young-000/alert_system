@@ -8,6 +8,7 @@ import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 import { queryKeys } from '@infrastructure/query/query-keys';
+import { cronToTimeInput, applyTimeToCron } from './cron-utils';
 import { TOAST_DURATION_MS } from './types';
 
 interface AlertCrudState {
@@ -138,26 +139,15 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
 
   const handleEditClick = (alert: Alert): void => {
     setEditTarget(alert);
-    const parts = alert.schedule.split(' ');
-    let time = '07:00';
-    if (parts.length >= 2) {
-      const minute = parts[0].padStart(2, '0');
-      const hour = parts[1].split(',')[0].padStart(2, '0');
-      time = `${hour}:${minute}`;
-    }
-    setEditForm({ name: alert.name, schedule: time });
+    setEditForm({ name: alert.name, schedule: cronToTimeInput(alert.schedule) });
   };
 
   const handleEditConfirm = async (): Promise<void> => {
     if (!editTarget) return;
     setIsEditing(true);
     try {
-      const [hour, minute] = editForm.schedule.split(':');
-      const originalParts = editTarget.schedule.split(' ');
-      const dayOfMonth = originalParts[2] ?? '*';
-      const month = originalParts[3] ?? '*';
-      const dayOfWeek = originalParts[4] ?? '*';
-      const cronSchedule = `${parseInt(minute, 10) || 0} ${parseInt(hour, 10) || 0} ${dayOfMonth} ${month} ${dayOfWeek}`;
+      // 모달은 첫 시각만 보여주므로, 나머지 시각(예: 퇴근 알림)은 그대로 보존해야 한다.
+      const cronSchedule = applyTimeToCron(editTarget.schedule, editForm.schedule);
 
       await alertApiClient.updateAlert(editTarget.id, {
         name: editForm.name,

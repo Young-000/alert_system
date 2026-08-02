@@ -39,6 +39,75 @@ export function cronToHuman(cron: string): string {
   return `${dayLabel} ${timeStr}`;
 }
 
+const DEFAULT_TIME_INPUT = '07:00';
+
+/**
+ * Extracts the earliest scheduled time from a cron expression as an
+ * `<input type="time">` value (`HH:mm`).
+ *
+ * Falls back to `07:00` when the expression can't be parsed.
+ */
+export function cronToTimeInput(cron: string): string {
+  const parsed = parseSchedule(cron);
+  if (!parsed) return DEFAULT_TIME_INPUT;
+
+  const [firstHour] = parsed.hours;
+  return `${String(firstHour).padStart(2, '0')}:${String(parsed.minute).padStart(2, '0')}`;
+}
+
+/**
+ * Replaces the earliest scheduled time of a cron expression with `HH:mm`,
+ * keeping every other scheduled hour and the day-of-month/month/day-of-week fields.
+ *
+ * 알림 수정 모달은 시각 입력이 하나뿐이라 첫 시각만 보여준다. 그 값으로 크론 전체를
+ * 다시 쓰면 `0 7,18 * * *`(출근+퇴근) 같은 알림에서 **퇴근 시각이 조용히 삭제된다.**
+ * 그래서 나머지 시각은 반드시 보존한다. (cron의 분 필드는 모든 시각에 공통 적용된다)
+ */
+export function applyTimeToCron(cron: string, timeInput: string): string {
+  const time = parseTimeInput(timeInput);
+  if (!time) return cron;
+
+  const parsed = parseSchedule(cron);
+  if (!parsed) {
+    return `${time.minute} ${time.hour} * * *`;
+  }
+
+  const [, ...remainingHours] = parsed.hours;
+  const hours = [...new Set([time.hour, ...remainingHours])].sort((a, b) => a - b);
+
+  return `${time.minute} ${hours.join(',')} ${parsed.restFields.join(' ')}`;
+}
+
+function parseTimeInput(timeInput: string): { hour: number; minute: number } | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(timeInput.trim());
+  if (!match) return null;
+
+  const hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+
+  return { hour, minute };
+}
+
+function parseSchedule(
+  cron: string,
+): { minute: number; hours: number[]; restFields: string[] } | null {
+  if (!cron || typeof cron !== 'string') return null;
+
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return null;
+
+  const minute = parseMinute(parts[0]);
+  const hours = parseNumericList(parts[1]);
+  if (minute === null || hours === null) return null;
+
+  return {
+    minute,
+    hours: [...hours].sort((a, b) => a - b),
+    restFields: parts.slice(2),
+  };
+}
+
 function parseMinute(field: string): number | null {
   const num = parseInt(field, 10);
   if (isNaN(num) || num < 0 || num > 59) return null;
