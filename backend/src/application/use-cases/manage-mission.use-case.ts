@@ -23,15 +23,23 @@ export class ManageMissionUseCase {
     title: string,
     missionType: MissionType,
   ): Promise<Mission> {
-    const count = await this.repo.countByUserAndType(userId, missionType);
-    if (count >= MAX_MISSIONS_PER_TYPE) {
+    const missions = await this.repo.findByUserId(userId);
+    const sameType = missions.filter((m) => m.missionType === missionType);
+
+    // 비활성 미션도 목록에 남아 자리를 차지하므로 제한 대상에 포함한다.
+    if (sameType.length >= MAX_MISSIONS_PER_TYPE) {
       throw new BadRequestException(
         `${missionType} 미션은 최대 ${MAX_MISSIONS_PER_TYPE}개까지 설정할 수 있습니다`,
       );
     }
 
     const mission = Mission.createNew(userId, title, missionType);
-    mission.sortOrder = count;
+    // 개수가 아니라 마지막 sortOrder 다음 값을 쓴다 — 중간 미션을 지운 뒤 만들면
+    // 개수가 남은 sortOrder와 겹쳐 목록 정렬과 순서 변경이 망가진다.
+    mission.sortOrder = sameType.reduce(
+      (next, m) => Math.max(next, m.sortOrder + 1),
+      0,
+    );
     return this.repo.saveMission(mission);
   }
 

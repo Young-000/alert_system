@@ -13,7 +13,6 @@ describe('MissionStatsUseCase', () => {
     repo = {
       findByUserId: jest.fn(),
       findById: jest.fn(),
-      countByUserAndType: jest.fn(),
       saveMission: jest.fn(),
       deleteMission: jest.fn(),
       findDailyRecords: jest.fn(),
