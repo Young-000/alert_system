@@ -454,6 +454,7 @@ export function AlertSettingsPage(): JSX.Element {
       {alertCrud.editTarget && (
         <EditAlertModal
           editForm={alertCrud.editForm}
+          originalSchedule={alertCrud.editTarget.schedule}
           isEditing={alertCrud.isEditing}
           onFormChange={alertCrud.setEditForm}
           onConfirm={alertCrud.handleEditConfirm}
