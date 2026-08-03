@@ -69,13 +69,33 @@ export function applyTimeToCron(cron: string, timeInput: string): string {
 
   const parsed = parseSchedule(cron);
   if (!parsed) {
-    return `${time.minute} ${time.hour} * * *`;
+    // 시각 필드를 숫자로 못 읽어도(`7-9`·`*/2`) 요일·일·월 제한은 살려둔다 —
+    // 시각 하나를 고치려다 "평일만"까지 잃게 하지 않는다.
+    const fields = cron.trim().split(/\s+/);
+    const restFields = fields.length === 5 ? fields.slice(2) : ['*', '*', '*'];
+    return `${time.minute} ${time.hour} ${restFields.join(' ')}`;
   }
 
   const [, ...remainingHours] = parsed.hours;
   const hours = [...new Set([time.hour, ...remainingHours])].sort((a, b) => a - b);
 
   return `${time.minute} ${hours.join(',')} ${parsed.restFields.join(' ')}`;
+}
+
+/**
+ * 두 알림이 "같은 스케줄"인지 비교하기 위한 정규형.
+ *
+ * 시각 순서(`0 18,7` vs `0 7,18`)와 공백 차이만 흡수하고, 그 밖에는 아무것도
+ * 합치지 않는다. 시각 필드를 `parseInt`로 훑으면 `'7-9'`가 `7`로, `'*'`가
+ * NaN(→탈락)으로 읽혀 **서로 다른 스케줄이 같은 문자열이 된다** — 그러면
+ * 07:00 알림 생성이 기존 `0 7-9 * * *` 알림과 중복이라며 차단된다.
+ * 숫자 목록으로 확실히 읽히지 않으면 정규화를 포기하고 원본을 그대로 쓴다.
+ */
+export function normalizeCronForComparison(cron: string): string {
+  const parsed = parseSchedule(cron);
+  if (!parsed) return cron.trim().replace(/\s+/g, ' ');
+
+  return `${parsed.minute} ${parsed.hours.join(',')} ${parsed.restFields.join(' ')}`;
 }
 
 function parseTimeInput(timeInput: string): { hour: number; minute: number } | null {
@@ -114,6 +134,13 @@ function parseMinute(field: string): number | null {
   return num;
 }
 
+/**
+ * `"7"` · `"7,18"`처럼 **순수한 숫자 목록일 때만** 값을 돌려준다.
+ *
+ * `parseInt('7-9')`는 NaN이 아니라 `7`이다. 범위(`7-9`)나 스텝(`*​/2`)을
+ * 숫자로 읽어버리면 호출부가 그 스케줄을 "07시 단일 알림"으로 오해하고,
+ * 저장 시 범위를 조용히 지운다. 해석할 수 없으면 실패로 알린다.
+ */
 function parseNumericList(field: string): number[] | null {
   if (field === '*') return null;
 
@@ -121,9 +148,8 @@ function parseNumericList(field: string): number[] | null {
 
   for (const part of field.split(',')) {
     const trimmed = part.trim();
-    const num = parseInt(trimmed, 10);
-    if (isNaN(num)) return null;
-    values.push(num);
+    if (!/^\d+$/.test(trimmed)) return null;
+    values.push(parseInt(trimmed, 10));
   }
 
   return values.length > 0 ? values : null;

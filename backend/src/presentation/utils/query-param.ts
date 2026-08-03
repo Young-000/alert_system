@@ -23,3 +23,28 @@ export function parseBoundedInt(
 
   return Math.min(Math.max(parsed, min), max);
 }
+
+/** 위도 한계. 이 밖의 값은 지구상의 좌표가 아니다. */
+export const MAX_LATITUDE = 90;
+/** 경도 한계. */
+export const MAX_LONGITUDE = 180;
+
+/**
+ * 쿼리스트링 좌표 파싱.
+ *
+ * 좌표는 정수 파라미터와 달리 클램프하지 않는다 — `?lat=999`를 90으로 접으면
+ * 사용자가 요청한 적 없는 위치의 날씨를 사실인 양 돌려주게 된다.
+ * 대신 "해석 불가 = 없음"으로 취급해 `undefined`를 돌려주고,
+ * 호출부 서비스가 기본 좌표(서울)로 폴백하게 둔다.
+ */
+export function parseCoordinate(
+  raw: string | undefined,
+  limit: number,
+): number | undefined {
+  if (raw === undefined || raw === null || raw === '') return undefined;
+
+  const parsed = parseFloat(raw);
+  if (Number.isNaN(parsed) || Math.abs(parsed) > limit) return undefined;
+
+  return parsed;
+}
