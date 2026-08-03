@@ -1,5 +1,44 @@
 # Alert System - 진행 기록
 
+## [2026-08-04] Auto E2E Review 00:00 — 8건 수정 (PR #171 머지)
+
+### Completed
+- fix(api): **페이지네이션 쿼리 파라미터의 하한 검증이 없어 음수가 SQL `LIMIT`/`OFFSET`에
+  그대로 도달**하던 문제. `Math.min(limit, 상한)`만 있고 `Math.max`가 없는 관용구가
+  **8개 컨트롤러에 복사**돼 있었다 (insights · notification-history · commute ·
+  congestion · challenge · behavior · commute-event · analytics).
+  TypeORM은 음수 `take`/`skip`을 검증하지 않고 `LIMIT -1`로 실어 보낸다
+  (better-sqlite3로 직접 실측) — **Postgres는 500, 테스트용 SQLite는 "제한 없음"으로
+  해석해 전량 반환**. `GET /insights/regions`는 `@Public()`이라 **인증 없이 트리거 가능**했다
+- refactor: `presentation/utils/query-param.ts` 신설 — 파싱과 범위 보정을 한 지점으로.
+  8곳을 각각 `Math.max`로 덧대는 대신 계약을 한 함수가 갖게 했다
+- test: 회귀 방지 19건 추가 (RED 확인 후 작성, 신규 spec 2개).
+  `insights.controller.spec.ts`는 해당 컨트롤러 **첫 spec** — 페이지네이션 7건 +
+  스케줄러 시크릿 검증 3건(`@Public()` + `timingSafeEqual` 조합이라 회귀 시 피해가 크다).
+  backend 1482 → **1501 passed**, frontend **646 passed** (프론트엔드 변경 0)
+- 근본 원인: **전역 `ValidationPipe`(`main.ts:64`)는 `@Body()`만 검증한다.**
+  `@Query()`는 DTO를 거치지 않아 컨트롤러가 마지막 방어선인데, 그 방어가 빠져 있었다
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      **8라운드째** 재확인 (`aws ecs list-clusters` → 빈 배열).
+      이번 8건 전부 백엔드라 머지는 됐지만 프로덕션에는 반영되지 않는다
+- [ ] 미머지 auto-review PR **24건** (전 라운드와 동일). 원인은 required status checks
+      이름 불일치 (`CI / frontend` vs 실제 `frontend`) — 이번 PR #171도 CI 양쪽 SUCCESS인데
+      BLOCKED이라 `--admin` 머지했다. PR 정리 → 컨텍스트 이름 정정 순서 권장
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (10라운드째). provider 등록은 있으나
+      `scheduleAlerts`·`cancelAlerts`·`rescheduleAlerts` **3개 공개 메서드 전부 호출부 0건**.
+      배선 = 실제 알림 발송 = 외부 노출 D1 게이트
+- [ ] 남은 무-spec 컨트롤러: `mission`(408줄) · `smart-departure`(168) · `place`(94) ·
+      `commute-event`(76) · `briefing`(74) · `widget`(22)
+
+### Notes
+- 착수 시 worktree가 `origin/main`보다 31커밋 뒤처져 있었다. 로컬 스테일 커밋 2건은
+  내용이 이미 upstream에 반영된 중복임을 확인하고 버렸다. 같은 이름의 열린 PR은 없었다
+- 누적 교훈은 `docs/LESSONS.md` 참조
+
+---
+
 ## [2026-08-03] Auto E2E Review 08:00 + 16:00 — 3건 수정 (PR #169 머지)
 
 ### Completed
