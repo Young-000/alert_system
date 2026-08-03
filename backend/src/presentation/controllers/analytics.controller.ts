@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { CalculateRouteAnalyticsUseCase } from '@application/use-cases/calculate-route-analytics.use-case';
 import { RouteAnalytics } from '@domain/entities/route-analytics.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt } from '../utils/query-param';
 
 // DTO types
 interface RouteAnalyticsResponseDto {
@@ -175,7 +176,7 @@ export class AnalyticsController {
       throw new ForbiddenException('다른 사용자의 추천 데이터에 접근할 수 없습니다.');
     }
 
-    const limitNum = limit ? (parseInt(limit, 10) || 3) : 3;
+    const limitNum = parseBoundedInt(limit, { fallback: 3, min: 1, max: 50 });
     this.logger.log(`Getting top ${limitNum} recommended routes for user ${userId}`);
 
     const analyticsArray = await this.calculateAnalyticsUseCase.executeForUser(userId);

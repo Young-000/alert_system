@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotificationLogEntity } from '../../infrastructure/persistence/typeorm/notification-log.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt, MAX_OFFSET } from '../utils/query-param';
 
 export interface NotificationStatsDto {
   total: number;
@@ -81,8 +82,8 @@ export class NotificationHistoryController {
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ): Promise<{ items: NotificationLogEntity[]; total: number }> {
-    const take = Math.min(parseInt(limit || '20', 10) || 20, 50);
-    const skip = parseInt(offset || '0', 10) || 0;
+    const take = parseBoundedInt(limit, { fallback: 20, min: 1, max: 50 });
+    const skip = parseBoundedInt(offset, { fallback: 0, min: 0, max: MAX_OFFSET });
 
     const [items, total] = await this.logRepo.findAndCount({
       where: { userId: req.user.userId },

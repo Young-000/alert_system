@@ -37,6 +37,7 @@ import {
 } from '@application/dto/streak.dto';
 import type { WeeklyReportResponseDto } from '@application/dto/weekly-report.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt, MAX_OFFSET } from '../utils/query-param';
 
 @Controller('commute')
 @UseGuards(AuthGuard('jwt'))
@@ -209,8 +210,8 @@ export class CommuteController {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 통근 기록에 접근할 수 없습니다.');
     }
-    const limitNum = limit ? (parseInt(limit, 10) || 20) : 20;
-    const offsetNum = offset ? (parseInt(offset, 10) || 0) : 0;
+    const limitNum = parseBoundedInt(limit, { fallback: 20, min: 1, max: 100 });
+    const offsetNum = parseBoundedInt(offset, { fallback: 0, min: 0, max: MAX_OFFSET });
     return this.manageSessionUseCase.getHistory(userId, limitNum, offsetNum);
   }
 
@@ -227,7 +228,7 @@ export class CommuteController {
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 통근 통계에 접근할 수 없습니다.');
     }
-    const daysNum = days ? (parseInt(days, 10) || 30) : 30;
+    const daysNum = parseBoundedInt(days, { fallback: 30, min: 1, max: 365 });
     return this.getStatsUseCase.execute(userId, daysNum);
   }
 

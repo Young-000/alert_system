@@ -27,6 +27,7 @@ import {
 import { InsightSortBy } from '@domain/repositories/regional-insight.repository';
 import { Public } from '@infrastructure/auth/public.decorator';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt, MAX_OFFSET } from '../utils/query-param';
 
 const VALID_SORT_BY: InsightSortBy[] = ['userCount', 'sessionCount', 'avgDuration', 'regionName'];
 
@@ -54,13 +55,10 @@ export class InsightsController {
       ? (sortBy as InsightSortBy)
       : undefined;
 
-    const limit = limitStr ? (parseInt(limitStr, 10) || 20) : 20;
-    const offset = offsetStr ? (parseInt(offsetStr, 10) || 0) : 0;
-
     return this.insightsService.getRegions({
       sortBy: validSortBy,
-      limit: Math.min(limit, 100),
-      offset: Math.max(offset, 0),
+      limit: parseBoundedInt(limitStr, { fallback: 20, min: 1, max: 100 }),
+      offset: parseBoundedInt(offsetStr, { fallback: 0, min: 0, max: MAX_OFFSET }),
     });
   }
 
