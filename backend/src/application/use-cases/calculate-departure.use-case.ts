@@ -208,7 +208,11 @@ export class CalculateDepartureUseCase {
           a.optimalDepartureAt.getTime() - b.optimalDepartureAt.getTime(),
       );
 
-    const relevant = upcoming.find((s) => s.optimalDepartureAt >= now) ?? upcoming[0];
+    // 오름차순이므로 아직 오지 않은 첫 출발이 "다음 출발"이다.
+    // 전부 지났다면 마지막 원소가 가장 최근 출발이다 ([0]은 가장 오래된 것).
+    const relevant =
+      upcoming.find((s) => s.optimalDepartureAt >= now) ??
+      upcoming[upcoming.length - 1];
     if (!relevant) return null;
 
     const dto = new WidgetDepartureDto();

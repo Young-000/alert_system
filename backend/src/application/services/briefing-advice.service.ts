@@ -39,6 +39,11 @@ const CATEGORY_ORDER: Record<AdviceCategory, number> = {
 
 const MAX_ADVICES = 4;
 
+/** 이 시간 안으로 남았으면 출발을 재촉한다. */
+const DEPARTURE_SOON_MINUTES = 10;
+/** 출발 시각이 이만큼 넘게 지나면 더 이상 조언 대상이 아니다. */
+const DEPARTURE_OVERDUE_GRACE_MINUTES = 30;
+
 @Injectable()
 export class BriefingAdviceService {
   generate(input: BriefingInput): BriefingResponseDto {
@@ -372,13 +377,18 @@ export class BriefingAdviceService {
 
   private generateDepartureAdvice(departure: WidgetDepartureDataDto): BriefingAdviceDto[] {
     const advices: BriefingAdviceDto[] = [];
+    const minutes = departure.minutesUntilDeparture;
 
-    if (departure.minutesUntilDeparture <= 10) {
+    // 위젯은 남은 출발이 없으면 지난 출발을 보여준다. 오늘 아침 출발이
+    // 밤까지 "출발까지 -690분!"으로 남는 일이 없도록 여기서 끊는다.
+    if (minutes < -DEPARTURE_OVERDUE_GRACE_MINUTES) return advices;
+
+    if (minutes <= DEPARTURE_SOON_MINUTES) {
       advices.push({
         category: 'transit',
         severity: 'warning',
         icon: '⏰',
-        message: `출발까지 ${departure.minutesUntilDeparture}분!`,
+        message: this.buildDepartureCountdownMessage(minutes),
       });
     }
 
@@ -392,6 +402,12 @@ export class BriefingAdviceService {
     }
 
     return advices;
+  }
+
+  private buildDepartureCountdownMessage(minutes: number): string {
+    if (minutes > 0) return `출발까지 ${minutes}분!`;
+    if (minutes === 0) return '지금 출발하세요!';
+    return `출발 시간이 ${-minutes}분 지났어요`;
   }
 
   // ─── Sorting & Limiting ───
