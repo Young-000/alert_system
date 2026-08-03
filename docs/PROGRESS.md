@@ -1,5 +1,36 @@
 # Alert System - 진행 기록
 
+## [2026-08-03] Auto E2E Review 08:00 + 16:00 — 3건 수정 (PR #169 머지)
+
+### Completed
+- fix(widget): 저녁에 위젯을 열면 **오늘 아침 출근 건**이 뜨던 문제
+  (`calculate-departure.use-case.ts:211`). 오름차순 배열에서 `upcoming[0]`을
+  "most recent"로 쓰고 있었다 — 주석과 코드가 정확히 반대였다.
+  `status`가 `departed`로 바뀌려면 사용자가 "출발"을 눌러야 해서 **기본 경로**였다
+- fix(widget): 그 결과가 **"출발까지 -690분!"** 으로 찍히던 문제
+  (`briefing-advice.service.ts:376`). `minutesUntilDeparture`는 부호 있는 값인데
+  음수가 `<= 10`을 통과해 문구에 그대로 박혔다. 부호별 분기 + 기한 초과 조기 반환
+- fix(commute): **도착 기록이 임의 순서로 실려 와 구간 소요시간·지연이 부풀려지던 문제**
+  (`commute-session.repository.ts:154`). 6개 finder가 `relations`만 걸고 ORDER BY가
+  없는데, `manage-commute-session.use-case.ts:113`은 배열의 마지막 원소를 직전 도착으로
+  보고 `durationFromPrevious`를 계산해 **DB에 영구 저장**한다. 그 값이 다시 구간별
+  통계(`calculate-route-analytics.use-case.ts:227`)의 입력이 된다.
+  전용 리포지토리·형제 리포지토리·테이블 인덱스가 전부 시간순을 전제하고 있었고
+  **여기만 빠져 있었다**
+- test: 회귀 방지 16건 추가 (전부 RED 확인 후 작성, 신규 spec 파일 2개).
+  backend 1466 → **1482 passed**, frontend **646 passed**
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      **7라운드째** 재확인 (`ecs list-clusters` 빈 배열 · ECR `RepositoryNotFoundException`).
+      이번 3건 전부 백엔드라 머지는 됐지만 프로덕션에는 반영되지 않는다
+- [ ] 미머지 auto-review PR **24건**. 원인은 required status checks 이름 불일치
+      (`CI / frontend` vs 실제 `frontend`) — 리포 설정 한 줄이라 인프라 게이트와 무관.
+      **다만 22건이 auto-merge 무장 상태라 고치는 순간 2월치까지 한꺼번에 쏟아진다**:
+      PR 정리 → 컨텍스트 이름 정정 순서로
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (provider 등록만 있고 호출부 0건)
+- [ ] 터치 타겟 44px 미달 6건 — 실화면 증거 필요
+
 ## [2026-08-03] Auto E2E Review — 2건 수정 (PR #167 머지)
 
 ### Completed
