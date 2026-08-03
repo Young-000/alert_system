@@ -1,4 +1,9 @@
-import { parseBoundedInt } from './query-param';
+import {
+  MAX_LATITUDE,
+  MAX_LONGITUDE,
+  parseBoundedInt,
+  parseCoordinate,
+} from './query-param';
 
 describe('parseBoundedInt', () => {
   const opts = { fallback: 20, min: 1, max: 100 };
@@ -43,5 +48,33 @@ describe('parseBoundedInt', () => {
 
   it('앞뒤 공백이 섞여도 읽는다', () => {
     expect(parseBoundedInt(' 42 ', opts)).toBe(42);
+  });
+});
+
+describe('parseCoordinate', () => {
+  it('값이 없으면 undefined', () => {
+    expect(parseCoordinate(undefined, MAX_LATITUDE)).toBeUndefined();
+    expect(parseCoordinate('', MAX_LATITUDE)).toBeUndefined();
+  });
+
+  it('숫자로 읽을 수 없으면 undefined (NaN을 하류로 흘리지 않는다)', () => {
+    expect(parseCoordinate('abc', MAX_LATITUDE)).toBeUndefined();
+  });
+
+  it('유효 좌표는 소수점까지 보존한다', () => {
+    expect(parseCoordinate('37.5665', MAX_LATITUDE)).toBe(37.5665);
+    expect(parseCoordinate('-126.978', MAX_LONGITUDE)).toBe(-126.978);
+  });
+
+  it('경계값은 유효하다', () => {
+    expect(parseCoordinate('90', MAX_LATITUDE)).toBe(90);
+    expect(parseCoordinate('-90', MAX_LATITUDE)).toBe(-90);
+    expect(parseCoordinate('180', MAX_LONGITUDE)).toBe(180);
+  });
+
+  // 클램프하면 요청한 적 없는 위치의 날씨를 사실인 양 돌려주게 된다 — 그래서 버린다.
+  it('범위를 벗어나면 클램프가 아니라 undefined다', () => {
+    expect(parseCoordinate('999', MAX_LATITUDE)).toBeUndefined();
+    expect(parseCoordinate('-500', MAX_LONGITUDE)).toBeUndefined();
   });
 });

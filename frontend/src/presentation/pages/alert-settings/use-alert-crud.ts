@@ -8,7 +8,11 @@ import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 import { queryKeys } from '@infrastructure/query/query-keys';
-import { cronToTimeInput, applyTimeToCron } from './cron-utils';
+import {
+  cronToTimeInput,
+  applyTimeToCron,
+  normalizeCronForComparison,
+} from './cron-utils';
 import { TOAST_DURATION_MS } from './types';
 
 interface AlertCrudState {
@@ -88,20 +92,12 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     await queryClient.invalidateQueries({ queryKey: queryKeys.alerts.byUser(userId) });
   }, [userId, queryClient]);
 
-  const normalizeSchedule = useCallback((schedule: string): string => {
-    const parts = schedule.split(' ');
-    if (parts.length < 5) return schedule;
-    const minute = parts[0];
-    const hours = parts[1].split(',').map(h => parseInt(h, 10)).filter(h => !isNaN(h)).sort((a, b) => a - b);
-    return `${minute} ${hours.join(',')} ${parts.slice(2).join(' ')}`;
-  }, []);
-
   const checkDuplicateAlert = useCallback((schedule: string, alertTypes: AlertType[]): Alert | null => {
-    const normalizedNew = normalizeSchedule(schedule);
+    const normalizedNew = normalizeCronForComparison(schedule);
     const newTypes = [...alertTypes].sort();
 
     return alerts.find(existing => {
-      const normalizedExisting = normalizeSchedule(existing.schedule);
+      const normalizedExisting = normalizeCronForComparison(existing.schedule);
       if (normalizedNew !== normalizedExisting) return false;
 
       const existingTypes = [...existing.alertTypes].sort();
@@ -110,7 +106,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
 
       return sameTypes;
     }) || null;
-  }, [alerts, normalizeSchedule]);
+  }, [alerts]);
 
   const handleDeleteClick = (alert: Alert): void => {
     // 다른 작업(토글·수정·이전 삭제)에서 남은 공유 error가 삭제 모달에 새어 나오는 것 방지

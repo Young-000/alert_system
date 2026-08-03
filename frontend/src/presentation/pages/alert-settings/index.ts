@@ -14,7 +14,12 @@ export { useWizardNavigation } from './use-wizard-navigation';
 
 // Utility functions
 export { generateSchedule, generateAlertName, getNotificationTimes } from './alert-utils';
-export { cronToHuman, cronToTimeInput, applyTimeToCron } from './cron-utils';
+export {
+  cronToHuman,
+  cronToTimeInput,
+  applyTimeToCron,
+  normalizeCronForComparison,
+} from './cron-utils';
 
 // Components
 export { AlertList } from './AlertList';

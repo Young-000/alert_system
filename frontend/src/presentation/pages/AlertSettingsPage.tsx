@@ -12,6 +12,7 @@ import {
   useAlertCrud,
   useTransportSearch,
   useWizardNavigation,
+  cronToHuman,
   generateSchedule,
   generateAlertName,
   getNotificationTimes,
@@ -108,9 +109,9 @@ export function AlertSettingsPage(): JSX.Element {
     const duplicate = checkDuplicateAlert(schedule, alertTypes);
     if (duplicate) {
       setDuplicateAlert(duplicate);
-      const parts = duplicate.schedule.split(' ');
-      const hours = parts[1]?.split(',').map(h => `${h.padStart(2, '0')}:00`).join(', ') || '';
-      setCrudError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
+      setCrudError(
+        `이미 같은 시간(${cronToHuman(duplicate.schedule)})에 동일한 알림이 있습니다.`,
+      );
       return;
     }
 
