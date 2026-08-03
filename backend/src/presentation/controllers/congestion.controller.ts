@@ -21,6 +21,7 @@ import {
 } from '@application/dto/congestion.dto';
 import { CongestionLevel, TimeSlot, TIME_SLOTS } from '@domain/entities/segment-congestion.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt } from '../utils/query-param';
 
 @Controller('congestion')
 @UseGuards(AuthGuard('jwt'))
@@ -49,12 +50,10 @@ export class CongestionController {
       ? (level as CongestionLevel)
       : undefined;
 
-    const limit = limitStr ? (parseInt(limitStr, 10) || 50) : 50;
-
     return this.congestionService.getSegments({
       timeSlot: validTimeSlot,
       level: validLevel,
-      limit: Math.min(limit, 200),
+      limit: parseBoundedInt(limitStr, { fallback: 50, min: 1, max: 200 }),
     });
   }
 

@@ -39,6 +39,7 @@ import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { NotificationOpenedDto } from '@application/dto/notification-opened.dto';
 import { TrackEventDto, DepartureConfirmedDto } from '@application/dto/behavior.dto';
+import { parseBoundedInt } from '../utils/query-param';
 
 @Controller('behavior')
 @UseGuards(AuthGuard('jwt'))
@@ -170,7 +171,7 @@ export class BehaviorController {
       return { records: [], message: 'Commute record repository not available' };
     }
 
-    const recordLimit = limit ? (parseInt(limit, 10) || 30) : 30;
+    const recordLimit = parseBoundedInt(limit, { fallback: 30, min: 1, max: 200 });
     const records = await this.commuteRecordRepository.findByUserId(userId, recordLimit);
     return { records };
   }
