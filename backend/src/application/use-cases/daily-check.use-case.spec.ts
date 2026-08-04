@@ -110,6 +110,42 @@ describe('DailyCheckUseCase', () => {
       expect(result.streakDay).toBe(3);
     });
 
+    it('totalMissions와 completedMissions를 응답에 포함한다', async () => {
+      // 화면이 "N/M 달성"을 그리려면 집계 수치가 응답에 실려야 한다.
+      // 계산만 하고 반환에서 누락하면 클라이언트가 undefined를 읽는다.
+      const commute1 = Mission.createNew(USER_ID, '영어 단어', 'commute');
+      const commute2 = Mission.createNew(USER_ID, '뉴스 읽기', 'commute');
+      const returnMission = Mission.createNew(USER_ID, '회고', 'return');
+      const record = DailyMissionRecord.createForToday(USER_ID, commute1.id, TODAY);
+      record.toggleCheck();
+
+      repo.findByUserId.mockResolvedValue([commute1, commute2, returnMission]);
+      repo.findDailyRecords.mockResolvedValue([record]);
+      repo.findScore.mockResolvedValue(null);
+      repo.findLatestStreak.mockResolvedValue(0);
+
+      const result = await useCase.getDailyStatus(USER_ID, TODAY);
+
+      expect(result.totalMissions).toBe(3);
+      expect(result.completedMissions).toBe(1);
+    });
+
+    it('비활성 미션은 집계 수치에서 제외한다', async () => {
+      const active = Mission.createNew(USER_ID, '영어 단어', 'commute');
+      const inactive = Mission.createNew(USER_ID, '독서', 'return');
+      inactive.toggleActive(); // isActive = false
+
+      repo.findByUserId.mockResolvedValue([active, inactive]);
+      repo.findDailyRecords.mockResolvedValue([]);
+      repo.findScore.mockResolvedValue(null);
+      repo.findLatestStreak.mockResolvedValue(0);
+
+      const result = await useCase.getDailyStatus(USER_ID, TODAY);
+
+      expect(result.totalMissions).toBe(1);
+      expect(result.completedMissions).toBe(0);
+    });
+
     it('미션이 없으면 빈 결과를 반환한다', async () => {
       repo.findByUserId.mockResolvedValue([]);
       repo.findDailyRecords.mockResolvedValue([]);
@@ -120,6 +156,8 @@ describe('DailyCheckUseCase', () => {
 
       expect(result.commuteMissions).toHaveLength(0);
       expect(result.returnMissions).toHaveLength(0);
+      expect(result.totalMissions).toBe(0);
+      expect(result.completedMissions).toBe(0);
       expect(result.completionRate).toBe(0);
       expect(result.streakDay).toBe(0);
     });

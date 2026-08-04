@@ -404,8 +404,8 @@ export function MissionsPage(): JSX.Element {
           {/* Stats card */}
           {dailyStatus ? (
             <StatsCard
-              completedMissions={dailyStatus.completedMissions}
-              totalMissions={dailyStatus.totalMissions}
+              completedMissions={commuteCounts.completed + returnCounts.completed}
+              totalMissions={commuteCounts.total + returnCounts.total}
               completionRate={dailyStatus.completionRate}
               streakDay={dailyStatus.streakDay}
             />
