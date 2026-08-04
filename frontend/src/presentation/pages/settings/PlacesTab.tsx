@@ -6,6 +6,7 @@ import {
   useDeletePlaceMutation,
   useTogglePlaceMutation,
 } from '@infrastructure/query';
+import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import type { Place, PlaceType } from '@infrastructure/api';
 
@@ -94,8 +95,8 @@ export function PlacesTab(): JSX.Element {
       setFormLabel('');
       setFormAddress('');
       setShowForm(false);
-    } catch {
-      setActionError('장소 등록에 실패했습니다.');
+    } catch (err: unknown) {
+      setActionError(getApiErrorMessage(err, '장소 등록에 실패했습니다.'));
     }
   }, [formLabel, formType, formAddress, createMutation]);
 
