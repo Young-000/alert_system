@@ -18,6 +18,8 @@ export type MissionWithRecord = {
 export type DailyStatus = {
   commuteMissions: MissionWithRecord[];
   returnMissions: MissionWithRecord[];
+  totalMissions: number;
+  completedMissions: number;
   completionRate: number;
   streakDay: number;
 };
@@ -69,6 +71,8 @@ export class DailyCheckUseCase {
     return {
       commuteMissions,
       returnMissions,
+      totalMissions,
+      completedMissions,
       completionRate,
       streakDay,
     };

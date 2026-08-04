@@ -215,6 +215,8 @@ export class MissionController {
       isCompleted: boolean;
       completedAt: string | null;
     }>;
+    totalMissions: number;
+    completedMissions: number;
     completionRate: number;
     streakDay: number;
   }> {
@@ -250,6 +252,8 @@ export class MissionController {
     return {
       commuteMissions: mapMissions(status.commuteMissions),
       returnMissions: mapMissions(status.returnMissions),
+      totalMissions: status.totalMissions,
+      completedMissions: status.completedMissions,
       completionRate: status.completionRate,
       streakDay: status.streakDay,
     };
