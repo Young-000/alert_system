@@ -8,6 +8,7 @@ import {
 } from '@infrastructure/api';
 import type { AlertType, CreateAlertDto } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
+import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import {
   useAlertCrud,
   useTransportSearch,
@@ -143,14 +144,7 @@ export function AlertSettingsPage(): JSX.Element {
         setCrudSuccess('');
       }, TOAST_DURATION_MS);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
-      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-        setCrudError('로그인이 만료되었습니다. 다시 로그인해주세요.');
-      } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-        setCrudError('권한이 없습니다. 다시 로그인해주세요.');
-      } else {
-        setCrudError(`알림 생성에 실패했습니다: ${errorMessage}`);
-      }
+      setCrudError(getApiErrorMessage(err, '알림 생성에 실패했습니다.'));
     } finally {
       setIsSubmitting(false);
     }

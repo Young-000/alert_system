@@ -120,6 +120,36 @@ describe('AlertSettingsPage', () => {
     });
   });
 
+  it('should not leak the raw API error body when quick weather alert creation fails', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
+    // ApiClient가 실제로 던지는 모양: `API Error {status}: {JSON body}`
+    mockAlertApiClient.createAlert.mockRejectedValueOnce(
+      new Error(
+        'API Error 409: {"statusCode":409,"message":"이미 같은 시간에 등록된 알림이 있습니다.","error":"Conflict","path":"/alerts"}',
+      ),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('원클릭 설정')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '원클릭 설정' }));
+
+    // 서버가 준 한국어 사유가 그대로 보여야 한다
+    await waitFor(() => {
+      expect(
+        screen.getByText('이미 같은 시간에 등록된 알림이 있습니다.'),
+      ).toBeInTheDocument();
+    });
+
+    // 내부 구현 문자열(JSON 본문·상태코드 키)이 화면에 새어나오면 안 된다
+    expect(screen.queryByText(/API Error/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/statusCode/)).not.toBeInTheDocument();
+  });
+
   // --- Wizard navigation ---
 
   it('should navigate through wizard steps when weather is selected', async () => {
