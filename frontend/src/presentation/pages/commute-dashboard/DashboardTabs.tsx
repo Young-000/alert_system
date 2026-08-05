@@ -1,28 +1,23 @@
-import type { CommuteStatsResponse, RouteAnalyticsResponse } from '@infrastructure/api/commute-api.client';
-import type { BehaviorAnalytics } from '@infrastructure/api/behavior-api.client';
 import type { StopwatchRecord } from './types';
-import type { TabId } from './use-commute-dashboard';
+import type { TabId } from './visible-tabs';
 
 interface DashboardTabsProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
-  stats: CommuteStatsResponse | null;
+  /** 그릴 탭 목록 — 본문 렌더 조건과 같은 출처를 쓴다 (`visible-tabs.ts`) */
+  visibleTabs: TabId[];
   stopwatchRecords: StopwatchRecord[];
-  routeAnalytics: RouteAnalyticsResponse[];
-  behaviorAnalytics: BehaviorAnalytics | null;
 }
 
 export function DashboardTabs({
   activeTab,
   onTabChange,
-  stats,
+  visibleTabs,
   stopwatchRecords,
-  routeAnalytics,
-  behaviorAnalytics,
 }: DashboardTabsProps): JSX.Element {
   return (
     <div className="dashboard-tabs" role="tablist" aria-label="통근 통계 탭">
-      {stats && stats.totalSessions > 0 && (
+      {visibleTabs.includes('overview') && (
         <>
           <button
             type="button"
@@ -59,7 +54,7 @@ export function DashboardTabs({
           </button>
         </>
       )}
-      {stopwatchRecords.length > 0 && (
+      {visibleTabs.includes('stopwatch') && (
         <button
           type="button"
           role="tab"
@@ -73,7 +68,7 @@ export function DashboardTabs({
           스톱워치 ({stopwatchRecords.length})
         </button>
       )}
-      {routeAnalytics.length > 0 && (
+      {visibleTabs.includes('analytics') && (
         <button
           type="button"
           role="tab"
@@ -87,7 +82,7 @@ export function DashboardTabs({
           분석
         </button>
       )}
-      {behaviorAnalytics?.hasEnoughData && (
+      {visibleTabs.includes('behavior') && (
         <button
           type="button"
           role="tab"

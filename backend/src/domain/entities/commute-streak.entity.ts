@@ -198,6 +198,24 @@ export class CommuteStreak {
     }
   }
 
+  /**
+   * 스트릭이 이미 끊겼으면 0으로 리셋 (조회 시 사용)
+   *
+   * currentStreak은 마지막 recordCompletion 시점의 값으로 굳어 있다. 2일 이상
+   * 빠지면 그 값은 더 이상 "연속 일수"가 아니지만, 다음 기록 전까지는 저장소에
+   * 그대로 남는다. 조회 경로에서 바로잡지 않으면 "다시 시작해보세요"와
+   * "연속 12일"이 한 화면에 같이 나간다.
+   *
+   * lastRecordDate는 지우지 않는다 — 지우면 상태가 'new'로 바뀌어
+   * 끊긴 사용자가 첫 사용자 안내를 받게 된다. 최고 기록과 획득 배지도 보존한다.
+   */
+  ensureStreakCurrent(todayKST: string): void {
+    if (this.getStatus(todayKST) !== 'broken') return;
+
+    this.currentStreak = 0;
+    this.streakStartDate = null;
+  }
+
   /** 주간 카운트가 이번 주가 아니면 리셋 (조회 시 사용) */
   ensureWeeklyCountCurrent(todayKST: string): void {
     const currentWeekStart = getWeekStartKST(todayKST);
