@@ -296,4 +296,108 @@ describe('CommuteStreak', () => {
       expect(streak.weekStartDate).toBe('2026-02-16'); // new week start
     });
   });
+
+  describe('ensureStreakCurrent', () => {
+    it('2일 이상 빠져 끊긴 스트릭은 0으로 리셋된다', () => {
+      // lastRecordDate가 2일 이상 지나면 스트릭은 이미 끊겼다.
+      // 다음 recordCompletion 전까지 저장된 currentStreak은 낡은 값이므로
+      // 조회 시점에 바로잡지 않으면 "연속 12일"이 그대로 화면에 나간다.
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 12,
+        streakStartDate: '2026-02-06',
+        lastRecordDate: '2026-02-14',
+      });
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.currentStreak).toBe(0);
+      expect(streak.streakStartDate).toBeNull();
+    });
+
+    it('끊겨도 최고 기록과 획득 배지는 보존한다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 12,
+        bestStreak: 25,
+        bestStreakStart: '2026-01-01',
+        bestStreakEnd: '2026-01-25',
+        lastRecordDate: '2026-02-14',
+        milestonesAchieved: ['7d'],
+        latestMilestone: '7d',
+      });
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.bestStreak).toBe(25);
+      expect(streak.bestStreakStart).toBe('2026-01-01');
+      expect(streak.bestStreakEnd).toBe('2026-01-25');
+      expect(streak.milestonesAchieved).toEqual(['7d']);
+      expect(streak.latestMilestone).toBe('7d');
+    });
+
+    it('리셋 후에도 broken 상태 판정은 유지된다', () => {
+      // lastRecordDate를 지우면 'new'로 바뀌어 "첫 기록을 시작하세요"가 뜬다.
+      // 끊긴 사용자에게는 "다시 시작해보세요"가 맞다.
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 12,
+        lastRecordDate: '2026-02-14',
+      });
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.getStatus('2026-02-17')).toBe('broken');
+    });
+
+    it('끊긴 스트릭의 다음 마일스톤은 처음부터 다시 센다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 12,
+        lastRecordDate: '2026-02-14',
+        milestonesAchieved: ['7d'],
+      });
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.getNextMilestone()).toEqual({
+        type: '14d',
+        label: '14일 연속',
+        daysRemaining: 14,
+        progress: 0,
+      });
+    });
+
+    it('오늘 기록한 살아 있는 스트릭은 건드리지 않는다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 12,
+        streakStartDate: '2026-02-06',
+        lastRecordDate: '2026-02-17',
+      });
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.currentStreak).toBe(12);
+      expect(streak.streakStartDate).toBe('2026-02-06');
+    });
+
+    it('어제까지 기록한 at_risk 스트릭은 건드리지 않는다', () => {
+      // 아직 살아 있다 — 오늘 기록하면 이어진다.
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 12,
+        streakStartDate: '2026-02-06',
+        lastRecordDate: '2026-02-16',
+      });
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.currentStreak).toBe(12);
+      expect(streak.streakStartDate).toBe('2026-02-06');
+    });
+
+    it('기록이 없는 신규 사용자는 그대로 둔다', () => {
+      const streak = CommuteStreak.createNew(userId);
+
+      streak.ensureStreakCurrent('2026-02-17');
+
+      expect(streak.currentStreak).toBe(0);
+      expect(streak.getStatus('2026-02-17')).toBe('new');
+    });
+  });
 });

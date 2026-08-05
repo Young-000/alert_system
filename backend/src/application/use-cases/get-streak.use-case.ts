@@ -34,7 +34,8 @@ export class GetStreakUseCase {
       streak = CommuteStreak.createNew(userId);
     }
 
-    // 주간 카운트가 이번 주가 아니면 리셋
+    // 저장된 값은 마지막 기록 시점의 것이라 조회 시점 기준으로 바로잡는다
+    streak.ensureStreakCurrent(todayKST);
     streak.ensureWeeklyCountCurrent(todayKST);
 
     const status = streak.getStatus(todayKST);
@@ -70,6 +71,9 @@ export class GetStreakUseCase {
     if (!streak) {
       streak = CommuteStreak.createNew(userId);
     }
+
+    // 홈 배지와 같은 기준으로 세야 두 화면의 숫자가 어긋나지 않는다
+    streak.ensureStreakCurrent(getTodayKST());
 
     const milestones: MilestoneInfoDto[] = MILESTONES.map((m) => {
       const achieved = streak!.milestonesAchieved.includes(m.type);

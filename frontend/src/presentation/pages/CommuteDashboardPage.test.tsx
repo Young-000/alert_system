@@ -7,6 +7,7 @@ import {
   getBehaviorApiClient,
   behaviorApiClient,
 } from '@infrastructure/api';
+import { STOPWATCH_STORAGE_KEY } from './commute-dashboard/types';
 import type { Mocked, MockedFunction } from 'vitest';
 
 // Mock navigate
@@ -109,6 +110,14 @@ const mockHistory = {
   hasMore: false,
 };
 
+const mockStopwatchRecord = {
+  id: 'sw-1',
+  startedAt: '2026-02-18T08:00:00Z',
+  completedAt: '2026-02-18T08:25:00Z',
+  totalDurationSeconds: 1500,
+  type: 'morning' as const,
+};
+
 const mockBehaviorAnalytics = {
   totalPatterns: 0,
   totalCommuteRecords: 2,
@@ -167,6 +176,55 @@ describe('CommuteDashboardPage', () => {
     });
     expect(screen.getByText('출퇴근 트래킹을 시작해보세요. 이동 시간을 기록하면 통계를 볼 수 있어요.')).toBeInTheDocument();
     expect(screen.getByText('트래킹 시작하기')).toBeInTheDocument();
+  });
+
+  // --- Stopwatch-only user ---
+
+  /**
+   * 스톱워치만 써 온 사용자는 체크포인트 세션이 0이라 '전체 요약'·'경로 비교'·'기록' 탭이
+   * 아예 렌더되지 않는다 (`DashboardTabs.tsx:25`). 그런데 활성 탭 기본값은 'overview'라
+   * (`use-commute-dashboard.ts:57`), 보이지도 않는 탭이 선택된 채로 남아
+   * 탭 하나만 덩그러니 있고 본문이 빈 화면이 된다.
+   */
+  it('스톱워치 기록만 있으면 스톱워치 내용을 바로 보여준다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
+    mockCommuteApi.getStats.mockResolvedValue(mockEmptyStats);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: /스톱워치/ })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('tab', { name: /스톱워치/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('스톱워치 기록 요약')).toBeInTheDocument();
+  });
+
+  it('통계를 못 불러와도 스톱워치 기록은 보여준다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
+    mockCommuteApi.getStats.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getHistory.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getUserAnalytics.mockRejectedValue(new Error('Network error'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('대시보드 데이터를 불러올 수 없습니다.')).toBeInTheDocument();
+    });
+    expect(screen.getByText('스톱워치 기록 요약')).toBeInTheDocument();
+  });
+
+  it('세션 기록이 생기면 전체 요약이 기본 탭으로 돌아온다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    });
   });
 
   // --- Dashboard with data ---
