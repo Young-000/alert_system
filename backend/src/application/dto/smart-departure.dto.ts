@@ -22,7 +22,9 @@ export class CreateSmartDepartureSettingDto {
   departureType: 'commute' | 'return';
 
   @IsString()
-  @Matches(/^\d{2}:\d{2}$/, { message: 'arrivalTarget must be in HH:mm format' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'arrivalTarget must be in HH:mm format (00:00-23:59)',
+  })
   arrivalTarget: string;
 
   @IsOptional()
@@ -54,7 +56,9 @@ export class UpdateSmartDepartureSettingDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{2}:\d{2}$/, { message: 'arrivalTarget must be in HH:mm format' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'arrivalTarget must be in HH:mm format (00:00-23:59)',
+  })
   arrivalTarget?: string;
 
   @IsOptional()
