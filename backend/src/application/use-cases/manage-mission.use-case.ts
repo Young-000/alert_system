@@ -22,6 +22,7 @@ export class ManageMissionUseCase {
     userId: string,
     title: string,
     missionType: MissionType,
+    emoji?: string,
   ): Promise<Mission> {
     const missions = await this.repo.findByUserId(userId);
     const sameType = missions.filter((m) => m.missionType === missionType);
@@ -33,7 +34,7 @@ export class ManageMissionUseCase {
       );
     }
 
-    const mission = Mission.createNew(userId, title, missionType);
+    const mission = Mission.createNew(userId, title, missionType, emoji);
     // 개수가 아니라 마지막 sortOrder 다음 값을 쓴다 — 중간 미션을 지운 뒤 만들면
     // 개수가 남은 sortOrder와 겹쳐 목록 정렬과 순서 변경이 망가진다.
     mission.sortOrder = sameType.reduce(
@@ -50,7 +51,7 @@ export class ManageMissionUseCase {
   async updateMission(
     missionId: string,
     userId: string,
-    fields: { title?: string; missionType?: MissionType },
+    fields: { title?: string; emoji?: string; missionType?: MissionType },
   ): Promise<Mission> {
     const mission = await this.findOwnedMission(missionId, userId);
     mission.update(fields);

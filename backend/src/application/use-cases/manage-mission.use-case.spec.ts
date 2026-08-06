@@ -249,4 +249,26 @@ describe('ManageMissionUseCase', () => {
       ).rejects.toThrow('권한이 없습니다');
     });
   });
+
+  describe('emoji 보존', () => {
+    it('생성 시 사용자가 고른 emoji를 저장한다', async () => {
+      repo.findByUserId.mockResolvedValue([]);
+      repo.saveMission.mockImplementation(async (m) => m);
+
+      const result = await useCase.createMission('user-1', '영어 단어', 'commute', '🧘');
+      expect(result.emoji).toBe('🧘');
+    });
+
+    it('수정 시 사용자가 고른 emoji를 저장한다', async () => {
+      const mission = Mission.createNew('user-1', '독서', 'commute');
+      repo.findById.mockResolvedValue(mission);
+      repo.saveMission.mockImplementation(async (m) => m);
+
+      const result = await useCase.updateMission(mission.id, 'user-1', {
+        title: '독서하기',
+        emoji: '🎧',
+      });
+      expect(result.emoji).toBe('🎧');
+    });
+  });
 });

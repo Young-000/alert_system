@@ -84,6 +84,7 @@ export class MissionController {
       userId,
       dto.title,
       dto.missionType,
+      dto.emoji,
     );
 
     return {
@@ -116,6 +117,7 @@ export class MissionController {
     this.logger.log(`User ${userId} updating mission ${id}`);
     const mission = await this.manageMissionUseCase.updateMission(id, userId, {
       title: dto.title,
+      emoji: dto.emoji,
       missionType: dto.missionType,
     });
 
