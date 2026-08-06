@@ -18,6 +18,7 @@ import { ManageChallengeUseCase } from '@application/use-cases/manage-challenge.
 import { ChallengeConflictError } from '@application/use-cases/manage-challenge.use-case';
 import { JoinChallengeDto } from '@application/dto/challenge.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt, MAX_OFFSET } from '../utils/query-param';
 
 @Controller('challenges')
 @UseGuards(AuthGuard('jwt'))
@@ -233,8 +234,8 @@ export class ChallengeController {
     this.logger.log(`Getting challenge history for user ${userId}`);
     const result = await this.manageChallengeUseCase.getChallengeHistory(
       userId,
-      parseInt(limit || '20', 10),
-      parseInt(offset || '0', 10),
+      parseBoundedInt(limit, { fallback: 20, min: 1, max: 100 }),
+      parseBoundedInt(offset, { fallback: 0, min: 0, max: MAX_OFFSET }),
     );
 
     return {

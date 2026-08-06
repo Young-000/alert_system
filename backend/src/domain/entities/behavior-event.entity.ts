@@ -1,3 +1,5 @@
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
+
 export enum BehaviorEventType {
   NOTIFICATION_RECEIVED = 'notification_received',
   NOTIFICATION_OPENED = 'notification_opened',
@@ -40,7 +42,7 @@ export class BehaviorEvent {
     }
   ) {
     const now = options?.timestamp || new Date();
-    const dayOfWeek = now.getDay();
+    const dayOfWeek = getDayOfWeekKST(now);
 
     this.id = options?.id || '';
     this.userId = userId;

@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { Weather, HourlyForecast, DailyForecast } from '@domain/entities/weather.entity';
+import { formatDateCompactKST, getHoursKST } from '@domain/utils/kst-date';
 
 export interface IWeatherApiClient {
   getWeather(lat: number, lng: number): Promise<Weather>;
@@ -229,7 +230,8 @@ export class WeatherApiClient implements IWeatherApiClient {
 
   // 날씨 상태 → 아이콘 변환
   private getIconFromCondition(condition: string): string {
-    const hour = new Date().getHours();
+    // 주/야 아이콘 판정도 KST 기준 (UTC면 한국 낮에 야간 아이콘이 나간다).
+    const hour = getHoursKST();
     const isDay = hour >= 6 && hour < 18;
     const suffix = isDay ? 'd' : 'n';
 
@@ -284,13 +286,14 @@ export class WeatherApiClient implements IWeatherApiClient {
   }
 
   // 초단기실황 기준 시각 계산 (매시 정각, 40분 이후 생성)
+  // base_date/base_time은 기상청 기준 = KST다. 서버 TZ(UTC)로 만들면 9시간 과거를
+  // 조회해 NO_DATA/과거 데이터를 받는다.
   private getBaseDateTime(): { baseDate: string; baseTime: string } {
-    const now = new Date();
     // 40분 전 시각 기준
-    now.setMinutes(now.getMinutes() - 40);
+    const base = new Date(Date.now() - 40 * 60 * 1000);
 
-    const baseDate = this.formatDate(now);
-    const baseTime = `${String(now.getHours()).padStart(2, '0')}00`;
+    const baseDate = this.formatDate(base);
+    const baseTime = `${String(getHoursKST(base)).padStart(2, '0')}00`;
 
     return { baseDate, baseTime };
   }
@@ -298,7 +301,8 @@ export class WeatherApiClient implements IWeatherApiClient {
   // 단기예보 기준 시각 계산 (02, 05, 08, 11, 14, 17, 20, 23시)
   private getForecastBaseDateTime(): { forecastBaseDate: string; forecastBaseTime: string } {
     const now = new Date();
-    const hour = now.getHours();
+    // 발표 시각은 KST 기준이다.
+    const hour = getHoursKST(now);
 
     // 단기예보 발표 시각: 02, 05, 08, 11, 14, 17, 20, 23시
     const baseTimes = [2, 5, 8, 11, 14, 17, 20, 23];
@@ -326,11 +330,9 @@ export class WeatherApiClient implements IWeatherApiClient {
     };
   }
 
+  // 기상청의 base_date·fcstDate는 KST 달력 날짜다.
   private formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}${month}${day}`;
+    return formatDateCompactKST(date);
   }
 
   private getTimeSlot(hour: number): string {

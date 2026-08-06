@@ -454,6 +454,21 @@ export const authApiClient = {
   verify: vi.fn(),
 };
 
+export const missionApiClient = {
+  getMissions: vi.fn().mockResolvedValue([]),
+  createMission: vi.fn(),
+  updateMission: vi.fn(),
+  deleteMission: vi.fn().mockResolvedValue(undefined),
+  toggleActive: vi.fn(),
+  reorder: vi.fn(),
+  getDailyStatus: vi.fn(),
+  toggleCheck: vi.fn(),
+  getDailyScore: vi.fn().mockResolvedValue(null),
+  getWeeklyStats: vi.fn(),
+  getMonthlyStats: vi.fn(),
+  getStreak: vi.fn().mockResolvedValue({ streakDay: 0 }),
+};
+
 export const briefingApiClient = {
   getBriefing: vi.fn().mockResolvedValue({
     advices: [],

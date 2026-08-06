@@ -261,7 +261,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
-  min-height: 32px;
+  /* 모바일 터치 타겟 최소 44px (Phase 6-6) */
+  min-height: 44px;
 }
 
 .tip-form-submit:hover:not(:disabled) {
@@ -316,6 +317,19 @@
 
 .tips-error-retry {
   margin-top: 0.375rem;
+}
+
+.tips-action-error {
+  text-align: center;
+  padding: 0.5rem 0;
+  color: var(--error);
+  font-size: 0.78rem;
+}
+
+.tip-form-error {
+  margin: 0.375rem 0 0;
+  color: var(--error);
+  font-size: 0.75rem;
 }
 
 /* ========== RESPONSIVE ========== */

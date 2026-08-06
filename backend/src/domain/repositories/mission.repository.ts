@@ -1,4 +1,4 @@
-import { Mission, MissionType } from '@domain/entities/mission.entity';
+import { Mission } from '@domain/entities/mission.entity';
 import { DailyMissionRecord } from '@domain/entities/daily-mission-record.entity';
 import { MissionScore } from '@domain/entities/mission-score.entity';
 
@@ -6,7 +6,6 @@ export interface IMissionRepository {
   // Mission CRUD
   findByUserId(userId: string): Promise<Mission[]>;
   findById(id: string): Promise<Mission | null>;
-  countByUserAndType(userId: string, missionType: MissionType): Promise<number>;
   saveMission(mission: Mission): Promise<Mission>;
   deleteMission(id: string): Promise<void>;
 

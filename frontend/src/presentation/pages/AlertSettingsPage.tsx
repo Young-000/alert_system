@@ -8,10 +8,12 @@ import {
 } from '@infrastructure/api';
 import type { AlertType, CreateAlertDto } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
+import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import {
   useAlertCrud,
   useTransportSearch,
   useWizardNavigation,
+  cronToHuman,
   generateSchedule,
   generateAlertName,
   getNotificationTimes,
@@ -108,9 +110,9 @@ export function AlertSettingsPage(): JSX.Element {
     const duplicate = checkDuplicateAlert(schedule, alertTypes);
     if (duplicate) {
       setDuplicateAlert(duplicate);
-      const parts = duplicate.schedule.split(' ');
-      const hours = parts[1]?.split(',').map(h => `${h.padStart(2, '0')}:00`).join(', ') || '';
-      setCrudError(`이미 같은 시간(${hours})에 동일한 알림이 있습니다.`);
+      setCrudError(
+        `이미 같은 시간(${cronToHuman(duplicate.schedule)})에 동일한 알림이 있습니다.`,
+      );
       return;
     }
 
@@ -142,14 +144,7 @@ export function AlertSettingsPage(): JSX.Element {
         setCrudSuccess('');
       }, TOAST_DURATION_MS);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
-      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-        setCrudError('로그인이 만료되었습니다. 다시 로그인해주세요.');
-      } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-        setCrudError('권한이 없습니다. 다시 로그인해주세요.');
-      } else {
-        setCrudError(`알림 생성에 실패했습니다: ${errorMessage}`);
-      }
+      setCrudError(getApiErrorMessage(err, '알림 생성에 실패했습니다.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -186,7 +181,7 @@ export function AlertSettingsPage(): JSX.Element {
   wizardSetStepRef.current = wizard.setStep;
 
   // Wizard visibility: show when no alerts (automatic) or user clicked "+" (explicit)
-  const shouldShowWizard = alertCrud.alerts.length === 0 || wizard.showWizard;
+  const shouldShowWizard = (alertCrud.alerts.length === 0 && !alertCrud.loadError) || wizard.showWizard;
 
   // Import from route handler
   const importFromRoute = (route: RouteResponse): void => {
@@ -381,12 +376,14 @@ export function AlertSettingsPage(): JSX.Element {
             searchResults={transportSearch.searchResults}
             selectedTransports={transportSearch.selectedTransports}
             isSearching={transportSearch.isSearching}
+            searchError={transportSearch.searchError}
             groupedStations={transportSearch.groupedStations}
             selectedStation={transportSearch.selectedStation}
             savedRoutes={alertCrud.savedRoutes}
             onSearchChange={transportSearch.setSearchQuery}
             onToggleTransport={transportSearch.toggleTransport}
             onSelectStation={transportSearch.setSelectedStation}
+            onRetrySearch={transportSearch.retrySearch}
           />
         )}
 
@@ -442,6 +439,7 @@ export function AlertSettingsPage(): JSX.Element {
         <DeleteConfirmModal
           targetName={alertCrud.deleteTarget.name}
           isDeleting={alertCrud.isDeleting}
+          deleteError={alertCrud.error}
           onConfirm={alertCrud.handleDeleteConfirm}
           onCancel={alertCrud.handleDeleteCancel}
         />
@@ -451,6 +449,7 @@ export function AlertSettingsPage(): JSX.Element {
       {alertCrud.editTarget && (
         <EditAlertModal
           editForm={alertCrud.editForm}
+          originalSchedule={alertCrud.editTarget.schedule}
           isEditing={alertCrud.isEditing}
           onFormChange={alertCrud.setEditForm}
           onConfirm={alertCrud.handleEditConfirm}

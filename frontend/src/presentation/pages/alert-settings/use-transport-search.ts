@@ -12,6 +12,7 @@ interface TransportSearchState {
   searchResults: TransportItem[];
   selectedTransports: TransportItem[];
   isSearching: boolean;
+  searchError: string | null;
   groupedStations: GroupedStation[];
   selectedStation: GroupedStation | null;
 }
@@ -21,6 +22,7 @@ interface TransportSearchActions {
   setSelectedTransports: React.Dispatch<React.SetStateAction<TransportItem[]>>;
   setSelectedStation: (station: GroupedStation | null) => void;
   toggleTransport: (item: TransportItem) => void;
+  retrySearch: () => void;
 }
 
 export function useTransportSearch(
@@ -30,8 +32,15 @@ export function useTransportSearch(
   const [searchResults, setSearchResults] = useState<TransportItem[]>([]);
   const [selectedTransports, setSelectedTransports] = useState<TransportItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [groupedStations, setGroupedStations] = useState<GroupedStation[]>([]);
   const [selectedStation, setSelectedStation] = useState<GroupedStation | null>(null);
+  // Bumped by retrySearch to re-run the effect with an unchanged query.
+  const [retryNonce, setRetryNonce] = useState(0);
+
+  const retrySearch = useCallback((): void => {
+    setRetryNonce((n) => n + 1);
+  }, []);
 
   // Unified search for subway + bus (with grouping for 2-step selection)
   useEffect(() => {
@@ -43,10 +52,12 @@ export function useTransportSearch(
       if (!shouldSearch) {
         setSearchResults([]);
         setGroupedStations([]);
+        setSearchError(null);
         return;
       }
 
       setIsSearching(true);
+      setSearchError(null);
       try {
         const results: TransportItem[] = [];
 
@@ -98,6 +109,7 @@ export function useTransportSearch(
         if (!controller.signal.aborted) {
           setSearchResults([]);
           setGroupedStations([]);
+          setSearchError('검색에 실패했어요. 잠시 후 다시 시도해주세요.');
           setIsSearching(false);
         }
       }
@@ -107,7 +119,7 @@ export function useTransportSearch(
       clearTimeout(searchTimeout);
       controller.abort();
     };
-  }, [searchQuery, transportTypes]);
+  }, [searchQuery, transportTypes, retryNonce]);
 
   const toggleTransport = useCallback((item: TransportItem): void => {
     setSelectedTransports((prev) => {
@@ -124,11 +136,13 @@ export function useTransportSearch(
     searchResults,
     selectedTransports,
     isSearching,
+    searchError,
     groupedStations,
     selectedStation,
     setSearchQuery,
     setSelectedTransports,
     setSelectedStation,
     toggleTransport,
+    retrySearch,
   };
 }

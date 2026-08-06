@@ -4,14 +4,24 @@ import { useDailyStatusQuery, useWeeklyStatsQuery, useMissionStreakQuery } from 
 
 export function MissionQuickCard(): JSX.Element | null {
   const { userId } = useAuth();
-  const { data: dailyStatus } = useDailyStatusQuery();
+  const { data: dailyStatus, isLoading } = useDailyStatusQuery();
   const { data: weeklyStats } = useWeeklyStatsQuery();
   const { data: streakData } = useMissionStreakQuery();
 
   if (!userId) return null;
+  // 미션 수가 확정되기 전에는 아무것도 그리지 않는다.
+  // 로딩 중 0으로 읽으면 미션이 있는 사용자에게 설정 유도 화면이 깜빡인다.
+  if (isLoading) return null;
 
-  const totalMissions = dailyStatus?.totalMissions ?? 0;
-  const completedMissions = dailyStatus?.completedMissions ?? 0;
+  // 집계 수치는 미션 배열에서 직접 센다. GET /missions/daily는 배열과
+  // completionRate만 내려주므로, 서버가 보내주지 않는 집계 필드를 읽으면
+  // 항상 0이 되어 미션이 있는 사용자에게도 설정 유도 화면이 뜬다.
+  const commuteMissions = dailyStatus?.commuteMissions ?? [];
+  const returnMissions = dailyStatus?.returnMissions ?? [];
+  const totalMissions = commuteMissions.length + returnMissions.length;
+  const completedMissions = [...commuteMissions, ...returnMissions].filter(
+    (m) => m.isCompleted,
+  ).length;
   const streakDay = streakData?.streakDay ?? dailyStatus?.streakDay ?? 0;
   const weeklyRate = weeklyStats?.completionRate ?? 0;
   const progressPercent = totalMissions > 0

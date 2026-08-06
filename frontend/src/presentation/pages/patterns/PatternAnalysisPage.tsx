@@ -294,6 +294,13 @@ export function PatternAnalysisPage(): JSX.Element {
       <main className="page patterns-page">
         <div className="patterns-auth-required">
           <p>로그인이 필요합니다.</p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => navigate('/login')}
+          >
+            로그인
+          </button>
         </div>
       </main>
     );

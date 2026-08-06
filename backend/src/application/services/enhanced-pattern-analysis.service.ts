@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getMonthFromDateOnly } from '@domain/utils/kst-date';
 import {
   UserPattern,
   PatternType,
@@ -21,7 +22,7 @@ import {
   COMMUTE_SESSION_REPOSITORY,
 } from '@domain/repositories/commute-session.repository';
 import { SessionStatus } from '@domain/entities/commute-session.entity';
-import { FeatureEngineeringService } from './feature-engineering.service';
+import { FeatureEngineeringService, CommuteFeatureRow } from './feature-engineering.service';
 import { mean, stdDev } from './statistics/descriptive-stats';
 import { linearRegression } from './statistics/linear-regression';
 
@@ -53,11 +54,11 @@ export class EnhancedPatternAnalysisService {
   async analyzeDayOfWeekPattern(
     userId: string,
     commuteType: CommuteType = CommuteType.MORNING,
+    preloadedRows?: CommuteFeatureRow[],
   ): Promise<DayOfWeekDepartureValue | null> {
     if (!this.commuteRepository) return null;
 
-    const records = await this.commuteRepository.findByUserIdAndType(userId, commuteType, 100);
-    const rows = this.featureService.transformRecordsToFeatureRows(records);
+    const rows = preloadedRows ?? (await this.loadFeatureRows(userId, commuteType));
 
     if (rows.length < 10) return null;
 
@@ -104,11 +105,11 @@ export class EnhancedPatternAnalysisService {
   async analyzeWeatherSensitivity(
     userId: string,
     commuteType: CommuteType = CommuteType.MORNING,
+    preloadedRows?: CommuteFeatureRow[],
   ): Promise<WeatherSensitivityValue | null> {
     if (!this.commuteRepository) return null;
 
-    const records = await this.commuteRepository.findByUserIdAndType(userId, commuteType, 100);
-    const rows = this.featureService.transformRecordsToFeatureRows(records);
+    const rows = preloadedRows ?? (await this.loadFeatureRows(userId, commuteType));
 
     if (rows.length < 20) return null;
 
@@ -164,18 +165,18 @@ export class EnhancedPatternAnalysisService {
   async analyzeSeasonalTrend(
     userId: string,
     commuteType: CommuteType = CommuteType.MORNING,
+    preloadedRows?: CommuteFeatureRow[],
   ): Promise<SeasonalTrendValue | null> {
     if (!this.commuteRepository) return null;
 
-    const records = await this.commuteRepository.findByUserIdAndType(userId, commuteType, 100);
-    const rows = this.featureService.transformRecordsToFeatureRows(records);
+    const rows = preloadedRows ?? (await this.loadFeatureRows(userId, commuteType));
 
     if (rows.length < 30) return null;
 
     // Group by month
     const monthGroups = new Map<number, number[]>();
     for (const row of rows) {
-      const month = row.commuteDate.getMonth() + 1; // 1-12
+      const month = getMonthFromDateOnly(row.commuteDate); // 1-12
       const existing = monthGroups.get(month) ?? [];
       existing.push(row.departureMinutes);
       monthGroups.set(month, existing);
@@ -292,6 +293,20 @@ export class EnhancedPatternAnalysisService {
   }
 
   /**
+   * Load and transform commute records into feature rows once.
+   * Shared by the analysis methods so runFullAnalysis avoids re-querying the
+   * same 100 records three times.
+   */
+  private async loadFeatureRows(
+    userId: string,
+    commuteType: CommuteType,
+  ): Promise<CommuteFeatureRow[]> {
+    if (!this.commuteRepository) return [];
+    const records = await this.commuteRepository.findByUserIdAndType(userId, commuteType, 100);
+    return this.featureService.transformRecordsToFeatureRows(records);
+  }
+
+  /**
    * Run all analyses for a user. Called after a new commute record is saved.
    */
   async runFullAnalysis(userId: string, commuteType: CommuteType = CommuteType.MORNING): Promise<{
@@ -299,10 +314,16 @@ export class EnhancedPatternAnalysisService {
     weatherSensitivity: WeatherSensitivityValue | null;
     seasonalTrend: SeasonalTrendValue | null;
   }> {
+    // Fetch + transform the records once and share them across all three analyses
+    // instead of each method issuing its own identical query.
+    const rows = this.commuteRepository
+      ? await this.loadFeatureRows(userId, commuteType)
+      : [];
+
     const [dayOfWeek, weatherSensitivity, seasonalTrend] = await Promise.all([
-      this.analyzeDayOfWeekPattern(userId, commuteType),
-      this.analyzeWeatherSensitivity(userId, commuteType),
-      this.analyzeSeasonalTrend(userId, commuteType),
+      this.analyzeDayOfWeekPattern(userId, commuteType, rows),
+      this.analyzeWeatherSensitivity(userId, commuteType, rows),
+      this.analyzeSeasonalTrend(userId, commuteType, rows),
     ]);
 
     this.logger.log(

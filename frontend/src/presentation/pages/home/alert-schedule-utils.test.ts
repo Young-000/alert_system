@@ -92,4 +92,46 @@ describe('computeNextAlert', () => {
     const result = computeNextAlert(alerts, now);
     expect(result).toEqual({ time: '06:05', label: '날씨' });
   });
+
+  // ── cron 요일 필드 반영 ──
+  // EventBridge는 요일을 그대로 실제 스케줄로 옮긴다. 요일을 무시하면
+  // 홈 화면이 "발화하지 않는 날"을 다음 알림으로 단언하게 된다.
+  describe('day-of-week 필드', () => {
+    const SATURDAY_10AM = new Date(2026, 7, 1, 10, 0); // 2026-08-01 (토) 10:00
+    const MONDAY_7AM = new Date(2026, 7, 3, 7, 0); // 2026-08-03 (월) 07:00
+
+    it('평일 전용 알림은 토요일에 "내일"(일요일)이라 하지 않는다', () => {
+      const alerts = [buildAlert({ schedule: '0 8 * * 1-5' })];
+      const result = computeNextAlert(alerts, SATURDAY_10AM);
+      expect(result).toEqual({ time: '월 08:00', label: '날씨' });
+    });
+
+    it('주말 전용 알림은 월요일에 오늘이라 하지 않는다', () => {
+      const alerts = [buildAlert({ schedule: '0 9 * * 0,6' })];
+      const result = computeNextAlert(alerts, MONDAY_7AM);
+      expect(result).toEqual({ time: '토 09:00', label: '날씨' });
+    });
+
+    it('평일 알림은 평일 아침이면 오늘로 표시한다', () => {
+      const alerts = [buildAlert({ schedule: '0 8 * * 1-5' })];
+      const result = computeNextAlert(alerts, MONDAY_7AM);
+      expect(result).toEqual({ time: '08:00', label: '날씨' });
+    });
+
+    it('평일 알림은 금요일 저녁이면 다음 발화가 월요일이다', () => {
+      const fridayEvening = new Date(2026, 7, 7, 20, 0); // 2026-08-07 (금) 20:00
+      const alerts = [buildAlert({ schedule: '0 8 * * 1-5' })];
+      const result = computeNextAlert(alerts, fridayEvening);
+      expect(result).toEqual({ time: '월 08:00', label: '날씨' });
+    });
+
+    it('요일이 다른 알림들 중 실제로 가장 먼저 발화하는 것을 고른다', () => {
+      const alerts = [
+        buildAlert({ id: 'a1', schedule: '0 7 * * 1-5', alertTypes: ['weather'] }), // → 월 07:00
+        buildAlert({ id: 'a2', schedule: '0 18 * * 0,6', alertTypes: ['bus'] }), // → 오늘(토) 18:00
+      ];
+      const result = computeNextAlert(alerts, SATURDAY_10AM);
+      expect(result).toEqual({ time: '18:00', label: '교통' });
+    });
+  });
 });

@@ -118,6 +118,54 @@ describe('CommunityController', () => {
 
       expect(mockTipsService.getTips).toHaveBeenCalledWith('station:1', 'user-1', 2, 10);
     });
+
+    // page/limit은 TipsService를 거쳐 TypeORM의 skip/take가 된다.
+    // 음수가 새면 Postgres가 `LIMIT -1`을 거부해 500이 되므로 경계에서 고정한다.
+    describe('page/limit 범위 보정', () => {
+      beforeEach(() => {
+        mockTipsService.getTips.mockResolvedValue({
+          tips: [],
+          total: 0,
+          page: 1,
+          limit: 20,
+          hasNext: false,
+        });
+      });
+
+      const lastCall = () => mockTipsService.getTips.mock.calls.at(-1) as unknown[];
+
+      it('값이 없으면 page=1, limit=20', async () => {
+        await controller.getTips(mockRequest, 'station:1', undefined, undefined);
+
+        expect(lastCall()[2]).toBe(1);
+        expect(lastCall()[3]).toBe(20);
+      });
+
+      it('음수 limit은 하한 1로 보정된다', async () => {
+        await controller.getTips(mockRequest, 'station:1', undefined, '-1');
+
+        expect(lastCall()[3]).toBe(1);
+      });
+
+      it('음수 page는 하한 1로 보정된다', async () => {
+        await controller.getTips(mockRequest, 'station:1', '-5', undefined);
+
+        expect(lastCall()[2]).toBe(1);
+      });
+
+      it('과대 limit은 상한 50으로 보정된다', async () => {
+        await controller.getTips(mockRequest, 'station:1', undefined, '100000');
+
+        expect(lastCall()[3]).toBe(50);
+      });
+
+      it('숫자가 아니면 기본값으로 떨어진다', async () => {
+        await controller.getTips(mockRequest, 'station:1', 'abc', 'xyz');
+
+        expect(lastCall()[2]).toBe(1);
+        expect(lastCall()[3]).toBe(20);
+      });
+    });
   });
 
   describe('POST /community/tips', () => {

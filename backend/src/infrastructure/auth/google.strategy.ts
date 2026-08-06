@@ -19,6 +19,14 @@ function getGoogleConfig(configService: ConfigService) {
   return { clientID, clientSecret, callbackURL };
 }
 
+/**
+ * 구글 userinfo의 `email_verified`는 불리언으로 오지만, 엔드포인트에 따라
+ * 문자열 `'true'`로 오는 경우가 있어 둘 다 받는다. 그 밖의 값은 미확인으로 본다.
+ */
+function isVerified(verified: unknown): boolean {
+  return verified === true || verified === 'true';
+}
+
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
@@ -56,10 +64,26 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       }
 
       const { id, emails, displayName, photos } = profile;
+      const primaryEmail = emails?.[0];
+
+      // 이 이메일은 뒤에서 기존 계정을 찾아 연동하는 열쇠로 쓰인다
+      // (`GoogleOAuthUseCase.execute`). 구글이 소유를 확인해준 주소가 아니면
+      // 남의 계정에 붙을 수 있으므로 여기서 끊는다.
+      if (!primaryEmail?.value) {
+        this.logger.warn(`Google login rejected: no email in profile (id: ${id})`);
+        done(null, false);
+        return;
+      }
+
+      if (!isVerified(primaryEmail.verified)) {
+        this.logger.warn(`Google login rejected: email not verified (${primaryEmail.value})`);
+        done(null, false);
+        return;
+      }
 
       const googleProfile: GoogleProfile = {
         googleId: id,
-        email: emails?.[0]?.value || '',
+        email: primaryEmail.value,
         name: displayName || '',
         picture: photos?.[0]?.value,
       };

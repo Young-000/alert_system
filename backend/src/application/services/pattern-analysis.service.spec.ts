@@ -3,6 +3,7 @@ import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.enti
 import { PatternType, CONFIDENCE_LEVELS, DEFAULT_PATTERNS, UserPattern } from '@domain/entities/user-pattern.entity';
 import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
 import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
+import { atTimeKST, toDateOnlyKST } from '@domain/utils/kst-date';
 
 describe('PatternAnalysisService', () => {
   let service: PatternAnalysisService;
@@ -23,8 +24,8 @@ describe('PatternAnalysisService', () => {
       date.setDate(date.getDate() + (6 - date.getDay()));
     }
 
-    const departure = new Date(date);
-    departure.setHours(hour, minute, 0, 0);
+    // hour/minute은 KST 벽시계 시각 (프로덕션 서버 TZ는 UTC다).
+    const departure = atTimeKST(toDateOnlyKST(date), hour, minute);
 
     return new CommuteRecord('user-1', date, CommuteType.MORNING, {
       id: `record-${dayOffset}`,
@@ -67,24 +68,16 @@ describe('PatternAnalysisService', () => {
     });
 
     it('충분한 데이터가 있으면 가중 평균을 계산한다', async () => {
-      // 5 weekday records around 8:00-8:20
-      // Use offsets that land on weekdays (Mon Feb 16, then previous Mon-Fri)
-      const records = [
-        createRecord(8, 0, 0),     // Mon Feb 16
-        createRecord(8, 10, -7),   // Mon Feb 9
-        createRecord(8, 5, -8),    // Sun... need to be careful
-        createRecord(8, 15, -9),
-        createRecord(8, 20, -10),
-      ];
-      // Instead, mock the repo to return records that will pass the weekday filter
-      // The filter checks r.commuteDate.getDay() is 1-5
+      // 같은 주 월~금 5건. 날짜는 반드시 Date.UTC로 만든다 —
+      // `new Date('2026-02-16T00:00:00')`은 TZ 접미사가 없어 **로컬 시각**으로
+      // 파싱되므로, KST보다 앞선 TZ(예: Pacific/Auckland, UTC+13)에서는
+      // toDateOnlyKST()가 하루 앞 날짜를 돌려줘 월요일이 일요일이 된다.
+      // 그러면 평일 필터에 5건이 못 채워져 COLD_START로 떨어진다.
       const weekdayRecords: CommuteRecord[] = [];
       for (let i = 0; i < 5; i++) {
-        // Create dates that are always weekdays (Mon-Fri of the same week)
-        const date = new Date('2026-02-16T00:00:00'); // Monday
-        date.setDate(date.getDate() + i); // Mon, Tue, Wed, Thu, Fri
-        const departure = new Date(date);
-        departure.setHours(8, i * 5, 0, 0); // 08:00, 08:05, 08:10, 08:15, 08:20
+        const date = new Date(Date.UTC(2026, 1, 16 + i)); // Mon Feb 16 ~ Fri Feb 20
+        // KST 08:00, 08:05, 08:10, 08:15, 08:20
+        const departure = atTimeKST(toDateOnlyKST(date), 8, i * 5);
         weekdayRecords.push(new CommuteRecord('user-1', date, CommuteType.MORNING, {
           id: `rec-${i}`,
           actualDeparture: departure,
@@ -239,6 +232,62 @@ describe('PatternAnalysisService', () => {
       expect(result.patternType).toBe(PatternType.NOTIFICATION_LEAD_TIME);
       const value = result.value as { optimalMinutes: number };
       expect(value.optimalMinutes).toBe(DEFAULT_PATTERNS.notificationLeadTime);
+    });
+  });
+
+  /**
+   * 회귀 방지: 리포지토리에서 온 기록의 commuteDate는 TypeORM이 문자열로 hydrate한다.
+   * 기존 스펙은 항상 `new Date(...)`를 넣어 프로덕션 경로를 재현하지 못했고,
+   * 그 결과 `commuteDate.getDay()` TypeError가 테스트를 통과해 배포됐다.
+   */
+  describe('DB에서 hydrate된 날짜 전용 문자열 처리', () => {
+    const hydratedRecord = (dateStr: string, hour: number, minute: number): CommuteRecord =>
+      new CommuteRecord('user-1', dateStr, CommuteType.MORNING, {
+        id: `rec-${dateStr}`,
+        actualDeparture: new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`),
+      });
+
+    it('문자열 날짜로도 평일 기록을 걸러내 패턴을 계산한다', async () => {
+      // 2026-07-27(월) ~ 2026-07-31(금)
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([
+        hydratedRecord('2026-07-27', 8, 0),
+        hydratedRecord('2026-07-28', 8, 5),
+        hydratedRecord('2026-07-29', 8, 10),
+        hydratedRecord('2026-07-30', 8, 15),
+        hydratedRecord('2026-07-31', 8, 20),
+      ]);
+
+      const result = await service.analyzeDeparturePattern('user-1', CommuteType.MORNING, true);
+
+      expect(result.sampleCount).toBe(5);
+      expect(result.confidence).toBe(CONFIDENCE_LEVELS.LEARNING);
+    });
+
+    it('주말 기록은 평일 분석에서 제외한다', async () => {
+      // 2026-08-01(토), 2026-08-02(일)
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([
+        hydratedRecord('2026-08-01', 9, 0),
+        hydratedRecord('2026-08-02', 9, 30),
+      ]);
+
+      const result = await service.analyzeDeparturePattern('user-1', CommuteType.MORNING, true);
+
+      expect(result.sampleCount).toBe(0);
+    });
+
+    it('updatePatternFromRecord가 문자열 날짜에서 평일 여부를 판정한다', async () => {
+      mockCommuteRepo.findByUserIdAndType.mockResolvedValue([]);
+      mockPatternRepo.findByUserIdTypeAndDay.mockResolvedValue(undefined);
+      mockPatternRepo.save.mockResolvedValue(undefined);
+
+      await service.updatePatternFromRecord(hydratedRecord('2026-07-27', 8, 0));
+
+      expect(mockPatternRepo.findByUserIdTypeAndDay).toHaveBeenCalledWith(
+        'user-1',
+        PatternType.DEPARTURE_TIME,
+        undefined,
+        true, // 2026-07-27은 월요일
+      );
     });
   });
 });

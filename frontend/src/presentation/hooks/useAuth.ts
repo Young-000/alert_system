@@ -25,12 +25,16 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+// 구분자로 이어붙이면 값 안의 구분자가 필드를 밀어낸다.
+// 이름은 사용자가 정하므로 JSON으로 인코딩해 경계를 값과 분리한다.
+const EMPTY_SNAPSHOT = JSON.stringify(AUTH_KEYS.map(() => ''));
+
 function getSnapshot(): string {
-  return AUTH_KEYS.map((k) => localStorage.getItem(k) ?? '').join('|');
+  return JSON.stringify(AUTH_KEYS.map((k) => localStorage.getItem(k) ?? ''));
 }
 
 function getServerSnapshot(): string {
-  return '||||';
+  return EMPTY_SNAPSHOT;
 }
 
 // storage 이벤트로 다른 탭의 변경도 감지
@@ -48,12 +52,12 @@ if (typeof window !== 'undefined') {
  */
 export function useAuth(): AuthState {
   const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const parts = raw.split('|');
-  const userId = parts[0] || '';
-  const userName = parts[1] || '회원';
-  const userEmail = parts[2] || '';
-  // parts[3] is accessToken -- skip (not exposed to components)
-  const phoneNumber = parts[4] || '';
+  // accessToken(4번째)은 컴포넌트에 노출하지 않는다.
+  const [storedId, storedName, storedEmail, , storedPhone] = JSON.parse(raw) as string[];
+  const userId = storedId || '';
+  const userName = storedName || '회원';
+  const userEmail = storedEmail || '';
+  const phoneNumber = storedPhone || '';
 
   return {
     userId,

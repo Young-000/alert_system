@@ -34,8 +34,13 @@ export type MissionWithRecord = {
 export type DailyStatus = {
   commuteMissions: MissionWithRecord[];
   returnMissions: MissionWithRecord[];
-  totalMissions: number;
-  completedMissions: number;
+  /**
+   * 집계 수치는 구버전 백엔드가 내려주지 않아 optional이다.
+   * 화면에서는 이 값에 기대지 말고 미션 배열에서 직접 세야 한다 —
+   * 없는 필드를 읽어 0/undefined가 되는 사고가 있었다.
+   */
+  totalMissions?: number;
+  completedMissions?: number;
   completionRate: number;
   streakDay: number;
 };

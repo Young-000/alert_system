@@ -1,5 +1,153 @@
 # Alert System - 진행 기록
 
+## [2026-08-04] Auto E2E Review 00:00 — 8건 수정 (PR #171 머지)
+
+### Completed
+- fix(api): **페이지네이션 쿼리 파라미터의 하한 검증이 없어 음수가 SQL `LIMIT`/`OFFSET`에
+  그대로 도달**하던 문제. `Math.min(limit, 상한)`만 있고 `Math.max`가 없는 관용구가
+  **8개 컨트롤러에 복사**돼 있었다 (insights · notification-history · commute ·
+  congestion · challenge · behavior · commute-event · analytics).
+  TypeORM은 음수 `take`/`skip`을 검증하지 않고 `LIMIT -1`로 실어 보낸다
+  (better-sqlite3로 직접 실측) — **Postgres는 500, 테스트용 SQLite는 "제한 없음"으로
+  해석해 전량 반환**. `GET /insights/regions`는 `@Public()`이라 **인증 없이 트리거 가능**했다
+- refactor: `presentation/utils/query-param.ts` 신설 — 파싱과 범위 보정을 한 지점으로.
+  8곳을 각각 `Math.max`로 덧대는 대신 계약을 한 함수가 갖게 했다
+- test: 회귀 방지 19건 추가 (RED 확인 후 작성, 신규 spec 2개).
+  `insights.controller.spec.ts`는 해당 컨트롤러 **첫 spec** — 페이지네이션 7건 +
+  스케줄러 시크릿 검증 3건(`@Public()` + `timingSafeEqual` 조합이라 회귀 시 피해가 크다).
+  backend 1482 → **1501 passed**, frontend **646 passed** (프론트엔드 변경 0)
+- 근본 원인: **전역 `ValidationPipe`(`main.ts:64`)는 `@Body()`만 검증한다.**
+  `@Query()`는 DTO를 거치지 않아 컨트롤러가 마지막 방어선인데, 그 방어가 빠져 있었다
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      **8라운드째** 재확인 (`aws ecs list-clusters` → 빈 배열).
+      이번 8건 전부 백엔드라 머지는 됐지만 프로덕션에는 반영되지 않는다
+- [ ] 미머지 auto-review PR **24건** (전 라운드와 동일). 원인은 required status checks
+      이름 불일치 (`CI / frontend` vs 실제 `frontend`) — 이번 PR #171도 CI 양쪽 SUCCESS인데
+      BLOCKED이라 `--admin` 머지했다. PR 정리 → 컨텍스트 이름 정정 순서 권장
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (10라운드째). provider 등록은 있으나
+      `scheduleAlerts`·`cancelAlerts`·`rescheduleAlerts` **3개 공개 메서드 전부 호출부 0건**.
+      배선 = 실제 알림 발송 = 외부 노출 D1 게이트
+- [ ] 남은 무-spec 컨트롤러: `mission`(408줄) · `smart-departure`(168) · `place`(94) ·
+      `commute-event`(76) · `briefing`(74) · `widget`(22)
+
+### Notes
+- 착수 시 worktree가 `origin/main`보다 31커밋 뒤처져 있었다. 로컬 스테일 커밋 2건은
+  내용이 이미 upstream에 반영된 중복임을 확인하고 버렸다. 같은 이름의 열린 PR은 없었다
+- 누적 교훈은 `docs/LESSONS.md` 참조
+
+---
+
+## [2026-08-03] Auto E2E Review 08:00 + 16:00 — 3건 수정 (PR #169 머지)
+
+### Completed
+- fix(widget): 저녁에 위젯을 열면 **오늘 아침 출근 건**이 뜨던 문제
+  (`calculate-departure.use-case.ts:211`). 오름차순 배열에서 `upcoming[0]`을
+  "most recent"로 쓰고 있었다 — 주석과 코드가 정확히 반대였다.
+  `status`가 `departed`로 바뀌려면 사용자가 "출발"을 눌러야 해서 **기본 경로**였다
+- fix(widget): 그 결과가 **"출발까지 -690분!"** 으로 찍히던 문제
+  (`briefing-advice.service.ts:376`). `minutesUntilDeparture`는 부호 있는 값인데
+  음수가 `<= 10`을 통과해 문구에 그대로 박혔다. 부호별 분기 + 기한 초과 조기 반환
+- fix(commute): **도착 기록이 임의 순서로 실려 와 구간 소요시간·지연이 부풀려지던 문제**
+  (`commute-session.repository.ts:154`). 6개 finder가 `relations`만 걸고 ORDER BY가
+  없는데, `manage-commute-session.use-case.ts:113`은 배열의 마지막 원소를 직전 도착으로
+  보고 `durationFromPrevious`를 계산해 **DB에 영구 저장**한다. 그 값이 다시 구간별
+  통계(`calculate-route-analytics.use-case.ts:227`)의 입력이 된다.
+  전용 리포지토리·형제 리포지토리·테이블 인덱스가 전부 시간순을 전제하고 있었고
+  **여기만 빠져 있었다**
+- test: 회귀 방지 16건 추가 (전부 RED 확인 후 작성, 신규 spec 파일 2개).
+  backend 1466 → **1482 passed**, frontend **646 passed**
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      **7라운드째** 재확인 (`ecs list-clusters` 빈 배열 · ECR `RepositoryNotFoundException`).
+      이번 3건 전부 백엔드라 머지는 됐지만 프로덕션에는 반영되지 않는다
+- [ ] 미머지 auto-review PR **24건**. 원인은 required status checks 이름 불일치
+      (`CI / frontend` vs 실제 `frontend`) — 리포 설정 한 줄이라 인프라 게이트와 무관.
+      **다만 22건이 auto-merge 무장 상태라 고치는 순간 2월치까지 한꺼번에 쏟아진다**:
+      PR 정리 → 컨텍스트 이름 정정 순서로
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (provider 등록만 있고 호출부 0건)
+- [ ] 터치 타겟 44px 미달 6건 — 실화면 증거 필요
+
+## [2026-08-03] Auto E2E Review — 2건 수정 (PR #167 머지)
+
+### Completed
+- fix(mission): 새 미션의 `sortOrder`를 기존 "개수"로 잡아, 중간 미션을 지운 뒤
+  만들면 남아 있는 미션과 값이 겹치던 문제 교정 (`max(기존)+1`로 교체).
+  겹치면 목록 정렬이 DB 임의 순서가 되고, **순서 변경 버튼이 같은 값을 두 번 써서
+  200으로 성공하며 아무것도 하지 않았다** — 에러도 뜨지 않아 무반응으로 보였다
+- fix(mission): 유형별 3개 제한이 활성 미션만 세어, 하나를 끄고 새로 만든 뒤 다시 켜면
+  4개가 되던 우회 경로 차단 (프론트엔드는 비활성 포함 3개에서 막고 있었다 — 앞뒤 불일치)
+- fix(db): 등록 엔티티 36개 중 **11개에 `CREATE TABLE`이 아예 없어** 프로덕션
+  (`synchronize=false`)에서 42P01로 500나던 스키마 갭을 닫는 마이그레이션 신규 작성
+  (`20260803_add_mission_challenge_cache_tables.sql`) — `MissionController`
+  엔드포인트 10개 전부가 대상이었다. RLS 포함
+- refactor(mission): 버그 원인이던 `countByUserAndType`(활성만 카운트) 제거 — 호출부 0
+- test: 회귀 방지 7건 추가 (RED 7건 확인 후 작성). backend 1462 → 1466 passed
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      5라운드째 재확인 (`ecs list-clusters` 빈 배열 · ECR `RepositoryNotFoundException`).
+      **이번엔 마이그레이션이라 적용돼야 의미가 있다** — 미션 기능의 프로덕션 500이
+      파일만 추가된 채 남는다
+- [ ] 신규 마이그레이션을 실제 Postgres에서 실행 검증 (엔티티↔DDL 전수 대조와
+      구문 구조 검사는 통과했으나 DB 적용은 미실행 — 적용 자체가 게이트)
+- [ ] 미머지 auto-review PR **24건**으로 악화 (최고령 2026-03-04).
+      원인은 required status checks 이름 불일치(`CI / frontend` vs 실제 `frontend`) —
+      리포 설정 한 줄이라 인프라 게이트와 무관하게 풀 수 있다
+- [ ] 터치 타겟 44px 미달 6건 — 실화면 증거 필요
+
+### Notes
+- 테스트 DB가 `synchronize: true`(sqljs)라 **DDL 부재는 원리적으로 테스트가 못 잡는다.**
+  엔티티 목록과 마이그레이션 DDL의 집합 차이를 `comm -23`으로 대조하는 것이 유일한 탐지법
+- 미션 기능은 컨트롤러·리포지토리가 여전히 spec 0 — 다음 라운드 후보
+
+## [2026-08-02] Auto E2E Review — 3건 수정
+
+### Completed
+- fix(route): 경로 수정이 `route_checkpoints`를 전량 삭제해 `ON DELETE CASCADE`로
+  도착 기록까지 지우던 데이터 유실 제거 — 이름만 바꿔도, 다른 경로를 대표로 지정해도 발생했다
+- fix(route): 대표 경로 해제 시 `totalExpectedDuration`·`createdAt`·checkpoint id를
+  떨어뜨려 건드리지도 않은 경로의 값이 유실되던 문제 교정
+- fix(stats): 날씨 미기록 세션을 '맑음'으로 채워 넣어 "비 오는 날이 더 빠르다"로
+  판정이 역전되던 문제 교정 (미기록 세션을 날씨별 통계에서 제외)
+- test: 회귀 방지 10건 추가 (634 FE / 1461 BE) — backend TZ 5종·frontend 4종 동일
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      이번 수정 2건이 DB 데이터 유실 방지라 배포 지연 비용이 크다
+- [ ] 체크포인트 목록 편집은 여전히 기록이 사라진다 — `CreateCheckpointDto`에 `id` 없음 (설계 판단)
+- [ ] 날씨 데이터 자체가 수집되지 않음 — 프론트가 `startSession`에 `weatherCondition` 미전송 (제품 판단)
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 — 스마트 출발 사전 알림이 생성되지 않음
+- [ ] 터치 타겟 44px 미달 6건 (실화면 확인 필요)
+
+### Notes
+- worktree base가 23커밋 뒤처져 있어 rebase 후 착수 (6회 연속 재발)
+- 신규 결함 3건 모두 spec 0개 모듈에서 나왔다 (4라운드 연속 같은 패턴)
+- 가설 1건은 테스트로 재현에 실패해 기각했다 (대시보드 탭 되돌림) — 불변조건 테스트로 대체
+
+---
+
+## [2026-07-31] Auto E2E Review — 4건 수정
+
+### Completed
+- fix(alert): `updateSchedule()`이 파생 필드 `notificationTime`을 갱신하도록 수정
+- fix(route): 최속 경로가 아닌데 "가장 짧아요"라고 단정하던 추천 문구 판정 교정
+- fix(air-quality): 경기 분기에 가려 도달 불가였던 인천 시도 판정 순서 교정
+- fix(missions): 순서 변경의 무음 실패 제거 — 순차 요청 + 실패 알림 + 재진입 가드
+- test: 회귀 방지 13건 추가 (620 FE / 1437 BE, TZ 3종 동일)
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요)
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 — 스마트 출발 사전 알림이 생성되지 않음
+- [ ] 터치 타겟 44px 미달 6건 (실화면 확인 필요)
+
+### Notes
+- worktree base가 21커밋 뒤처져 있어 rebase 후 착수 (4회 연속 재발)
+
+---
+
 ## 현재 상태
 
 - 2026-07-10 `17b9022` chore(repo): auto-review 리포트 gitignore + PROGRESS 동기화

@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
 import {
   PatternType,
   DayOfWeekDepartureValue,
@@ -89,7 +90,7 @@ export class PredictionEngineService {
     conditions?: PredictionConditions,
   ): Promise<PredictionResult> {
     const targetDate = conditions?.targetDate ?? new Date();
-    const dayOfWeek = targetDate.getDay();
+    const dayOfWeek = getDayOfWeekKST(targetDate);
 
     // 1. Get record count & determine tier
     const records = this.commuteRepository
@@ -289,8 +290,10 @@ export class PredictionEngineService {
     // Overall stats
     const departureTimes = featureRows.map(r => r.departureMinutes);
     const avgDeparture = totalRecords > 0 ? mean(departureTimes) : timeToMinutes('08:00');
+    // records는 commuteDate DESC 정렬이므로 마지막 원소가 가장 오래된 기록이다.
+    // commuteDate는 날짜 전용('YYYY-MM-DD')이라 기존 ISO 문자열 응답 형식에 맞춰 자정 UTC로 표기한다.
     const earliest = records.length > 0
-      ? records[records.length - 1].commuteDate.toISOString()
+      ? new Date(`${records[records.length - 1].commuteDate}T00:00:00Z`).toISOString()
       : new Date().toISOString();
 
     // Day-of-week analysis

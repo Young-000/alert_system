@@ -621,6 +621,55 @@ describe('BriefingAdviceService', () => {
       );
       expect(departureAdvice).toBeUndefined();
     });
+
+    it('출발 시각이면 지금 출발하라고 알린다', () => {
+      const result = service.generate(
+        buildInput({
+          departure: buildDeparture({ minutesUntilDeparture: 0 }),
+        }),
+      );
+
+      const departureAdvice = result.advices.find(
+        (a) => a.category === 'transit' && a.icon === '⏰',
+      );
+      expect(departureAdvice?.message).toBe('지금 출발하세요!');
+    });
+
+    // 회귀 방지: 남은 분을 그대로 끼워 넣으면 지난 출발이 "출발까지 -5분!"으로 찍힌다.
+    it('출발 시각이 막 지났으면 지난 시간으로 표현한다', () => {
+      const result = service.generate(
+        buildInput({
+          departure: buildDeparture({ minutesUntilDeparture: -5 }),
+        }),
+      );
+
+      const departureAdvice = result.advices.find(
+        (a) => a.category === 'transit' && a.icon === '⏰',
+      );
+      expect(departureAdvice?.message).toBe('출발 시간이 5분 지났어요');
+      expect(
+        result.advices.some((a) => a.message.includes('-')),
+      ).toBe(false);
+    });
+
+    // 회귀 방지: 오늘 아침 출발이 밤까지 위젯에 남아 경고를 띄우면 안 된다.
+    it('한참 지난 출발에는 출발 조언을 붙이지 않는다', () => {
+      const result = service.generate(
+        buildInput({
+          departure: buildDeparture({
+            minutesUntilDeparture: -690,
+            hasTrafficDelay: true,
+          }),
+        }),
+      );
+
+      expect(
+        result.advices.some((a) => a.message.includes('출발')),
+      ).toBe(false);
+      expect(
+        result.advices.some((a) => a.message.includes('교통 지연')),
+      ).toBe(false);
+    });
   });
 
   // ─── Sorting & Limiting Tests ─────────────────────────

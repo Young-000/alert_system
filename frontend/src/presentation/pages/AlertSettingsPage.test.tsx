@@ -120,6 +120,36 @@ describe('AlertSettingsPage', () => {
     });
   });
 
+  it('should not leak the raw API error body when quick weather alert creation fails', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
+    // ApiClient가 실제로 던지는 모양: `API Error {status}: {JSON body}`
+    mockAlertApiClient.createAlert.mockRejectedValueOnce(
+      new Error(
+        'API Error 409: {"statusCode":409,"message":"이미 같은 시간에 등록된 알림이 있습니다.","error":"Conflict","path":"/alerts"}',
+      ),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('원클릭 설정')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '원클릭 설정' }));
+
+    // 서버가 준 한국어 사유가 그대로 보여야 한다
+    await waitFor(() => {
+      expect(
+        screen.getByText('이미 같은 시간에 등록된 알림이 있습니다.'),
+      ).toBeInTheDocument();
+    });
+
+    // 내부 구현 문자열(JSON 본문·상태코드 키)이 화면에 새어나오면 안 된다
+    expect(screen.queryByText(/API Error/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/statusCode/)).not.toBeInTheDocument();
+  });
+
   // --- Wizard navigation ---
 
   it('should navigate through wizard steps when weather is selected', async () => {
@@ -348,6 +378,54 @@ describe('AlertSettingsPage', () => {
     await waitFor(() => {
       expect(screen.queryByText('알림 삭제')).not.toBeInTheDocument();
     });
+  });
+
+  it('should not leak a previous delete error into a newly reopened delete modal', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([
+      {
+        id: 'alert-1',
+        userId: 'user-1',
+        name: '테스트 알림',
+        schedule: '0 8 * * *',
+        alertTypes: ['weather'] as AlertType[],
+        enabled: true,
+      },
+    ]);
+    mockAlertApiClient.deleteAlert.mockRejectedValueOnce(new Error('network'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('삭제')).toBeInTheDocument();
+    });
+
+    // 1st attempt: open modal and confirm -> delete fails -> error shown in modal
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('알림 삭제')).toBeInTheDocument();
+    });
+    const deleteButtons = screen.getAllByRole('button', { name: '삭제' });
+    const confirmButton = deleteButtons.find(btn => btn.classList.contains('btn-danger'));
+    fireEvent.click(confirmButton!);
+
+    await waitFor(() => {
+      expect(screen.getByText('삭제에 실패했습니다.')).toBeInTheDocument();
+    });
+
+    // Cancel, then reopen the modal
+    fireEvent.click(screen.getByText('취소'));
+    await waitFor(() => {
+      expect(screen.queryByText('알림 삭제')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('알림 삭제')).toBeInTheDocument();
+    });
+
+    // The stale error from the previous failed attempt must NOT appear
+    expect(screen.queryByText('삭제에 실패했습니다.')).not.toBeInTheDocument();
   });
 
   // --- Toggle alert ---

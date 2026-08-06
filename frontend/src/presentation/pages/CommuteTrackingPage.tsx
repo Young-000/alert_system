@@ -30,6 +30,8 @@ export function CommuteTrackingPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState('');
+  // 로드 실패 시 "다시 시도"가 데이터 로드를 재실행하도록 하는 트리거
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Timer
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -108,7 +110,7 @@ export function CommuteTrackingPage(): JSX.Element {
 
     loadData();
     return () => { isMounted = false; };
-  }, [userId, navigate, commuteApi, navRouteId, searchMode]);
+  }, [userId, navigate, commuteApi, navRouteId, searchMode, reloadKey]);
 
   // Timer effect
   useEffect(() => {
@@ -364,7 +366,15 @@ export function CommuteTrackingPage(): JSX.Element {
             <button
               type="button"
               className="btn btn-ghost btn-sm"
-              onClick={() => { setError(''); void handleComplete(); }}
+              onClick={() => {
+                setError('');
+                // 세션이 없으면 로드 실패 상태 → 데이터 로드를 재시도, 있으면 완료 재시도
+                if (session) {
+                  void handleComplete();
+                } else {
+                  setReloadKey((k) => k + 1);
+                }
+              }}
               style={{ marginLeft: '0.5rem' }}
             >
               다시 시도

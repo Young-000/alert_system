@@ -22,6 +22,7 @@ import type {
   CommuteEventListResponseDto,
 } from '@application/dto/commute-event.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt } from '../utils/query-param';
 
 @Controller('commute/events')
 @UseGuards(AuthGuard('jwt'))
@@ -70,7 +71,7 @@ export class CommuteEventController {
     @Query('limit') limitStr: string | undefined,
     @Request() req: AuthenticatedRequest,
   ): Promise<CommuteEventListResponseDto> {
-    const limit = limitStr ? parseInt(limitStr, 10) : 50;
+    const limit = parseBoundedInt(limitStr, { fallback: 50, min: 1, max: 200 });
     return this.processCommuteEventUseCase.getEventsByUserId(req.user.userId, limit);
   }
 }

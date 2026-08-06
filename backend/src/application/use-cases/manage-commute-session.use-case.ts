@@ -1,4 +1,11 @@
-import { Injectable, Inject, Optional, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Optional,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import {
   ICommuteSessionRepository,
   COMMUTE_SESSION_REPOSITORY,
@@ -46,6 +53,11 @@ export class ManageCommuteSessionUseCase {
     const route = await this.routeRepository.findById(dto.routeId);
     if (!route) {
       throw new NotFoundException(`Route with ID ${dto.routeId} not found`);
+    }
+
+    // 남의 경로에 세션을 붙이면 그 경로의 통계(findByRouteId 집계)가 오염된다.
+    if (route.userId !== dto.userId) {
+      throw new ForbiddenException('다른 사용자의 경로로 세션을 시작할 수 없습니다.');
     }
 
     // Check if user already has an in-progress session
@@ -229,14 +241,16 @@ export class ManageCommuteSessionUseCase {
     return this.toSessionResponseDto(session, route?.checkpoints.length || 0, route);
   }
 
-  async getHistory(userId: string, limit = 20, _offset = 0): Promise<CommuteHistoryResponseDto> {
+  async getHistory(userId: string, limit = 20, offset = 0): Promise<CommuteHistoryResponseDto> {
     if (!this.sessionRepository || !this.routeRepository) {
       throw new Error('Required repositories not available');
     }
 
-    const sessions = await this.sessionRepository.findByUserId(userId, limit + 1);
+    // limit+1건을 조회해 다음 페이지 존재 여부(hasMore)를 추가 쿼리 없이 판단한다.
+    const sessions = await this.sessionRepository.findByUserId(userId, limit + 1, offset);
     const hasMore = sessions.length > limit;
     const resultSessions = sessions.slice(0, limit);
+    const totalCount = await this.sessionRepository.countByUserId(userId);
 
     // Batch-fetch route names to avoid N+1 queries
     const routeIds = [...new Set(resultSessions.map((s) => s.routeId))];
@@ -260,7 +274,7 @@ export class ManageCommuteSessionUseCase {
     return {
       userId,
       sessions: sessionSummaries,
-      totalCount: sessions.length,
+      totalCount,
       hasMore,
     };
   }

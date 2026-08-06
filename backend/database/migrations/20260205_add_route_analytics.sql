@@ -109,9 +109,11 @@ CREATE INDEX IF NOT EXISTS alerts_route_id_idx ON alert_system.alerts(route_id);
 -- ============================================================================
 
 -- Set category based on existing alert_types
+-- alert_types is a TypeORM simple-json TEXT column (e.g. '["bus","subway"]'),
+-- so JSON-text matching is used instead of ANY(array).
 UPDATE alert_system.alerts
 SET alert_category = CASE
-  WHEN route_id IS NOT NULL AND ('bus' = ANY(alert_types) OR 'subway' = ANY(alert_types))
+  WHEN route_id IS NOT NULL AND (alert_types LIKE '%"bus"%' OR alert_types LIKE '%"subway"%')
     THEN 'departure_reminder'
   ELSE 'daily_weather'
 END

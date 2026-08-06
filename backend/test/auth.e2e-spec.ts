@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { TestAppModule } from './test-app.module';
+import { resetThrottler } from './throttler-reset';
 
 describe('Auth Service (e2e)', () => {
   let app: INestApplication;
@@ -22,9 +23,17 @@ describe('Auth Service (e2e)', () => {
     await app.init();
   });
 
+  // 테스트 간 rate limit 누적 제거 (register 3회/분 제한이 스위트를 무너뜨림)
+  beforeEach(() => {
+    resetThrottler(app);
+  });
+
   afterAll(async () => {
     await app.close();
   });
+
+  // CreateUserDto가 요구하는 필수 필드 (전화번호는 유니크 제약이 없어 재사용 가능)
+  const PHONE_NUMBER = '01012345678';
 
   describe('POST /auth/register', () => {
     const uniqueEmail = () => `auth-test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
@@ -37,6 +46,7 @@ describe('Auth Service (e2e)', () => {
           email,
           password: 'SecurePass123!',
           name: 'Test User',
+          phoneNumber: PHONE_NUMBER,
         })
         .expect(201);
 
@@ -53,13 +63,13 @@ describe('Auth Service (e2e)', () => {
       // First registration
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email, password: 'SecurePass123!', name: 'First User' })
+        .send({ email, password: 'SecurePass123!', name: 'First User', phoneNumber: PHONE_NUMBER })
         .expect(201);
 
       // Duplicate registration
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email, password: 'SecurePass123!', name: 'Second User' })
+        .send({ email, password: 'SecurePass123!', name: 'Second User', phoneNumber: PHONE_NUMBER })
         .expect(409);
     });
 
@@ -70,6 +80,7 @@ describe('Auth Service (e2e)', () => {
           email: 'invalid-email',
           password: 'SecurePass123!',
           name: 'Test User',
+          phoneNumber: PHONE_NUMBER,
         })
         .expect(400);
     });
@@ -88,6 +99,7 @@ describe('Auth Service (e2e)', () => {
           email: uniqueEmail(),
           password: '12345', // Too short
           name: 'Test User',
+          phoneNumber: PHONE_NUMBER,
         })
         .expect(400);
     });
@@ -105,6 +117,7 @@ describe('Auth Service (e2e)', () => {
           email: testEmail,
           password: testPassword,
           name: 'Login Test User',
+          phoneNumber: PHONE_NUMBER,
         });
     });
 
@@ -166,7 +179,7 @@ describe('Auth Service (e2e)', () => {
 
       const registerRes = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email, password: 'SecurePass123!', name: 'JWT Test' });
+        .send({ email, password: 'SecurePass123!', name: 'JWT Test', phoneNumber: PHONE_NUMBER });
 
       const { accessToken, user } = registerRes.body;
 
