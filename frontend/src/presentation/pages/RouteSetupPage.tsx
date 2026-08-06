@@ -16,6 +16,7 @@ import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from 
 import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
+import { resolvePreferredFlag } from './route-setup/route-payload';
 import { useRouteValidation } from './route-setup/use-route-validation';
 import { useStationSearch } from './route-setup/use-station-search';
 import { LineSelectionModal } from './route-setup/LineSelectionModal';
@@ -345,7 +346,10 @@ export function RouteSetupPage(): JSX.Element {
         userId,
         name: finalName,
         routeType,
-        isPreferred: existingRoutes.length === 0,
+        isPreferred: resolvePreferredFlag({
+          isEditing: editingRoute !== null,
+          existingRouteCount: existingRoutes.length,
+        }),
         checkpoints: createCheckpoints(selectedStops, routeType),
       };
 
