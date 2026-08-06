@@ -1,5 +1,49 @@
 # Alert System - 진행 기록
 
+## [2026-08-07] Auto E2E Review 08:00 — 2건 수정
+
+### Completed
+- fix(mission): **미션 달성률이 100%를 넘어 스트릭이 조용히 끊기던 문제**
+  (`daily-check.use-case.ts:126`). 분모는 활성 미션 수, 분자는 그날의 완료 기록 **전부**를
+  세고 있었다. 완료한 미션을 비활성화하면 분모만 줄어 150%가 되는데,
+  `MissionScore.calculate`는 `completionRate === 100`일 때만 스트릭을 잇기 때문에
+  **초과하는 순간 스트릭이 0으로 리셋**된다. 반대 방향도 성립한다 — 활성 미션이
+  미완료여도 비활성 미션의 완료 기록이 그 자리를 메워 "오늘 다 했다"로 오판한다.
+  삭제된 미션의 잔존 기록도 같은 경로로 분자를 부풀린다.
+  화면 경로(`getDailyStatus:56`)는 이미 올바르게 세고 있었고 **저장 경로만 틀렸다** —
+  집계를 `countCompleted()` 한 함수로 모아 두 경로가 공유하게 했다
+- fix(route-setup): **늦게 도착한 검색 응답이 최신 결과를 덮어쓰던 문제**
+  (`use-station-search.ts:38`). 300ms 디바운스만 있고 stale 가드가 없었다.
+  더 눈에 띄는 경로는 역을 고른 뒤 `clearSearch()`로 비운 목록을 떠 있던 요청이
+  도착해 **되살리는** 것. 같은 앱의 자매 훅 `use-transport-search.ts:49`는
+  `AbortController` 가드를 이미 갖고 있었다 — 복사 드리프트
+- test: 회귀 방지 5건 추가 (전부 RED 확인 후 작성, 신규 spec 파일 1개).
+  backend 1589 → **1592 passed** · frontend 710 → **712 passed**
+- Phase 2·3·6·7 전수 통과. 특히 엔티티 36개 ↔ DDL 39개 대조에서
+  **누락 0건** (테스트는 `synchronize=true`라 이 격차를 못 본다)
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트, 대표 판단 필요).
+      **9라운드째** 재확인 (`aws ecs list-clusters` → 빈 배열).
+      이번 백엔드 수정 1건은 머지돼도 프로덕션에 반영되지 않는다
+- [ ] 미머지 auto-review PR **24건** (전 라운드와 동일). 원인은 required status checks
+      이름 불일치 (`CI / frontend` vs 실제 `frontend`)
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (**11라운드째**). 3개 공개 메서드 호출부 0건.
+      배선 = 실제 알림 발송 = 외부 노출 D1 게이트
+- [ ] 남은 무-spec 컨트롤러: `mission`(414줄) · `smart-departure`(168) · `place`(94) ·
+      `commute-event`(77) · `widget`(22) — 이번 라운드에 4개를 정독했고 소유권 검사·경계는
+      정상이었다. 결함은 use-case 층에서 나왔다
+
+### Notes
+- 착수 시 worktree가 `origin/main`보다 **41커밋 뒤**였고 로컬 스테일 커밋 2건이 있었다.
+  같은 이름의 PR #180이 이미 MERGED라 리셋이 안전함을 먼저 확인했고,
+  두 커밋 모두 `patch contents already upstream`으로 drop됐다
+- `frontend/.env.production`이 커밋돼 있다(규칙상 gitignore 대상). 내용은 전부 공개값이고
+  Vercel 대시보드 설정 확인 없이 지우면 빌드가 깨지므로 이번엔 손대지 않았다
+- 누적 교훈은 `docs/LESSONS.md` 참조
+
+---
+
 ## [2026-08-04] Auto E2E Review 00:00 — 8건 수정 (PR #171 머지)
 
 ### Completed

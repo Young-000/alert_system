@@ -53,9 +53,7 @@ export class DailyCheckUseCase {
     );
 
     const totalMissions = activeMissions.length;
-    const completedMissions = withRecords.filter(
-      (m) => m.record?.isCompleted,
-    ).length;
+    const completedMissions = this.countCompleted(activeMissions, records);
     const completionRate =
       totalMissions === 0
         ? 0
@@ -111,6 +109,28 @@ export class DailyCheckUseCase {
     return this.repo.findScore(userId, date);
   }
 
+  /**
+   * 완료 개수는 **활성 미션에 달린 기록만** 센다.
+   *
+   * 기록 목록에는 그날 이후 비활성화되거나 삭제된 미션의 행이 그대로 남는다.
+   * 거르지 않고 세면 분자가 분모(활성 미션 수)를 넘어 달성률이 100을 초과하는데,
+   * `MissionScore.calculate`는 `completionRate === 100`일 때만 스트릭을 잇기 때문에
+   * 초과하는 순간 스트릭이 조용히 0으로 끊긴다. 반대로 활성 미션이 미완료여도
+   * 비활성 미션의 완료 기록이 그 자리를 메워 "오늘 다 했다"로 오판할 수 있다.
+   *
+   * 화면(getDailyStatus)과 저장(recalculateScore)이 각자 세면 반드시 갈라지므로
+   * 두 경로가 이 함수 하나를 공유한다.
+   */
+  private countCompleted(
+    activeMissions: Mission[],
+    records: DailyMissionRecord[],
+  ): number {
+    const completedMissionIds = new Set(
+      records.filter((r) => r.isCompleted).map((r) => r.missionId),
+    );
+    return activeMissions.filter((m) => completedMissionIds.has(m.id)).length;
+  }
+
   private async recalculateScore(
     userId: string,
     date: string,
@@ -123,7 +143,7 @@ export class DailyCheckUseCase {
 
     const activeMissions = allMissions.filter((m) => m.isActive);
     const totalMissions = activeMissions.length;
-    const completedMissions = records.filter((r) => r.isCompleted).length;
+    const completedMissions = this.countCompleted(activeMissions, records);
 
     const newScore = MissionScore.calculate(
       userId,
