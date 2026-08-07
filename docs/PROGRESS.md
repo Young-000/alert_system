@@ -1,5 +1,42 @@
 # Alert System - 진행 기록
 
+## [2026-08-08] Auto E2E Review 00:00 — 8건 수정 (Critical 3)
+
+### Completed
+- fix(smart-departure): **simple-array 하이드레이션 타입 오류로 조회 전 경로 500**
+  (`value.split is not a function`). TypeORM은 simple-array를 조회 시 배열로 돌려주는데
+  엔티티가 `string`으로 선언하고 리포지토리가 `.split()`을 걸었다. save()는 인메모리 반환이라
+  통과해 "저장은 되는데 조회만 죽는" 형태 — sqljs 왕복 spec으로 재현 후 수정
+- fix(routes): **PATCH /routes 체크포인트 id 결락 → 경로 수정마다 도착 기록 전량 유실**.
+  UpdateRouteDto가 id 없는 CreateCheckpointDto를 재사용해 CASCADE 방어(survivingIds)가
+  무력화됐다. 프론트가 실제로 이 경로를 타는 중이었음. `UpdateCheckpointDto(id?)` 신설 +
+  소유권 검증(타 경로 체크포인트 탈취 차단) + `@ArrayMinSize(1)`
+- fix(missions): **스트릭이 매일 1로 리셋** — findLatestStreak가 방금 저장한 오늘 행을
+  previousStreak으로 참조 (미션 2개 이상이면 어제 5 → 오늘 전부 완료해도 1).
+  `findLatestStreak(userId, beforeDate?)` 계약 변경 (오늘 이전 exclusive)
+- fix(frontend): 삭제된 routeId로 /commute 진입 시 dead-end(전 버튼 무반응) → 홈 리다이렉트 ·
+  알림 로드 실패 시 QuickPresets 노출로 중복 알림톡 생성 가능 → 차단 ·
+  알림 기록 로드 실패 시 "기록이 없어요" 오표기 가드 · 미션 체크 실패 무음 → 피드백 배너 ·
+  RouteSetupPage 저장 타이머 언마운트 cleanup
+- fix(kst): snapshot normalizeDateField가 UTC 그대로 → `toDateOnlyKST()` 헬퍼로 교체
+- test: 회귀 방지 19건 추가 (전부 RED 확인 후 수정). backend 1598 → **1612 passed** ·
+  frontend 712 → **717 passed**
+- Phase 1~8 전수 통과. 착수 시 worktree 43커밋 뒤처짐 → rebase 선행
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트). **11라운드째**.
+      이번 백엔드 Critical 수정도 머지만 되고 프로덕션 미반영
+- [ ] 프론트 경로 수정 플로우가 체크포인트 id를 안 보냄 — 백엔드는 수용하게 됐지만
+      프론트 편집 UX 재설계 필요 (기획 판단)
+- [ ] 미션 스트릭 공백일 처리 (며칠 쉬어도 연속 취급) — 리셋 규칙 기획 판단
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (**13라운드째**, D1). snapshot 상태머신
+      절반 도달 불가 + alertsSent 영구 빈 값(중복 발송 방어 부재)은 배선 시 함께
+- [ ] Supabase RLS 실측 불가 (MCP SQL 3회 connection timeout, 프로젝트는 ACTIVE_HEALTHY)
+- [ ] required status checks 이름 불일치로 auto-merge 불능 — admin 머지 우회 지속
+
+### Notes
+- 상세 리포트: `.claude/e2e-reports/auto-review/20260808_000000.md` (gitignored)
+
 ## [2026-08-07] Auto E2E Review 16:00 — 1건 수정
 
 ### Completed
