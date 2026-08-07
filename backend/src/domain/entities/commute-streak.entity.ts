@@ -1,4 +1,9 @@
-import { subtractDays, getWeekStartKST } from '@domain/utils/kst-date';
+import { subtractDays, getWeekStartKST, getDayOfWeekFromDateOnly } from '@domain/utils/kst-date';
+
+function isWeekend(dateStr: string): boolean {
+  const day = getDayOfWeekFromDateOnly(dateStr);
+  return day === 0 || day === 6;
+}
 
 export type StreakStatus = 'active' | 'at_risk' | 'broken' | 'new';
 export type MilestoneType = '7d' | '14d' | '30d' | '60d' | '100d';
@@ -98,8 +103,8 @@ export class CommuteStreak {
    * 스트릭 갱신 핵심 로직
    * - todayKST: 한국 시간 기준 오늘 날짜 (YYYY-MM-DD)
    * - 이미 오늘 기록됨 -> 스킵
-   * - 어제 기록 있음 -> 스트릭 연장
-   * - 어제 기록 없음 -> 새 스트릭 시작
+   * - 마지막 필수 기록일 이후 기록 있음 -> 스트릭 연장
+   * - 없음 -> 새 스트릭 시작
    */
   recordCompletion(todayKST: string): RecordCompletionResult {
     // 이미 오늘 기록됨 -> 스킵
@@ -107,13 +112,10 @@ export class CommuteStreak {
       return { updated: false, milestoneAchieved: null };
     }
 
-    const yesterday = subtractDays(todayKST, 1);
-
-    if (this.lastRecordDate === yesterday) {
-      // 어제 기록 있음 -> 스트릭 연장
+    if (this.lastRecordDate && this.lastRecordDate >= this.lastRequiredRecordDate(todayKST)) {
       this.currentStreak += 1;
     } else {
-      // 어제 기록 없음 -> 새 스트릭 시작
+      // 필수 기록일을 놓침 -> 새 스트릭 시작
       this.currentStreak = 1;
       this.streakStartDate = todayKST;
     }
@@ -146,12 +148,26 @@ export class CommuteStreak {
 
     if (this.lastRecordDate === todayKST) return 'active';
 
-    // 어제까지 기록했지만 오늘은 아직 — 스트릭은 살아 있으나 오늘 넘기면 끊긴다.
-    const yesterday = subtractDays(todayKST, 1);
-    if (this.lastRecordDate === yesterday) return 'at_risk';
+    // 필수 기록일까지 기록돼 있으면 스트릭은 살아 있으나 오늘(다음 평일) 넘기면 끊긴다.
+    if (this.lastRecordDate >= this.lastRequiredRecordDate(todayKST)) return 'at_risk';
 
-    // 2일 이상 빠짐
+    // 필수 기록일을 놓침
     return 'broken';
+  }
+
+  /**
+   * 스트릭이 이어지려면 늦어도 이 날짜에는 기록이 있어야 한다.
+   * 기본은 어제. 주말 제외(excludeWeekends)면 어제가 주말인 경우
+   * 직전 평일(금요일)까지 거슬러 올라간다 — 금→월이 연속으로 인정된다.
+   */
+  private lastRequiredRecordDate(todayKST: string): string {
+    let day = subtractDays(todayKST, 1);
+    if (this.excludeWeekends) {
+      while (isWeekend(day)) {
+        day = subtractDays(day, 1);
+      }
+    }
+    return day;
   }
 
   /** 새 마일스톤 달성 확인 */

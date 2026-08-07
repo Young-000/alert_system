@@ -1,5 +1,24 @@
 # Alert System - 진행 기록
 
+## [2026-08-07] Auto E2E Review 16:00 — 1건 수정
+
+### Completed
+- fix(streak): **`excludeWeekends`(주말 제외)가 스트릭 판정에서 완전히 무시되던 문제**
+  (`commute-streak.entity.ts`). 설정은 `PUT /commute/streak/settings`로 저장·반환까지 되지만
+  `recordCompletion`·`getStatus`는 무조건 "어제 기록"만 봤다. 주말 제외를 켠 사용자도
+  금→월 기록이 리셋되어 **스트릭이 5를 넘을 수 없고**, 일요일 조회에서는 `broken` 판정과 함께
+  currentStreak이 0으로 표시됐다. `lastRequiredRecordDate()`(기본 어제, 주말 제외 시 직전 평일)를
+  도입해 두 판정 경로가 공유하게 했다
+- test: 회귀 방지 6건 추가 (RED 확인 후 구현). backend 1592 → **1598 passed** · frontend 712 passed
+- Phase 1·2·3·4·5·6·7 전수 통과. 착수 시 worktree가 origin/main보다 42커밋 뒤처져 있어 리베이스 선행
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트). **10라운드째** 재확인
+      (`aws ecs list-clusters` → 빈 배열). 이번 스트릭 수정도 머지만 되고 프로덕션 미반영
+- [ ] `excludeWeekends` 설정 토글 UI 미노출 — API로만 변경 가능. 화면 노출 여부는 기획 판단
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (**12라운드째**). 배선 = 알림 발송 = 외부 노출 D1 게이트
+- [ ] required status checks 이름 불일치로 auto-merge 불능 — admin 머지 우회 지속
+
 ## [2026-08-07] Auto E2E Review 08:00 — 2건 수정
 
 ### Completed

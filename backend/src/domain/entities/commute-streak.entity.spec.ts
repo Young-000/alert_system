@@ -187,6 +187,94 @@ describe('CommuteStreak', () => {
     });
   });
 
+  describe('excludeWeekends (주말 제외)', () => {
+    // 2026-02-13(금) · 02-14(토) · 02-15(일) · 02-16(월) · 02-17(화)
+
+    it('주말 제외 시 금요일 기록 후 월요일 기록이면 스트릭이 연장된다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 5,
+        lastRecordDate: '2026-02-13',
+        streakStartDate: '2026-02-09',
+        excludeWeekends: true,
+      });
+
+      const result = streak.recordCompletion('2026-02-16');
+
+      expect(result.updated).toBe(true);
+      expect(streak.currentStreak).toBe(6);
+      expect(streak.streakStartDate).toBe('2026-02-09'); // 시작일 유지
+    });
+
+    it('주말 제외가 꺼져 있으면 금요일 기록 후 월요일 기록은 리셋된다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 5,
+        lastRecordDate: '2026-02-13',
+        streakStartDate: '2026-02-09',
+      });
+
+      streak.recordCompletion('2026-02-16');
+
+      expect(streak.currentStreak).toBe(1);
+    });
+
+    it('주말 제외라도 평일(월요일)을 건너뛰면 리셋된다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 5,
+        lastRecordDate: '2026-02-13',
+        streakStartDate: '2026-02-09',
+        excludeWeekends: true,
+      });
+
+      const result = streak.recordCompletion('2026-02-17');
+
+      expect(result.updated).toBe(true);
+      expect(streak.currentStreak).toBe(1);
+      expect(streak.streakStartDate).toBe('2026-02-17');
+    });
+
+    it('주말 제외라도 주말에 기록하면 스트릭에 카운트되고 월요일로 이어진다', () => {
+      const streak = new CommuteStreak(userId, {
+        currentStreak: 5,
+        lastRecordDate: '2026-02-13',
+        streakStartDate: '2026-02-09',
+        excludeWeekends: true,
+      });
+
+      streak.recordCompletion('2026-02-14'); // 토요일 기록도 +1
+      expect(streak.currentStreak).toBe(6);
+
+      streak.recordCompletion('2026-02-16'); // 일요일 건너뛰고 월요일
+      expect(streak.currentStreak).toBe(7);
+    });
+
+    it('주말 제외 시 금요일 기록 후 주말 동안은 broken이 아니라 at_risk다', () => {
+      const streak = new CommuteStreak(userId, {
+        lastRecordDate: '2026-02-13',
+        currentStreak: 5,
+        excludeWeekends: true,
+      });
+
+      expect(streak.getStatus('2026-02-14')).toBe('at_risk'); // 토
+      expect(streak.getStatus('2026-02-15')).toBe('at_risk'); // 일
+      expect(streak.getStatus('2026-02-16')).toBe('at_risk'); // 월 (오늘 기록 전)
+      expect(streak.getStatus('2026-02-17')).toBe('broken'); // 화 (월요일 놓침)
+    });
+
+    it('주말 제외 시 일요일 조회에서 스트릭이 리셋되지 않는다', () => {
+      const streak = new CommuteStreak(userId, {
+        lastRecordDate: '2026-02-13',
+        currentStreak: 5,
+        streakStartDate: '2026-02-09',
+        excludeWeekends: true,
+      });
+
+      streak.ensureStreakCurrent('2026-02-15');
+
+      expect(streak.currentStreak).toBe(5);
+      expect(streak.streakStartDate).toBe('2026-02-09');
+    });
+  });
+
   describe('getStatus', () => {
     it('기록이 없으면 new 상태다', () => {
       const streak = CommuteStreak.createNew(userId);
