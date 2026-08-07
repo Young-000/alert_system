@@ -77,8 +77,8 @@ export class SmartDepartureSettingRepositoryImpl
     entity.arrivalTarget = setting.arrivalTarget;
     entity.prepTimeMinutes = setting.prepTimeMinutes;
     entity.isEnabled = setting.isEnabled;
-    entity.activeDays = setting.activeDays.join(',');
-    entity.preAlerts = setting.preAlerts.join(',');
+    entity.activeDays = setting.activeDays.map(String);
+    entity.preAlerts = setting.preAlerts.map(String);
     return entity;
   }
 
@@ -113,8 +113,10 @@ export class SmartDepartureSettingRepositoryImpl
     return match ? match[1] : time;
   }
 
-  private parseIntArray(value: string): number[] {
-    if (!value || value === '') return [];
-    return value.split(',').map((v) => parseInt(v.trim(), 10)).filter((n) => !isNaN(n));
+  /** simple-array 하이드레이션 결과(string[])를 숫자 배열로. 빈 문자열 요소는 걸러낸다. */
+  private parseIntArray(value: string[] | null | undefined): number[] {
+    return (value ?? [])
+      .map((v) => parseInt(String(v).trim(), 10))
+      .filter((n) => !isNaN(n));
   }
 }

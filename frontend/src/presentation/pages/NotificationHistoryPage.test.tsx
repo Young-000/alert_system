@@ -55,6 +55,18 @@ describe('NotificationHistoryPage', () => {
     expect(screen.getByRole('link', { name: '알림 설정 페이지로 이동' })).toHaveAttribute('href', '/alerts');
   });
 
+  it('should not claim empty history when loading failed', async () => {
+    mockNotificationApiClient.getHistory.mockRejectedValue(new Error('network'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    // 실패 시에는 기록이 있는지 알 수 없으므로 "없어요"라고 단정하면 안 된다
+    expect(screen.queryByText('알림 기록이 없어요')).not.toBeInTheDocument();
+  });
+
   it('should render notification items correctly', async () => {
     const mockLogs = [
       {

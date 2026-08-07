@@ -184,6 +184,21 @@ describe('CommuteTrackingPage', () => {
     });
   });
 
+  it('should redirect to home when navigation routeId no longer exists', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'deleted-route-id' };
+    mockCommuteApi.getUserRoutes.mockResolvedValue([mockRoute]);
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    });
+    expect(mockCommuteApi.startSession).not.toHaveBeenCalled();
+  });
+
   // --- Active session display ---
 
   it('should display active session with timer and route name', async () => {

@@ -125,9 +125,14 @@ export class ManageRouteUseCase {
     let totalExpectedDuration = existing.totalExpectedDuration;
 
     if (dto.checkpoints) {
+      // id는 이 경로 소속인 것만 통과 — 남의 경로 체크포인트 id를 넣어
+      // 그 행의 routeId를 가로채는 것을 막는다
+      const ownedIds = new Set(existing.checkpoints.map((cp) => cp.id));
       checkpoints = dto.checkpoints.map(
         (cp) =>
           new RouteCheckpoint(cp.sequenceOrder, cp.name, cp.checkpointType, {
+            id: cp.id && ownedIds.has(cp.id) ? cp.id : undefined,
+            routeId: existing.id,
             linkedStationId: cp.linkedStationId,
             linkedBusStopId: cp.linkedBusStopId,
             lineInfo: cp.lineInfo,

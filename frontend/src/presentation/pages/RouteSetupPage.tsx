@@ -149,6 +149,16 @@ export function RouteSetupPage(): JSX.Element {
     return cleanup;
   }, [loadRoutes]);
 
+  // 저장 토스트 중 다른 페이지로 이동하면 홈 강제 이동 타이머를 해제
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+        navigateTimerRef.current = null;
+      }
+    };
+  }, []);
+
   // Parse shared route from URL
   useEffect(() => {
     const shared = searchParams.get('shared');

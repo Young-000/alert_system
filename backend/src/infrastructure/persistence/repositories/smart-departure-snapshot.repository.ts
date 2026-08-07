@@ -6,6 +6,7 @@ import { ISmartDepartureSnapshotRepository } from '@domain/repositories/smart-de
 import { SmartDepartureSnapshot } from '@domain/entities/smart-departure-snapshot.entity';
 import type { SnapshotStatus } from '@domain/entities/smart-departure-snapshot.entity';
 import type { DepartureType } from '@domain/entities/smart-departure-setting.entity';
+import { getTodayKST, toDateOnlyKST } from '@domain/utils/kst-date';
 
 @Injectable()
 export class SmartDepartureSnapshotRepositoryImpl
@@ -107,13 +108,9 @@ export class SmartDepartureSnapshotRepositoryImpl
     entity.historyAvgTravelMin = snapshot.historyAvgTravelMin;
     entity.realtimeAdjustmentMin = snapshot.realtimeAdjustmentMin;
     entity.status = snapshot.status;
-    entity.alertsSent = snapshot.alertsSent.length > 0
-      ? snapshot.alertsSent.join(',')
-      : '';
+    entity.alertsSent = snapshot.alertsSent.map(String);
     entity.departedAt = snapshot.departedAt;
-    entity.scheduleIds = snapshot.scheduleIds.length > 0
-      ? snapshot.scheduleIds.join(',')
-      : '';
+    entity.scheduleIds = [...snapshot.scheduleIds];
     entity.calculatedAt = snapshot.calculatedAt;
     return entity;
   }
@@ -145,9 +142,7 @@ export class SmartDepartureSnapshotRepositoryImpl
   }
 
   private getTodayDateString(): string {
-    const now = new Date();
-    const kst = new Date(now.getTime() + 9 * 60 * 60_000);
-    return kst.toISOString().slice(0, 10);
+    return getTodayKST();
   }
 
   private normalizeTimeField(time: string): string {
@@ -159,28 +154,21 @@ export class SmartDepartureSnapshotRepositoryImpl
 
   /**
    * PostgreSQL DATE type may return a Date object or string.
-   * Normalize to 'YYYY-MM-DD'.
+   * Normalize to 'YYYY-MM-DD'. Date인 경우 KST 달력 날짜로 환산해야
+   * KST 00:00~08:59에 전날로 밀리지 않는다.
    */
   private normalizeDateField(date: string | Date): string {
-    if (date instanceof Date) {
-      return date.toISOString().slice(0, 10);
-    }
-    if (typeof date === 'string' && date.length >= 10) {
-      return date.slice(0, 10);
-    }
-    return String(date);
+    return toDateOnlyKST(date);
   }
 
-  private parseIntArray(value: string | null | undefined): number[] {
-    if (!value || value === '') return [];
-    return value
-      .split(',')
-      .map((v) => parseInt(v.trim(), 10))
+  /** simple-array 하이드레이션 결과(string[])를 숫자 배열로. 빈 문자열 요소는 걸러낸다. */
+  private parseIntArray(value: string[] | null | undefined): number[] {
+    return (value ?? [])
+      .map((v) => parseInt(String(v).trim(), 10))
       .filter((n) => !isNaN(n));
   }
 
-  private parseStringArray(value: string | null | undefined): string[] {
-    if (!value || value === '') return [];
-    return value.split(',').map((v) => v.trim()).filter((v) => v.length > 0);
+  private parseStringArray(value: string[] | null | undefined): string[] {
+    return (value ?? []).map((v) => String(v).trim()).filter((v) => v.length > 0);
   }
 }

@@ -37,11 +37,12 @@ export class SmartDepartureSettingEntity {
   @Column({ name: 'is_enabled', type: 'boolean', default: true })
   isEnabled: boolean;
 
+  // simple-array는 TypeORM이 하이드레이션 때 배열로 돌려준다 — string으로 선언 금지
   @Column({ name: 'active_days', type: 'simple-array' })
-  activeDays: string; // stored as comma-separated, mapped in repository
+  activeDays: string[];
 
   @Column({ name: 'pre_alerts', type: 'simple-array' })
-  preAlerts: string; // stored as comma-separated, mapped in repository
+  preAlerts: string[];
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

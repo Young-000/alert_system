@@ -109,6 +109,20 @@ describe('AlertSettingsPage', () => {
     expect(screen.getByText('원클릭 설정')).toBeInTheDocument();
   });
 
+  it('should not show quick presets when alert list failed to load', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockRejectedValue(new Error('network'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('다시 시도')).toBeInTheDocument();
+    });
+    // 서버에 이미 같은 알림이 있는지 알 수 없으므로 중복 생성 경로를 차단해야 한다
+    expect(screen.queryByText('빠른 알림 설정')).not.toBeInTheDocument();
+    expect(screen.queryByText('날씨 + 미세먼지')).not.toBeInTheDocument();
+  });
+
   it('should show alimtalk banner', async () => {
     localStorage.setItem('userId', 'user-1');
     mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);

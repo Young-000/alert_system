@@ -291,6 +291,9 @@ describe('DailyCheckUseCase', () => {
           streakDay: 3, // previousStreak(2) + 1 since 100%
         }),
       );
+      // 오늘 이전(exclusive)으로 조회해야 한다 — 날짜를 안 넘기면 방금 저장한
+      // 오늘 행이 previousStreak으로 잡혀 미션 2개 이상이면 스트릭이 매일 리셋된다
+      expect(repo.findLatestStreak).toHaveBeenCalledWith(USER_ID, TODAY);
     });
 
     it('일부만 완료하면 streak가 0이다', async () => {

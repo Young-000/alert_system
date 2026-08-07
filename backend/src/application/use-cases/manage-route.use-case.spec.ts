@@ -160,4 +160,57 @@ describe('ManageRouteUseCase - 대표 경로 유일성', () => {
     expect(unsetCall![0].totalExpectedDuration).toBe(47);
     expect(unsetCall![0].checkpoints.map((cp) => cp.id)).toEqual(['cp-b1', 'cp-b2']);
   });
+
+  /**
+   * DTO가 체크포인트 id를 실어 나르지 못하면 리포지토리의 CASCADE 방어
+   * (`survivingIds` 필터)가 무력화된다 — 모든 체크포인트가 id 없는 신규로
+   * 취급돼 전량 삭제→재삽입되고, 그 경로의 도착 기록이 전부 사라진다.
+   */
+  describe('updateRoute - 체크포인트 id 보존', () => {
+    const existingRoute = (): CommuteRoute =>
+      new CommuteRoute('user-1', '출근길', RouteType.MORNING, {
+        id: 'route-1',
+        isPreferred: false,
+        totalExpectedDuration: 30,
+        checkpoints: [
+          new RouteCheckpoint(0, '집', CheckpointType.HOME, { id: 'cp-1', routeId: 'route-1' }),
+          new RouteCheckpoint(1, '회사', CheckpointType.WORK, { id: 'cp-2', routeId: 'route-1' }),
+        ],
+      });
+
+    it('dto 체크포인트의 id가 이 경로 소속이면 도메인 체크포인트로 전달한다', async () => {
+      repo.findById.mockResolvedValue(existingRoute());
+
+      await useCase.updateRoute('route-1', {
+        name: '이름만 변경',
+        checkpoints: [
+          { id: 'cp-1', sequenceOrder: 0, name: '집', checkpointType: CheckpointType.HOME },
+          { id: 'cp-2', sequenceOrder: 1, name: '회사', checkpointType: CheckpointType.WORK },
+        ],
+      });
+
+      const updated = repo.update.mock.calls.find(([route]) => route.id === 'route-1');
+      expect(updated![0].checkpoints.map((cp) => cp.id)).toEqual(['cp-1', 'cp-2']);
+    });
+
+    it('이 경로 소속이 아닌 id는 무시하고 신규 체크포인트로 취급한다', async () => {
+      repo.findById.mockResolvedValue(existingRoute());
+
+      await useCase.updateRoute('route-1', {
+        checkpoints: [
+          { id: 'cp-1', sequenceOrder: 0, name: '집', checkpointType: CheckpointType.HOME },
+          {
+            // 다른 경로의 체크포인트 id — 그대로 저장하면 그 경로에서 체크포인트를 훔쳐온다
+            id: 'foreign-cp',
+            sequenceOrder: 1,
+            name: '회사',
+            checkpointType: CheckpointType.WORK,
+          },
+        ],
+      });
+
+      const updated = repo.update.mock.calls.find(([route]) => route.id === 'route-1');
+      expect(updated![0].checkpoints.map((cp) => cp.id)).toEqual(['cp-1', '']);
+    });
+  });
 });

@@ -78,6 +78,17 @@ export class CreateRouteDto {
   checkpoints: CreateCheckpointDto[];
 }
 
+/**
+ * 수정 시 체크포인트는 id를 실어 보낼 수 있다. id가 있으면 기존 행을 유지해
+ * `checkpoint_records`(ON DELETE CASCADE)가 살아남는다 — id 없이 보내면
+ * 전량 삭제→재삽입으로 그 경로의 도착 기록이 전부 사라진다.
+ */
+export class UpdateCheckpointDto extends CreateCheckpointDto {
+  @IsOptional()
+  @IsUUID('4', { message: '유효한 체크포인트 ID가 아닙니다.' })
+  id?: string;
+}
+
 export class UpdateRouteDto {
   @IsOptional()
   @IsString()
@@ -93,9 +104,10 @@ export class UpdateRouteDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: '최소 하나의 체크포인트가 필요합니다.' })
   @ValidateNested({ each: true })
-  @Type(() => CreateCheckpointDto)
-  checkpoints?: CreateCheckpointDto[];
+  @Type(() => UpdateCheckpointDto)
+  checkpoints?: UpdateCheckpointDto[];
 }
 
 // Response DTOs (used for type safety, no validation needed)
