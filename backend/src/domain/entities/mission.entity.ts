@@ -2,6 +2,23 @@ import { v4 as uuidv4 } from 'uuid';
 
 export type MissionType = 'commute' | 'return';
 
+/**
+ * 제목 규칙 위반. 호출부(use case)가 이 타입을 보고 400으로 바꾼다 —
+ * bare Error로 새어 나가면 전역 필터가 500 + 'Internal server error'로 덮는다.
+ */
+export class InvalidMissionTitleError extends Error {
+  constructor(message = 'title은 1~100자여야 합니다') {
+    super(message);
+    this.name = 'InvalidMissionTitleError';
+  }
+}
+
+function assertValidTitle(title: string | undefined): asserts title is string {
+  if (!title || title.trim().length === 0 || title.length > 100) {
+    throw new InvalidMissionTitleError();
+  }
+}
+
 const EMOJI_KEYWORDS: [string[], string][] = [
   [['영어', '단어', '외우기', '암기', '어휘'], '📖'],
   [['뉴스', '신문', '기사'], '📰'],
@@ -70,9 +87,7 @@ export class Mission {
     missionType: MissionType,
     emoji?: string,
   ): Mission {
-    if (!title || title.trim().length === 0 || title.length > 100) {
-      throw new Error('title은 1~100자여야 합니다');
-    }
+    assertValidTitle(title);
     return new Mission({
       userId,
       title: title.trim(),
@@ -87,9 +102,7 @@ export class Mission {
     const chosenEmoji = normalizeEmoji(fields.emoji);
 
     if (fields.title !== undefined) {
-      if (!fields.title || fields.title.trim().length === 0 || fields.title.length > 100) {
-        throw new Error('title은 1~100자여야 합니다');
-      }
+      assertValidTitle(fields.title);
       this.title = fields.title.trim();
       this.emoji = chosenEmoji ?? matchEmoji(this.title);
     } else if (chosenEmoji) {

@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { ManageMissionUseCase } from './manage-mission.use-case';
 import { IMissionRepository } from '@domain/repositories/mission.repository';
 import { Mission, MissionType } from '@domain/entities/mission.entity';
@@ -23,21 +24,21 @@ describe('ManageMissionUseCase', () => {
     useCase = new ManageMissionUseCase(repo);
   });
 
-  describe('createMission', () => {
-    /** sortOrder/isActive를 지정한 기존 미션 */
-    function existing(
-      sortOrder: number,
-      options: { missionType?: MissionType; isActive?: boolean } = {},
-    ): Mission {
-      return new Mission({
-        userId: 'user-1',
-        title: `미션 ${sortOrder}`,
-        missionType: options.missionType ?? 'commute',
-        isActive: options.isActive ?? true,
-        sortOrder,
-      });
-    }
+  /** sortOrder/isActive를 지정한 기존 미션 */
+  function existing(
+    sortOrder: number,
+    options: { missionType?: MissionType; isActive?: boolean } = {},
+  ): Mission {
+    return new Mission({
+      userId: 'user-1',
+      title: `미션 ${sortOrder}`,
+      missionType: options.missionType ?? 'commute',
+      isActive: options.isActive ?? true,
+      sortOrder,
+    });
+  }
 
+  describe('createMission', () => {
     it('미션을 생성한다', async () => {
       repo.findByUserId.mockResolvedValue([]);
       repo.saveMission.mockImplementation(async (m) => m);
@@ -114,6 +115,14 @@ describe('ManageMissionUseCase', () => {
         useCase.createMission('user-1', '네 번째', 'commute'),
       ).rejects.toThrow('commute 미션은 최대 3개까지 설정할 수 있습니다');
     });
+
+    it('공백뿐인 제목은 400으로 거절한다', async () => {
+      repo.findByUserId.mockResolvedValue([]);
+
+      await expect(
+        useCase.createMission('user-1', '   ', 'commute'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 
   describe('getUserMissions', () => {
@@ -152,6 +161,7 @@ describe('ManageMissionUseCase', () => {
     it('미션 타입을 수정한다', async () => {
       const mission = Mission.createNew('user-1', '독서', 'commute');
       repo.findById.mockResolvedValue(mission);
+      repo.findByUserId.mockResolvedValue([mission]);
       repo.saveMission.mockImplementation(async (m) => m);
 
       const result = await useCase.updateMission(mission.id, 'user-1', { missionType: 'return' });
@@ -173,6 +183,49 @@ describe('ManageMissionUseCase', () => {
       await expect(
         useCase.updateMission('non-existent', 'user-1', { title: '수정' }),
       ).rejects.toThrow('미션을 찾을 수 없습니다');
+    });
+
+    it('공백뿐인 제목은 400으로 거절한다', async () => {
+      // bare Error를 던지면 전역 필터가 500 + Internal server error로 바꾼다.
+      const mission = Mission.createNew('user-1', '독서', 'commute');
+      repo.findById.mockResolvedValue(mission);
+
+      await expect(
+        useCase.updateMission(mission.id, 'user-1', { title: '   ' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('타입을 바꿀 때 대상 타입이 이미 최대치면 거절한다', async () => {
+      // 생성 때만 3개 제한을 걸면, 타입 변경으로 제한을 우회할 수 있다.
+      const target = Mission.createNew('user-1', '독서', 'commute');
+      repo.findById.mockResolvedValue(target);
+      repo.findByUserId.mockResolvedValue([
+        target,
+        existing(0, { missionType: 'return' }),
+        existing(1, { missionType: 'return' }),
+        existing(2, { missionType: 'return' }),
+      ]);
+
+      await expect(
+        useCase.updateMission(target.id, 'user-1', { missionType: 'return' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('같은 타입 안에서의 수정은 개수 제한에 걸리지 않는다', async () => {
+      const target = Mission.createNew('user-1', '독서', 'commute');
+      repo.findById.mockResolvedValue(target);
+      repo.findByUserId.mockResolvedValue([
+        target,
+        existing(1, { missionType: 'commute' }),
+        existing(2, { missionType: 'commute' }),
+      ]);
+      repo.saveMission.mockImplementation(async (m) => m);
+
+      const result = await useCase.updateMission(target.id, 'user-1', {
+        title: '독서 30분',
+        missionType: 'commute',
+      });
+      expect(result.title).toBe('독서 30분');
     });
   });
 

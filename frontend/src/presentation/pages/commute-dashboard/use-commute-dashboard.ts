@@ -15,6 +15,7 @@ import {
 } from '@infrastructure/api/behavior-api.client';
 import { getStopwatchRecords, type StopwatchRecord } from './types';
 import { getVisibleTabs, resolveActiveTab, type TabId } from './visible-tabs';
+import { selectComparableRouteIds } from './route-comparison';
 
 export type { TabId } from './visible-tabs';
 
@@ -129,10 +130,12 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
 
-        // A-4: Load route comparison if 2+ routes
-        if (statsData.routeStats.length >= 2) {
-          const routeIds = statsData.routeStats.map(r => r.routeId);
-          commuteApi.compareRoutes(routeIds)
+        // A-4: Load route comparison (서버가 받는 개수 범위로 맞춰서 요청)
+        const comparableRouteIds = selectComparableRouteIds(
+          statsData.routeStats.map(r => r.routeId),
+        );
+        if (comparableRouteIds) {
+          commuteApi.compareRoutes(comparableRouteIds)
             .then(comparison => { if (isMounted) setRouteComparison(comparison); })
             .catch(() => { if (isMounted) setComparisonError('비교 데이터를 불러올 수 없습니다'); });
         }
