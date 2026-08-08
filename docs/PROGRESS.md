@@ -1,5 +1,29 @@
 # Alert System - 진행 기록
 
+## [2026-08-08] Auto E2E Review 16:00 — 1건 수정 (Critical)
+
+### Completed
+- fix(routes): **경로 수정 PATCH가 `userId`를 실어 보내 요청 전체가 400** — 편집 저장이
+  CreateRouteDto(userId 포함)를 PATCH에 재사용했는데 서버 UpdateRouteDto에는 userId가 없고
+  전역 파이프가 forbidNonWhitelisted라 경로 수정이 코드 레벨에서 전면 불능이었음.
+  같은 페이로드가 체크포인트 id도 안 실어 (400이 아니었어도) CASCADE로 도착 기록 전량
+  유실 경로. `route-payload.ts`에 `buildCheckpoints`(id 보존: 정거장=checkpointId,
+  집/회사=checkpointType 매칭) + `buildUpdateRouteDto`(userId 미포함) 신설로 두 결함 동시 해소
+- **Supabase RLS 실측 성공** (3라운드 연속 timeout 끝에): alert_system 스키마 39/39 테이블
+  `rls_enabled=true` 확인 — 이전 미해결 항목 해소
+- test: 회귀 방지 8건 추가 (RED 확인 후 GREEN). frontend 717 → **725 passed** · backend 1612 passed
+- Phase 1~8 전수 GREEN. 번들 gzip 188KB (<500KB)
+
+### Next Steps
+- [ ] 🚨 AWS 백엔드 인프라 부재 → 배포 불가 (D1 게이트). **12라운드째**
+- [ ] `ScheduleDepartureAlertsUseCase` 미배선 (**14라운드째**, D1)
+- [ ] 미션 스트릭 공백일 처리 — 리셋 규칙 기획 판단
+- [ ] `excludeWeekends` 토글 UI 미노출 · required checks 이름 불일치로 auto-merge 불능 (admin 머지)
+
+### Notes
+- 상세 리포트: `.claude/e2e-reports/auto-review/20260808_160003.md` (gitignored)
+- 같은 날 PR #183 위에 쌓아서 진행 (00:00 라운드와 같은 브랜치)
+
 ## [2026-08-08] Auto E2E Review 00:00 — 8건 수정 (Critical 3)
 
 ### Completed
