@@ -8,6 +8,7 @@ import {
   Logger,
   UseGuards,
   Request,
+  BadRequestException,
   ForbiddenException,
   HttpCode,
 } from '@nestjs/common';
@@ -16,6 +17,10 @@ import { CalculateRouteAnalyticsUseCase } from '@application/use-cases/calculate
 import { RouteAnalytics } from '@domain/entities/route-analytics.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { parseBoundedInt } from '../utils/query-param';
+
+/** GET /analytics/compare 가 한 번에 받는 경로 수 범위 */
+export const MIN_COMPARE_ROUTES = 2;
+export const MAX_COMPARE_ROUTES = 5;
 
 // DTO types
 interface RouteAnalyticsResponseDto {
@@ -136,17 +141,24 @@ export class AnalyticsController {
    */
   @Get('compare')
   async compareRoutes(
-    @Query('routeIds') routeIds: string,
+    @Query('routeIds') routeIds: string | undefined,
     @Request() req: AuthenticatedRequest,
   ): Promise<RouteComparisonResponseDto> {
-    const ids = routeIds.split(',').map((id) => id.trim());
+    // 전역 ValidationPipe는 @Body()만 검증한다. 쿼리 파라미터는 여기서 막지 않으면
+    // 누락 시 `undefined.split`으로 터져 500이 나간다.
+    // 잘못된 입력은 전부 BadRequestException이어야 한다 — bare Error는
+    // AllExceptionsFilter가 500 + 'Internal server error'로 바꿔 사유를 지운다.
+    const ids = (routeIds ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
 
-    if (ids.length < 2) {
-      throw new Error('비교할 경로를 2개 이상 선택해주세요.');
+    if (ids.length < MIN_COMPARE_ROUTES) {
+      throw new BadRequestException('비교할 경로를 2개 이상 선택해주세요.');
     }
 
-    if (ids.length > 5) {
-      throw new Error('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
+    if (ids.length > MAX_COMPARE_ROUTES) {
+      throw new BadRequestException('한 번에 최대 5개 경로까지 비교할 수 있습니다.');
     }
 
     // 권한 검사: 요청한 모든 경로가 사용자 소유인지 확인
