@@ -2,6 +2,12 @@
 
 > 비자명한 교훈만 1줄로 상단 append. 자명한 요약 금지.
 
+- 2026-08-09 **`@IsNotEmpty`는 `''`만 막고 `'   '`는 통과시킨다.** 공백뿐인 값이 DTO를 지나
+  도메인에서 trim 후 걸리면 그 예외는 500이 된다 — 검증은 **엔티티가 아니라 DTO에서, trim한
+  뒤에** 끝내야 한다(`@Transform` 먼저, `@IsNotEmpty` 나중). 그리고 **개수 제한은 생성에만
+  걸면 이동으로 뚫린다**: `createMission`이 유형별 3개를 막아도 `updateMission`의 타입 변경에
+  같은 검사가 없으면 4개가 된다. 정원 검사는 "새로 만들 때"가 아니라 **"그 칸에 들어갈 때"**에 건다.
+
 - 2026-08-09 **입력 검증을 bare `Error`로 던지면 검증이 장애로 둔갑한다.** `AllExceptionsFilter`가
   non-HttpException을 500 + 'Internal server error'로 덮으므로, 사용자는 한국어 사유를 못 받고
   서버는 정상 입력 오류를 `logger.error`+스택으로 쌓아 **진짜 장애를 가린다**. 그리고 서버가

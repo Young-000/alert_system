@@ -44,6 +44,23 @@ describe('Mission DTO ↔ 프론트 전송 body 계약', () => {
         pipe.transform(body, asBody(CreateMissionDto)),
       ).rejects.toThrow();
     });
+
+    it('공백뿐인 제목은 400으로 거부한다', async () => {
+      // IsNotEmpty는 ''만 막는다 — 공백은 통과해 엔티티에서 터지고 500이 된다.
+      const body = { title: '   ', missionType: 'commute' };
+
+      await expect(
+        pipe.transform(body, asBody(CreateMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    it('제목 앞뒤 공백은 잘라서 넘긴다', async () => {
+      const body = { title: '  독서하기  ', missionType: 'commute' };
+
+      await expect(
+        pipe.transform(body, asBody(CreateMissionDto)),
+      ).resolves.toMatchObject({ title: '독서하기' });
+    });
   });
 
   describe('UpdateMissionDto', () => {
@@ -54,6 +71,30 @@ describe('Mission DTO ↔ 프론트 전송 body 계약', () => {
       await expect(
         pipe.transform(body, asBody(UpdateMissionDto)),
       ).resolves.toMatchObject({ title: '독서하기', emoji: '🎧' });
+    });
+
+    it('제목을 빼면 emoji만 수정할 수 있다', async () => {
+      const body = { emoji: '🎧' };
+
+      await expect(
+        pipe.transform(body, asBody(UpdateMissionDto)),
+      ).resolves.toMatchObject({ emoji: '🎧' });
+    });
+
+    it('빈 제목으로는 수정할 수 없다', async () => {
+      const body = { title: '' };
+
+      await expect(
+        pipe.transform(body, asBody(UpdateMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    it('공백뿐인 제목으로는 수정할 수 없다', async () => {
+      const body = { title: '   ' };
+
+      await expect(
+        pipe.transform(body, asBody(UpdateMissionDto)),
+      ).rejects.toThrow();
     });
   });
 });
