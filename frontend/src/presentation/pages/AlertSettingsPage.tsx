@@ -425,8 +425,9 @@ export function AlertSettingsPage(): JSX.Element {
       </div>
       )}
 
-      {/* 빠른 알림 프리셋 - 위저드가 활성화되지 않은 경우에만 표시 */}
-      {!shouldShowWizard && (
+      {/* 빠른 알림 프리셋 - 위저드가 활성화되지 않은 경우에만 표시.
+          로드 실패 시에는 서버의 기존 알림을 알 수 없어 중복 생성 위험이 있으므로 숨긴다 */}
+      {!shouldShowWizard && !alertCrud.loadError && (
         <QuickPresets
           alerts={alertCrud.alerts}
           isSubmitting={alertCrud.isSubmitting}

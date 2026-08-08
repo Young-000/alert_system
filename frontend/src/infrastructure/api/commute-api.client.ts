@@ -27,11 +27,17 @@ export interface CreateRouteDto {
   checkpoints: CreateCheckpointDto[];
 }
 
+// 수정 시 id가 있는 체크포인트는 서버가 행을 유지한다(도착 기록 보존).
+// id가 없으면 삭제→재삽입되어 해당 체크포인트의 기록이 사라진다.
+export interface UpdateCheckpointDto extends CreateCheckpointDto {
+  id?: string;
+}
+
 export interface UpdateRouteDto {
   name?: string;
   routeType?: RouteType;
   isPreferred?: boolean;
-  checkpoints?: CreateCheckpointDto[];
+  checkpoints?: UpdateCheckpointDto[];
 }
 
 export interface CheckpointResponse {

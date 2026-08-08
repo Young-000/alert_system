@@ -78,7 +78,10 @@ export function CommuteTrackingPage(): JSX.Element {
               routeId: matchingRoute.id,
             });
             if (isMounted) setSession(newSession);
+            return;
           }
+          // 경로가 삭제된 경우: dead-end 방지를 위해 홈으로
+          if (isMounted) navigate('/', { replace: true });
           return;
         }
 

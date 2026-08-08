@@ -63,7 +63,8 @@ export class DailyCheckUseCase {
     if (existingScore) {
       streakDay = existingScore.streakDay;
     } else {
-      streakDay = await this.repo.findLatestStreak(userId);
+      // 오늘 행이 없을 때는 어제까지의 스트릭을 보여준다 (오늘 이전 exclusive)
+      streakDay = await this.repo.findLatestStreak(userId, date);
     }
 
     return {
@@ -138,7 +139,9 @@ export class DailyCheckUseCase {
     const [allMissions, records, previousStreak] = await Promise.all([
       this.repo.findByUserId(userId),
       this.repo.findDailyRecords(userId, date),
-      this.repo.findLatestStreak(userId),
+      // 오늘 이전(exclusive)만 — recalculateScore는 매 토글마다 오늘 행을
+      // 저장하므로, 오늘을 포함하면 두 번째 토글부터 스트릭이 자기 자신을 참조한다
+      this.repo.findLatestStreak(userId, date),
     ]);
 
     const activeMissions = allMissions.filter((m) => m.isActive);

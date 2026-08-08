@@ -15,6 +15,9 @@ export interface SelectedStop {
   name: string;
   line: string;
   transportMode: LocalTransportMode;
+  // 편집 로드 시 원본 체크포인트 id. 수정 저장에 실어 보내야
+  // 서버가 행을 유지해 도착 기록(CASCADE)이 살아남는다.
+  checkpointId?: string;
 }
 
 // Grouped station for line selection

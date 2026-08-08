@@ -396,6 +396,13 @@ export function MissionsPage(): JSX.Element {
         <span className="missions-date">{formatTodayKST()}</span>
       </header>
 
+      {/* 체크 토글 실패 피드백 — 무음 실패 방지 */}
+      {toggleMutation.isError && !toggleMutation.isPending && (
+        <div className="mission-error" role="alert">
+          <p>미션 체크에 실패했어요. 다시 눌러 주세요.</p>
+        </div>
+      )}
+
       {/* Empty state or mission content */}
       {!hasMissions ? (
         <EmptyState />

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, LessThan } from 'typeorm';
 import { IMissionRepository } from '@domain/repositories/mission.repository';
 import { Mission, MissionType } from '@domain/entities/mission.entity';
 import { DailyMissionRecord } from '@domain/entities/daily-mission-record.entity';
@@ -119,9 +119,9 @@ export class MissionRepositoryImpl implements IMissionRepository {
 
   // --- Stats ---
 
-  async findLatestStreak(userId: string): Promise<number> {
+  async findLatestStreak(userId: string, beforeDate?: string): Promise<number> {
     const latest = await this.scoreRepo.findOne({
-      where: { userId },
+      where: beforeDate ? { userId, date: LessThan(beforeDate) } : { userId },
       order: { date: 'DESC' },
     });
     return latest?.streakDay ?? 0;
