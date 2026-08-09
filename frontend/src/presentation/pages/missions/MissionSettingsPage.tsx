@@ -262,6 +262,7 @@ export function MissionSettingsPage(): JSX.Element {
   const [deletingMission, setDeletingMission] = useState<Mission | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [reorderError, setReorderError] = useState('');
 
   const handleCancelDelete = useCallback(() => {
     setDeletingMission(null);
@@ -361,17 +362,33 @@ export function MissionSettingsPage(): JSX.Element {
     }
   }, [deletingMission, deleteMutation]);
 
+  /**
+   * 두 미션의 sortOrder를 맞바꾼다.
+   * 두 요청을 순차로 보내고 실패를 표면화한다 — 병렬 fire-and-forget이면
+   * 첫 요청만 성공했을 때 두 미션이 같은 sortOrder로 남고 사용자는 알 수 없다.
+   */
+  const swapSortOrder = useCallback(
+    async (a: Mission, b: Mission) => {
+      if (reorderMutation.isPending) return;
+      setReorderError('');
+      try {
+        await reorderMutation.mutateAsync({ id: a.id, sortOrder: b.sortOrder });
+        await reorderMutation.mutateAsync({ id: b.id, sortOrder: a.sortOrder });
+      } catch {
+        setReorderError('순서 변경에 실패했습니다. 다시 시도해주세요.');
+      }
+    },
+    [reorderMutation],
+  );
+
   const handleMoveUp = useCallback(
     (mission: Mission) => {
       const list = mission.missionType === 'commute' ? commuteMissions : returnMissions;
       const idx = list.findIndex((m) => m.id === mission.id);
       if (idx <= 0) return;
-      const prevMission = list[idx - 1];
-      // Swap sort orders
-      reorderMutation.mutate({ id: mission.id, sortOrder: prevMission.sortOrder });
-      reorderMutation.mutate({ id: prevMission.id, sortOrder: mission.sortOrder });
+      void swapSortOrder(mission, list[idx - 1]);
     },
-    [commuteMissions, returnMissions, reorderMutation],
+    [commuteMissions, returnMissions, swapSortOrder],
   );
 
   const handleMoveDown = useCallback(
@@ -379,11 +396,9 @@ export function MissionSettingsPage(): JSX.Element {
       const list = mission.missionType === 'commute' ? commuteMissions : returnMissions;
       const idx = list.findIndex((m) => m.id === mission.id);
       if (idx < 0 || idx >= list.length - 1) return;
-      const nextMission = list[idx + 1];
-      reorderMutation.mutate({ id: mission.id, sortOrder: nextMission.sortOrder });
-      reorderMutation.mutate({ id: nextMission.id, sortOrder: mission.sortOrder });
+      void swapSortOrder(mission, list[idx + 1]);
     },
-    [commuteMissions, returnMissions, reorderMutation],
+    [commuteMissions, returnMissions, swapSortOrder],
   );
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -479,6 +494,12 @@ export function MissionSettingsPage(): JSX.Element {
       <p className="msettings-description">
         출퇴근 시간에 할 미션을 설정하세요. 각 유형별 최대 {MAX_MISSIONS_PER_TYPE}개까지 가능해요.
       </p>
+
+      {reorderError ? (
+        <p className="msettings-error-inline" role="alert">
+          {reorderError}
+        </p>
+      ) : null}
 
       {/* Commute missions */}
       <MissionTypeSection

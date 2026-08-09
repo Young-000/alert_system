@@ -1,7 +1,10 @@
 import { useFocusTrap } from '@presentation/hooks/useFocusTrap';
+import { cronToHuman, applyTimeToCron } from './cron-utils';
 
 interface EditAlertModalProps {
   readonly editForm: { name: string; schedule: string };
+  /** 수정 전 원본 크론. 하루 여러 번 울리는 알림임을 사용자에게 보여주는 데 쓴다. */
+  readonly originalSchedule: string;
   readonly isEditing: boolean;
   readonly onFormChange: (form: { name: string; schedule: string }) => void;
   readonly onConfirm: () => void;
@@ -10,11 +13,16 @@ interface EditAlertModalProps {
 
 export function EditAlertModal({
   editForm,
+  originalSchedule,
   isEditing,
   onFormChange,
   onConfirm,
   onCancel,
 }: EditAlertModalProps): JSX.Element {
+  // 시각 입력은 하나뿐이지만 알림은 하루 여러 번 울릴 수 있다 — 저장 후 결과를 미리 보여준다.
+  const resultingSchedule = cronToHuman(
+    applyTimeToCron(originalSchedule, editForm.schedule),
+  );
   const trapRef = useFocusTrap({
     active: true,
     onEscape: isEditing ? undefined : onCancel,
@@ -59,6 +67,13 @@ export function EditAlertModal({
               onChange={(e) => onFormChange({ ...editForm, schedule: e.target.value })}
               className="form-input"
             />
+            <p
+              className="muted"
+              style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}
+              data-testid="edit-schedule-preview"
+            >
+              저장하면 <strong>{resultingSchedule}</strong>에 울립니다.
+            </p>
           </div>
           <p className="muted" style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
             알림 유형 변경은 새로운 알림을 생성해주세요.

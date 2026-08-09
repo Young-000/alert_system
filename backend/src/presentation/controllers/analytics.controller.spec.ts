@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AnalyticsController } from './analytics.controller';
 import { CalculateRouteAnalyticsUseCase } from '@application/use-cases/calculate-route-analytics.use-case';
 import { RouteAnalytics } from '@domain/entities/route-analytics.entity';
@@ -206,6 +206,57 @@ describe('AnalyticsController', () => {
       await expect(
         controller.compareRoutes('route-1,route-2', mockRequest(OWNER_ID)),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    // 아래는 전부 "잘못된 요청"이다. bare Error로 던지면 AllExceptionsFilter가
+    // 500 + 'Internal server error'로 바꿔버려, 클라이언트는 사유를 못 받고
+    // 서버는 정상 입력 검증을 장애 로그(logger.error + 스택)로 기록한다.
+    it('경로 수 부족은 BadRequestException (500 아님)', async () => {
+      await expect(
+        controller.compareRoutes('route-1', mockRequest(OWNER_ID)),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('경로 수 초과는 BadRequestException (500 아님)', async () => {
+      await expect(
+        controller.compareRoutes('r1,r2,r3,r4,r5,r6', mockRequest(OWNER_ID)),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('routeIds 파라미터 누락 시 500이 아니라 BadRequestException', async () => {
+      await expect(
+        controller.compareRoutes(undefined as unknown as string, mockRequest(OWNER_ID)),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('routeIds가 빈 문자열이어도 BadRequestException', async () => {
+      await expect(
+        controller.compareRoutes('', mockRequest(OWNER_ID)),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('쉼표만 있거나 공백뿐인 항목은 경로로 세지 않는다', async () => {
+      await expect(
+        controller.compareRoutes('route-1, ,', mockRequest(OWNER_ID)),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('빈 항목을 제거한 뒤 남은 id로만 조회한다', async () => {
+      const analytics1 = createMockAnalytics('route-1', '경로 A', { average: 40 });
+      const analytics2 = createMockAnalytics('route-2', '경로 B', { average: 50 });
+      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([analytics1, analytics2]);
+      calculateAnalyticsUseCase.compareRoutes.mockResolvedValue({
+        routes: [analytics1, analytics2],
+        winner: { fastest: 'route-1', mostReliable: 'route-1', recommended: 'route-1' },
+        analysis: { timeDifference: 10, reliabilityDifference: 5 },
+      } as any);
+
+      await controller.compareRoutes('route-1,,route-2,', mockRequest(OWNER_ID));
+
+      expect(calculateAnalyticsUseCase.compareRoutes).toHaveBeenCalledWith([
+        'route-1',
+        'route-2',
+      ]);
     });
   });
 

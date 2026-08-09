@@ -156,6 +156,27 @@ describe('NotificationHistoryController', () => {
       expect(qb.andWhere).not.toHaveBeenCalled();
     });
 
+    it('days가 상한(365)을 넘으면 365로 제한', async () => {
+      const qb = createMockQueryBuilder([{ status: 'success', count: 1 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      await controller.getStats(mockRequest(OWNER_ID), '999999999999');
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        "log.sentAt >= NOW() - INTERVAL '1 day' * :days",
+        { days: 365 },
+      );
+    });
+
+    it('days가 음수면 날짜 필터 미적용', async () => {
+      const qb = createMockQueryBuilder([{ status: 'success', count: 1 }]);
+      logRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      await controller.getStats(mockRequest(OWNER_ID), '-30');
+
+      expect(qb.andWhere).not.toHaveBeenCalled();
+    });
+
     it('userId로 필터링하여 조회', async () => {
       const qb = createMockQueryBuilder([]);
       logRepo.createQueryBuilder.mockReturnValue(qb as any);

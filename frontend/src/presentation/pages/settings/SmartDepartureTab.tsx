@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { useRoutesQuery } from '@infrastructure/query';
 import {
@@ -7,6 +8,7 @@ import {
   useDeleteSmartDepartureMutation,
   useToggleSmartDepartureMutation,
 } from '@infrastructure/query';
+import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import type { SmartDepartureSetting, DepartureType } from '@infrastructure/api';
 
@@ -76,8 +78,11 @@ function SettingCard({
 
 export function SmartDepartureTab(): JSX.Element {
   const { userId } = useAuth();
-  const { data: settings, isLoading } = useSmartDepartureSettingsQuery(!!userId);
-  const { data: routes } = useRoutesQuery(userId || '');
+  const { data: settings, isLoading: isLoadingSettings } = useSmartDepartureSettingsQuery(!!userId);
+  const { data: routes, isLoading: isLoadingRoutes } = useRoutesQuery(userId || '');
+  // 경로 응답 전에는 빈 상태를 확정할 수 없다 — 경로가 있는 사용자에게
+  // "먼저 경로를 등록해주세요"가 잘못 스쳐 보이기 때문이다.
+  const isLoading = isLoadingSettings || isLoadingRoutes;
   const createMutation = useCreateSmartDepartureMutation();
   const deleteMutation = useDeleteSmartDepartureMutation();
   const toggleMutation = useToggleSmartDepartureMutation();
@@ -109,8 +114,8 @@ export function SmartDepartureTab(): JSX.Element {
         activeDays: [1, 2, 3, 4, 5], // Mon-Fri default
       });
       setShowForm(false);
-    } catch {
-      setActionError('스마트 출발 설정에 실패했습니다.');
+    } catch (err: unknown) {
+      setActionError(getApiErrorMessage(err, '스마트 출발 설정에 실패했습니다.'));
     }
   }, [formRouteId, formType, formTarget, formPrep, routes, createMutation]);
 
@@ -216,7 +221,10 @@ export function SmartDepartureTab(): JSX.Element {
                 min={10}
                 max={60}
                 value={formPrep}
-                onChange={(e) => setFormPrep(parseInt(e.target.value) || 15)}
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value, 10);
+                  setFormPrep(isNaN(parsed) ? 15 : parsed);
+                }}
               />
             </div>
             <button
@@ -234,6 +242,9 @@ export function SmartDepartureTab(): JSX.Element {
           <div className="settings-empty">
             <span aria-hidden="true">🗺️</span>
             <p>먼저 경로를 등록해주세요</p>
+            <Link to="/routes" className="btn btn-primary btn-sm">
+              경로 등록하러 가기
+            </Link>
           </div>
         ) : !settings || settings.length === 0 ? (
           <div className="settings-empty">

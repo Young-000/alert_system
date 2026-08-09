@@ -168,38 +168,41 @@ describe('SmartMessageBuilder', () => {
     });
   });
 
+  // 제목은 발송 시점의 KST 시각으로 결정된다.
+  // 프로덕션(ECS)은 컨테이너 TZ 미지정이라 Node가 UTC로 동작하므로,
+  // 시스템 시각은 반드시 오프셋을 명시한 절대 시각으로 고정한다.
+  // (오프셋 없는 'YYYY-MM-DDTHH:mm:ss'는 로컬 시간으로 파싱돼 서버 TZ에 따라 결과가 달라진다.)
   describe('buildTitle', () => {
-    it('오전(5-12시)에는 출근 알림을 반환한다', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const titleAt = (utcInstant: string) => {
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-02-18T08:00:00'));
+      jest.setSystemTime(new Date(utcInstant));
+      return builder.buildTitle(createContext());
+    };
 
-      const result = builder.buildTitle(createContext());
+    it('KST 오전(5-12시)에는 출근 알림을 반환한다', () => {
+      // UTC 전날 23:00 = KST 08:00
+      expect(titleAt('2026-02-17T23:00:00Z')).toContain('출근');
+    });
 
+    it('KST 오후(12-18시)에는 오후 알림을 반환한다', () => {
+      // UTC 05:00 = KST 14:00
+      expect(titleAt('2026-02-18T05:00:00Z')).toContain('오후');
+    });
+
+    it('KST 저녁(18시 이후)에는 퇴근 알림을 반환한다', () => {
+      // UTC 10:00 = KST 19:00
+      expect(titleAt('2026-02-18T10:00:00Z')).toContain('퇴근');
+    });
+
+    it('KST 07:00 출근 시각에 퇴근 알림을 보내지 않는다', () => {
+      // 회귀 방지: getHours() 기반이면 UTC 22:00으로 읽혀 '퇴근 알림'이 나갔다.
+      const result = titleAt('2026-02-17T22:00:00Z');
       expect(result).toContain('출근');
-
-      jest.useRealTimers();
-    });
-
-    it('오후(12-18시)에는 오후 알림을 반환한다', () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-02-18T14:00:00'));
-
-      const result = builder.buildTitle(createContext());
-
-      expect(result).toContain('오후');
-
-      jest.useRealTimers();
-    });
-
-    it('저녁(18시 이후)에는 퇴근 알림을 반환한다', () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-02-18T19:00:00'));
-
-      const result = builder.buildTitle(createContext());
-
-      expect(result).toContain('퇴근');
-
-      jest.useRealTimers();
+      expect(result).not.toContain('퇴근');
     });
   });
 

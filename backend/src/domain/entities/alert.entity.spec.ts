@@ -193,6 +193,24 @@ describe('Alert', () => {
 
       expect(alert.notificationTime).toBe('07:45');
     });
+
+    it('updateSchedule() 후 notificationTime이 새 스케줄을 따라야 한다', () => {
+      const alert = new Alert('user-id', '알림', '0 8 * * *', [AlertType.WEATHER]);
+
+      alert.updateSchedule('30 6 * * *');
+
+      expect(alert.schedule).toBe('30 6 * * *');
+      expect(alert.notificationTime).toBe('06:30');
+      expect(alert.toJSON().notificationTime).toBe('06:30');
+    });
+
+    it('시간을 추출할 수 없는 스케줄로 바꾸면 notificationTime이 비워져야 한다', () => {
+      const alert = new Alert('user-id', '알림', '0 8 * * *', [AlertType.WEATHER]);
+
+      alert.updateSchedule('*/15 * * * *');
+
+      expect(alert.notificationTime).toBeUndefined();
+    });
   });
 
   describe('toJSON()', () => {

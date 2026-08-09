@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
 import type { LocalTransportMode, GroupedStation, SelectedStop } from './types';
 
@@ -34,8 +34,15 @@ export function useStationSearch(
   const [lineSelectionModal, setLineSelectionModal] = useState<GroupedStation | null>(null);
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  // 가장 최근에 시작한 검색의 번호. 응답이 돌아왔을 때 이 값과 다르면 버린다.
+  const latestRequestRef = useRef(0);
 
   const searchStops = useCallback(async (query: string) => {
+    // 디바운스는 요청 수를 줄일 뿐 응답 순서를 보장하지 않는다. 먼저 보낸 검색의
+    // 응답이 늦게 도착하면 입력창은 "역삼"인데 목록은 "강남"이 된다.
+    const requestId = ++latestRequestRef.current;
+    const isStale = (): boolean => latestRequestRef.current !== requestId;
+
     if (!query || query.length < 1) {
       setSubwayResults([]);
       setBusResults([]);
@@ -47,19 +54,22 @@ export function useStationSearch(
     try {
       if (currentTransport === 'subway') {
         const results = await subwayApiClient.searchStations(query);
+        if (isStale()) return;
         setSubwayResults(results.slice(0, 10));
         setBusResults([]);
       } else {
         const results = await busApiClient.searchStops(query);
+        if (isStale()) return;
         setBusResults(results.slice(0, 6));
         setSubwayResults([]);
       }
     } catch {
+      if (isStale()) return;
       setSubwayResults([]);
       setBusResults([]);
       setSearchError('검색에 실패했습니다');
     } finally {
-      setIsSearching(false);
+      if (!isStale()) setIsSearching(false);
     }
   }, [currentTransport]);
 
@@ -90,10 +100,18 @@ export function useStationSearch(
   }, [searchStops]);
 
   const clearSearch = useCallback(() => {
+    // 역을 고른 뒤에도 떠 있던 요청이 돌아오면 드롭다운이 되살아난다.
+    // 아직 안 나간 디바운스와 이미 나간 요청을 함께 무효화한다.
+    clearTimeout(searchTimerRef.current);
+    latestRequestRef.current += 1;
     setSearchQuery('');
     setSubwayResults([]);
     setBusResults([]);
+    setIsSearching(false);
   }, []);
+
+  // 언마운트 후 타이머가 깨어나 이미 사라진 화면의 검색을 시작하지 않도록 정리한다.
+  useEffect(() => () => clearTimeout(searchTimerRef.current), []);
 
   const handleStationClick = useCallback((grouped: GroupedStation) => {
     if (grouped.lines.length === 1) {

@@ -5,6 +5,7 @@ import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commut
 import { RouteCheckpointEntity } from '@infrastructure/persistence/typeorm/route-checkpoint.entity';
 import { CheckpointRecordEntity } from '@infrastructure/persistence/typeorm/checkpoint-record.entity';
 import { UserPlaceEntity } from '@infrastructure/persistence/typeorm/user-place.entity';
+import { getHoursKST } from '@domain/utils/kst-date';
 import {
   IRegionalInsightRepository,
   REGIONAL_INSIGHT_REPOSITORY,
@@ -252,7 +253,8 @@ export class InsightsAggregationService {
       group.checkpointNames.push(obs.startCheckpointName);
       group.userIds.add(obs.userId);
       group.durations.push(obs.totalDurationMinutes);
-      group.startHours.push(obs.startedAt.getHours());
+      // 피크 시간대는 KST 기준이다 (서버 TZ가 UTC면 9시간 밀린 분포가 나온다).
+      group.startHours.push(getHoursKST(obs.startedAt));
 
       // Classify into time buckets for trend calculation
       const sessionDate = obs.startedAt;

@@ -1,4 +1,17 @@
+import { getDayOfWeekKST } from '@domain/utils/kst-date';
+
 export type DepartureType = 'commute' | 'return';
+
+/**
+ * 설정값이 도메인 규칙을 벗어났을 때 던진다.
+ * 사용자 입력 오류이므로 use-case에서 400으로 옮긴다 (서버 오류가 아니다).
+ */
+export class InvalidSmartDepartureSettingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidSmartDepartureSettingError';
+  }
+}
 
 export class SmartDepartureSetting {
   readonly id: string;
@@ -65,19 +78,34 @@ export class SmartDepartureSetting {
       },
     );
 
-    if (!setting.isValidArrivalTarget()) {
-      throw new Error(`Invalid arrivalTarget format: ${arrivalTarget}. Must be HH:mm`);
-    }
-    if (!setting.isValidPrepTime()) {
-      throw new Error(
-        `Invalid prepTimeMinutes: ${setting.prepTimeMinutes}. Must be 10-60`,
-      );
-    }
-    if (!setting.isValidActiveDays()) {
-      throw new Error(`Invalid activeDays: ${JSON.stringify(setting.activeDays)}. Values must be 0-6`);
-    }
+    setting.assertValid();
 
     return setting;
+  }
+
+  /**
+   * 저장 가능한 상태인지 확인한다.
+   *
+   * 생성과 수정이 같은 규칙을 쓰게 하려고 한곳에 모았다 — 한쪽만 검사하면
+   * 수정 경로로 무효한 값이 들어가 출발시각 계산이 조용히 어긋난다.
+   * 생성자에서는 부르지 않는다: 저장소가 DB 행을 복원할 때도 지나가는 길이다.
+   */
+  private assertValid(): void {
+    if (!this.isValidArrivalTarget()) {
+      throw new InvalidSmartDepartureSettingError(
+        `Invalid arrivalTarget: ${this.arrivalTarget}. Must be HH:mm within 00:00-23:59`,
+      );
+    }
+    if (!this.isValidPrepTime()) {
+      throw new InvalidSmartDepartureSettingError(
+        `Invalid prepTimeMinutes: ${this.prepTimeMinutes}. Must be 10-60`,
+      );
+    }
+    if (!this.isValidActiveDays()) {
+      throw new InvalidSmartDepartureSettingError(
+        `Invalid activeDays: ${JSON.stringify(this.activeDays)}. Values must be 0-6`,
+      );
+    }
   }
 
   withUpdatedFields(fields: {
@@ -87,7 +115,7 @@ export class SmartDepartureSetting {
     activeDays?: number[];
     preAlerts?: number[];
   }): SmartDepartureSetting {
-    return new SmartDepartureSetting(
+    const updated = new SmartDepartureSetting(
       this.userId,
       fields.routeId ?? this.routeId,
       this.departureType,
@@ -102,6 +130,10 @@ export class SmartDepartureSetting {
         updatedAt: new Date(),
       },
     );
+
+    updated.assertValid();
+
+    return updated;
   }
 
   toggleEnabled(): SmartDepartureSetting {
@@ -124,7 +156,7 @@ export class SmartDepartureSetting {
 
   isActiveToday(): boolean {
     if (!this.isEnabled) return false;
-    const dayOfWeek = new Date().getDay();
+    const dayOfWeek = getDayOfWeekKST();
     return this.activeDays.includes(dayOfWeek);
   }
 

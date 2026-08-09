@@ -61,6 +61,37 @@ describe('Mission', () => {
       mission.update({ missionType: 'return' });
       expect(mission.missionType).toBe('return');
     });
+
+    it('emoji를 직접 지정하면 그것을 쓴다', () => {
+      const mission = Mission.createNew('user-1', '독서', 'commute');
+      mission.update({ emoji: '🎧' });
+      expect(mission.emoji).toBe('🎧');
+    });
+
+    it('제목과 emoji를 함께 바꾸면 사용자가 고른 emoji가 이긴다', () => {
+      // 제목만 보고 재계산하면 '스트레칭'→💪가 되어 사용자 선택이 덮인다.
+      const mission = Mission.createNew('user-1', '영어 단어', 'commute');
+      mission.update({ title: '스트레칭 10분', emoji: '🎯' });
+      expect(mission.title).toBe('스트레칭 10분');
+      expect(mission.emoji).toBe('🎯');
+    });
+  });
+
+  describe('createNew - emoji', () => {
+    it('emoji를 지정하면 제목 추론 대신 그것을 쓴다', () => {
+      const mission = Mission.createNew('user-1', '영어 단어', 'commute', '🧘');
+      expect(mission.emoji).toBe('🧘');
+    });
+
+    it('emoji가 없으면 기존대로 제목에서 추론한다', () => {
+      const mission = Mission.createNew('user-1', '영어 단어', 'commute');
+      expect(mission.emoji).toBe('📖');
+    });
+
+    it('공백뿐인 emoji는 제목 추론으로 되돌린다', () => {
+      const mission = Mission.createNew('user-1', '영어 단어', 'commute', '   ');
+      expect(mission.emoji).toBe('📖');
+    });
   });
 
   describe('toggleActive', () => {

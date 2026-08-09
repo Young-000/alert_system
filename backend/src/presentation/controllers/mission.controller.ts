@@ -84,6 +84,7 @@ export class MissionController {
       userId,
       dto.title,
       dto.missionType,
+      dto.emoji,
     );
 
     return {
@@ -116,6 +117,7 @@ export class MissionController {
     this.logger.log(`User ${userId} updating mission ${id}`);
     const mission = await this.manageMissionUseCase.updateMission(id, userId, {
       title: dto.title,
+      emoji: dto.emoji,
       missionType: dto.missionType,
     });
 
@@ -215,6 +217,8 @@ export class MissionController {
       isCompleted: boolean;
       completedAt: string | null;
     }>;
+    totalMissions: number;
+    completedMissions: number;
     completionRate: number;
     streakDay: number;
   }> {
@@ -250,6 +254,8 @@ export class MissionController {
     return {
       commuteMissions: mapMissions(status.commuteMissions),
       returnMissions: mapMissions(status.returnMissions),
+      totalMissions: status.totalMissions,
+      completedMissions: status.completedMissions,
       completionRate: status.completionRate,
       streakDay: status.streakDay,
     };

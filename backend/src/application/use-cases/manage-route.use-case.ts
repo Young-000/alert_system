@@ -54,10 +54,15 @@ export class ManageRouteUseCase {
       );
       if (existingPreferred) {
         await this.routeRepository.update(
+          // isPreferred만 내리고 나머지는 그대로 — 사용자가 건드리지도 않은 경로다.
+          // 특히 checkpoints의 id를 잃으면 저장 시 전부 새 체크포인트로 취급돼
+          // ON DELETE CASCADE로 그 경로의 도착 기록까지 사라진다.
           new CommuteRoute(existingPreferred.userId, existingPreferred.name, existingPreferred.routeType, {
             id: existingPreferred.id,
             isPreferred: false,
+            totalExpectedDuration: existingPreferred.totalExpectedDuration,
             checkpoints: existingPreferred.checkpoints,
+            createdAt: existingPreferred.createdAt,
           })
         );
       }
@@ -120,9 +125,14 @@ export class ManageRouteUseCase {
     let totalExpectedDuration = existing.totalExpectedDuration;
 
     if (dto.checkpoints) {
+      // id는 이 경로 소속인 것만 통과 — 남의 경로 체크포인트 id를 넣어
+      // 그 행의 routeId를 가로채는 것을 막는다
+      const ownedIds = new Set(existing.checkpoints.map((cp) => cp.id));
       checkpoints = dto.checkpoints.map(
         (cp) =>
           new RouteCheckpoint(cp.sequenceOrder, cp.name, cp.checkpointType, {
+            id: cp.id && ownedIds.has(cp.id) ? cp.id : undefined,
+            routeId: existing.id,
             linkedStationId: cp.linkedStationId,
             linkedBusStopId: cp.linkedBusStopId,
             lineInfo: cp.lineInfo,
@@ -137,19 +147,30 @@ export class ManageRouteUseCase {
       );
     }
 
-    // Handle isPreferred change
-    if (dto.isPreferred && !existing.isPreferred) {
-      const routeType = dto.routeType ?? existing.routeType;
+    // Handle isPreferred change.
+    // routeType이 바뀌면 이미 대표이던 경로도 "새 타입의 대표"가 되므로,
+    // 그 타입의 기존 대표를 해제해야 한다. 빠뜨리면 같은 타입에 대표가 둘 남고
+    // findPreferredByUserId()(findOne)가 비결정적으로 하나를 고른다.
+    const routeType = dto.routeType ?? existing.routeType;
+    const becomesPreferred = dto.isPreferred ?? existing.isPreferred;
+    const changesPreferredSlot = !existing.isPreferred || routeType !== existing.routeType;
+
+    if (becomesPreferred && changesPreferredSlot) {
       const existingPreferred = await this.routeRepository.findPreferredByUserId(
         existing.userId,
         routeType
       );
       if (existingPreferred && existingPreferred.id !== id) {
         await this.routeRepository.update(
+          // isPreferred만 내리고 나머지는 그대로 — 사용자가 건드리지도 않은 경로다.
+          // 특히 checkpoints의 id를 잃으면 저장 시 전부 새 체크포인트로 취급돼
+          // ON DELETE CASCADE로 그 경로의 도착 기록까지 사라진다.
           new CommuteRoute(existingPreferred.userId, existingPreferred.name, existingPreferred.routeType, {
             id: existingPreferred.id,
             isPreferred: false,
+            totalExpectedDuration: existingPreferred.totalExpectedDuration,
             checkpoints: existingPreferred.checkpoints,
+            createdAt: existingPreferred.createdAt,
           })
         );
       }

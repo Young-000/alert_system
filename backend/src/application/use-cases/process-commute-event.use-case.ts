@@ -26,10 +26,12 @@ import type { CommuteEventAction } from '@domain/entities/commute-event.entity';
 import { CommuteSession, SessionStatus } from '@domain/entities/commute-session.entity';
 import { RouteType } from '@domain/entities/commute-route.entity';
 import type { PlaceType } from '@domain/entities/user-place.entity';
+import { getHoursKST } from '@domain/utils/kst-date';
 import { RecordCommuteEventDto } from '@application/dto/commute-event.dto';
 import type {
   CommuteEventResponseDto,
   BatchCommuteEventsResponseDto,
+  BatchEventFailureDto,
   CommuteEventListResponseDto,
   CommuteEventDetailDto,
 } from '@application/dto/commute-event.dto';
@@ -109,7 +111,9 @@ export class ProcessCommuteEventUseCase {
     const savedEvent = await this.eventRepository.save(event);
 
     // 4. Determine action based on time window rules
-    const hour = new Date(dto.triggeredAt).getHours();
+    // 시간대 규칙은 KST 기준이다. 서버 TZ가 UTC인 ECS에서 getHours()를 쓰면
+    // KST 07:30 출근이 22시로 읽혀 commute_started가 아예 발생하지 않는다.
+    const hour = getHoursKST(new Date(dto.triggeredAt));
     const action = this.determineAction(place.placeType, dto.eventType, hour);
 
     this.logger.log(
@@ -155,20 +159,38 @@ export class ProcessCommuteEventUseCase {
     );
 
     const results: CommuteEventResponseDto[] = [];
+    const failures: BatchEventFailureDto[] = [];
     let ignored = 0;
 
     for (const eventDto of sorted) {
-      const result = await this.processEvent(userId, eventDto);
-      results.push(result);
-      if (result.action === 'ignored') {
-        ignored++;
+      // 개별 이벤트의 실패가 배치 전체를 무너뜨리면 안 된다.
+      // 모바일은 업로드가 throw하면 오프라인 큐를 그대로 두므로(geofence.service),
+      // 삭제된 장소를 참조하는 이벤트 하나가 그 큐를 영구히 막아버린다.
+      try {
+        const result = await this.processEvent(userId, eventDto);
+        results.push(result);
+        if (result.action === 'ignored') {
+          ignored++;
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : '알 수 없는 오류';
+        this.logger.warn(
+          `Skipping unprocessable batch event (place ${eventDto.placeId}) for user ${userId}: ${reason}`
+        );
+        failures.push({
+          placeId: eventDto.placeId,
+          triggeredAt: eventDto.triggeredAt,
+          reason,
+        });
       }
     }
 
     return {
       processed: results.length - ignored,
       ignored,
+      failed: failures.length,
       results,
+      failures,
     };
   }
 

@@ -10,10 +10,7 @@ import { SendNotificationUseCase } from '@application/use-cases/send-notificatio
 import { NotificationMessageBuilderService } from '@application/services/notification-message-builder.service';
 import { GenerateWeeklyReportUseCase } from '@application/use-cases/generate-weekly-report.use-case';
 import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commute-session.entity';
-import { WeatherApiClient } from '@infrastructure/external-apis/weather-api.client';
-import { AirQualityApiClient } from '@infrastructure/external-apis/air-quality-api.client';
-import { SubwayApiClient } from '@infrastructure/external-apis/subway-api.client';
-import { BusApiClient } from '@infrastructure/external-apis/bus-api.client';
+import { ExternalApiModule } from './external-api.module';
 import { NotificationProcessor } from '@infrastructure/queue/notification.processor';
 import { SolapiService, NoopSolapiService, SOLAPI_SERVICE } from '@infrastructure/messaging/solapi.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -24,7 +21,7 @@ import { PushModule } from './push.module';
 const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
 
 @Module({
-  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]), PushModule],
+  imports: [SchedulerModule.forRoot(), SmartNotificationModule, ConfigModule, CommuteModule, TypeOrmModule.forFeature([NotificationLogEntity, CommuteSessionEntity]), PushModule, ExternalApiModule],
   controllers: [SchedulerTriggerController],
   providers: [
     {
@@ -38,34 +35,6 @@ const isQueueEnabled = process.env.QUEUE_ENABLED === 'true';
     {
       provide: 'ISubwayStationRepository',
       useClass: PostgresSubwayStationRepository,
-    },
-    {
-      provide: 'IWeatherApiClient',
-      useFactory: () => {
-        const apiKey = process.env.AIR_QUALITY_API_KEY || '';
-        return new WeatherApiClient(apiKey);
-      },
-    },
-    {
-      provide: 'IAirQualityApiClient',
-      useFactory: () => {
-        const apiKey = process.env.AIR_QUALITY_API_KEY || '';
-        return new AirQualityApiClient(apiKey);
-      },
-    },
-    {
-      provide: 'ISubwayApiClient',
-      useFactory: () => {
-        const apiKey = process.env.SUBWAY_API_KEY || '';
-        return new SubwayApiClient(apiKey);
-      },
-    },
-    {
-      provide: 'IBusApiClient',
-      useFactory: () => {
-        const apiKey = process.env.BUS_API_KEY || '';
-        return new BusApiClient(apiKey);
-      },
     },
     {
       provide: SOLAPI_SERVICE,

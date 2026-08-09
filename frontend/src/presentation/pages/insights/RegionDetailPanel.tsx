@@ -40,8 +40,12 @@ function getTrendBadge(
 }
 
 export function RegionDetailPanel({ regionId }: RegionDetailPanelProps): JSX.Element {
-  const { data: detail, isLoading: detailLoading } = useRegionDetail(regionId);
-  const { data: peakHours, isLoading: peakLoading } = useRegionPeakHours(regionId);
+  const { data: detail, isLoading: detailLoading, refetch: refetchDetail } = useRegionDetail(regionId);
+  const {
+    data: peakHours,
+    isLoading: peakLoading,
+    refetch: refetchPeakHours,
+  } = useRegionPeakHours(regionId);
 
   if (detailLoading || peakLoading) {
     return (
@@ -56,6 +60,16 @@ export function RegionDetailPanel({ regionId }: RegionDetailPanelProps): JSX.Ele
     return (
       <div className="insight-detail-panel">
         <p className="muted">상세 데이터를 불러올 수 없습니다</p>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => {
+            void refetchDetail();
+            void refetchPeakHours();
+          }}
+        >
+          다시 시도
+        </button>
       </div>
     );
   }

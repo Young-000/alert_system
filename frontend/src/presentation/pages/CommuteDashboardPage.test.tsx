@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CommuteDashboardPage } from './CommuteDashboardPage';
 import {
@@ -7,6 +7,7 @@ import {
   getBehaviorApiClient,
   behaviorApiClient,
 } from '@infrastructure/api';
+import { STOPWATCH_STORAGE_KEY } from './commute-dashboard/types';
 import type { Mocked, MockedFunction } from 'vitest';
 
 // Mock navigate
@@ -109,6 +110,14 @@ const mockHistory = {
   hasMore: false,
 };
 
+const mockStopwatchRecord = {
+  id: 'sw-1',
+  startedAt: '2026-02-18T08:00:00Z',
+  completedAt: '2026-02-18T08:25:00Z',
+  totalDurationSeconds: 1500,
+  type: 'morning' as const,
+};
+
 const mockBehaviorAnalytics = {
   totalPatterns: 0,
   totalCommuteRecords: 2,
@@ -167,6 +176,55 @@ describe('CommuteDashboardPage', () => {
     });
     expect(screen.getByText('출퇴근 트래킹을 시작해보세요. 이동 시간을 기록하면 통계를 볼 수 있어요.')).toBeInTheDocument();
     expect(screen.getByText('트래킹 시작하기')).toBeInTheDocument();
+  });
+
+  // --- Stopwatch-only user ---
+
+  /**
+   * 스톱워치만 써 온 사용자는 체크포인트 세션이 0이라 '전체 요약'·'경로 비교'·'기록' 탭이
+   * 아예 렌더되지 않는다 (`DashboardTabs.tsx:25`). 그런데 활성 탭 기본값은 'overview'라
+   * (`use-commute-dashboard.ts:57`), 보이지도 않는 탭이 선택된 채로 남아
+   * 탭 하나만 덩그러니 있고 본문이 빈 화면이 된다.
+   */
+  it('스톱워치 기록만 있으면 스톱워치 내용을 바로 보여준다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
+    mockCommuteApi.getStats.mockResolvedValue(mockEmptyStats);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: /스톱워치/ })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('tab', { name: /스톱워치/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('스톱워치 기록 요약')).toBeInTheDocument();
+  });
+
+  it('통계를 못 불러와도 스톱워치 기록은 보여준다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
+    mockCommuteApi.getStats.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getHistory.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getUserAnalytics.mockRejectedValue(new Error('Network error'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('대시보드 데이터를 불러올 수 없습니다.')).toBeInTheDocument();
+    });
+    expect(screen.getByText('스톱워치 기록 요약')).toBeInTheDocument();
+  });
+
+  it('세션 기록이 생기면 전체 요약이 기본 탭으로 돌아온다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    });
   });
 
   // --- Dashboard with data ---
@@ -261,6 +319,84 @@ describe('CommuteDashboardPage', () => {
     // RoutesTab should render route buttons
     await waitFor(() => {
       expect(screen.getByText('강남 출근길')).toBeInTheDocument();
+    });
+  });
+
+  // --- URL tab parameter ---
+
+  /**
+   * `?tab=` 반영 이펙트(`use-commute-dashboard.ts:73`)는 `behaviorAnalytics`에도 의존한다.
+   * 행동 분석 응답은 대시보드가 그려진 뒤에 따로 도착하므로 이펙트가 한 번 더 돈다.
+   * 그때 사용자가 눌러 둔 탭이 URL 값으로 되돌아가지 않아야 한다
+   * (탭 클릭이 `setSearchParams`로 URL도 함께 갱신하기 때문에 성립하는 불변조건 —
+   *  둘 중 하나만 바뀌면 곧바로 깨진다).
+   */
+  it('늦게 도착한 행동 분석이 사용자가 고른 탭을 URL 값으로 되돌리지 않는다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    let resolveAnalytics: (value: typeof mockBehaviorAnalytics) => void = () => {};
+    mockBehaviorApi.getAnalytics.mockReturnValue(
+      new Promise((resolve) => {
+        resolveAnalytics = resolve;
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/commute/dashboard?tab=history']}>
+        <CommuteDashboardPage />
+      </MemoryRouter>
+    );
+
+    // URL이 지정한 '기록' 탭으로 진입
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '기록' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    // 사용자가 '전체 요약'으로 직접 이동
+    fireEvent.click(screen.getByRole('tab', { name: '전체 요약' }));
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    // 이제서야 행동 분석 응답 도착
+    await act(async () => {
+      resolveAnalytics(mockBehaviorAnalytics);
+    });
+
+    expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: '기록' })).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('?tab=behavior는 행동 분석 데이터가 도착한 뒤에 열린다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    let resolveAnalytics: (value: typeof mockBehaviorAnalytics) => void = () => {};
+    mockBehaviorApi.getAnalytics.mockReturnValue(
+      new Promise((resolve) => {
+        resolveAnalytics = resolve;
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/commute/dashboard?tab=behavior']}>
+        <CommuteDashboardPage />
+      </MemoryRouter>
+    );
+
+    // 데이터가 없는 동안에는 '행동 패턴' 탭 자체가 없으므로 전체 요약으로 대기
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+    });
+    expect(screen.queryByRole('tab', { name: '행동 패턴' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveAnalytics({ ...mockBehaviorAnalytics, hasEnoughData: true });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '행동 패턴' })).toHaveAttribute('aria-selected', 'true');
     });
   });
 

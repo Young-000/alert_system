@@ -1,4 +1,9 @@
-import { subtractDays, getWeekStartKST } from '@domain/utils/kst-date';
+import { subtractDays, getWeekStartKST, getDayOfWeekFromDateOnly } from '@domain/utils/kst-date';
+
+function isWeekend(dateStr: string): boolean {
+  const day = getDayOfWeekFromDateOnly(dateStr);
+  return day === 0 || day === 6;
+}
 
 export type StreakStatus = 'active' | 'at_risk' | 'broken' | 'new';
 export type MilestoneType = '7d' | '14d' | '30d' | '60d' | '100d';
@@ -98,8 +103,8 @@ export class CommuteStreak {
    * 스트릭 갱신 핵심 로직
    * - todayKST: 한국 시간 기준 오늘 날짜 (YYYY-MM-DD)
    * - 이미 오늘 기록됨 -> 스킵
-   * - 어제 기록 있음 -> 스트릭 연장
-   * - 어제 기록 없음 -> 새 스트릭 시작
+   * - 마지막 필수 기록일 이후 기록 있음 -> 스트릭 연장
+   * - 없음 -> 새 스트릭 시작
    */
   recordCompletion(todayKST: string): RecordCompletionResult {
     // 이미 오늘 기록됨 -> 스킵
@@ -107,25 +112,22 @@ export class CommuteStreak {
       return { updated: false, milestoneAchieved: null };
     }
 
-    const yesterday = subtractDays(todayKST, 1);
-
-    if (this.lastRecordDate === yesterday) {
-      // 어제 기록 있음 -> 스트릭 연장
+    if (this.lastRecordDate && this.lastRecordDate >= this.lastRequiredRecordDate(todayKST)) {
       this.currentStreak += 1;
     } else {
-      // 어제 기록 없음 -> 새 스트릭 시작
+      // 필수 기록일을 놓침 -> 새 스트릭 시작
       this.currentStreak = 1;
       this.streakStartDate = todayKST;
     }
 
     this.lastRecordDate = todayKST;
 
-    // 최고 기록 갱신
+    // 최고 기록 갱신 — 구간은 항상 지금 진행 중인 스트릭의 것이다.
+    // (옛 기록의 시작일을 남겨두면 새 스트릭이 기록을 경신하는 순간
+    //  bestStreakStart~bestStreakEnd가 실재하지 않는 긴 구간으로 날조된다)
     if (this.currentStreak > this.bestStreak) {
       this.bestStreak = this.currentStreak;
-      if (this.currentStreak === 1) {
-        this.bestStreakStart = todayKST;
-      }
+      this.bestStreakStart = this.streakStartDate ?? todayKST;
       this.bestStreakEnd = todayKST;
     }
 
@@ -146,11 +148,26 @@ export class CommuteStreak {
 
     if (this.lastRecordDate === todayKST) return 'active';
 
-    const yesterday = subtractDays(todayKST, 1);
-    if (this.lastRecordDate === yesterday) return 'active';
+    // 필수 기록일까지 기록돼 있으면 스트릭은 살아 있으나 오늘(다음 평일) 넘기면 끊긴다.
+    if (this.lastRecordDate >= this.lastRequiredRecordDate(todayKST)) return 'at_risk';
 
-    // 2일 이상 빠짐
+    // 필수 기록일을 놓침
     return 'broken';
+  }
+
+  /**
+   * 스트릭이 이어지려면 늦어도 이 날짜에는 기록이 있어야 한다.
+   * 기본은 어제. 주말 제외(excludeWeekends)면 어제가 주말인 경우
+   * 직전 평일(금요일)까지 거슬러 올라간다 — 금→월이 연속으로 인정된다.
+   */
+  private lastRequiredRecordDate(todayKST: string): string {
+    let day = subtractDays(todayKST, 1);
+    if (this.excludeWeekends) {
+      while (isWeekend(day)) {
+        day = subtractDays(day, 1);
+      }
+    }
+    return day;
   }
 
   /** 새 마일스톤 달성 확인 */
@@ -195,6 +212,24 @@ export class CommuteStreak {
     } else {
       this.weeklyCount += 1;
     }
+  }
+
+  /**
+   * 스트릭이 이미 끊겼으면 0으로 리셋 (조회 시 사용)
+   *
+   * currentStreak은 마지막 recordCompletion 시점의 값으로 굳어 있다. 2일 이상
+   * 빠지면 그 값은 더 이상 "연속 일수"가 아니지만, 다음 기록 전까지는 저장소에
+   * 그대로 남는다. 조회 경로에서 바로잡지 않으면 "다시 시작해보세요"와
+   * "연속 12일"이 한 화면에 같이 나간다.
+   *
+   * lastRecordDate는 지우지 않는다 — 지우면 상태가 'new'로 바뀌어
+   * 끊긴 사용자가 첫 사용자 안내를 받게 된다. 최고 기록과 획득 배지도 보존한다.
+   */
+  ensureStreakCurrent(todayKST: string): void {
+    if (this.getStatus(todayKST) !== 'broken') return;
+
+    this.currentStreak = 0;
+    this.streakStartDate = null;
   }
 
   /** 주간 카운트가 이번 주가 아니면 리셋 (조회 시 사용) */

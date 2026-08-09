@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
 import {
@@ -14,8 +14,10 @@ import {
   type UserPattern,
 } from '@infrastructure/api/behavior-api.client';
 import { getStopwatchRecords, type StopwatchRecord } from './types';
+import { getVisibleTabs, resolveActiveTab, type TabId } from './visible-tabs';
+import { selectComparableRouteIds } from './route-comparison';
 
-export type TabId = 'overview' | 'routes' | 'history' | 'stopwatch' | 'analytics' | 'behavior';
+export type { TabId } from './visible-tabs';
 
 interface UseCommuteDashboardReturn {
   userId: string;
@@ -28,8 +30,10 @@ interface UseCommuteDashboardReturn {
   isLoading: boolean;
   loadError: string;
   retryLoad: () => void;
+  /** 실제로 렌더되는 탭 (보이지 않는 탭이 선택되면 첫 번째 보이는 탭으로 대체된다) */
   activeTab: TabId;
   setActiveTab: React.Dispatch<React.SetStateAction<TabId>>;
+  visibleTabs: TabId[];
   routeAnalytics: RouteAnalyticsResponse[];
   analyticsError: string;
   comparisonError: string;
@@ -54,7 +58,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [requestedTab, setRequestedTab] = useState<TabId>('overview');
   const [routeAnalytics, setRouteAnalytics] = useState<RouteAnalyticsResponse[]>([]);
   const [behaviorAnalytics, setBehaviorAnalytics] = useState<BehaviorAnalytics | null>(null);
   const [behaviorPatterns, setBehaviorPatterns] = useState<UserPattern[]>([]);
@@ -77,11 +81,19 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     if (!validTabs.includes(urlTab as TabId)) return;
     // 'behavior' tab requires hasEnoughData -- if not available yet, fall back to overview
     if (urlTab === 'behavior' && !behaviorAnalytics?.hasEnoughData) {
-      setActiveTab('overview');
+      setRequestedTab('overview');
       return;
     }
-    setActiveTab(urlTab as TabId);
+    setRequestedTab(urlTab as TabId);
   }, [searchParams, behaviorAnalytics]);
+
+  // 선택된 탭이 실제로 렌더되는지는 데이터가 도착해야 알 수 있다.
+  // 버튼이 없는 탭이 선택된 채로 남으면 본문이 빈 화면이 되므로 여기서 바로잡는다.
+  const visibleTabs = useMemo(
+    () => getVisibleTabs({ stats, stopwatchRecords, routeAnalytics, behaviorAnalytics }),
+    [stats, stopwatchRecords, routeAnalytics, behaviorAnalytics],
+  );
+  const activeTab = resolveActiveTab(requestedTab, visibleTabs);
 
   // Load stopwatch records from localStorage (no auto tab switch)
   useEffect(() => {
@@ -105,7 +117,7 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
           commuteApi.getStats(userId, 30),
           commuteApi.getHistory(userId, 10),
           commuteApi.getUserAnalytics(userId).catch(() => {
-            setAnalyticsError('분석 데이터를 불러올 수 없습니다');
+            if (isMounted) setAnalyticsError('분석 데이터를 불러올 수 없습니다');
             return [] as RouteAnalyticsResponse[];
           }),
         ]);
@@ -118,10 +130,12 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
           setSelectedRouteId(statsData.routeStats[0].routeId);
         }
 
-        // A-4: Load route comparison if 2+ routes
-        if (statsData.routeStats.length >= 2) {
-          const routeIds = statsData.routeStats.map(r => r.routeId);
-          commuteApi.compareRoutes(routeIds)
+        // A-4: Load route comparison (서버가 받는 개수 범위로 맞춰서 요청)
+        const comparableRouteIds = selectComparableRouteIds(
+          statsData.routeStats.map(r => r.routeId),
+        );
+        if (comparableRouteIds) {
+          commuteApi.compareRoutes(comparableRouteIds)
             .then(comparison => { if (isMounted) setRouteComparison(comparison); })
             .catch(() => { if (isMounted) setComparisonError('비교 데이터를 불러올 수 없습니다'); });
         }
@@ -167,7 +181,8 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
     loadError,
     retryLoad,
     activeTab,
-    setActiveTab,
+    setActiveTab: setRequestedTab,
+    visibleTabs,
     routeAnalytics,
     analyticsError,
     comparisonError,

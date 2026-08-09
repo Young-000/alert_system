@@ -37,22 +37,9 @@ import { ICommuteRecordRepository } from '@domain/repositories/commute-record.re
 import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
-
-interface TrackEventDto {
-  userId: string;
-  eventType: string;
-  alertId?: string;
-  metadata?: Record<string, unknown>;
-  source?: 'push' | 'app';
-}
-
-interface DepartureConfirmedDto {
-  userId: string;
-  alertId: string;
-  source: 'push' | 'app';
-  weatherCondition?: string;
-  transitDelayMinutes?: number;
-}
+import { NotificationOpenedDto } from '@application/dto/notification-opened.dto';
+import { TrackEventDto, DepartureConfirmedDto } from '@application/dto/behavior.dto';
+import { parseBoundedInt } from '../utils/query-param';
 
 @Controller('behavior')
 @UseGuards(AuthGuard('jwt'))
@@ -131,7 +118,7 @@ export class BehaviorController {
   @Post('notification-opened')
   @HttpCode(HttpStatus.OK)
   async notificationOpened(
-    @Body() dto: { userId: string; alertId: string; notificationId?: string },
+    @Body() dto: NotificationOpenedDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
     // 권한 검사: 자신의 알림 열기만 기록 가능
@@ -184,7 +171,7 @@ export class BehaviorController {
       return { records: [], message: 'Commute record repository not available' };
     }
 
-    const recordLimit = limit ? parseInt(limit, 10) : 30;
+    const recordLimit = parseBoundedInt(limit, { fallback: 30, min: 1, max: 200 });
     const records = await this.commuteRecordRepository.findByUserId(userId, recordLimit);
     return { records };
   }
@@ -212,9 +199,9 @@ export class BehaviorController {
 
     const conditions: CurrentConditions = {};
     if (weather) conditions.weather = weather;
-    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10);
+    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10) || 0;
     if (isRaining) conditions.isRaining = isRaining === 'true';
-    if (temperature) conditions.temperature = parseInt(temperature, 10);
+    if (temperature) conditions.temperature = parseInt(temperature, 10) || 0;
 
     return this.predictOptimalDepartureUseCase.execute(userId, alertId, conditions);
   }
@@ -283,8 +270,8 @@ export class BehaviorController {
     } = {};
 
     if (weather) conditions.weather = weather;
-    if (temperature) conditions.temperature = parseInt(temperature, 10);
-    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10);
+    if (temperature) conditions.temperature = parseInt(temperature, 10) || 0;
+    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10) || 0;
     if (date) conditions.targetDate = new Date(date);
 
     return this.predictionEngine.predict(userId, conditions);

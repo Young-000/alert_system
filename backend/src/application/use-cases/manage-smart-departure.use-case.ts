@@ -1,12 +1,14 @@
 import {
   Injectable,
   Inject,
+  BadRequestException,
   ConflictException,
   NotFoundException,
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import {
+  InvalidSmartDepartureSettingError,
   SmartDepartureSetting,
 } from '@domain/entities/smart-departure-setting.entity';
 import type { DepartureType } from '@domain/entities/smart-departure-setting.entity';
@@ -65,16 +67,18 @@ export class ManageSmartDepartureUseCase {
     }
 
     // 3. Create domain entity
-    const setting = SmartDepartureSetting.create(
-      userId,
-      dto.routeId,
-      dto.departureType as DepartureType,
-      dto.arrivalTarget,
-      {
-        prepTimeMinutes: dto.prepTimeMinutes,
-        activeDays: dto.activeDays,
-        preAlerts: dto.preAlerts,
-      },
+    const setting = this.buildSetting(() =>
+      SmartDepartureSetting.create(
+        userId,
+        dto.routeId,
+        dto.departureType as DepartureType,
+        dto.arrivalTarget,
+        {
+          prepTimeMinutes: dto.prepTimeMinutes,
+          activeDays: dto.activeDays,
+          preAlerts: dto.preAlerts,
+        },
+      ),
     );
 
     // 4. Persist
@@ -104,13 +108,15 @@ export class ManageSmartDepartureUseCase {
       }
     }
 
-    const updated = setting.withUpdatedFields({
-      routeId: dto.routeId,
-      arrivalTarget: dto.arrivalTarget,
-      prepTimeMinutes: dto.prepTimeMinutes,
-      activeDays: dto.activeDays,
-      preAlerts: dto.preAlerts,
-    });
+    const updated = this.buildSetting(() =>
+      setting.withUpdatedFields({
+        routeId: dto.routeId,
+        arrivalTarget: dto.arrivalTarget,
+        prepTimeMinutes: dto.prepTimeMinutes,
+        activeDays: dto.activeDays,
+        preAlerts: dto.preAlerts,
+      }),
+    );
 
     await this.settingRepo.update(updated);
     this.logger.log(`Updated smart departure setting ${id} for user ${userId}`);
@@ -137,6 +143,21 @@ export class ManageSmartDepartureUseCase {
     );
 
     return this.toResponseDto(toggled);
+  }
+
+  /**
+   * 도메인 검증 실패만 400으로 옮긴다.
+   * 다른 예외는 그대로 흘려보낸다 — 진짜 서버 오류를 400으로 감추지 않기 위함이다.
+   */
+  private buildSetting(build: () => SmartDepartureSetting): SmartDepartureSetting {
+    try {
+      return build();
+    } catch (error) {
+      if (error instanceof InvalidSmartDepartureSettingError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 
   private async findAndVerifyOwnership(

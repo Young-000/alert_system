@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { MissionEntity } from './mission.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('daily_mission_records', { schema: 'alert_system' })
 @Unique(['userId', 'missionId', 'date'])
@@ -30,7 +31,7 @@ export class DailyMissionRecordEntity {
   @Column({ type: 'boolean', name: 'is_completed', default: false })
   isCompleted: boolean;
 
-  @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
+  @Column({ name: 'completed_at', type: TIMESTAMPTZ, nullable: true })
   completedAt: Date | null;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })

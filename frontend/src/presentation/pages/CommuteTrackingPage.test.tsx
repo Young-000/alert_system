@@ -184,6 +184,21 @@ describe('CommuteTrackingPage', () => {
     });
   });
 
+  it('should redirect to home when navigation routeId no longer exists', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'deleted-route-id' };
+    mockCommuteApi.getUserRoutes.mockResolvedValue([mockRoute]);
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    });
+    expect(mockCommuteApi.startSession).not.toHaveBeenCalled();
+  });
+
   // --- Active session display ---
 
   it('should display active session with timer and route name', async () => {
@@ -404,6 +419,40 @@ describe('CommuteTrackingPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('데이터를 불러오는데 실패했습니다.')).toBeInTheDocument();
+    });
+  });
+
+  it('should retry data loading in place when clicking retry after a load failure', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'route-1' };
+    mockCommuteApi.getInProgressSession.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getUserRoutes.mockRejectedValue(new Error('Network error'));
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('다시 시도')).toBeInTheDocument();
+    });
+
+    // 재시도는 성공하도록 전환
+    mockCommuteApi.getInProgressSession.mockResolvedValue(null);
+    mockCommuteApi.getUserRoutes.mockResolvedValue([mockRoute]);
+    const callsBefore = mockCommuteApi.getInProgressSession.mock.calls.length;
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('다시 시도'));
+    });
+
+    // 전체 페이지 리로드가 아니라 데이터 로드만 재실행되어야 한다
+    await waitFor(() => {
+      expect(mockCommuteApi.getInProgressSession.mock.calls.length).toBeGreaterThan(
+        callsBefore
+      );
+    });
+    await waitFor(() => {
+      expect(screen.getByText('출근 중')).toBeInTheDocument();
     });
   });
 

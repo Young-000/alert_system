@@ -134,6 +134,9 @@ export function RouteListView({
           {filteredRoutes.length === 0 ? (
             <div className="route-filter-empty">
               <p>{routeTab === 'morning' ? '출근' : '퇴근'} 경로가 없어요</p>
+              <button type="button" className="btn btn-primary btn-sm" onClick={onStartCreating}>
+                {routeTab === 'morning' ? '출근' : '퇴근'} 경로 추가
+              </button>
             </div>
           ) : (
             filteredRoutes.map((route) => (

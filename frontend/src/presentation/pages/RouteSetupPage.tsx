@@ -13,9 +13,12 @@ import {
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
 import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from '@infrastructure/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@infrastructure/query/query-keys';
 import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
+import { resolvePreferredFlag, buildCheckpoints, buildUpdateRouteDto } from './route-setup/route-payload';
 import { useRouteValidation } from './route-setup/use-route-validation';
 import { useStationSearch } from './route-setup/use-station-search';
 import { LineSelectionModal } from './route-setup/LineSelectionModal';
@@ -32,6 +35,19 @@ export function RouteSetupPage(): JSX.Element {
   const { userId } = useAuth();
   const commuteApi = getCommuteApiClient();
   const toast = useToast();
+  const queryClient = useQueryClient();
+
+  /**
+   * 이 화면은 경로 목록을 자체 state로 들고 있어 저장 결과가 여기서는 바로 보인다.
+   * 하지만 홈·알림·설정은 react-query 캐시(routes 10분, alerts 2분)를 읽으므로,
+   * 무효화하지 않으면 저장 직후 홈으로 이동했을 때 방금 만든 경로와 자동 생성된
+   * 알림이 그 시간 동안 보이지 않는다.
+   */
+  const invalidateRouteCaches = useCallback((): void => {
+    if (!userId) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.routes.byUser(userId) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.alerts.byUser(userId) });
+  }, [queryClient, userId]);
 
   // Shared route banner
   const [sharedRoute, setSharedRoute] = useState<SharedRouteData | null>(null);
@@ -148,6 +164,16 @@ export function RouteSetupPage(): JSX.Element {
     return cleanup;
   }, [loadRoutes]);
 
+  // 저장 토스트 중 다른 페이지로 이동하면 홈 강제 이동 타이머를 해제
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+        navigateTimerRef.current = null;
+      }
+    };
+  }, []);
+
   // Parse shared route from URL
   useEffect(() => {
     const shared = searchParams.get('shared');
@@ -187,6 +213,7 @@ export function RouteSetupPage(): JSX.Element {
       const saved = await commuteApi.createRoute(dto);
       setExistingRoutes(prev => [...prev, saved]);
       setSharedRoute(null);
+      invalidateRouteCaches();
     } catch {
       setError('경로 가져오기에 실패했습니다.');
     } finally {
@@ -226,8 +253,8 @@ export function RouteSetupPage(): JSX.Element {
   // 정류장 삭제
   const removeStop = useCallback((index: number) => {
     setSelectedStops(prev => {
-      if (prev.length <= 1) {
-        setError('경유지는 최소 1개 필요합니다.');
+      if (prev.length <= 2) {
+        setError('경유지는 최소 2개 필요합니다.');
         return prev;
       }
       return prev.filter((_, i) => i !== index);
@@ -248,39 +275,9 @@ export function RouteSetupPage(): JSX.Element {
     }
   }, []);
 
-  // 체크포인트 생성 헬퍼
-  const createCheckpoints = (stops: SelectedStop[], type: RouteType): CreateCheckpointDto[] => {
-    const checkpoints: CreateCheckpointDto[] = [];
-    let seq = 1;
-    const isToWork = type === 'morning';
-
-    checkpoints.push({
-      sequenceOrder: seq++,
-      name: isToWork ? '집' : '회사',
-      checkpointType: isToWork ? 'home' : 'work',
-      transportMode: 'walk',
-    });
-
-    for (const stop of stops) {
-      checkpoints.push({
-        sequenceOrder: seq++,
-        name: stop.name,
-        checkpointType: stop.transportMode === 'subway' ? 'subway' : 'bus_stop',
-        linkedStationId: stop.transportMode === 'subway' ? stop.id : undefined,
-        linkedBusStopId: stop.transportMode === 'bus' ? stop.id : undefined,
-        lineInfo: stop.line,
-        transportMode: stop.transportMode,
-      });
-    }
-
-    checkpoints.push({
-      sequenceOrder: seq,
-      name: isToWork ? '회사' : '집',
-      checkpointType: isToWork ? 'work' : 'home',
-    });
-
-    return checkpoints;
-  };
+  // 체크포인트 생성 헬퍼 (id 보존 규칙 포함) — route-setup/route-payload.ts
+  const createCheckpoints = (stops: SelectedStop[], type: RouteType): CreateCheckpointDto[] =>
+    buildCheckpoints(stops, type);
 
   // 경로 생성 후 기본 알림 자동 생성
   const autoCreateAlerts = async (route: RouteResponse): Promise<void> => {
@@ -341,21 +338,31 @@ export function RouteSetupPage(): JSX.Element {
       const defaultName = generateRouteName(routeType, selectedStops);
       const finalName = routeName.trim() || defaultName;
 
-      const dto: CreateRouteDto = {
-        userId,
-        name: finalName,
-        routeType,
-        isPreferred: existingRoutes.length === 0,
-        checkpoints: createCheckpoints(selectedStops, routeType),
-      };
-
       if (editingRoute) {
-        await commuteApi.updateRoute(editingRoute.id, dto);
+        // PATCH에는 userId를 담으면 안 된다(서버 forbidNonWhitelisted → 400).
+        // 체크포인트 id를 실어야 도착 기록(CASCADE)이 보존된다.
+        const updateDto = buildUpdateRouteDto({
+          name: finalName,
+          routeType,
+          stops: selectedStops,
+          existingCheckpoints: editingRoute.checkpoints,
+        });
+        await commuteApi.updateRoute(editingRoute.id, updateDto);
         const updatedRoutes = await commuteApi.getUserRoutes(userId);
         setExistingRoutes(updatedRoutes);
         toast.success('경로가 수정되었습니다');
       } else {
-        const saved = await commuteApi.createRoute(dto);
+        const createDto: CreateRouteDto = {
+          userId,
+          name: finalName,
+          routeType,
+          isPreferred: resolvePreferredFlag({
+            isEditing: false,
+            existingRouteCount: existingRoutes.length,
+          }),
+          checkpoints: createCheckpoints(selectedStops, routeType),
+        };
+        const saved = await commuteApi.createRoute(createDto);
         await autoCreateAlerts(saved);
 
         if (routeType === 'morning' && createReverse) {
@@ -380,6 +387,7 @@ export function RouteSetupPage(): JSX.Element {
         }
       }
 
+      invalidateRouteCaches();
       navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '';
@@ -451,6 +459,7 @@ export function RouteSetupPage(): JSX.Element {
         name: cp.name,
         line: cp.lineInfo || '',
         transportMode: cp.checkpointType === 'subway' ? 'subway' as LocalTransportMode : 'bus' as LocalTransportMode,
+        checkpointId: cp.id,
       }));
 
     setSelectedStops(stops);
@@ -488,6 +497,7 @@ export function RouteSetupPage(): JSX.Element {
       await commuteApi.deleteRoute(deleteTarget.id);
       setExistingRoutes(prev => prev.filter(r => r.id !== deleteTarget.id));
       setDeleteTarget(null);
+      invalidateRouteCaches();
     } catch {
       setError('삭제에 실패했습니다.');
     } finally {

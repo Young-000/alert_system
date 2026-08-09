@@ -1,3 +1,5 @@
+import { formatTimeKST, getHoursKST, toDateOnlyKST } from '@domain/utils/kst-date';
+
 export enum CommuteType {
   MORNING = 'morning',
   EVENING = 'evening',
@@ -7,7 +9,14 @@ export class CommuteRecord {
   readonly id: string;
   readonly userId: string;
   readonly alertId?: string;
-  readonly commuteDate: Date;
+  /**
+   * 출퇴근 날짜 (KST 달력 날짜, 'YYYY-MM-DD').
+   *
+   * DB 컬럼이 `date`(날짜 전용)이므로 시각·타임존 개념이 없다. TypeORM도 이 컬럼을
+   * 문자열로 hydrate하므로 문자열이 런타임 실제 타입이다. 프로젝트의 다른 날짜 전용
+   * 필드(`SmartDepartureSnapshot.departureDate`, `StreakDailyLog.recordDate`)와 같은 표현이다.
+   */
+  readonly commuteDate: string;
   readonly commuteType: CommuteType;
   readonly scheduledDeparture?: string;  // TIME format "HH:mm"
   readonly actualDeparture?: Date;
@@ -18,7 +27,7 @@ export class CommuteRecord {
 
   constructor(
     userId: string,
-    commuteDate: Date,
+    commuteDate: Date | string,
     commuteType: CommuteType,
     options?: {
       id?: string;
@@ -33,7 +42,7 @@ export class CommuteRecord {
   ) {
     this.id = options?.id || '';
     this.userId = userId;
-    this.commuteDate = commuteDate;
+    this.commuteDate = toDateOnlyKST(commuteDate);
     this.commuteType = commuteType;
     this.alertId = options?.alertId;
     this.scheduledDeparture = options?.scheduledDeparture;
@@ -51,7 +60,8 @@ export class CommuteRecord {
     transitDelayMinutes?: number
   ): CommuteRecord {
     const now = new Date();
-    const hour = now.getHours();
+    // 서버 TZ는 UTC이므로 getHours()는 KST 오전/오후를 잘못 판정한다 (KST 07:00 = UTC 22:00 전날).
+    const hour = getHoursKST(now);
     const commuteType = hour < 12 ? CommuteType.MORNING : CommuteType.EVENING;
 
     return new CommuteRecord(userId, now, commuteType, {
@@ -64,8 +74,7 @@ export class CommuteRecord {
 
   getActualDepartureTime(): string | undefined {
     if (!this.actualDeparture) return undefined;
-    const hours = this.actualDeparture.getHours().toString().padStart(2, '0');
-    const minutes = this.actualDeparture.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    // 사용자에게 보여줄 시각 — 서버 TZ가 UTC여도 KST로 표기한다.
+    return formatTimeKST(this.actualDeparture);
   }
 }

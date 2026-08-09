@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { SmartDepartureSettingEntity } from './smart-departure-setting.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('smart_departure_snapshots', { schema: 'alert_system' })
 @Index(['userId', 'departureDate'])
@@ -44,7 +45,7 @@ export class SmartDepartureSnapshotEntity {
   @Column({ name: 'prep_time_minutes', type: 'integer' })
   prepTimeMinutes: number;
 
-  @Column({ name: 'optimal_departure_at', type: 'timestamptz' })
+  @Column({ name: 'optimal_departure_at', type: TIMESTAMPTZ })
   optimalDepartureAt: Date;
 
   @Column({ name: 'baseline_travel_min', type: 'integer', nullable: true })
@@ -63,16 +64,17 @@ export class SmartDepartureSnapshotEntity {
   @Column({ type: 'varchar', length: 20, default: 'scheduled' })
   status: string;
 
+  // simple-array는 TypeORM이 하이드레이션 때 배열로 돌려준다 — string으로 선언 금지
   @Column({ name: 'alerts_sent', type: 'simple-array', nullable: true })
-  alertsSent: string; // stored as comma-separated, mapped in repository
+  alertsSent: string[] | null;
 
-  @Column({ name: 'departed_at', type: 'timestamptz', nullable: true })
+  @Column({ name: 'departed_at', type: TIMESTAMPTZ, nullable: true })
   departedAt: Date | null;
 
   @Column({ name: 'schedule_ids', type: 'simple-array', nullable: true })
-  scheduleIds: string; // stored as comma-separated
+  scheduleIds: string[] | null;
 
-  @Column({ name: 'calculated_at', type: 'timestamptz', default: () => 'now()' })
+  @Column({ name: 'calculated_at', type: TIMESTAMPTZ, default: () => 'now()' })
   calculatedAt: Date;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })

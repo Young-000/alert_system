@@ -117,6 +117,12 @@
   text-align: center;
 }
 
+.msettings-error-inline {
+  color: var(--error);
+  font-size: 13px;
+  margin: 0 16px 12px;
+}
+
 /* ─── Section ───────────────────────────────────────── */
 
 .msettings-section {

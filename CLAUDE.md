@@ -343,7 +343,7 @@ VITE_VAPID_PUBLIC_KEY=...
 ### Solapi 설정 (알림톡)
 | 항목 | 값 |
 |------|-----|
-| **API Key** | `NCSUDCVMRTFLTHIY` |
+| **API Key** | `~/.claude/secrets/teamY/infra.env`의 `SOLAPI_API_KEY` 참조 (프로덕션은 SSM `/alert-system/prod/solapi-api-key`) |
 | **PF ID** | `KA01PF260118103514818QktedIWetBs` |
 | **Template ID** | `KA01TP2601181035243285qjwlwSLm5X` |
 

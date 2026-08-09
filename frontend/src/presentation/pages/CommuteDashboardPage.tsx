@@ -26,6 +26,7 @@ export function CommuteDashboardPage(): JSX.Element {
     loadError,
     activeTab,
     setActiveTab,
+    visibleTabs,
     routeAnalytics,
     analyticsError,
     comparisonError,
@@ -104,10 +105,8 @@ export function CommuteDashboardPage(): JSX.Element {
               setActiveTab(tab);
               setSearchParams({ tab }, { replace: true });
             }}
-            stats={stats}
+            visibleTabs={visibleTabs}
             stopwatchRecords={stopwatchRecords}
-            routeAnalytics={routeAnalytics}
-            behaviorAnalytics={behaviorAnalytics}
           />
 
           {activeTab === 'overview' && stats && (

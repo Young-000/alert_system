@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { ChallengeTemplateEntity } from './challenge-template.entity';
+import { TIMESTAMPTZ } from './column-types';
 
 @Entity('user_challenges', { schema: 'alert_system' })
 @Index(['userId', 'status'])
@@ -30,13 +31,13 @@ export class UserChallengeEntity {
   @Column({ type: 'varchar', length: 20, default: 'active' })
   status: string;
 
-  @Column({ name: 'started_at', type: 'timestamptz' })
+  @Column({ name: 'started_at', type: TIMESTAMPTZ })
   startedAt: Date;
 
-  @Column({ name: 'deadline_at', type: 'timestamptz' })
+  @Column({ name: 'deadline_at', type: TIMESTAMPTZ })
   deadlineAt: Date;
 
-  @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
+  @Column({ name: 'completed_at', type: TIMESTAMPTZ, nullable: true })
   completedAt: Date | null;
 
   @Column({ type: 'integer', name: 'current_progress', default: 0 })

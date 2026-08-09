@@ -170,6 +170,20 @@ describe('PatternAnalysisPage', () => {
     expect(screen.getByText('비 영향이 평균보다 2분 적음')).toBeInTheDocument();
   });
 
+  it('비로그인 상태에서 로그인 CTA를 제공한다', () => {
+    // dead-end 금지: 모든 상태의 끝에 다음 행동이 정확히 하나 있어야 한다.
+    localStorage.clear();
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    expect(screen.getByText('로그인이 필요합니다.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '로그인' })).toBeInTheDocument();
+  });
+
   it('탭은 role=tablist과 aria-selected 속성을 갖는다', async () => {
     render(
       <TestProviders>

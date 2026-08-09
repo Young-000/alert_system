@@ -4,11 +4,15 @@ import {
   Post,
   Param,
   Query,
+  Headers,
   HttpCode,
   HttpStatus,
   Logger,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { timingSafeEqual } from 'crypto';
 import { Throttle } from '@nestjs/throttler';
 import { InsightsService } from '@application/services/insights/insights.service';
 import { InsightsAggregationService } from '@application/services/insights/insights-aggregation.service';
@@ -23,6 +27,7 @@ import {
 import { InsightSortBy } from '@domain/repositories/regional-insight.repository';
 import { Public } from '@infrastructure/auth/public.decorator';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
+import { parseBoundedInt, MAX_OFFSET } from '../utils/query-param';
 
 const VALID_SORT_BY: InsightSortBy[] = ['userCount', 'sessionCount', 'avgDuration', 'regionName'];
 
@@ -33,6 +38,7 @@ export class InsightsController {
   constructor(
     private readonly insightsService: InsightsService,
     private readonly aggregationService: InsightsAggregationService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -49,13 +55,10 @@ export class InsightsController {
       ? (sortBy as InsightSortBy)
       : undefined;
 
-    const limit = limitStr ? (parseInt(limitStr, 10) || 20) : 20;
-    const offset = offsetStr ? (parseInt(offsetStr, 10) || 0) : 0;
-
     return this.insightsService.getRegions({
       sortBy: validSortBy,
-      limit: Math.min(limit, 100),
-      offset: Math.max(offset, 0),
+      limit: parseBoundedInt(limitStr, { fallback: 20, min: 1, max: 100 }),
+      offset: parseBoundedInt(offsetStr, { fallback: 0, min: 0, max: MAX_OFFSET }),
     });
   }
 
@@ -103,12 +106,29 @@ export class InsightsController {
   }
 
   /**
-   * Trigger full recalculation of all regional insights (requires auth).
+   * Trigger full recalculation of all regional insights.
+   * Protected by scheduler secret header (admin-only operation).
    */
+  @Public()
   @Post('recalculate')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 1, ttl: 300000 } })
-  async recalculate(): Promise<InsightsRecalculateResponseDto> {
+  async recalculate(
+    @Headers('x-scheduler-secret') schedulerSecret: string,
+  ): Promise<InsightsRecalculateResponseDto> {
+    const expectedSecret = this.configService.get<string>('SCHEDULER_SECRET');
+    if (!expectedSecret || !schedulerSecret) {
+      throw new UnauthorizedException('Authentication failed');
+    }
+
+    const expected = Buffer.from(expectedSecret, 'utf8');
+    const received = Buffer.from(schedulerSecret, 'utf8');
+    if (expected.length !== received.length ||
+        !timingSafeEqual(expected, received)) {
+      this.logger.warn('Invalid scheduler secret for insights recalculate');
+      throw new UnauthorizedException('Authentication failed');
+    }
+
     this.logger.log('Triggering full regional insights recalculation');
 
     const result = await this.aggregationService.recalculateAll();

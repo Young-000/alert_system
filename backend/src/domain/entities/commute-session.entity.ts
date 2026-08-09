@@ -18,6 +18,7 @@ export class CommuteSession {
   readonly status: SessionStatus;
   readonly weatherCondition?: string;
   readonly notes?: string;
+  /** 도착 시각 오름차순. 마지막 원소가 가장 최근 도착이다 (리포지토리가 보장). */
   readonly checkpointRecords: CheckpointRecord[];
   readonly createdAt: Date;
 
