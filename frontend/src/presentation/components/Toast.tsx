@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { cn } from '../utils/cn';
 
 export interface ToastMessage {
@@ -118,9 +118,12 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps): JSX.
 // Toast hook for easy usage
 export function useToast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  // Date.now()만으로는 같은 밀리초에 올라온 두 건이 같은 id가 된다.
+  // id는 목록의 key이자 dismiss 대상이라, 충돌하면 하나를 닫을 때 둘 다 사라진다.
+  const nextIdRef = useRef(0);
 
   const addToast = useCallback((type: ToastMessage['type'], message: string) => {
-    const id = Date.now().toString();
+    const id = `toast-${nextIdRef.current++}`;
     setToasts((prev) => [...prev, { id, type, message }]);
   }, []);
 

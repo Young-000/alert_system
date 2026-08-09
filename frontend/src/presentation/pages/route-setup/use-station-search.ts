@@ -46,6 +46,9 @@ export function useStationSearch(
     if (!query || query.length < 1) {
       setSubwayResults([]);
       setBusResults([]);
+      // 위에서 요청 번호를 올려 진행 중이던 검색을 stale로 만들었으므로
+      // 그 검색의 finally는 isSearching을 내리지 않는다. 여기서 내린다.
+      setIsSearching(false);
       return;
     }
 
