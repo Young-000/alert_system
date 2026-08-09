@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryKeys } from '@infrastructure/query/query-keys';
 import { RouteSetupPage } from './RouteSetupPage';
 import {
   commuteApiClient,
@@ -36,11 +38,18 @@ const mockCommuteApi = commuteApiClient as Mocked<typeof commuteApiClient>;
 const mockGetCommuteApi = getCommuteApiClient as MockedFunction<typeof getCommuteApiClient>;
 const mockAlertApi = alertApiClient as Mocked<typeof alertApiClient>;
 
+let testQueryClient: QueryClient;
+
 function renderPage(): ReturnType<typeof render> {
+  testQueryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <RouteSetupPage />
-    </MemoryRouter>
+    <QueryClientProvider client={testQueryClient}>
+      <MemoryRouter>
+        <RouteSetupPage />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -354,6 +363,43 @@ describe('RouteSetupPage', () => {
 
     await waitFor(() => {
       expect(mockCommuteApi.deleteRoute).toHaveBeenCalledWith('route-1');
+    });
+  });
+
+  it('삭제가 성공하면 홈·알림 화면이 쓰는 경로 캐시를 무효화한다', async () => {
+    const userId = 'test-user-id';
+    localStorage.setItem('userId', userId);
+    mockCommuteApi.getUserRoutes.mockResolvedValue([createMockRoute()]);
+    mockCommuteApi.deleteRoute.mockResolvedValue(undefined);
+
+    renderPage();
+
+    // 홈에서 이미 읽어둔 캐시가 있는 상태를 재현한다
+    testQueryClient.setQueryData(queryKeys.routes.byUser(userId), [createMockRoute()]);
+
+    await waitFor(() => {
+      expect(screen.getByText('강남 출근길')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('경로 삭제')).toBeInTheDocument();
+    });
+
+    const confirmBtn = screen
+      .getAllByRole('button', { name: '삭제' })
+      .find((btn) => btn.classList.contains('btn-danger'));
+    fireEvent.click(confirmBtn!);
+
+    await waitFor(() => {
+      expect(mockCommuteApi.deleteRoute).toHaveBeenCalledWith('route-1');
+    });
+
+    // 무효화하지 않으면 staleTime(10분) 동안 홈에 삭제된 경로가 남는다
+    await waitFor(() => {
+      expect(
+        testQueryClient.getQueryState(queryKeys.routes.byUser(userId))?.isInvalidated
+      ).toBe(true);
     });
   });
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { userApiClient } from '@infrastructure/api';
 import type { Alert } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
@@ -59,6 +60,7 @@ export interface UseSettingsReturn {
 export function useSettings(): UseSettingsReturn {
   const navigate = useNavigate();
   const { userId, phoneNumber } = useAuth();
+  const queryClient = useQueryClient();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -147,6 +149,10 @@ export function useSettings(): UseSettingsReturn {
     try {
       await userApiClient.deleteAllData(userId);
       setShowDeleteAllData(false);
+      // 통근 기록·행동 이벤트가 서버에서 사라졌다. 캐시를 그대로 두면 대시보드·리포트·
+      // 인사이트가 지운 기록으로 계속 그려진다 — 어떤 화면이 무엇을 캐시했는지 세지 않고
+      // 전부 무효화한다(삭제는 드물고, 남는 잔상의 대가가 크다).
+      void queryClient.invalidateQueries();
       setPrivacyMessage('추적 데이터가 삭제되었습니다.');
     } catch {
       setPrivacyMessage('데이터 삭제에 실패했습니다.');
