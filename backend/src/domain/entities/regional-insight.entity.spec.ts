@@ -90,25 +90,41 @@ describe('RegionalInsight', () => {
   });
 
   describe('isStale', () => {
+    // 경계가 정확히 30일이라 시계를 고정하지 않으면 테스트 실행 중 흐른 시간만큼
+    // 30일을 넘겨버린다 (30.0000000116 > 30). 고정 시각 기준으로 판정한다.
+    const NOW = new Date('2026-08-10T00:00:00.000Z');
+    const daysBefore = (days: number): Date =>
+      new Date(NOW.getTime() - days * 24 * 60 * 60 * 1000);
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(NOW);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it('30일 이내 업데이트면 stale이 아니다', () => {
       const insight = createInsight({ lastCalculatedAt: new Date() });
       expect(insight.isStale()).toBe(false);
     });
 
     it('30일 이상 지났으면 stale이다', () => {
-      const thirtyOneDaysAgo = new Date();
-      thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
-
-      const insight = createInsight({ lastCalculatedAt: thirtyOneDaysAgo });
+      const insight = createInsight({ lastCalculatedAt: daysBefore(31) });
       expect(insight.isStale()).toBe(true);
     });
 
     it('정확히 30일인 경우 stale이 아니다', () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const insight = createInsight({ lastCalculatedAt: thirtyDaysAgo });
+      const insight = createInsight({ lastCalculatedAt: daysBefore(30) });
       expect(insight.isStale()).toBe(false);
+    });
+
+    it('30일에서 1밀리초만 지나도 stale이다', () => {
+      const insight = createInsight({
+        lastCalculatedAt: new Date(daysBefore(30).getTime() - 1),
+      });
+      expect(insight.isStale()).toBe(true);
     });
   });
 

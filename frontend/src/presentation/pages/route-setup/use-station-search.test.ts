@@ -97,4 +97,35 @@ describe('useStationSearch', () => {
 
     expect(result.current.subwayResults).toEqual([]);
   });
+
+  it('검색어를 모두 지우면 검색 중 표시가 풀린다', async () => {
+    // 빈 검색어로 들어온 호출은 요청 번호만 올리고 곧장 빠져나간다. 그 사이
+    // 떠 있던 요청은 stale로 판정돼 finally에서 isSearching을 내리지 않으므로,
+    // 아무도 내리지 않으면 빈 입력창 위에 "검색 중..."이 영구히 남는다.
+    const pending = deferred<SubwayStation[]>();
+    searchStations.mockReturnValueOnce(pending.promise);
+
+    const { result } = renderHook(() =>
+      useStationSearch('subway', [], vi.fn()),
+    );
+
+    act(() => result.current.handleSearchChange('강남'));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(result.current.isSearching).toBe(true);
+
+    act(() => result.current.handleSearchChange(''));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    await act(async () => {
+      pending.resolve([station('강남', '2호선')]);
+      await pending.promise;
+    });
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false));
+    expect(result.current.subwayResults).toEqual([]);
+  });
 });

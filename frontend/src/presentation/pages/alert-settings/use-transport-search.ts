@@ -53,6 +53,9 @@ export function useTransportSearch(
         setSearchResults([]);
         setGroupedStations([]);
         setSearchError(null);
+        // 진행 중이던 검색은 abort돼 스스로 isSearching을 내리지 않는다.
+        // 여기서 내리지 않으면 빈 입력창 위에 "검색 중..."이 영구히 남는다.
+        setIsSearching(false);
         return;
       }
 
