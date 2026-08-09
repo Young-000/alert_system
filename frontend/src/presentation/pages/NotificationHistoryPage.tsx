@@ -317,6 +317,12 @@ export function NotificationHistoryPage(): JSX.Element {
           <p>불러오는 중...</p>
         </div>
       )}
+      {isLoading && logs.length > 0 && (
+        <div className="settings-loading" role="status" aria-live="polite" style={{ padding: '0.5rem 0' }}>
+          <span className="spinner spinner-sm" aria-hidden="true" />
+          <p>새로고침 중...</p>
+        </div>
+      )}
     </main>
   );
 }
