@@ -171,6 +171,9 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
     try {
       await alertApiClient.toggleAlert(alert.id);
+      // 낙관적 변경은 로컬 state에만 남는다. 캐시를 그대로 두면 staleTime(2분) 안에
+      // 이 화면을 다시 열었을 때 옛 enabled 값이 그려져 껐던 알림이 켜진 것처럼 보인다.
+      await reloadAlerts();
     } catch {
       setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
       setError('알림 상태 변경에 실패했습니다.');

@@ -50,6 +50,29 @@ describe('WeatherController', () => {
       expect(weatherApiClient.getWeatherWithForecast).not.toHaveBeenCalled();
     });
 
+    it('지구 밖 좌표(위도 999) 시 에러 응답 반환', async () => {
+      const result = await controller.getCurrent('999', '126.978');
+
+      expect(result).toEqual({ error: 'Invalid coordinates' });
+      expect(weatherApiClient.getWeatherWithForecast).not.toHaveBeenCalled();
+    });
+
+    it('지구 밖 좌표(경도 -181) 시 에러 응답 반환', async () => {
+      const result = await controller.getCurrent('37.5665', '-181');
+
+      expect(result).toEqual({ error: 'Invalid coordinates' });
+      expect(weatherApiClient.getWeatherWithForecast).not.toHaveBeenCalled();
+    });
+
+    it('경계값 좌표(위도 90, 경도 180)는 그대로 조회', async () => {
+      const mockWeather = { temperature: -30, condition: '눈' };
+      weatherApiClient.getWeatherWithForecast.mockResolvedValue(mockWeather as any);
+
+      await controller.getCurrent('90', '180');
+
+      expect(weatherApiClient.getWeatherWithForecast).toHaveBeenCalledWith(90, 180);
+    });
+
     it('weatherApiClient 미주입 시 에러 응답 반환', async () => {
       const module = await Test.createTestingModule({
         controllers: [WeatherController],

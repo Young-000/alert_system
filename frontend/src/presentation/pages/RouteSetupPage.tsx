@@ -13,6 +13,8 @@ import {
   type CheckpointType,
 } from '@infrastructure/api/commute-api.client';
 import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from '@infrastructure/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@infrastructure/query/query-keys';
 import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
@@ -33,6 +35,19 @@ export function RouteSetupPage(): JSX.Element {
   const { userId } = useAuth();
   const commuteApi = getCommuteApiClient();
   const toast = useToast();
+  const queryClient = useQueryClient();
+
+  /**
+   * 이 화면은 경로 목록을 자체 state로 들고 있어 저장 결과가 여기서는 바로 보인다.
+   * 하지만 홈·알림·설정은 react-query 캐시(routes 10분, alerts 2분)를 읽으므로,
+   * 무효화하지 않으면 저장 직후 홈으로 이동했을 때 방금 만든 경로와 자동 생성된
+   * 알림이 그 시간 동안 보이지 않는다.
+   */
+  const invalidateRouteCaches = useCallback((): void => {
+    if (!userId) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.routes.byUser(userId) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.alerts.byUser(userId) });
+  }, [queryClient, userId]);
 
   // Shared route banner
   const [sharedRoute, setSharedRoute] = useState<SharedRouteData | null>(null);
@@ -198,6 +213,7 @@ export function RouteSetupPage(): JSX.Element {
       const saved = await commuteApi.createRoute(dto);
       setExistingRoutes(prev => [...prev, saved]);
       setSharedRoute(null);
+      invalidateRouteCaches();
     } catch {
       setError('경로 가져오기에 실패했습니다.');
     } finally {
@@ -371,6 +387,7 @@ export function RouteSetupPage(): JSX.Element {
         }
       }
 
+      invalidateRouteCaches();
       navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '';
@@ -480,6 +497,7 @@ export function RouteSetupPage(): JSX.Element {
       await commuteApi.deleteRoute(deleteTarget.id);
       setExistingRoutes(prev => prev.filter(r => r.id !== deleteTarget.id));
       setDeleteTarget(null);
+      invalidateRouteCaches();
     } catch {
       setError('삭제에 실패했습니다.');
     } finally {
