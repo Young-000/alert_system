@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApiClient } from '@infrastructure/api';
-import { safeSetItem } from '@infrastructure/storage/safe-storage';
+import {
+  safeSetItem,
+  saveCredentials,
+  CREDENTIAL_STORAGE_ERROR,
+} from '@infrastructure/storage/safe-storage';
 import { notifyAuthChange } from '@presentation/hooks/useAuth';
 
 type AuthMode = 'login' | 'register';
@@ -55,8 +59,11 @@ export function LoginPage(): JSX.Element {
       try {
         if (mode === 'register') {
           const response = await authApiClient.register({ email, password, name, phoneNumber });
-          safeSetItem('userId', response.user.id);
-          safeSetItem('accessToken', response.accessToken);
+          // 토큰을 저장하지 못하면 이동해봤자 곧바로 로그인 화면으로 되튕긴다.
+          if (!saveCredentials(response.accessToken, response.user.id)) {
+            setError(CREDENTIAL_STORAGE_ERROR);
+            return;
+          }
           safeSetItem('userName', name);
           if (phoneNumber) safeSetItem('phoneNumber', phoneNumber);
           // 신규 회원은 온보딩으로 이동
@@ -65,8 +72,10 @@ export function LoginPage(): JSX.Element {
           return;
         } else {
           const response = await authApiClient.login({ email, password });
-          safeSetItem('userId', response.user.id);
-          safeSetItem('accessToken', response.accessToken);
+          if (!saveCredentials(response.accessToken, response.user.id)) {
+            setError(CREDENTIAL_STORAGE_ERROR);
+            return;
+          }
           if (response.user.name) safeSetItem('userName', response.user.name);
           if (response.user.phoneNumber) safeSetItem('phoneNumber', response.user.phoneNumber);
         }

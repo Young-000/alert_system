@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { safeSetItem } from '@infrastructure/storage/safe-storage';
+import {
+  safeSetItem,
+  saveCredentials,
+  CREDENTIAL_STORAGE_ERROR,
+} from '@infrastructure/storage/safe-storage';
 import { notifyAuthChange } from '@presentation/hooks/useAuth';
 
 function getCallbackParams(): URLSearchParams {
@@ -46,8 +50,14 @@ export function AuthCallbackPage(): JSX.Element {
       }
 
       if (token && userId) {
-        safeSetItem('accessToken', token);
-        safeSetItem('userId', userId);
+        // 저장에 실패하면 '성공' 화면을 보여준 뒤 곧바로 로그인으로 되튕긴다.
+        // 그 왕복은 사용자에게 원인이 보이지 않으므로 여기서 멈추고 사유를 말한다.
+        if (!saveCredentials(token, userId)) {
+          setStatus('error');
+          setErrorMessage(CREDENTIAL_STORAGE_ERROR);
+          timerId = setTimeout(() => navigate('/login'), 3000);
+          return;
+        }
 
         const email = params.get('email');
         const name = params.get('name');
