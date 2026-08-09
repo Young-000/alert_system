@@ -2,6 +2,22 @@
 
 > 비자명한 교훈만 1줄로 상단 append. 자명한 요약 금지.
 
+- 2026-08-10 **테스트가 실패를 재현하는 방식이 환경에 의존하면 로컬 GREEN·CI RED로 갈린다.**
+  `setupTests.ts`는 Node 25+의 깨진 built-in localStorage일 때만 자체 `MemoryStorage`로 대체한다.
+  그래서 `vi.spyOn(window.localStorage, 'setItem')`은 로컬(Node 25)에서만 먹고 CI(Node 20)의
+  jsdom Proxy Storage는 가로채지 못한다(`Storage.prototype` 스파이는 정반대로 갈린다).
+  **저장 실패는 모듈 경계 mock 또는 `vi.stubGlobal('localStorage', ...)`로 재현한다.**
+
+- 2026-08-10 **실패를 boolean으로 알려주는 래퍼는 호출부가 안 보면 없는 것만 못하다.**
+  `safeSetItem`은 시크릿 모드·용량 초과를 false로 반환하도록 만들어졌는데 호출부 4곳 전부가
+  무시해, Google 로그인이 "로그인 성공!"을 띄운 뒤 토큰 없이 이동해 로그인 화면으로 되튕겼다.
+  **반환값을 쓰라고 만든 API는 도입 시점에 호출부 전수(grep)로 확인한다.**
+
+- 2026-08-10 **배치 API는 한 건의 영구 실패로 큐 전체를 영원히 막을 수 있다.**
+  `processBatch`가 이벤트별 try/catch 없이 던지는데 모바일은 업로드 실패 시 큐를 보존하므로,
+  삭제된 장소를 참조하는 이벤트 하나가 오프라인 큐를 영구 정지시켰다(에러 표시도 없이).
+  **클라이언트가 재시도하는 배치 엔드포인트는 건별 실패를 흡수하고 사유를 응답에 실어야 한다.**
+
 - 2026-08-09 **자체 state로 목록을 들고 있는 화면은 캐시 미갱신 결함을 스스로 숨긴다.**
   `RouteSetupPage`는 저장 결과를 `existingRoutes`에 직접 넣어 그 화면에서는 멀쩡히 보이지만,
   홈·알림·설정이 읽는 react-query 캐시(routes **10분**, alerts 2분)는 손대지 않아 저장 직후
