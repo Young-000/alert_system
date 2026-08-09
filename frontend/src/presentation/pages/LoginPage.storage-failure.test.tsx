@@ -1,7 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginPage } from './LoginPage';
 import { authApiClient } from '@infrastructure/api';
+import { saveCredentials } from '@infrastructure/storage/safe-storage';
 import { MemoryRouter } from 'react-router-dom';
+import type * as SafeStorage from '@infrastructure/storage/safe-storage';
 import type { Mocked } from 'vitest';
 
 /**
@@ -18,6 +20,14 @@ vi.mock('@infrastructure/api', () => ({
   },
 }));
 
+// 저장 실패는 모듈 경계에서 재현한다.
+// localStorage 인스턴스에 스파이를 걸면 환경에 따라(jsdom Proxy vs setupTests의 MemoryStorage)
+// 가로채기 여부가 갈려 CI에서만 깨진다.
+vi.mock('@infrastructure/storage/safe-storage', async () => {
+  const actual = await vi.importActual<typeof SafeStorage>('@infrastructure/storage/safe-storage');
+  return { ...actual, saveCredentials: vi.fn() };
+});
+
 const mockAuthApiClient = authApiClient as Mocked<typeof authApiClient>;
 
 const mockNavigate = vi.fn();
@@ -27,21 +37,11 @@ vi.mock('react-router-dom', async () => ({
 }));
 
 describe('LoginPage - 자격증명 저장 실패', () => {
-  let setItemSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    // 시크릿 모드/저장소 차단 재현.
-    // setupTests.ts가 localStorage를 자체 MemoryStorage 인스턴스로 대체하므로
-    // Storage.prototype이 아니라 인스턴스에 스파이를 건다.
-    setItemSpy = vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
-      throw new Error('QuotaExceededError');
-    });
-  });
-
-  afterEach(() => {
-    setItemSpy.mockRestore();
+    // 시크릿 모드/저장소 차단 재현
+    vi.mocked(saveCredentials).mockReturnValue(false);
   });
 
   const submitLogin = (): void => {

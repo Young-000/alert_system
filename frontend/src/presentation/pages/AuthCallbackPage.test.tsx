@@ -1,6 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthCallbackPage } from './AuthCallbackPage';
+import { saveCredentials } from '@infrastructure/storage/safe-storage';
+import type * as SafeStorage from '@infrastructure/storage/safe-storage';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
@@ -8,15 +10,26 @@ vi.mock('react-router-dom', async () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// 기본은 실제 구현을 쓰고, 저장 실패 케이스만 모듈 경계에서 뒤집는다.
+// localStorage 인스턴스 스파이는 환경에 따라 가로채기가 갈려 CI에서만 깨진다.
+vi.mock('@infrastructure/storage/safe-storage', async () => {
+  const actual = await vi.importActual<typeof SafeStorage>('@infrastructure/storage/safe-storage');
+  return { ...actual, saveCredentials: vi.fn(actual.saveCredentials) };
+});
+
 const setCallbackHash = (hash: string): void => {
   window.history.replaceState(null, '', `/auth/callback${hash}`);
 };
 
 describe('AuthCallbackPage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     localStorage.clear();
     setCallbackHash('');
+    const actual = await vi.importActual<typeof SafeStorage>(
+      '@infrastructure/storage/safe-storage'
+    );
+    vi.mocked(saveCredentials).mockImplementation(actual.saveCredentials);
   });
 
   it('토큰과 userId를 저장하고 성공 화면을 보여준다', async () => {
@@ -46,17 +59,8 @@ describe('AuthCallbackPage', () => {
   });
 
   describe('자격증명 저장 실패 (시크릿 모드·저장소 차단)', () => {
-    let setItemSpy: ReturnType<typeof vi.spyOn>;
-
     beforeEach(() => {
-      // setupTests.ts가 localStorage를 자체 MemoryStorage로 대체하므로 인스턴스에 스파이를 건다.
-      setItemSpy = vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
-        throw new Error('QuotaExceededError');
-      });
-    });
-
-    afterEach(() => {
-      setItemSpy.mockRestore();
+      vi.mocked(saveCredentials).mockReturnValue(false);
     });
 
     it('저장하지 못하면 성공 화면을 보여주지 않는다', async () => {
