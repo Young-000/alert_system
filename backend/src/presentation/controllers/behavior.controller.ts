@@ -39,7 +39,11 @@ import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { NotificationOpenedDto } from '@application/dto/notification-opened.dto';
 import { TrackEventDto, DepartureConfirmedDto } from '@application/dto/behavior.dto';
-import { parseBoundedInt } from '../utils/query-param';
+import {
+  parseBoundedInt,
+  parseConditionDate,
+  parseConditionInt,
+} from '../utils/query-param';
 
 @Controller('behavior')
 @UseGuards(AuthGuard('jwt'))
@@ -199,9 +203,11 @@ export class BehaviorController {
 
     const conditions: CurrentConditions = {};
     if (weather) conditions.weather = weather;
-    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10) || 0;
+    if (transitDelay) {
+      conditions.transitDelayMinutes = parseConditionInt(transitDelay, 'transitDelay');
+    }
     if (isRaining) conditions.isRaining = isRaining === 'true';
-    if (temperature) conditions.temperature = parseInt(temperature, 10) || 0;
+    if (temperature) conditions.temperature = parseConditionInt(temperature, 'temperature');
 
     return this.predictOptimalDepartureUseCase.execute(userId, alertId, conditions);
   }
@@ -270,9 +276,11 @@ export class BehaviorController {
     } = {};
 
     if (weather) conditions.weather = weather;
-    if (temperature) conditions.temperature = parseInt(temperature, 10) || 0;
-    if (transitDelay) conditions.transitDelayMinutes = parseInt(transitDelay, 10) || 0;
-    if (date) conditions.targetDate = new Date(date);
+    if (temperature) conditions.temperature = parseConditionInt(temperature, 'temperature');
+    if (transitDelay) {
+      conditions.transitDelayMinutes = parseConditionInt(transitDelay, 'transitDelay');
+    }
+    if (date) conditions.targetDate = parseConditionDate(date, 'date');
 
     return this.predictionEngine.predict(userId, conditions);
   }
