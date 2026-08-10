@@ -478,4 +478,48 @@ describe('CommuteDashboardPage', () => {
       expect(screen.getByText('요일별 패턴')).toBeInTheDocument();
     });
   });
+
+  // --- Deep link (?tab=) ---
+
+  /**
+   * `?tab=`으로 들어온 뒤 사용자가 다른 탭을 고르면, 그 선택이 유지돼야 한다.
+   *
+   * URL 탭을 적용하는 effect는 `behaviorAnalytics`를 의존성으로 들고 있어
+   * 행동 분석 응답이 늦게 도착하면 다시 실행된다. 이때 탭이 URL 값으로
+   * 되돌아가지 않는 이유는 탭 클릭이 URL도 함께 갱신하기 때문이다
+   * (`CommuteDashboardPage.tsx:106`의 `setSearchParams({ tab })`).
+   * 그 동기화가 빠지면 사용자가 아무것도 누르지 않았는데 탭이 튀므로
+   * 두 곳이 함께 움직인다는 사실을 여기서 고정한다.
+   */
+  it('?tab= 딥링크로 들어와도 사용자가 고른 탭이 늦은 응답에 되돌아가지 않는다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getStats.mockResolvedValue(mockStatsWithData);
+
+    // 행동 분석만 늦게 도착시킨다 — 사용자가 탭을 고른 뒤에 resolve된다.
+    let resolveAnalytics!: (value: typeof mockBehaviorAnalytics) => void;
+    mockBehaviorApi.getAnalytics.mockReturnValue(
+      new Promise(resolve => { resolveAnalytics = resolve; }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/commute/dashboard?tab=history']}>
+        <CommuteDashboardPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '기록' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    // 사용자가 '전체 요약'으로 옮긴다.
+    fireEvent.click(screen.getByRole('tab', { name: '전체 요약' }));
+    expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+
+    // 이제서야 행동 분석 응답이 도착한다.
+    await act(async () => {
+      resolveAnalytics(mockBehaviorAnalytics);
+    });
+
+    expect(screen.getByRole('tab', { name: '전체 요약' })).toHaveAttribute('aria-selected', 'true');
+  });
 });

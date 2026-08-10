@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { BehaviorController } from './behavior.controller';
 import { TrackBehaviorUseCase } from '@application/use-cases/track-behavior.use-case';
 import { PredictOptimalDepartureUseCase } from '@application/use-cases/predict-optimal-departure.use-case';
@@ -492,6 +492,31 @@ describe('BehaviorController', () => {
           OWNER_ID, undefined, undefined, undefined, undefined, mockRequest(OTHER_USER_ID),
         ),
       ).rejects.toThrow(ForbiddenException);
+
+      expect(mockPredictionEngine.predict).not.toHaveBeenCalled();
+    });
+
+    /**
+     * 해석 불가한 날짜는 Invalid Date가 되고, 거기서 뽑은 요일은 NaN이라
+     * 요일 보정이 통째로 건너뛰어진다 (`prediction-engine.service.ts:93`).
+     * 그렇게 나간 예측은 정상 응답과 구분되지 않으므로 엔진까지 가기 전에 끊는다.
+     */
+    it('해석 불가한 date는 예측을 돌리지 않고 400으로 거절한다', async () => {
+      await expect(
+        controller.getPrediction(
+          OWNER_ID, undefined, undefined, undefined, 'garbage', mockRequest(OWNER_ID),
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockPredictionEngine.predict).not.toHaveBeenCalled();
+    });
+
+    it('해석 불가한 temperature는 0℃로 바꾸지 않고 400으로 거절한다', async () => {
+      await expect(
+        controller.getPrediction(
+          OWNER_ID, undefined, 'abc', undefined, undefined, mockRequest(OWNER_ID),
+        ),
+      ).rejects.toThrow(BadRequestException);
 
       expect(mockPredictionEngine.predict).not.toHaveBeenCalled();
     });

@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+
 /**
  * 쿼리스트링 정수 파라미터 파싱.
  *
@@ -45,6 +47,48 @@ export function parseCoordinate(
 
   const parsed = parseFloat(raw);
   if (Number.isNaN(parsed) || Math.abs(parsed) > limit) return undefined;
+
+  return parsed;
+}
+
+/**
+ * 예측 조건으로 쓰이는 정수 파라미터.
+ *
+ * limit/offset과 달리 이 값들은 폴백이 성립하지 않는다. `parseInt(raw, 10) || 0`은
+ * 해석 실패를 0으로 바꾸는데, 여기서 0은 "안 보냄"이 아니라 **영하 0도**·**지연 0분**이라는
+ * 구체적인 조건이다. `?temperature=abc`가 0°C 예측으로 조용히 바뀌면 사용자는 요청한 적
+ * 없는 답을 정상 결과로 받는다. 그래서 클램프도 폴백도 하지 않고 거절한다.
+ *
+ * 호출부가 `if (raw)`로 감싸 "보냈을 때만" 부르므로, 빈 문자열도 여기 오면 잘못된 입력이다.
+ */
+export function parseConditionInt(raw: string, paramName: string): number {
+  const parsed = Number(raw);
+
+  if (raw.trim() === '' || !Number.isFinite(parsed)) {
+    throw new BadRequestException(
+      `${paramName}은(는) 숫자여야 합니다. (받은 값: "${raw}")`,
+    );
+  }
+
+  return Math.trunc(parsed);
+}
+
+/**
+ * 예측 조건으로 쓰이는 날짜 파라미터.
+ *
+ * `new Date('garbage')`는 던지지 않고 Invalid Date를 만든다. 거기서 뽑은 요일은 NaN이고,
+ * NaN은 어떤 요일과도 같지 않으므로 요일 보정 세그먼트 탐색이 **항상 빗나간다**
+ * (`prediction-engine.service.ts:93`). 보정이 통째로 건너뛰어진 예측이 정상 응답과
+ * 구분되지 않는 형태로 나가므로, Invalid Date는 여기서 끊는다.
+ */
+export function parseConditionDate(raw: string, paramName: string): Date {
+  const parsed = new Date(raw);
+
+  if (Number.isNaN(parsed.getTime())) {
+    throw new BadRequestException(
+      `${paramName}은(는) 해석 가능한 날짜여야 합니다. (받은 값: "${raw}")`,
+    );
+  }
 
   return parsed;
 }
