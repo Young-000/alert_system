@@ -28,6 +28,9 @@ import type { ChecklistItem } from './weather-utils';
 import { getActiveRoute } from './route-utils';
 import type { TransitArrivalInfo } from './route-utils';
 import { computeNextAlert } from './alert-schedule-utils';
+import { safeSessionGetItem, safeSessionSetItem } from '@infrastructure/storage/safe-storage';
+
+const ROUTE_REC_DISMISSED_KEY = 'routeRecDismissed';
 
 export interface UseHomeDataReturn {
   isLoggedIn: boolean;
@@ -47,7 +50,7 @@ export interface UseHomeDataReturn {
   departurePrediction: DeparturePrediction | null;
   routeRecommendation: RouteRecommendationResponse | null;
   routeRecDismissed: boolean;
-  setRouteRecDismissed: (v: boolean) => void;
+  dismissRouteRecommendation: () => void;
   routes: RouteResponse[];
   activeRoute: RouteResponse | null;
   forceRouteType: 'auto' | 'morning' | 'evening';
@@ -126,7 +129,9 @@ export function useHomeData(): UseHomeDataReturn {
   const [forceRouteType, setForceRouteType] = useState<'auto' | 'morning' | 'evening'>('auto');
   const [departurePrediction, setDeparturePrediction] = useState<DeparturePrediction | null>(null);
   const [routeRecommendation, setRouteRecommendation] = useState<RouteRecommendationResponse | null>(null);
-  const [routeRecDismissed, setRouteRecDismissed] = useState(() => sessionStorage.getItem('routeRecDismissed') === 'true');
+  const [routeRecDismissed, setRouteRecDismissed] = useState(
+    () => safeSessionGetItem(ROUTE_REC_DISMISSED_KEY) === 'true',
+  );
   const [checkedItems, setCheckedItems] = useState<Set<string>>(getCheckedItems);
 
   // Initialize behavior collector
@@ -196,6 +201,12 @@ export function useHomeData(): UseHomeDataReturn {
     return getWeatherChecklist(weather, airQuality);
   }, [weather, airQuality]);
 
+  // 닫힘 상태와 그 영속화를 한곳에서 처리한다 — 화면은 "닫았다"만 알면 된다.
+  const dismissRouteRecommendation = useCallback((): void => {
+    setRouteRecDismissed(true);
+    safeSessionSetItem(ROUTE_REC_DISMISSED_KEY, 'true');
+  }, []);
+
   const handleChecklistToggle = useCallback((id: string) => {
     setCheckedItems(prev => {
       const next = new Set(prev);
@@ -241,7 +252,7 @@ export function useHomeData(): UseHomeDataReturn {
     departurePrediction,
     routeRecommendation,
     routeRecDismissed,
-    setRouteRecDismissed,
+    dismissRouteRecommendation,
     routes,
     activeRoute,
     forceRouteType,
