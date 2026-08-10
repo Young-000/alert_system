@@ -1,5 +1,33 @@
 # Alert System - 진행 기록
 
+## [2026-08-10] Auto E2E Review 16:00 — 5건 수정 (DB 2 + FE 3)
+
+### Completed
+- fix(db): **`users` 컬럼 단위 DDL 갭** — `UserEntity`가 선언하는 `phone_number`·`google_id`를
+  만드는 `.sql`이 리포지토리에 없었다. 프로덕션은 `synchronize=false`이고 TypeORM은 선언된
+  모든 컬럼을 SELECT에 넣으므로 users를 읽는 모든 경로(로그인·회원가입·알림 발송 대상 조회)가
+  42703으로 죽는다. `password_hash` NOT NULL도 해제(소셜 가입은 비밀번호 없음).
+  `20260810_add_missing_user_columns.sql` 추가 — **적용은 사람 게이트라 파일만 생성**
+- chore(db): `scheduler-setup.sql` 삭제 — "SQL Editor에서 실행하세요"라고 지시하면서
+  스키마 미한정 `CREATE TABLE`로 public에 객체를 만든다(절대 규칙 위반). EventBridge 전환으로
+  내용은 이미 폐기, 코드 참조 0건
+- fix(home): **저장소가 막힌 브라우저에서 홈이 통째로 죽는 경로 3곳** — `saveCheckedItems`,
+  `sessionStorage` 읽기(useState 이니셜라이저·홈 진입만 해도 터짐), 쓰기(추천 카드 닫기).
+  전부 렌더 단계 또는 setState 업데이터 안이라 던지면 ErrorBoundary가 앱 전체를 대체했다.
+  `safe-storage.ts`에 세션 대응 추가 + 닫힘 상태·영속화를 훅이 함께 소유하도록 정리
+- 검사 방법 자체를 강화: 엔티티↔DDL **컬럼 단위** 대조(2→0), public 스키마 `CREATE TABLE`(1→0),
+  RLS 커버리지(39/39)
+
+### Verification
+- FE: lint 0 · tsc 0 · build 성공 · 765 passed (758 → 765, +7)
+- BE: lint 0 · build 성공 · 1638 passed (프로덕션 코드 변경 0줄 → ECS 배포 불필요)
+- 번들 gzip 261.7KB < 500KB
+
+### Next Steps
+- [ ] `20260810_add_missing_user_columns.sql` 프로덕션 적용 (사람 게이트)
+- [ ] branch protection required checks 이름 정정 (`CI / frontend` → `frontend`)
+- [ ] `useAuth.getSnapshot()` 저장소 가드 여부 — 제품 판단 필요 (관찰 기록)
+
 ## [2026-08-08] Auto E2E Review 16:00 — 1건 수정 (Critical)
 
 ### Completed
