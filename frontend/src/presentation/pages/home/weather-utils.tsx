@@ -1,3 +1,4 @@
+import { safeSetItem } from '@infrastructure/storage/safe-storage';
 import type { WeatherData } from '@infrastructure/api';
 
 // ─── Constants ─────────────────────────────────────
@@ -117,7 +118,9 @@ export function getCheckedItems(): Set<string> {
 }
 
 export function saveCheckedItems(checked: Set<string>): void {
-  localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify({
+  // 호출부가 setState 업데이터 안이라 여기서 던지면 렌더 도중 예외가 된다.
+  // 읽기와 같은 계약 — 저장소가 막혀도 체크 자체는 되게 둔다.
+  safeSetItem(CHECKLIST_STORAGE_KEY, JSON.stringify({
     date: getTodayKey(),
     checked: Array.from(checked),
   }));

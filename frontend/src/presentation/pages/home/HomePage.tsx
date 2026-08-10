@@ -128,10 +128,7 @@ export function HomePage(): JSX.Element {
       {data.routeRecommendation && data.routeRecommendation.recommendation && !data.routeRecDismissed && (
         <RouteRecommendation
           recommendation={data.routeRecommendation}
-          onDismiss={() => {
-            data.setRouteRecDismissed(true);
-            sessionStorage.setItem('routeRecDismissed', 'true');
-          }}
+          onDismiss={data.dismissRouteRecommendation}
         />
       )}
 

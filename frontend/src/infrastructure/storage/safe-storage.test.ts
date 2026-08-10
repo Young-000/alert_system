@@ -1,4 +1,9 @@
-import { safeSetItem, saveCredentials } from './safe-storage';
+import {
+  safeSetItem,
+  saveCredentials,
+  safeSessionGetItem,
+  safeSessionSetItem,
+} from './safe-storage';
 
 /**
  * `vi.stubGlobal`로 localStorage 자체를 갈아끼운다.
@@ -63,6 +68,49 @@ describe('safe-storage', () => {
       stubStorage(setItem);
 
       expect(saveCredentials('token-1', 'user-1')).toBe(false);
+    });
+  });
+
+  /**
+   * sessionStorage는 접근 자체가 막힐 수 있다(쿠키/사이트 데이터 차단 시 SecurityError).
+   * 읽기가 렌더 중에 일어나므로, 던지면 화면 전체가 죽는다.
+   */
+  describe('safeSessionGetItem', () => {
+    const stubSession = (getItem: (key: string) => string | null): void => {
+      vi.stubGlobal('sessionStorage', { getItem, setItem: vi.fn(), removeItem: vi.fn(), clear: vi.fn() });
+    };
+
+    it('저장된 값을 그대로 돌려준다', () => {
+      stubSession(() => 'true');
+      expect(safeSessionGetItem('k')).toBe('true');
+    });
+
+    it('저장소 접근이 막히면 던지지 않고 null을 반환한다', () => {
+      stubSession(() => {
+        throw new Error('SecurityError');
+      });
+      expect(safeSessionGetItem('k')).toBeNull();
+    });
+  });
+
+  describe('safeSessionSetItem', () => {
+    const stubSession = (setItem: (key: string, value: string) => void): void => {
+      vi.stubGlobal('sessionStorage', { setItem, getItem: vi.fn(), removeItem: vi.fn(), clear: vi.fn() });
+    };
+
+    it('저장에 성공하면 true를 반환한다', () => {
+      const setItem = vi.fn();
+      stubSession(setItem);
+
+      expect(safeSessionSetItem('k', 'v')).toBe(true);
+      expect(setItem).toHaveBeenCalledWith('k', 'v');
+    });
+
+    it('저장이 실패하면 던지지 않고 false를 반환한다', () => {
+      stubSession(() => {
+        throw new Error('QuotaExceededError');
+      });
+      expect(safeSessionSetItem('k', 'v')).toBe(false);
     });
   });
 });

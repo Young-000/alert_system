@@ -5,6 +5,8 @@ import {
   getGreeting,
   getWeatherAdvice,
   getTodayKey,
+  getCheckedItems,
+  saveCheckedItems,
   RAIN_PROBABILITY_THRESHOLD,
   COLD_TEMP_THRESHOLD,
   HOT_TEMP_THRESHOLD,
@@ -330,5 +332,61 @@ describe('getTodayKey', () => {
   it('returns YYYY-M-D format', () => {
     vi.setSystemTime(new Date(2026, 1, 17));
     expect(getTodayKey()).toBe('2026-2-17');
+  });
+});
+
+// ─── 체크리스트 저장 (저장소가 막힌 브라우저) ────────────────────────────────
+
+/**
+ * saveCheckedItems는 setCheckedItems 업데이터 안에서 호출된다.
+ * 여기서 던지면 렌더 도중 예외가 되어 ErrorBoundary가 앱 전체를 대체한다.
+ * 읽기(getCheckedItems)는 이미 가드돼 있으므로 쓰기도 같은 계약이어야 한다.
+ */
+describe('체크리스트 저장소 접근', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const stubStorage = (overrides: Partial<Storage>): void => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      ...overrides,
+    });
+  };
+
+  it('저장이 실패해도 던지지 않는다', () => {
+    stubStorage({
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+
+    expect(() => saveCheckedItems(new Set(['umbrella']))).not.toThrow();
+  });
+
+  it('읽기가 실패해도 던지지 않고 빈 집합을 준다', () => {
+    stubStorage({
+      getItem: () => {
+        throw new Error('SecurityError');
+      },
+    });
+
+    expect(getCheckedItems()).toEqual(new Set());
+  });
+
+  it('저장한 항목은 같은 날 다시 읽힌다', () => {
+    let saved: string | null = null;
+    stubStorage({
+      setItem: (_k: string, v: string) => {
+        saved = v;
+      },
+      getItem: () => saved,
+    });
+
+    saveCheckedItems(new Set(['umbrella', 'mask']));
+    expect(getCheckedItems()).toEqual(new Set(['umbrella', 'mask']));
   });
 });
