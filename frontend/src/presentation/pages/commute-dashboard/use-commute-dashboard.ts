@@ -112,6 +112,12 @@ export function useCommuteDashboard(): UseCommuteDashboardReturn {
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
+      // 지난 시도에서 남은 문구를 먼저 비운다. 이 세 개는 각각 독립된 하위 요청이
+      // 실패했을 때만 채워지는데, 지우는 곳이 없으면 재시도가 성공해도 화면에는
+      // 방금 불러온 데이터 위에 "불러올 수 없습니다"가 그대로 붙어 있게 된다.
+      setAnalyticsError('');
+      setComparisonError('');
+      setBehaviorError('');
       try {
         const [statsData, historyData, analyticsData] = await Promise.all([
           commuteApi.getStats(userId, 30),
