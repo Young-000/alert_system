@@ -7,6 +7,7 @@ import {
   FindTipsOptions,
 } from '@domain/repositories/community-tip.repository';
 import { CommunityTip } from '@domain/entities/community-tip.entity';
+import { getTodayKST, toDateKST } from '@domain/utils/kst-date';
 
 @Injectable()
 export class CommunityTipRepositoryImpl implements ICommunityTipRepository {
@@ -48,19 +49,12 @@ export class CommunityTipRepositoryImpl implements ICommunityTipRepository {
   }
 
   async countUserTipsToday(userId: string): Promise<number> {
-    // KST = UTC+9 offset
-    const now = new Date();
-    const kstOffset = 9 * 60 * 60 * 1000;
-    const kstNow = new Date(now.getTime() + kstOffset);
-    const kstStartOfDay = new Date(
-      Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate()),
-    );
-    const utcStartOfDay = new Date(kstStartOfDay.getTime() - kstOffset);
-
+    // "오늘"의 경계는 KST 자정이다. 오프셋 산술을 여기서 다시 짜면
+    // kst-date의 정의와 갈라질 수 있으므로 공용 헬퍼만 쓴다.
     return this.repository.count({
       where: {
         authorId: userId,
-        createdAt: MoreThanOrEqual(utcStartOfDay),
+        createdAt: MoreThanOrEqual(toDateKST(getTodayKST())),
       },
     });
   }

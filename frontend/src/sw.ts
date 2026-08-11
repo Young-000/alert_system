@@ -8,6 +8,7 @@ import {
   NetworkFirst,
 } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { isCacheableApiPath } from './sw-cache-rules';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -46,11 +47,7 @@ registerRoute(
 
 // Runtime caching: API responses (stale-while-revalidate for weather/transit)
 registerRoute(
-  ({ url }) =>
-    url.pathname.startsWith('/api/weather') ||
-    url.pathname.startsWith('/api/air-quality') ||
-    url.pathname.startsWith('/api/subway/stations/search') ||
-    url.pathname.startsWith('/api/bus/stops/search'),
+  ({ url }) => isCacheableApiPath(url.pathname),
   new StaleWhileRevalidate({
     cacheName: 'api-cache',
     plugins: [
