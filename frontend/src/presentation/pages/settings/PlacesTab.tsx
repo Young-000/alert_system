@@ -119,8 +119,15 @@ export function PlacesTab(): JSX.Element {
     }
   }, [deleteTarget, deleteMutation]);
 
+  // 등록·삭제와 같은 계약: 실패하면 actionError로 표면화한다.
+  // 전역 MutationCache.onError는 텔레메트리 로깅만 하므로 여기서 알리지 않으면
+  // 사용자에게는 "눌렀는데 아무 일도 안 일어남"으로만 보인다.
   const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
+    if (toggleMutation.isPending) return;
+    setActionError('');
+    toggleMutation.mutate(id, {
+      onError: () => setActionError('장소 상태 변경에 실패했습니다.'),
+    });
   }, [toggleMutation]);
 
   if (isLoading) {

@@ -81,3 +81,39 @@ describe('MissionSettingsPage — 순서 변경', () => {
     expect(mockMissionApiClient.reorder).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('MissionSettingsPage — 활성/비활성 토글', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMissionApiClient.getMissions.mockResolvedValue([
+      mission('m1', '첫 번째 미션', 0),
+    ]);
+  });
+
+  it('토글이 실패하면 사용자에게 알린다', async () => {
+    // 순서 변경(reorderError)·삭제(deleteError)·저장(saveError)은 실패를 표면화하는데
+    // 토글만 fire-and-forget이라 조용히 삼켰다. 전역 onError는 로깅만 한다.
+    mockMissionApiClient.toggleActive.mockRejectedValue(new Error('500'));
+    renderPage();
+
+    const toggle = await screen.findByRole('switch', { name: '첫 번째 미션 비활성화' });
+    await userEvent.click(toggle);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('상태 변경에 실패');
+  });
+
+  it('토글이 성공하면 에러를 띄우지 않는다', async () => {
+    mockMissionApiClient.toggleActive.mockResolvedValue(
+      mission('m1', '첫 번째 미션', 0),
+    );
+    renderPage();
+
+    const toggle = await screen.findByRole('switch', { name: '첫 번째 미션 비활성화' });
+    await userEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(mockMissionApiClient.toggleActive).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
