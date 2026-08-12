@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SmartDepartureTab } from './SmartDepartureTab';
 import { TestProviders } from '../../../test-utils';
 
@@ -89,5 +90,74 @@ describe('SmartDepartureTab', () => {
       expect(screen.getByText('등록된 스마트 출발 설정이 없습니다')).toBeInTheDocument();
     });
     expect(screen.queryByText('먼저 경로를 등록해주세요')).not.toBeInTheDocument();
+  });
+});
+
+describe('SmartDepartureTab — ON/OFF 토글', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    commuteApi.getUserRoutes.mockResolvedValue([
+      { id: 'route-1', name: '출근 경로', routeType: 'morning' },
+    ] as never);
+    mockSmartDepartureApi.getSettings.mockResolvedValue([
+      {
+        id: 'setting-1',
+        userId: 'user-1',
+        routeId: 'route-1',
+        departureType: 'commute',
+        arrivalTarget: '09:00',
+        prepTimeMinutes: 15,
+        isEnabled: true,
+        activeDays: [1, 2, 3, 4, 5],
+        preAlerts: [10],
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+      },
+    ] as never);
+  });
+
+  it('토글이 실패하면 실패 사실을 화면에 알린다', async () => {
+    // 생성/삭제는 actionError 배너를 쓰는데 토글만 조용히 삼켰다.
+    mockSmartDepartureApi.toggleSetting.mockRejectedValue(new Error('500'));
+    const user = userEvent.setup();
+
+    renderTab();
+    const toggle = await screen.findByRole('button', { name: '출근 비활성화' });
+
+    await user.click(toggle);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '설정 상태 변경에 실패했습니다.',
+      );
+    });
+  });
+
+  it('토글이 성공하면 에러를 띄우지 않는다', async () => {
+    mockSmartDepartureApi.toggleSetting.mockResolvedValue({ id: 'setting-1' } as never);
+    const user = userEvent.setup();
+
+    renderTab();
+    const toggle = await screen.findByRole('button', { name: '출근 비활성화' });
+
+    await user.click(toggle);
+
+    await waitFor(() => {
+      expect(mockSmartDepartureApi.toggleSetting).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('요청이 끝나기 전 다시 눌러도 중복 요청을 보내지 않는다', async () => {
+    mockSmartDepartureApi.toggleSetting.mockReturnValue(new Promise(() => {}));
+    const user = userEvent.setup();
+
+    renderTab();
+    const toggle = await screen.findByRole('button', { name: '출근 비활성화' });
+
+    await user.click(toggle);
+    await user.click(toggle);
+
+    expect(mockSmartDepartureApi.toggleSetting).toHaveBeenCalledTimes(1);
   });
 });

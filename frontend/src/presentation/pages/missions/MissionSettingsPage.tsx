@@ -263,6 +263,7 @@ export function MissionSettingsPage(): JSX.Element {
   const [deleteError, setDeleteError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [reorderError, setReorderError] = useState('');
+  const [toggleError, setToggleError] = useState('');
 
   const handleCancelDelete = useCallback(() => {
     setDeletingMission(null);
@@ -339,10 +340,16 @@ export function MissionSettingsPage(): JSX.Element {
     [editingMission, modalType, createMutation, updateMutation],
   );
 
+  // 순서 변경·삭제·저장과 같은 계약: 실패를 표면화한다.
+  // 전역 MutationCache.onError는 텔레메트리 로깅만 하므로 여기서 알리지 않으면
+  // 미션을 껐다고 믿은 채 다음 날 그대로 알림을 받는다.
   const handleToggle = useCallback(
     (id: string) => {
       if (toggleMutation.isPending) return;
-      toggleMutation.mutate(id);
+      setToggleError('');
+      toggleMutation.mutate(id, {
+        onError: () => setToggleError('상태 변경에 실패했습니다. 다시 시도해주세요.'),
+      });
     },
     [toggleMutation],
   );
@@ -498,6 +505,12 @@ export function MissionSettingsPage(): JSX.Element {
       {reorderError ? (
         <p className="msettings-error-inline" role="alert">
           {reorderError}
+        </p>
+      ) : null}
+
+      {toggleError ? (
+        <p className="msettings-error-inline" role="alert">
+          {toggleError}
         </p>
       ) : null}
 

@@ -141,8 +141,15 @@ export function SmartDepartureTab(): JSX.Element {
     }
   }, [deleteTarget, deleteMutation]);
 
+  // 생성·삭제와 같은 계약: 실패하면 actionError로 표면화한다.
+  // 전역 MutationCache.onError는 텔레메트리 로깅만 하므로 여기서 알리지 않으면
+  // 켜고 끈 결과가 서버에 반영되지 않은 채 화면만 그대로 남는다.
   const handleToggle = useCallback((id: string) => {
-    toggleMutation.mutate(id);
+    if (toggleMutation.isPending) return;
+    setActionError('');
+    toggleMutation.mutate(id, {
+      onError: () => setActionError('설정 상태 변경에 실패했습니다.'),
+    });
   }, [toggleMutation]);
 
   if (isLoading) {
