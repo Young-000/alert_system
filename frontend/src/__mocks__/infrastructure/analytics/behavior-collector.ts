@@ -14,6 +14,11 @@ export enum BehaviorEventType {
 }
 
 export const behaviorCollector = {
+  // 실물(behavior-collector.ts)이 노출하는 메서드는 전부 있어야 한다.
+  // initialize는 로그인 상태에서만 호출돼 오래 빠져 있어도 드러나지 않았다.
+  initialize: vi.fn(),
+  setTrackingEnabled: vi.fn(),
+  isAvailable: vi.fn(() => false),
   track: vi.fn(),
   flush: vi.fn(),
   setUserId: vi.fn(),

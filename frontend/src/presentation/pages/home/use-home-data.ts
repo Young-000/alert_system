@@ -142,12 +142,22 @@ export function useHomeData(): UseHomeDataReturn {
   }, [userId]);
 
   // A-1: Load optimal departure prediction
+  //
+  // 이 효과는 set만 하고 clear를 하지 않으면 안 된다. 예측은 "지금 켜져 있는 알림"과
+  // "지금 날씨"를 전제로 계산된 값이라, 전제가 사라졌는데 값이 남으면 화면이
+  // 근거 없는 출발 시각을 계속 단정한다 (알림을 다 꺼도 카드가 남는 식).
   useEffect(() => {
     let isMounted = true;
-    if (!userId || alerts.length === 0 || !weather) return;
+    if (!userId || alerts.length === 0 || !weather) {
+      setDeparturePrediction(null);
+      return;
+    }
 
     const enabledAlert = alerts.find(a => a.enabled);
-    if (!enabledAlert) return;
+    if (!enabledAlert) {
+      setDeparturePrediction(null);
+      return;
+    }
 
     behaviorApiClient.getOptimalDeparture(userId, enabledAlert.id, {
       weather: weather.condition,
@@ -155,26 +165,37 @@ export function useHomeData(): UseHomeDataReturn {
       isRaining: getWeatherType(weather.condition) === 'rainy',
     })
       .then(prediction => {
-        if (isMounted && prediction && prediction.confidence >= DEPARTURE_PREDICTION_CONFIDENCE_THRESHOLD) {
-          setDeparturePrediction(prediction);
-        }
+        if (!isMounted) return;
+        // 신뢰도 미달 = 서버가 "모르겠다"고 답한 것. 옛 확신을 남겨두면 안 된다.
+        setDeparturePrediction(
+          prediction && prediction.confidence >= DEPARTURE_PREDICTION_CONFIDENCE_THRESHOLD
+            ? prediction
+            : null,
+        );
       })
+      // 조회 실패는 "예측이 없다"가 아니다 — 직전 값을 그대로 둔다.
       .catch(err => console.warn('Failed to load departure prediction:', err));
 
     return () => { isMounted = false; };
   }, [userId, alerts, weather]);
 
-  // A-3: Load weather route recommendation
+  // A-3: Load weather route recommendation (위와 같은 이유로 전제가 깨지면 지운다)
   useEffect(() => {
     let isMounted = true;
-    if (!userId || routes.length < 2 || !weather) return;
+    if (!userId || routes.length < 2 || !weather) {
+      setRouteRecommendation(null);
+      return;
+    }
 
     const commuteApi = getCommuteApiClient();
     commuteApi.getWeatherRouteRecommendation(userId, weather.condition)
       .then(rec => {
-        if (isMounted && rec.confidence > ROUTE_RECOMMENDATION_CONFIDENCE_THRESHOLD && rec.recommendation) {
-          setRouteRecommendation(rec);
-        }
+        if (!isMounted) return;
+        setRouteRecommendation(
+          rec.confidence > ROUTE_RECOMMENDATION_CONFIDENCE_THRESHOLD && rec.recommendation
+            ? rec
+            : null,
+        );
       })
       .catch(err => console.warn('Failed to load route recommendation:', err));
 
