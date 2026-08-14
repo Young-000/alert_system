@@ -1977,6 +1977,7 @@
 }
 
 .search-clear {
+  position: relative;
   background: #e5e5ea;
   border: none;
   min-width: 32px;
@@ -1988,6 +1989,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 32px 원은 손가락에 작다. 원의 크기는 그대로 두고 누를 수 있는 영역만 44px로 넓힌다. */
+.search-clear::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
 }
 
 .apple-searching {
@@ -2521,6 +2530,7 @@
 }
 
 .sortable-stop-remove {
+  position: relative;
   background: none;
   border: none;
   color: var(--ink-muted);
@@ -2532,6 +2542,13 @@
   justify-content: center;
   cursor: pointer;
   transition: color 0.2s;
+}
+
+/* 드래그 핸들(.drag-handle-btn)과 같은 기준 — 보이는 크기는 두고 히트 영역만 44px. */
+.sortable-stop-remove::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
 }
 
 .sortable-stop-remove:hover {
