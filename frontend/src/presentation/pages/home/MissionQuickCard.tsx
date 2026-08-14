@@ -4,7 +4,7 @@ import { useDailyStatusQuery, useWeeklyStatsQuery, useMissionStreakQuery } from 
 
 export function MissionQuickCard(): JSX.Element | null {
   const { userId } = useAuth();
-  const { data: dailyStatus, isLoading } = useDailyStatusQuery();
+  const { data: dailyStatus, isLoading, isError } = useDailyStatusQuery();
   const { data: weeklyStats } = useWeeklyStatsQuery();
   const { data: streakData } = useMissionStreakQuery();
 
@@ -12,6 +12,11 @@ export function MissionQuickCard(): JSX.Element | null {
   // 미션 수가 확정되기 전에는 아무것도 그리지 않는다.
   // 로딩 중 0으로 읽으면 미션이 있는 사용자에게 설정 유도 화면이 깜빡인다.
   if (isLoading) return null;
+  // 조회 실패도 data가 undefined다 — 그대로 세면 "미션 0개"가 되어,
+  // 미션을 이미 만들어 둔 사용자에게 설정 유도 화면을 띄운다.
+  // 실패는 "미션이 없다"가 아니므로 아무 주장도 하지 않는다.
+  // (이전 응답이 캐시에 남아 있으면 그건 그대로 보여준다)
+  if (isError && !dailyStatus) return null;
 
   // 집계 수치는 미션 배열에서 직접 센다. GET /missions/daily는 배열과
   // completionRate만 내려주므로, 서버가 보내주지 않는 집계 필드를 읽으면
