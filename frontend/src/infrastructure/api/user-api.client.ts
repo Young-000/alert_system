@@ -11,9 +11,17 @@ export interface User {
   };
 }
 
+/**
+ * POST /users 요청 본문.
+ * 서버 CreateUserDto(backend: application/dto/create-user.dto.ts)는
+ * email·password·name·phoneNumber를 전부 필수로 요구한다.
+ * 제약: password 6~72자 · name 최대 50자 · phoneNumber `01012345678` 형식.
+ */
 export interface CreateUserDto {
   email: string;
+  password: string;
   name: string;
+  phoneNumber: string;
   location?: {
     address: string;
     lat: number;

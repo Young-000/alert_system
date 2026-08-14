@@ -474,6 +474,8 @@ export const briefingApiClient = {
     advices: [],
     weather: null,
     airQuality: null,
+    transit: { subway: null, bus: null },
+    departure: null,
     contextLabel: '출근 브리핑',
     summary: '',
     updatedAt: new Date().toISOString(),
@@ -482,16 +484,35 @@ export const briefingApiClient = {
 
 export type AdviceSeverity = 'info' | 'warning' | 'danger';
 
+/** 화면에서 로컬 조립하는 칩 — 서버 응답 타입이 아니다 (BriefingAdvice와 구분) */
 export interface AdviceChip {
   emoji: string;
   text: string;
   severity: AdviceSeverity;
 }
 
+export type AdviceCategory =
+  | 'clothing'
+  | 'umbrella'
+  | 'mask'
+  | 'transit'
+  | 'temperature'
+  | 'wind';
+
+export interface BriefingAdvice {
+  category: AdviceCategory;
+  severity: AdviceSeverity;
+  icon: string;
+  message: string;
+  detail?: string;
+}
+
 export interface BriefingResponse {
-  advices: AdviceChip[];
+  advices: BriefingAdvice[];
   weather: unknown;
   airQuality: unknown;
+  transit: unknown;
+  departure: unknown;
   contextLabel: string;
   summary: string;
   updatedAt: string;

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { MissionQuickCard } from './MissionQuickCard';
 import { missionApiClient } from '@infrastructure/api';
 import type { DailyStatus, MissionWithRecord } from '@infrastructure/api';
@@ -131,5 +131,48 @@ describe('MissionQuickCard', () => {
 
     expect(await screen.findByText('미션을 설정해보세요!')).toBeInTheDocument();
     expect(screen.queryByText(/오늘의 미션/)).not.toBeInTheDocument();
+  });
+
+  it('조회에 실패했을 때 미션이 없다고 단정하지 않는다', async () => {
+    // 실패해도 data는 undefined다. 그대로 세면 "미션 0개"가 되어,
+    // 미션을 이미 만들어 둔 사용자가 서버 오류 때 설정 유도 화면을 본다.
+    mockMissionApiClient.getDailyStatus.mockRejectedValue(new Error('네트워크 오류'));
+
+    const { container } = render(
+      <TestProviders>
+        <MissionQuickCard />
+      </TestProviders>,
+    );
+
+    await waitFor(() => {
+      expect(mockMissionApiClient.getDailyStatus).toHaveBeenCalled();
+    });
+    // 실패 상태가 정착될 때까지 흘려보낸다 (부정 단언은 즉시 통과하므로 대기가 필요하다)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(screen.queryByText('미션을 설정해보세요!')).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('조회에 실패해도 직전 응답이 남아 있으면 그대로 보여준다', async () => {
+    mockMissionApiClient.getDailyStatus.mockResolvedValue(dailyStatus());
+
+    const { rerender } = render(
+      <TestProviders>
+        <MissionQuickCard />
+      </TestProviders>,
+    );
+    expect(await screen.findByText('오늘의 미션 1/3')).toBeInTheDocument();
+
+    mockMissionApiClient.getDailyStatus.mockRejectedValue(new Error('네트워크 오류'));
+    rerender(
+      <TestProviders>
+        <MissionQuickCard />
+      </TestProviders>,
+    );
+
+    expect(await screen.findByText('오늘의 미션 1/3')).toBeInTheDocument();
   });
 });

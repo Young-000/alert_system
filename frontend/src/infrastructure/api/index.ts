@@ -85,6 +85,8 @@ export type {
 } from './mission-api.client';
 export { BriefingApiClient } from './briefing-api.client';
 export type {
-  AdviceSeverity, AdviceChip, BriefingWeatherData,
-  BriefingAirQualityData, BriefingResponse,
+  AdviceSeverity, AdviceChip, AdviceCategory, BriefingAdvice,
+  BriefingWeatherData, BriefingAirQualityData,
+  BriefingSubwayData, BriefingBusData, BriefingTransitData,
+  BriefingDepartureData, BriefingResponse,
 } from './briefing-api.client';
