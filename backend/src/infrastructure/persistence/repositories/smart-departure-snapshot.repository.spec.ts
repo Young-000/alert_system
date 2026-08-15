@@ -12,6 +12,13 @@ import { SmartDepartureSnapshot } from '@domain/entities/smart-departure-snapsho
  * 하이드레이션 시점에 string[]으로 변환한다. string 취급으로 `.split()`을
  * 걸면 모든 조회 경로가 죽는다. setting 리포지토리 spec과 같은 계열.
  */
+/**
+ * ALL_ENTITIES(38개) 메타데이터 빌드 + synchronize는 부하가 걸린 러너에서
+ * jest 기본 훅 제한(5초)을 넘길 수 있다. 넘기면 beforeAll이 중단돼
+ * 이 describe의 테스트가 전부 실패하므로 명시적으로 여유를 준다.
+ */
+const DB_SETUP_TIMEOUT_MS = 30_000;
+
 describe('SmartDepartureSnapshotRepositoryImpl (DB 왕복 하이드레이션)', () => {
   let dataSource: DataSource;
   let repository: SmartDepartureSnapshotRepositoryImpl;
@@ -53,7 +60,7 @@ describe('SmartDepartureSnapshotRepositoryImpl (DB 왕복 하이드레이션)', 
       preAlerts: ['30', '10', '0'],
     });
     settingId = setting.id;
-  });
+  }, DB_SETUP_TIMEOUT_MS);
 
   afterAll(async () => {
     await dataSource.destroy();

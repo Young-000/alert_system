@@ -14,6 +14,13 @@ import { MissionScore } from '@domain/entities/mission-score.entity';
  * 값"이 된다 → 미션 2개 이상인 사용자는 스트릭이 매일 1로 리셋된다.
  * (어제 5 → 오늘 전부 완료해도 6이 아니라 1)
  */
+/**
+ * ALL_ENTITIES(38개) 메타데이터 빌드 + synchronize는 부하가 걸린 러너에서
+ * jest 기본 훅 제한(5초)을 넘길 수 있다. 넘기면 beforeAll이 중단돼
+ * 이 describe의 테스트가 전부 실패하므로 명시적으로 여유를 준다.
+ */
+const DB_SETUP_TIMEOUT_MS = 30_000;
+
 describe('MissionRepositoryImpl.findLatestStreak (DB 왕복)', () => {
   let dataSource: DataSource;
   let repository: MissionRepositoryImpl;
@@ -61,7 +68,7 @@ describe('MissionRepositoryImpl.findLatestStreak (DB 왕복)', () => {
         streakDay: 0,
       }),
     );
-  });
+  }, DB_SETUP_TIMEOUT_MS);
 
   afterAll(async () => {
     await dataSource.destroy();
