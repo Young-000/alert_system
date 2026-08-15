@@ -219,7 +219,14 @@ export class ScheduleDepartureAlertsUseCase {
     }
   }
 
+  /**
+   * 스케줄 이름은 그룹 안에서 유일해야 한다. UUID 앞 8자만 쓰면 32비트라
+   * 서로 다른 사용자의 스냅샷이 같은 이름을 만들 수 있고, 그때
+   * CreateSchedule은 ConflictException을 던진다 — 호출부가 그 예외를 로그만
+   * 남기고 넘기므로 한쪽 사용자의 알림이 조용히 생성되지 않는다.
+   * 전체 UUID를 쓴다 (`dep-` + 36 + `-` + 분 + `m` ≈ 45자, 이름 상한 64자 이내).
+   */
   private getScheduleName(snapshotId: string, preAlertMinutes: number): string {
-    return `dep-${snapshotId.slice(0, 8)}-${preAlertMinutes}m`;
+    return `dep-${snapshotId}-${preAlertMinutes}m`;
   }
 }
