@@ -13,12 +13,15 @@ vi.mock('@infrastructure/api', () => ({
   },
 }));
 
+const alertsQueryState = { data: [] as unknown[], isLoading: false, isError: false, refetch: vi.fn() };
+const routesQueryState = { data: [] as unknown[], isLoading: false, isError: false, refetch: vi.fn() };
+
 vi.mock('@infrastructure/query/use-alerts-query', () => ({
-  useAlertsQuery: () => ({ data: [], isLoading: false }),
+  useAlertsQuery: () => alertsQueryState,
 }));
 
 vi.mock('@infrastructure/query/use-routes-query', () => ({
-  useRoutesQuery: () => ({ data: [], isLoading: false }),
+  useRoutesQuery: () => routesQueryState,
 }));
 
 vi.mock('@infrastructure/push/push-manager', () => ({
@@ -54,6 +57,50 @@ function createWrapper() {
 describe('useSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    alertsQueryState.isError = false;
+    routesQueryState.isError = false;
+  });
+
+  describe('목록 조회 실패', () => {
+    // 실패해도 `data ?? []`가 빈 배열을 내놓기 때문에, 에러를 따로 알리지 않으면
+    // 저장된 경로·알림이 멀쩡히 있는 사용자에게 화면이 "없어요"라고 단언한다.
+    it('경로 조회가 실패하면 loadError로 알린다', () => {
+      routesQueryState.isError = true;
+      const { wrapper } = createWrapper();
+
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      expect(result.current.loadError).toBe('경로와 알림을 불러오지 못했어요');
+    });
+
+    it('알림 조회가 실패하면 loadError로 알린다', () => {
+      alertsQueryState.isError = true;
+      const { wrapper } = createWrapper();
+
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      expect(result.current.loadError).toBe('경로와 알림을 불러오지 못했어요');
+    });
+
+    it('둘 다 성공하면 loadError가 비어 있다', () => {
+      const { wrapper } = createWrapper();
+
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      expect(result.current.loadError).toBe('');
+    });
+
+    it('retryLoad는 두 조회를 모두 다시 부른다', () => {
+      const { wrapper } = createWrapper();
+
+      const { result } = renderHook(() => useSettings(), { wrapper });
+      act(() => {
+        result.current.retryLoad();
+      });
+
+      expect(alertsQueryState.refetch).toHaveBeenCalledTimes(1);
+      expect(routesQueryState.refetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('handleDeleteAllData', () => {

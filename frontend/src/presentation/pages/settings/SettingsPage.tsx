@@ -9,6 +9,17 @@ import { AppTab } from './AppTab';
 import { PlacesTab } from './PlacesTab';
 import { SmartDepartureTab } from './SmartDepartureTab';
 
+function LoadErrorNotice({ message, onRetry }: { message: string; onRetry: () => void }): JSX.Element {
+  return (
+    <div className="notice error" role="alert">
+      <p>{message}</p>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={onRetry}>
+        다시 시도
+      </button>
+    </div>
+  );
+}
+
 export function SettingsPage(): JSX.Element {
   const settings = useSettings();
 
@@ -80,12 +91,20 @@ export function SettingsPage(): JSX.Element {
               onLogout={settings.handleLogout}
             />
           )}
-          {settings.activeTab === 'routes' && (
-            <RoutesTab routeCount={settings.routes.length} />
-          )}
-          {settings.activeTab === 'alerts' && (
-            <AlertsTab alertCount={settings.alerts.length} />
-          )}
+          {/* 조회 실패는 개수 0으로 흘러들어온다. 그대로 그리면 "없어요"가 되어
+              저장된 경로·알림이 지워진 것처럼 보이므로, 실패는 실패라고 말한다. */}
+          {settings.activeTab === 'routes' &&
+            (settings.loadError ? (
+              <LoadErrorNotice message={settings.loadError} onRetry={settings.retryLoad} />
+            ) : (
+              <RoutesTab routeCount={settings.routes.length} />
+            ))}
+          {settings.activeTab === 'alerts' &&
+            (settings.loadError ? (
+              <LoadErrorNotice message={settings.loadError} onRetry={settings.retryLoad} />
+            ) : (
+              <AlertsTab alertCount={settings.alerts.length} />
+            ))}
           {settings.activeTab === 'places' && <PlacesTab />}
           {settings.activeTab === 'departure' && <SmartDepartureTab />}
           {settings.activeTab === 'app' && (
