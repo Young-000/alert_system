@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { userApiClient } from '@infrastructure/api';
@@ -27,6 +27,8 @@ export interface UseSettingsReturn {
   alerts: Alert[];
   routes: RouteResponse[];
   isLoading: boolean;
+  loadError: string;
+  retryLoad: () => void;
 
   // Local data reset
   showLocalDataReset: boolean;
@@ -72,6 +74,14 @@ export function useSettings(): UseSettingsReturn {
   const alerts = alertsQuery.data ?? [];
   const routes = routesQuery.data ?? [];
   const isLoading = alertsQuery.isLoading || routesQuery.isLoading;
+  // 조회가 실패해도 `?? []`가 빈 배열을 내놓는다. 이걸 그대로 개수로 넘기면 화면이
+  // "등록된 경로가 없어요"라고 단언해, 경로가 멀쩡히 있는 사용자에게 지워졌다고 말한다.
+  const loadError =
+    alertsQuery.isError || routesQuery.isError ? '경로와 알림을 불러오지 못했어요' : '';
+  const retryLoad = useCallback(() => {
+    void alertsQuery.refetch();
+    void routesQuery.refetch();
+  }, [alertsQuery, routesQuery]);
 
   // Local data reset
   const [showLocalDataReset, setShowLocalDataReset] = useState(false);
@@ -199,6 +209,8 @@ export function useSettings(): UseSettingsReturn {
     alerts,
     routes,
     isLoading,
+    loadError,
+    retryLoad,
     showLocalDataReset,
     setShowLocalDataReset,
     resetSuccess,
