@@ -10,6 +10,7 @@ import {
 } from '@infrastructure/query';
 import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { LoadErrorNotice } from '../../components/LoadErrorNotice';
 import type { SmartDepartureSetting, DepartureType } from '@infrastructure/api';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -78,11 +79,28 @@ function SettingCard({
 
 export function SmartDepartureTab(): JSX.Element {
   const { userId } = useAuth();
-  const { data: settings, isLoading: isLoadingSettings } = useSmartDepartureSettingsQuery(!!userId);
-  const { data: routes, isLoading: isLoadingRoutes } = useRoutesQuery(userId || '');
+  const {
+    data: settings,
+    isLoading: isLoadingSettings,
+    isError: isSettingsError,
+    refetch: refetchSettings,
+  } = useSmartDepartureSettingsQuery(!!userId);
+  const {
+    data: routes,
+    isLoading: isLoadingRoutes,
+    isError: isRoutesError,
+    refetch: refetchRoutes,
+  } = useRoutesQuery(userId || '');
   // 경로 응답 전에는 빈 상태를 확정할 수 없다 — 경로가 있는 사용자에게
   // "먼저 경로를 등록해주세요"가 잘못 스쳐 보이기 때문이다.
   const isLoading = isLoadingSettings || isLoadingRoutes;
+  // 같은 이유로 조회가 실패한 뒤에도 빈 상태를 확정하면 안 된다.
+  // 둘 중 어느 쪽이 실패해도 화면은 사실과 다른 빈 상태를 그리게 된다.
+  const isLoadError = isSettingsError || isRoutesError;
+  const retryLoad = useCallback(() => {
+    if (isSettingsError) void refetchSettings();
+    if (isRoutesError) void refetchRoutes();
+  }, [isSettingsError, isRoutesError, refetchSettings, refetchRoutes]);
   const createMutation = useCreateSmartDepartureMutation();
   const deleteMutation = useDeleteSmartDepartureMutation();
   const toggleMutation = useToggleSmartDepartureMutation();
@@ -245,7 +263,12 @@ export function SmartDepartureTab(): JSX.Element {
           </div>
         )}
 
-        {!routes || routes.length === 0 ? (
+        {isLoadError ? (
+          <LoadErrorNotice
+            message="스마트 출발 설정을 불러오지 못했습니다."
+            onRetry={retryLoad}
+          />
+        ) : !routes || routes.length === 0 ? (
           <div className="settings-empty">
             <span aria-hidden="true">🗺️</span>
             <p>먼저 경로를 등록해주세요</p>

@@ -1,6 +1,7 @@
 import { PageHeader } from '../../components/PageHeader';
 import { AuthRequired } from '../../components/AuthRequired';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { LoadErrorNotice } from '../../components/LoadErrorNotice';
 import { useSettings } from './use-settings';
 import { ProfileTab } from './ProfileTab';
 import { RoutesTab } from './RoutesTab';
@@ -8,17 +9,6 @@ import { AlertsTab } from './AlertsTab';
 import { AppTab } from './AppTab';
 import { PlacesTab } from './PlacesTab';
 import { SmartDepartureTab } from './SmartDepartureTab';
-
-function LoadErrorNotice({ message, onRetry }: { message: string; onRetry: () => void }): JSX.Element {
-  return (
-    <div className="notice error" role="alert">
-      <p>{message}</p>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={onRetry}>
-        다시 시도
-      </button>
-    </div>
-  );
-}
 
 export function SettingsPage(): JSX.Element {
   const settings = useSettings();
