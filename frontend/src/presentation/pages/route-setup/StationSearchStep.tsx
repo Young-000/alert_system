@@ -9,13 +9,17 @@ interface StationSearchStepProps {
   routeType: RouteType;
   searchQuery: string;
   isSearching: boolean;
+  /** 경로 저장·검증 등 화면 전체의 오류. 검색과 무관하므로 재시도를 붙이지 않는다. */
   error: string;
+  /** 역·정류장 검색 자체가 실패했을 때만. 재시도 대상이 명확하다. */
+  searchError: string;
   groupedSubwayResults: GroupedStation[];
   busResults: BusStop[];
   onSearchChange: (value: string) => void;
   onClearSearch: () => void;
   onStationClick: (grouped: GroupedStation) => void;
   onBusStopSelect: (stop: BusStop) => void;
+  onRetrySearch: () => void;
   onStepChange: (step: SetupStep) => void;
 }
 
@@ -26,12 +30,14 @@ export function StationSearchStep({
   searchQuery,
   isSearching,
   error,
+  searchError,
   groupedSubwayResults,
   busResults,
   onSearchChange,
   onClearSearch,
   onStationClick,
   onBusStopSelect,
+  onRetrySearch,
   onStepChange,
 }: StationSearchStepProps): JSX.Element {
   return (
@@ -94,6 +100,21 @@ export function StationSearchStep({
           <div className="apple-searching">검색 중...</div>
         )}
 
+        {/* 검색 실패는 '결과 없음'과 다른 상태다. 둘을 같이 띄우면 화면이 서로
+            모순되는 말을 하고, 재시도 수단이 없으면 다시 타이핑하는 수밖에 없다. */}
+        {searchError && !isSearching && (
+          <div className="apple-no-results" role="alert">
+            <p>{searchError}</p>
+            <button
+              type="button"
+              className="apple-btn-secondary"
+              onClick={onRetrySearch}
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
+
         {/* 지하철 검색 결과 */}
         {currentTransport === 'subway' && groupedSubwayResults.length > 0 && (
           <ul className="search-results-list" role="listbox" aria-label="지하철역 검색 결과">
@@ -146,7 +167,7 @@ export function StationSearchStep({
           </ul>
         )}
 
-        {searchQuery && !isSearching && groupedSubwayResults.length === 0 && busResults.length === 0 && (
+        {searchQuery && !isSearching && !searchError && groupedSubwayResults.length === 0 && busResults.length === 0 && (
           <div className="apple-no-results">
             검색 결과가 없습니다
           </div>

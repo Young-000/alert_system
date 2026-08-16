@@ -128,4 +128,29 @@ describe('useStationSearch', () => {
     await waitFor(() => expect(result.current.isSearching).toBe(false));
     expect(result.current.subwayResults).toEqual([]);
   });
+
+  it('실패한 검색을 같은 검색어 그대로 다시 보낸다', async () => {
+    // 검색이 실패하면 화면에는 재시도 버튼만 남는다. 검색어를 고쳐 치지 않아도
+    // 같은 질의가 다시 나가야 그 버튼이 실제로 하는 일이 있다.
+    searchStations.mockRejectedValueOnce(new Error('network'));
+
+    const { result } = renderHook(() =>
+      useStationSearch('subway', [], vi.fn()),
+    );
+
+    act(() => result.current.handleSearchChange('강남'));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    await waitFor(() => expect(result.current.searchError).toBe('검색에 실패했습니다'));
+
+    searchStations.mockResolvedValueOnce([station('강남', '2호선')]);
+    await act(async () => {
+      result.current.retrySearch();
+    });
+
+    await waitFor(() => expect(result.current.searchError).toBe(''));
+    expect(searchStations).toHaveBeenLastCalledWith('강남');
+    expect(result.current.subwayResults).toHaveLength(1);
+  });
 });

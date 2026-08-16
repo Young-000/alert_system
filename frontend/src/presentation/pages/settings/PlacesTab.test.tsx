@@ -109,3 +109,46 @@ describe('PlacesTab — 장소 ON/OFF 토글', () => {
     expect(placeApi.togglePlace).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('PlacesTab — 조회 실패', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('조회에 실패하면 "등록된 장소가 없습니다"라고 단언하지 않는다', async () => {
+    // 실패는 data=undefined로 들어오고 isLoading은 false가 된다. 그대로 그리면
+    // 등록해 둔 집·직장이 지워진 것처럼 보인다.
+    placeApi.getPlaces.mockRejectedValue(new Error('500'));
+
+    renderTab();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('등록된 장소가 없습니다')).not.toBeInTheDocument();
+  });
+
+  it('조회에 실패하면 다시 시도할 수 있다', async () => {
+    // dead-end 금지 — 그 화면에서 할 수 있는 일이 하나는 있어야 한다.
+    placeApi.getPlaces.mockRejectedValue(new Error('500'));
+    const user = userEvent.setup();
+
+    renderTab();
+    const retry = await screen.findByRole('button', { name: '다시 시도' });
+
+    placeApi.getPlaces.mockResolvedValue([place()]);
+    await user.click(retry);
+
+    expect(await screen.findByText('우리집')).toBeInTheDocument();
+  });
+
+  it('조회에 성공하면 빈 상태를 정상적으로 보여준다', async () => {
+    // 대조군 — 진짜 빈 목록까지 에러로 바꿔버리지 않는다는 것을 고정한다.
+    placeApi.getPlaces.mockResolvedValue([]);
+
+    renderTab();
+
+    expect(await screen.findByText('등록된 장소가 없습니다')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});

@@ -161,3 +161,56 @@ describe('SmartDepartureTab — ON/OFF 토글', () => {
     expect(mockSmartDepartureApi.toggleSetting).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('SmartDepartureTab — 조회 실패', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // 경로는 정상 응답시킨다 — 경로가 비면 "먼저 경로를 등록해주세요"라는
+    // 다른 빈 상태가 잡혀서 설정 조회 실패를 검증할 수 없다.
+    commuteApi.getUserRoutes.mockResolvedValue([
+      { id: 'route-1', name: '출근 경로', routeType: 'morning' },
+    ] as never);
+  });
+
+  it('조회에 실패하면 "설정이 없습니다"라고 단언하지 않는다', async () => {
+    // 설정 조회가 실패해도 data=undefined / isLoading=false가 되어
+    // 저장해 둔 스마트 출발 설정이 사라진 것처럼 보인다.
+    mockSmartDepartureApi.getSettings.mockRejectedValue(new Error('500'));
+
+    renderTab();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText('등록된 스마트 출발 설정이 없습니다'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('조회에 실패하면 다시 시도할 수 있다', async () => {
+    mockSmartDepartureApi.getSettings.mockRejectedValue(new Error('500'));
+    const user = userEvent.setup();
+
+    renderTab();
+    const retry = await screen.findByRole('button', { name: '다시 시도' });
+
+    mockSmartDepartureApi.getSettings.mockResolvedValue([]);
+    await user.click(retry);
+
+    expect(
+      await screen.findByText('등록된 스마트 출발 설정이 없습니다'),
+    ).toBeInTheDocument();
+  });
+
+  it('조회에 성공하면 빈 상태를 정상적으로 보여준다', async () => {
+    // 대조군 — 진짜 빈 목록은 그대로 빈 상태로 남는다.
+    mockSmartDepartureApi.getSettings.mockResolvedValue([]);
+
+    renderTab();
+
+    expect(
+      await screen.findByText('등록된 스마트 출발 설정이 없습니다'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});

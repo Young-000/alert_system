@@ -13,6 +13,7 @@ interface UseStationSearchReturn {
   lineSelectionModal: GroupedStation | null;
   setLineSelectionModal: React.Dispatch<React.SetStateAction<GroupedStation | null>>;
   handleSearchChange: (value: string) => void;
+  retrySearch: () => void;
   clearSearch: () => void;
   handleStationClick: (grouped: GroupedStation) => void;
   handleLineSelect: (stationName: string, line: string, stationId: string) => void;
@@ -102,6 +103,13 @@ export function useStationSearch(
     searchTimerRef.current = setTimeout(() => searchStops(value), SEARCH_DEBOUNCE_MS);
   }, [searchStops]);
 
+  // 실패한 검색을 같은 검색어 그대로 다시 보낸다. 아직 안 나간 디바운스가 있으면
+  // 취소한다 — 재시도와 겹치면 같은 질의가 두 번 나간다.
+  const retrySearch = useCallback(() => {
+    clearTimeout(searchTimerRef.current);
+    void searchStops(searchQuery);
+  }, [searchStops, searchQuery]);
+
   const clearSearch = useCallback(() => {
     // 역을 고른 뒤에도 떠 있던 요청이 돌아오면 드롭다운이 되살아난다.
     // 아직 안 나간 디바운스와 이미 나간 요청을 함께 무효화한다.
@@ -164,6 +172,7 @@ export function useStationSearch(
     lineSelectionModal,
     setLineSelectionModal,
     handleSearchChange,
+    retrySearch,
     clearSearch,
     handleStationClick,
     handleLineSelect,

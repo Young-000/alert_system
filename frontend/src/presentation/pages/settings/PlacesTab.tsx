@@ -8,6 +8,7 @@ import {
 } from '@infrastructure/query';
 import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { LoadErrorNotice } from '../../components/LoadErrorNotice';
 import type { Place, PlaceType } from '@infrastructure/api';
 
 const PLACE_ICONS: Record<PlaceType, string> = { home: '🏠', work: '🏢' };
@@ -68,7 +69,7 @@ function PlaceCard({
 
 export function PlacesTab(): JSX.Element {
   const { userId } = useAuth();
-  const { data: places, isLoading } = usePlacesQuery(!!userId);
+  const { data: places, isLoading, isError, refetch } = usePlacesQuery(!!userId);
   const createMutation = useCreatePlaceMutation();
   const deleteMutation = useDeletePlaceMutation();
   const toggleMutation = useTogglePlaceMutation();
@@ -208,7 +209,14 @@ export function PlacesTab(): JSX.Element {
           </div>
         )}
 
-        {!places || places.length === 0 ? (
+        {/* 조회 실패는 data=undefined로 들어온다. 그대로 빈 상태를 그리면
+            등록해 둔 집·직장이 지워진 것처럼 보이므로 실패는 실패라고 말한다. */}
+        {isError ? (
+          <LoadErrorNotice
+            message="장소를 불러오지 못했습니다."
+            onRetry={() => void refetch()}
+          />
+        ) : !places || places.length === 0 ? (
           <div className="settings-empty">
             <span aria-hidden="true">📍</span>
             <p>등록된 장소가 없습니다</p>
