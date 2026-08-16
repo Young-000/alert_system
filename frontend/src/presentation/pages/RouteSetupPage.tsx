@@ -574,13 +574,15 @@ export function RouteSetupPage(): JSX.Element {
             routeType={routeType}
             searchQuery={search.searchQuery}
             isSearching={search.isSearching}
-            error={search.searchError || error}
+            error={error}
+            searchError={search.searchError}
             groupedSubwayResults={search.groupedSubwayResults}
             busResults={search.busResults}
             onSearchChange={search.handleSearchChange}
             onClearSearch={search.clearSearch}
             onStationClick={search.handleStationClick}
             onBusStopSelect={search.handleSelectBusStop}
+            onRetrySearch={search.retrySearch}
             onStepChange={setStep}
           />
         )}
