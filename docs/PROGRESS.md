@@ -1,5 +1,33 @@
 # Alert System - 진행 기록
 
+## [2026-08-17] Auto E2E Review 16:00 — 1건 수정 (FE)
+
+### Completed
+- fix(report): **주간 리포트 "이전 주" 버튼이 서버가 거절하는 주차까지 열려 있었다.**
+  `WeeklyTab`은 상한 12, `WeeklyReportCard`는 4, 서버(`GetWeeklyReportUseCase:25`)는 0~4 밖을
+  400으로 거절한다. 훅이 `retry: false`라 리포트 탭의 **5~12주차 8개 구간이 클릭 가능하면서
+  항상 에러 화면**이었다 — 같은 앱의 두 화면이 서로 다른 상한을 말하고 있었다.
+  서버 계약을 정본으로 삼아 상수를 `infrastructure/query/weekly-report-bounds.ts` 하나로 모음
+- 상수 배치에서 두 번 막힌 것이 이번 라운드의 실질 발견: `@infrastructure/api/*`는 vitest alias가
+  통째로 mock 모듈로 치환하고, 훅 모듈에 두면 그 훅을 `vi.mock`하는 테스트가 전부 깨진다.
+  공유 상수는 **아무도 mock할 이유가 없는 leaf 파일**에 둔다 (LESSONS 기록)
+- 같은 유형 전수 확인: 서버가 범위 위반을 400으로 던지는 자리 3곳 중 나머지 2곳
+  (경로 비교 2~5개, 장소 반경 100~500m)은 이미 클라이언트가 서버 범위에 맞춰져 있음
+
+### Verification
+- FE: lint 0 · tsc 0 · build 성공 · 822 passed (819 → 822, 테스트 파일 76 → 77)
+- BE: **변경 0줄** · npm ci ✓ · lint 0 · build ✓ · 1653 passed (10 skipped) → ECS 배포 불필요
+- DB: `alert_system` 39 테이블 / RLS 39-on 0-off (라이브 실측) · 엔티티↔DDL 갭 0
+- 번들 gzip 125.3KB < 500KB
+
+### Next Steps
+- [ ] 스마트 출발 사전 알림 배선 — **D1 게이트** (알림 발송 + terraform 룰 추가).
+      발행 `source=alert-system.smart-departure`/`detail-type=SmartDepartureAlert` vs
+      유일 룰 `alert-system.scheduler`/`ScheduledNotification` — 두 필드 모두 불일치
+- [ ] branch protection required checks 이름 정정 (`CI / frontend` → `frontend`) — 대표 승인 필요
+- [ ] `commute.controller.ts:251` `weekOffset` raw 파싱 (`parseInt || 0`) 정리 —
+      현재 사용자 도달 경로 없음, ECS 배포 가능해질 때 함께
+
 ## [2026-08-10] Auto E2E Review 16:00 — 5건 수정 (DB 2 + FE 3)
 
 ### Completed
