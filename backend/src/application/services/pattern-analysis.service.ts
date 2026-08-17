@@ -9,6 +9,7 @@ import {
 } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord, CommuteType } from '@domain/entities/commute-record.entity';
 import { getDayOfWeekFromDateOnly } from '@domain/utils/kst-date';
+import { minutesToTime } from './statistics/descriptive-stats';
 import {
   IUserPatternRepository,
   USER_PATTERN_REPOSITORY,
@@ -215,11 +216,11 @@ export class PatternAnalysisService implements IPatternAnalysisService {
     return hours * 60 + minutes;
   }
 
+  // 분→"HH:mm" 변환은 statistics/descriptive-stats의 minutesToTime 하나만 쓴다.
+  // 사본을 두면 반올림 규칙이 갈라진다 (여기 있던 사본은 분 자리를 반올림하지 않아
+  // 소수가 들어오면 "07:59.79999"를 만들었다).
   private minutesToTime(minutes: number): string {
-    const normalizedMinutes = ((minutes % 1440) + 1440) % 1440; // Handle negative/overflow
-    const hours = Math.floor(normalizedMinutes / 60);
-    const mins = normalizedMinutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    return minutesToTime(minutes);
   }
 
   private getDefaultDepartureTime(commuteType: CommuteType, isWeekday: boolean): string {

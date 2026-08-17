@@ -95,10 +95,14 @@ export function timeToMinutes(time: string): number {
 
 /**
  * Convert minutes since midnight to "HH:mm" time string.
+ *
+ * 반올림은 시·분으로 쪼개기 **전에** 한 번만 한다. 분 자리를 따로 반올림하면
+ * 479.8분이 "07:60", 1439.7분이 "23:60"이 되어 시계에 없는 시각이 나온다.
+ * 하루를 넘기는 보정도 반올림 뒤에 해야 1439.7분이 "00:00"이 된다.
  */
 export function minutesToTime(minutes: number): string {
-  const normalizedMinutes = ((minutes % 1440) + 1440) % 1440;
+  const normalizedMinutes = ((Math.round(minutes) % 1440) + 1440) % 1440;
   const hours = Math.floor(normalizedMinutes / 60);
-  const mins = Math.round(normalizedMinutes % 60);
+  const mins = normalizedMinutes % 60;
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }

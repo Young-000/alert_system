@@ -197,5 +197,20 @@ describe('descriptive-stats', () => {
     it('1440 이상은 하루를 돌아서 계산한다', () => {
       expect(minutesToTime(1450)).toBe('00:10');
     });
+
+    it('소수 입력에서 시계에 없는 시각을 만들지 않는다', () => {
+      // 분 자리를 따로 반올림하면 07시 60분이 된다.
+      expect(minutesToTime(479.8)).toBe('08:00');
+    });
+
+    it('소수를 내림하지 않고 반올림한다', () => {
+      // 대조군: "소수는 무조건 버린다"는 오답을 차단한다.
+      expect(minutesToTime(479.2)).toBe('07:59');
+      expect(minutesToTime(480.6)).toBe('08:01');
+    });
+
+    it('자정 직전의 소수는 다음 날 00:00으로 넘어간다', () => {
+      expect(minutesToTime(1439.7)).toBe('00:00');
+    });
   });
 });

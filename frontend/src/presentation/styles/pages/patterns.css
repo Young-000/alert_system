@@ -611,6 +611,19 @@ a.pattern-card:hover {
   font-size: 14px;
 }
 
+/* 안내 문구 + 다음 행동 버튼을 한 덩어리로 세로 정렬한다. */
+.patterns-empty-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+}
+
+.patterns-empty-notice .patterns-empty {
+  padding: 0;
+}
+
 .patterns-empty-state {
   text-align: center;
   padding: 60px 20px;
