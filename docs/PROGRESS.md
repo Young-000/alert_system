@@ -1,5 +1,42 @@
 # Alert System - 진행 기록
 
+## [2026-08-18] Auto E2E Review 00:00 — 2건 수정 (FE + BE)
+
+### Completed
+- fix(patterns): **요일별 평균 출발 시간이 "07:60"으로 표시됐다.** 분→"HH:mm" 변환이
+  시·분을 쪼갠 뒤 분만 반올림해서(`floor(479.8/60)`=7, `round(479.8%60)`=60) 시계에 없는
+  시각을 만들었다. 세그먼트별 `avgMinutes`는 백엔드가 반올림해 정수지만 **전체 평균은
+  프론트가 직접 나눠서** 만들기 때문에 소수다. 반올림을 분해 전 1회로 옮기고 하루 넘김
+  보정(`%1440`)을 그 뒤에 뒀다 (1439.7 → "23:60" ✗ / "00:00" ✓)
+- 같은 변환 사본이 **3벌**이었고 백엔드 2벌도 같은 결함을 갖고 있었다 — 호출부 7곳 중 5곳이
+  우연히 `Math.round`로 감싸고 나머지 2곳이 받는 값이 저장 시점에 이미 반올림돼 있어
+  가려져 있었을 뿐이다. `descriptive-stats.ts`를 정본으로 고치고
+  `pattern-analysis.service.ts`의 private 사본을 제거해 위임
+- fix(ux): 패턴 분석의 요일별/날씨 **빈 상태가 버튼 0개에 합쇼체 사과문**이라
+  ux-baseline 원칙 3(dead-end 금지)·체크리스트 6-2 위반. 무엇이 쌓이면 보이는지 말하고
+  다음 행동 1개(`/commute`)를 뒀다. 형제 빈 상태 8곳을 전수 확인해 나머지는 미수정
+  (사용자가 할 수 있는 행동이 없거나 이미 해요체로 다음 행동을 말함)
+
+### Verification
+- FE: lint 0 · tsc 0 · build 성공 · **828 passed** (822 → 828) · precache 943.21 KiB
+- BE: lint 0 · build ✓ · **1656 passed** (1653 → 1656, 10 skipped)
+- DB: `alert_system` 39 테이블 / RLS 39-on 0-off (라이브 실측) · 엔티티↔DDL 갭 0
+- 번들 gzip 125.1KB < 500KB
+- BE 첫 전체 실행에서 `prediction-integration.spec.ts:409`(`duration < 200ms` 벽시계 단언)
+  1건 실패 — FE 스위트 동시 실행 부하. 단독 14 passed, 경합 없이 재실행 1656 passed로 확인
+- 배포: FE는 머지 시 Vercel 자동. BE는 코드 변경 있으나 **ECS/ECR/ALB 실물 부재**로 배포 미실행
+  (표시용 문자열 포매팅이라 API 계약·스키마 변경 없음)
+
+### Next Steps
+- [ ] 스마트 출발 사전 알림 배선 — **D1 게이트** (알림 발송 + terraform 룰 추가).
+      이번 라운드 재실측: `scheduleAlerts` 호출처 여전히 0건, source·detail-type 둘 다 불일치
+- [ ] branch protection required checks 이름 정정 (`CI / frontend` → `frontend`) — 대표 승인 필요.
+      이번 라운드는 GitHub API 503로 재확인 실패, 머지는 `--admin`으로 처리
+- [ ] `prediction-integration.spec.ts`의 벽시계 단언 3건 — 병렬 실행에서 위양성.
+      임계값 조정은 성능 기준 변경이라 자율 범위 밖으로 두고 기록만 남김
+- [ ] `commute.controller.ts:251` `weekOffset` raw 파싱 (`parseInt || 0`) 정리 —
+      현재 사용자 도달 경로 없음, ECS 배포 가능해질 때 함께
+
 ## [2026-08-17] Auto E2E Review 16:00 — 1건 수정 (FE)
 
 ### Completed
