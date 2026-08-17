@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { WeeklyReportResponse } from '@infrastructure/api/commute-api.client';
+import { MAX_WEEK_OFFSET } from '@infrastructure/query/weekly-report-bounds';
 import { DailyBarChart } from './DailyBarChart';
 import { TrendIndicator } from './TrendIndicator';
 
@@ -11,8 +12,6 @@ interface WeeklyReportCardProps {
   onWeekChange: (offset: number) => void;
   onRetry?: () => void;
 }
-
-const MAX_WEEK_OFFSET = 4;
 
 function renderSkeleton(): JSX.Element {
   return (

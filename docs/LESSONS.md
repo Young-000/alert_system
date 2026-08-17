@@ -2,6 +2,22 @@
 
 > 비자명한 교훈만 1줄로 상단 append. 자명한 요약 금지.
 
+- 2026-08-17 **클라이언트가 정한 탐색 상한이 서버가 400으로 거절하는 범위보다 넓으면, 그 사이 구간은
+  전부 에러 화면이다.** 주간 리포트의 "이전 주" 버튼이 홈 카드에서는 4주, 리포트 탭에서는 12주까지
+  열려 있었다. 서버(`GetWeeklyReportUseCase`)는 0~4 밖을 400으로 거절하고 훅은 `retry: false`라,
+  리포트 탭에서 5~12주차는 클릭할 수 있으면서 **항상** 실패한다. 두 화면 다 자기 테스트는 통과했다 —
+  각자 자기가 정한 숫자를 확인했을 뿐이라서다. **범위 상수는 그 범위를 거절하는 쪽(서버)이 정본이고,
+  화면은 가져다 쓰기만 해야 한다.** 같은 유형을 전수로 찾을 땐 서버의 `BadRequestException` 중
+  범위 위반을 던지는 자리를 먼저 세고, 그 값을 클라이언트가 어디서 복제하는지 역추적한다.
+
+- 2026-08-17 **공유 상수를 "테스트가 mock하는 모듈"에 두면 그 모듈을 mock하는 테스트가 전부 터진다.**
+  위 상한을 처음엔 `@infrastructure/api/commute-api.client`에 뒀는데, vitest.config의 alias가
+  `@infrastructure/api/*` **전체**를 `src/__mocks__/.../index.ts`로 치환해서 상수가 undefined가 됐다
+  (컴포넌트가 테스트에서만 다르게 동작 = 검증 무의미). 그다음 `use-weekly-report-query.ts`로 옮겼더니
+  그 훅을 `vi.mock`하던 `ReportPage.test.tsx` 12건이 "No export is defined on the mock"으로 터졌다.
+  결론: 상수는 **의존성 없고 아무도 mock할 이유가 없는 leaf 파일**에 둔다
+  (`infrastructure/query/weekly-report-bounds.ts`). 그래야 테스트가 화면이 실제로 쓰는 값을 검증한다.
+
 - 2026-08-17 **성격이 다른 오류를 `a || b`로 한 prop에 합쳐 보내면 컴포넌트가 구조적으로 구분할 수 없게 된다.**
   `RouteSetupPage`가 `error={search.searchError || error}`로 검색 실패와 페이지 검증/저장 오류를
   한 prop에 합쳐 보냈다. 받는 쪽은 "지금 뜬 게 검색 실패인지"를 알 방법이 없으니 빈 상태
