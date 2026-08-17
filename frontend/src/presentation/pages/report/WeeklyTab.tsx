@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { useWeeklyReportQuery } from '@infrastructure/query/use-weekly-report-query';
+import { MAX_WEEK_OFFSET } from '@infrastructure/query/weekly-report-bounds';
 import { getQueryErrorMessage } from '@infrastructure/query/error-utils';
 import { DailyBarChart } from '../home/DailyBarChart';
 import { TrendIndicator } from '../home/TrendIndicator';
-
-const MAX_WEEK_OFFSET = 12;
 
 function WeeklyTabSkeleton(): JSX.Element {
   return (
