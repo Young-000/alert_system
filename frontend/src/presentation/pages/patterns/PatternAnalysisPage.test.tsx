@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { TestProviders } from '../../../test-utils';
 import { PatternAnalysisPage } from './PatternAnalysisPage';
 import { behaviorApiClient } from '@infrastructure/api';
@@ -168,6 +168,134 @@ describe('PatternAnalysisPage', () => {
     });
     expect(screen.getByText('눈')).toBeInTheDocument();
     expect(screen.getByText('비 영향이 평균보다 2분 적음')).toBeInTheDocument();
+  });
+
+  it('요일 평균이 소수여도 시계에 없는 시각을 만들지 않는다', async () => {
+    // 합 2399 / 5 = 479.8분. 분 자리를 따로 반올림하면 60분이 되어 "07:60"이 나온다.
+    mockBehaviorApi.getInsights.mockResolvedValue({
+      ...mockInsights,
+      dayOfWeek: {
+        ...mockInsights.dayOfWeek,
+        segments: [
+          { dayOfWeek: 1, dayName: '월', avgMinutes: 478, stdDevMinutes: 4, sampleCount: 3 },
+          { dayOfWeek: 2, dayName: '화', avgMinutes: 479, stdDevMinutes: 3, sampleCount: 3 },
+          { dayOfWeek: 3, dayName: '수', avgMinutes: 480, stdDevMinutes: 2, sampleCount: 3 },
+          { dayOfWeek: 4, dayName: '목', avgMinutes: 481, stdDevMinutes: 5, sampleCount: 3 },
+          { dayOfWeek: 5, dayName: '금', avgMinutes: 481, stdDevMinutes: 9, sampleCount: 3 },
+        ],
+      },
+    });
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    expect(await screen.findByText('평균 08:00')).toBeInTheDocument();
+  });
+
+  it('요일 평균이 정수면 그대로 표시한다', async () => {
+    // 대조군: "분을 항상 버린다"는 오답을 차단한다. 합 2400 / 5 = 480분.
+    mockBehaviorApi.getInsights.mockResolvedValue({
+      ...mockInsights,
+      dayOfWeek: {
+        ...mockInsights.dayOfWeek,
+        segments: [
+          { dayOfWeek: 1, dayName: '월', avgMinutes: 480, stdDevMinutes: 4, sampleCount: 3 },
+          { dayOfWeek: 2, dayName: '화', avgMinutes: 480, stdDevMinutes: 3, sampleCount: 3 },
+          { dayOfWeek: 3, dayName: '수', avgMinutes: 480, stdDevMinutes: 2, sampleCount: 3 },
+          { dayOfWeek: 4, dayName: '목', avgMinutes: 480, stdDevMinutes: 5, sampleCount: 3 },
+          { dayOfWeek: 5, dayName: '금', avgMinutes: 480, stdDevMinutes: 9, sampleCount: 3 },
+        ],
+      },
+    });
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    expect(await screen.findByText('평균 08:00')).toBeInTheDocument();
+  });
+
+  it('요일별 막대는 각 요일의 출발 시각을 그대로 보여준다', async () => {
+    // 대조군: 평균 계산을 고치면서 개별 요일 표기를 바꾸지 않았다는 증거. 485분 = 08:05.
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    await screen.findByText('요일별 출발 시간');
+    expect(screen.getByLabelText(/월요일: 08:05/)).toBeInTheDocument();
+  });
+
+  it('요일별 데이터가 없으면 다음 행동을 정확히 하나 제공한다', async () => {
+    // dead-end 금지 (ux-baseline 원칙 3 · 체크리스트 6-2).
+    mockBehaviorApi.getInsights.mockResolvedValue({
+      ...mockInsights,
+      dayOfWeek: { segments: [], mostConsistentDay: null, mostVariableDay: null },
+    });
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    const panel = await screen.findByRole('tabpanel');
+    expect(within(panel).getAllByRole('button')).toHaveLength(1);
+    expect(within(panel).getByRole('button', { name: '출퇴근 기록하기' })).toBeInTheDocument();
+  });
+
+  it('날씨 데이터가 없으면 다음 행동을 정확히 하나 제공한다', async () => {
+    mockBehaviorApi.getInsights.mockResolvedValue({
+      ...mockInsights,
+      weatherSensitivity: null,
+    });
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '날씨' }));
+
+    const panel = await screen.findByRole('tabpanel');
+    expect(within(panel).getAllByRole('button')).toHaveLength(1);
+    expect(within(panel).getByRole('button', { name: '출퇴근 기록하기' })).toBeInTheDocument();
+  });
+
+  it('데이터가 있는 탭에는 안내 버튼을 넣지 않는다', async () => {
+    // 대조군: "모든 탭에 버튼을 단다"는 오답을 차단한다.
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    await screen.findByText('요일별 출발 시간');
+    const panel = screen.getByRole('tabpanel');
+    expect(within(panel).queryByRole('button', { name: '출퇴근 기록하기' })).not.toBeInTheDocument();
   });
 
   it('비로그인 상태에서 로그인 CTA를 제공한다', () => {

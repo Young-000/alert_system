@@ -17,9 +17,17 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'weather', label: '날씨' },
 ];
 
+/**
+ * 자정 기준 분 → "HH:mm".
+ *
+ * 반올림은 시·분으로 쪼개기 **전에** 한 번만 한다. 분 자리를 따로 반올림하면
+ * 479.8분이 07시 60분이 되어 시계에 없는 시각이 나온다 (요일 평균은 소수다).
+ * 백엔드 `minutesToTime`(descriptive-stats.ts)과 같은 계약이다.
+ */
 function minutesToTimeString(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
+  const total = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
@@ -35,6 +43,27 @@ function TierBadge({ tier }: { tier: string }): JSX.Element {
     <span className={`patterns-tier-badge patterns-tier-badge--${tier}`}>
       {labels[tier] ?? tier}
     </span>
+  );
+}
+
+/**
+ * 데이터가 없는 탭의 안내. 못 하는 것을 사과하는 대신 무엇이 쌓이면 보이는지 말하고,
+ * 다음 행동을 정확히 하나 둔다 (ux-baseline 원칙 3·7).
+ */
+function PatternEmptyNotice({ message }: { message: string }): JSX.Element {
+  const navigate = useNavigate();
+
+  return (
+    <div className="patterns-empty-notice">
+      <p className="patterns-empty">{message}</p>
+      <button
+        type="button"
+        className="btn btn-primary btn-sm"
+        onClick={() => navigate('/commute')}
+      >
+        출퇴근 기록하기
+      </button>
+    </div>
   );
 }
 
@@ -118,7 +147,7 @@ function ByDayTab({ insights }: { insights: InsightsResponse }): JSX.Element {
   if (segments.length === 0) {
     return (
       <div className="patterns-tab-content" role="tabpanel" id="panel-by-day" aria-labelledby="tab-by-day">
-        <p className="patterns-empty">요일별 데이터가 아직 충분하지 않습니다.</p>
+        <PatternEmptyNotice message="출퇴근을 기록하면 요일마다 출발 시간이 어떻게 다른지 보여드려요." />
       </div>
     );
   }
@@ -224,7 +253,7 @@ function WeatherTab({ insights }: { insights: InsightsResponse }): JSX.Element {
   if (!weather) {
     return (
       <div className="patterns-tab-content" role="tabpanel" id="panel-weather" aria-labelledby="tab-weather">
-        <p className="patterns-empty">날씨 데이터가 아직 충분하지 않습니다. 더 많은 기록이 필요합니다.</p>
+        <PatternEmptyNotice message="비·눈 오는 날 기록이 모이면 날씨가 출발 시간에 주는 영향을 알려드려요." />
       </div>
     );
   }
