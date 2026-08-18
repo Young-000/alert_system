@@ -80,3 +80,31 @@ describe('useAuth', () => {
     });
   });
 });
+
+/**
+ * 사이트 데이터가 차단된 브라우저(또는 샌드박스 iframe)에서는 localStorage 접근이
+ * SecurityError를 던진다. getSnapshot은 렌더 중에 불리고 17개 화면이 이 훅에 걸려
+ * 있으므로, 던지면 앱 전체가 오류 화면이 된다 — 비로그인 화면은 이미 있는데도.
+ */
+describe('useAuth — 저장소 접근이 차단된 브라우저', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('읽기가 SecurityError를 던져도 렌더가 죽지 않고 비로그인으로 읽는다', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      },
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    expect(result.current.isLoggedIn).toBe(false);
+    expect(result.current.userId).toBe('');
+    expect(result.current.userName).toBe('회원');
+  });
+});

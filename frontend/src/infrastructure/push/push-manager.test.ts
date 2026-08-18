@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { apiClient } from '@infrastructure/api';
-import { subscribeToPush, isPushSubscribed } from './push-manager';
+import { subscribeToPush, isPushSubscribed, syncPushSubscriptionOwner } from './push-manager';
 
 /**
  * 브라우저 구독과 서버 등록은 **둘 다 성공해야** 알림이 한 통이라도 온다.
@@ -109,5 +109,58 @@ describe('subscribeToPush', () => {
   it('구독이 있으면 isPushSubscribed가 true를 돌려준다 (되돌림의 의미를 고정)', async () => {
     stubPushEnvironment();
     await expect(isPushSubscribed()).resolves.toBe(true);
+  });
+});
+
+/**
+ * 로그아웃은 브라우저 구독을 지우지 않는다. 서버는 endpoint 하나를 사용자 한 명에게
+ * 묶으므로, 소유권을 옮기지 않으면 같은 기기의 다음 사용자가 **이전 사용자의**
+ * 출발 시각과 경로를 계속 받는다. 새 사용자 화면은 이미 "켜짐"이라 스스로 풀리지 않는다.
+ */
+describe('syncPushSubscriptionOwner', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('다른 사용자가 로그인하면 구독을 다시 등록해 소유권을 옮긴다', async () => {
+    stubPushEnvironment();
+    localStorage.setItem('pushSubscriptionOwnerId', 'user-이전');
+    mockedApiClient.post.mockResolvedValueOnce({});
+
+    await expect(syncPushSubscriptionOwner('user-새로운')).resolves.toBe(true);
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith('/push/subscribe', {
+      endpoint: 'https://push.example.com/sub-1',
+      keys: { p256dh: 'p256dh-value', auth: 'auth-value' },
+    });
+    expect(localStorage.getItem('pushSubscriptionOwnerId')).toBe('user-새로운');
+  });
+
+  it('같은 사용자면 다시 등록하지 않는다 — 앱을 열 때마다 요청을 보내지 않는다', async () => {
+    stubPushEnvironment();
+    localStorage.setItem('pushSubscriptionOwnerId', 'user-1');
+
+    await expect(syncPushSubscriptionOwner('user-1')).resolves.toBe(false);
+    expect(mockedApiClient.post).not.toHaveBeenCalled();
+  });
+
+  it('등록에 실패하면 소유자 표시를 남기지 않아 다음 실행에서 다시 시도한다', async () => {
+    stubPushEnvironment();
+    localStorage.setItem('pushSubscriptionOwnerId', 'user-이전');
+    mockedApiClient.post.mockRejectedValueOnce(new Error('network down'));
+
+    await expect(syncPushSubscriptionOwner('user-새로운')).rejects.toThrow('network down');
+    expect(localStorage.getItem('pushSubscriptionOwnerId')).toBe('user-이전');
+  });
+
+  it('비로그인 상태에서는 아무 것도 보내지 않는다', async () => {
+    stubPushEnvironment();
+    await expect(syncPushSubscriptionOwner('')).resolves.toBe(false);
+    expect(mockedApiClient.post).not.toHaveBeenCalled();
   });
 });

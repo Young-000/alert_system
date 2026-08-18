@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { safeGetItem } from '@infrastructure/storage/safe-storage';
 
 interface AuthState {
   userId: string;
@@ -30,7 +31,7 @@ function subscribe(listener: () => void): () => void {
 const EMPTY_SNAPSHOT = JSON.stringify(AUTH_KEYS.map(() => ''));
 
 function getSnapshot(): string {
-  return JSON.stringify(AUTH_KEYS.map((k) => localStorage.getItem(k) ?? ''));
+  return JSON.stringify(AUTH_KEYS.map((k) => safeGetItem(k) ?? ''));
 }
 
 function getServerSnapshot(): string {

@@ -1,5 +1,7 @@
 import {
   safeSetItem,
+  safeGetItem,
+  safeRemoveItem,
   saveCredentials,
   safeSessionGetItem,
   safeSessionSetItem,
@@ -112,5 +114,53 @@ describe('safe-storage', () => {
       });
       expect(safeSessionSetItem('k', 'v')).toBe(false);
     });
+  });
+});
+
+/**
+ * 사이트 데이터가 차단된 브라우저에서는 `localStorage.getItem` 자체가 SecurityError를
+ * 던진다. 이 읽기는 렌더 중에 일어나므로(useAuth의 getSnapshot) 던지면 화면이 통째로
+ * 죽는다. 저장 실패와 달리 되돌릴 것이 없으므로 "비로그인"으로 읽는 것이 유일한 복구다.
+ */
+describe('safe-storage — 접근이 차단된 저장소', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const stubBlockedStorage = (): void => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      },
+      setItem: () => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      },
+      removeItem: () => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      },
+      clear: vi.fn(),
+    });
+  };
+
+  it('safeGetItem은 읽기가 막히면 던지지 않고 null을 반환한다', () => {
+    stubBlockedStorage();
+    expect(() => safeGetItem('accessToken')).not.toThrow();
+    expect(safeGetItem('accessToken')).toBeNull();
+  });
+
+  it('safeGetItem은 값이 있으면 그대로 돌려준다', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => (k === 'userId' ? 'u-1' : null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+    expect(safeGetItem('userId')).toBe('u-1');
+    expect(safeGetItem('userName')).toBeNull();
+  });
+
+  it('safeRemoveItem은 삭제가 막혀도 던지지 않는다 — 로그아웃이 멈추면 안 된다', () => {
+    stubBlockedStorage();
+    expect(() => safeRemoveItem('accessToken')).not.toThrow();
   });
 });

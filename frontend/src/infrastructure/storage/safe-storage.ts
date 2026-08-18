@@ -12,6 +12,29 @@ export function safeSetItem(key: string, value: string): boolean {
   }
 }
 
+/**
+ * localStorage는 값이 없을 때가 아니라 **접근 자체가 막혔을 때** 던진다
+ * (사이트 데이터 차단·샌드박스 iframe → SecurityError). 읽기는 렌더 중에 일어나므로
+ * 던지면 화면이 통째로 죽는다. 못 읽으면 로그아웃 상태로 보는 것이 맞다 —
+ * 앱은 비로그인 화면을 이미 갖고 있지만 흰 화면에는 다음 행동이 없다.
+ */
+export function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/** 접근이 막힌 저장소에는 지울 것도 없다. 로그아웃이 예외로 멈추면 안 된다. */
+export function safeRemoveItem(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // 읽을 수도 없는 저장소이므로 세션은 이미 비어 있는 것과 같다
+  }
+}
+
 /** 세션 유지에 반드시 필요한 두 값. 하나라도 못 쓰면 로그인은 성립하지 않는다. */
 export function saveCredentials(accessToken: string, userId: string): boolean {
   const tokenSaved = safeSetItem('accessToken', accessToken);
