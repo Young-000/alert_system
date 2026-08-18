@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { useAuth } from './hooks/useAuth';
 import { OfflineBanner } from './components/OfflineBanner';
 import { BottomNavigation } from './components/BottomNavigation';
 
@@ -48,6 +49,24 @@ function useIdlePreload(): void {
   }, []);
 }
 
+/**
+ * 로그인한 사용자가 바뀌면 이 기기의 푸시 구독 소유권을 서버에서 옮긴다.
+ * 로그아웃은 브라우저 구독을 지우지 않으므로, 이게 없으면 같은 기기의 다음 사용자가
+ * 이전 사용자의 출퇴근 알림을 계속 받는다. 사용자가 시작한 동작이 아니라 화면에
+ * 알리지 않고, 실패하면 소유자 표시가 남지 않아 다음 실행에서 다시 시도한다.
+ */
+export function usePushSubscriptionOwner(): void {
+  const { userId } = useAuth();
+  useEffect(() => {
+    if (!userId) return;
+    // 정적 import는 push-manager와 그 의존 사슬을 초기 청크로 끌어온다.
+    // 첫 화면에 필요 없는 배경 작업이므로 실행 시점에 가져온다.
+    void import('@infrastructure/push/push-manager')
+      .then((m) => m.syncPushSubscriptionOwner(userId))
+      .catch(() => undefined);
+  }, [userId]);
+}
+
 function ScrollToTop(): null {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -58,6 +77,7 @@ function ScrollToTop(): null {
 
 function App() {
   useIdlePreload();
+  usePushSubscriptionOwner();
   return (
     <ErrorBoundary>
       <OfflineBanner />

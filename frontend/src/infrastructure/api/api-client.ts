@@ -1,4 +1,5 @@
 import { notifyAuthChange } from '@presentation/hooks/useAuth';
+import { safeGetItem, safeRemoveItem } from '@infrastructure/storage/safe-storage';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_RETRIES = 2;
@@ -28,7 +29,7 @@ export class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    const token = localStorage.getItem('accessToken');
+    const token = safeGetItem('accessToken');
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -38,11 +39,11 @@ export class ApiClient {
   private handleAuthError(url: string, status: number): void {
     const isAuthEndpoint = url.startsWith('/auth/');
     if (status === 401 && !isAuthEndpoint) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('phoneNumber');
+      safeRemoveItem('accessToken');
+      safeRemoveItem('userId');
+      safeRemoveItem('userName');
+      safeRemoveItem('userEmail');
+      safeRemoveItem('phoneNumber');
       notifyAuthChange();
       window.location.href = '/login';
     }

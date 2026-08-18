@@ -5,6 +5,7 @@ import { userApiClient } from '@infrastructure/api';
 import type { Alert } from '@infrastructure/api';
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
+import { safeRemoveItem } from '@infrastructure/storage/safe-storage';
 import { useAuth, notifyAuthChange } from '@presentation/hooks/useAuth';
 import { useAlertsQuery } from '@infrastructure/query/use-alerts-query';
 import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
@@ -174,11 +175,11 @@ export function useSettings(): UseSettingsReturn {
 
   // Logout
   const handleLogout = (): void => {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('phoneNumber');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
+    safeRemoveItem('userId');
+    safeRemoveItem('accessToken');
+    safeRemoveItem('phoneNumber');
+    safeRemoveItem('userName');
+    safeRemoveItem('userEmail');
     notifyAuthChange();
     navigate('/');
     window.location.reload();
@@ -194,7 +195,7 @@ export function useSettings(): UseSettingsReturn {
 
   // Local data reset handler
   const handleLocalDataReset = (): void => {
-    localStorage.removeItem('commute_stopwatch_records');
+    safeRemoveItem('commute_stopwatch_records');
     setShowLocalDataReset(false);
     setResetSuccess(true);
     setTimeout(() => setResetSuccess(false), TOAST_DURATION_MS);
