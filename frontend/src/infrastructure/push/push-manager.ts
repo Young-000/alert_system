@@ -37,13 +37,24 @@ export async function subscribeToPush(): Promise<boolean> {
   });
 
   const subJson = sub.toJSON();
-  await apiClient.post('/push/subscribe', {
-    endpoint: subJson.endpoint,
-    keys: {
-      p256dh: subJson.keys?.p256dh || '',
-      auth: subJson.keys?.auth || '',
-    },
-  });
+
+  // 브라우저 구독과 서버 등록은 둘 다 성공해야 알림이 한 통이라도 온다.
+  // 서버 등록만 실패했을 때 브라우저 구독을 남겨두면, 다음 방문에
+  // isPushSubscribed()가 true를 돌려줘 설정 화면은 "켜짐"으로 굳는데
+  // 서버에는 endpoint가 없어 실제로는 아무것도 오지 않는다.
+  // 되돌려서 화면과 실제 상태를 맞추고, 실패는 그대로 호출부에 알린다.
+  try {
+    await apiClient.post('/push/subscribe', {
+      endpoint: subJson.endpoint,
+      keys: {
+        p256dh: subJson.keys?.p256dh || '',
+        auth: subJson.keys?.auth || '',
+      },
+    });
+  } catch (error) {
+    await sub.unsubscribe().catch(() => undefined);
+    throw error;
+  }
 
   return true;
 }
