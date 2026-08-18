@@ -63,6 +63,9 @@ export function CommuteDashboardPage(): JSX.Element {
     );
   }
 
+  const hasNothingToShow =
+    (!stats || stats.totalSessions === 0) && stopwatchRecords.length === 0;
+
   return (
     <main className="page">
       <nav className="nav">
@@ -89,7 +92,11 @@ export function CommuteDashboardPage(): JSX.Element {
         </div>
       )}
 
-      {(!stats || stats.totalSessions === 0) && stopwatchRecords.length === 0 ? (
+      {hasNothingToShow ? (
+        // 조회 실패는 stats=null로 들어온다. 그대로 빈 상태를 그리면 기록을 쌓아 온
+        // 사용자에게 "아직 기록이 없어요"라고 말해 데이터가 지워진 것처럼 보인다.
+        // 실패했을 때는 위의 오류 알림(재시도 버튼 포함)만 남긴다.
+        loadError ? null : (
         <EmptyState
           icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>}
           title="아직 기록이 없어요"
@@ -97,6 +104,7 @@ export function CommuteDashboardPage(): JSX.Element {
           actionLink="/commute"
           actionText="트래킹 시작하기"
         />
+        )
       ) : (
         <div className="dashboard-container">
           <DashboardTabs

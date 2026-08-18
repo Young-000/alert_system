@@ -215,6 +215,26 @@ describe('CommuteDashboardPage', () => {
     expect(screen.getByText('스톱워치 기록 요약')).toBeInTheDocument();
   });
 
+  /**
+   * 조회가 실패하면 stats는 undefined로 남는다. 그대로 그리면 "아직 기록이 없어요"가
+   * 되어, 기록을 쌓아 온 사용자에게 데이터가 지워졌다고 말한다. 실패는 실패라고만
+   * 말하고 빈 상태는 그리지 않는다 (SettingsPage·PlacesTab·NotificationHistoryPage와 같은 규칙).
+   */
+  it('조회에 실패하면 "아직 기록이 없어요"라고 단언하지 않는다', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getStats.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getHistory.mockRejectedValue(new Error('Network error'));
+    mockCommuteApi.getUserAnalytics.mockRejectedValue(new Error('Network error'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('대시보드 데이터를 불러올 수 없습니다.')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('아직 기록이 없어요')).not.toBeInTheDocument();
+    expect(screen.queryByText('트래킹 시작하기')).not.toBeInTheDocument();
+  });
+
   it('세션 기록이 생기면 전체 요약이 기본 탭으로 돌아온다', async () => {
     localStorage.setItem('userId', 'test-user-id');
     localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify([mockStopwatchRecord]));
