@@ -34,10 +34,10 @@ export class AirQualityApiClient implements IAirQualityApiClient {
           ver: '1.0',
         },
         // paramsSerializer로 serviceKey를 인코딩하지 않도록 설정
-        paramsSerializer: (params) => {
+        paramsSerializer: (params: Record<string, unknown>) => {
           const searchParams = new URLSearchParams();
-          Object.keys(params).forEach((key) => {
-            searchParams.append(key, params[key]);
+          Object.entries(params).forEach(([key, value]) => {
+            searchParams.append(key, String(value));
           });
           return searchParams.toString();
         },
