@@ -81,6 +81,19 @@ describe('MissionsPage', () => {
     });
   });
 
+  it('should render missions while weekly stats are still loading', async () => {
+    // 주간 통계는 부가 위젯이다. 그것이 느리다고 핵심 행동(미션 체크)까지
+    // 스켈레톤 뒤에 갇히면 안 된다.
+    mockMissionApi.getWeeklyStats.mockReturnValue(new Promise<WeeklyStats>(() => {}));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('물 마시기')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('checkbox', { name: /물 마시기/ })).toBeEnabled();
+  });
+
   it('should show feedback when mission check toggle fails', async () => {
     mockMissionApi.toggleCheck.mockRejectedValue(new Error('network'));
 

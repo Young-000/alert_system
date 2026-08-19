@@ -267,10 +267,7 @@ export function MissionsPage(): JSX.Element {
     refetch: refetchDaily,
   } = useDailyStatusQuery();
 
-  const {
-    data: weeklyStats,
-    isLoading: isWeeklyLoading,
-  } = useWeeklyStatsQuery();
+  const { data: weeklyStats } = useWeeklyStatsQuery();
 
   const toggleMutation = useToggleCheckMutation();
 
@@ -302,7 +299,11 @@ export function MissionsPage(): JSX.Element {
     ? dailyStatus.commuteMissions.length > 0 || dailyStatus.returnMissions.length > 0
     : false;
 
-  const isLoading = isDailyLoading || isWeeklyLoading;
+  // 주간 통계는 부가 위젯이라 로딩 게이트에 넣지 않는다. 아래 렌더가
+  // weeklyStats 부재를 이미 견디므로(`weeklyStats ? ... : null`), 여기에 묶으면
+  // 주간 통계가 느릴 때 핵심 행동인 미션 체크까지 스켈레톤 뒤에 갇힌다.
+  // 홈의 MissionQuickCard도 daily만 게이트로 쓴다.
+  const isLoading = isDailyLoading;
 
   // ── Auth required ──
   if (!userId) {

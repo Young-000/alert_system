@@ -104,6 +104,9 @@ export function useReorderMissionMutation() {
       missionApiClient.reorder(id, sortOrder),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.missions.all });
+      // 오늘의 미션도 sortOrder 순으로 내려온다 — 여기를 빼면 순서를 바꾼 뒤
+      // /missions가 옛 순서를 계속 보여준다 (형제 뮤테이션 4개는 전부 무효화한다)
+      void qc.invalidateQueries({ queryKey: queryKeys.missions.daily });
     },
   });
 }
