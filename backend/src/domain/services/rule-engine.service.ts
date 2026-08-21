@@ -104,14 +104,17 @@ export class RuleEngine implements IRuleEngine {
     }
 
     // Transit variables
+    // arrivalTime은 초 단위다. 사람에게 "N분"으로 보여줄 템플릿은 arrivalMinutes를 쓴다.
     if (context.busArrivals && context.busArrivals.length > 0) {
       const firstBus = context.busArrivals[0];
+      message = message.replace(/\{\{busArrival\.arrivalMinutes\}\}/g, String(this.toMinutes(firstBus.arrivalTime)));
       message = message.replace(/\{\{busArrival\.arrivalTime\}\}/g, String(firstBus.arrivalTime));
       message = message.replace(/\{\{busArrival\.routeName\}\}/g, firstBus.routeName);
     }
 
     if (context.subwayArrivals && context.subwayArrivals.length > 0) {
       const firstSubway = context.subwayArrivals[0];
+      message = message.replace(/\{\{subwayArrival\.arrivalMinutes\}\}/g, String(this.toMinutes(firstSubway.arrivalTime)));
       message = message.replace(/\{\{subwayArrival\.arrivalTime\}\}/g, String(firstSubway.arrivalTime));
       message = message.replace(/\{\{subwayArrival\.destination\}\}/g, firstSubway.destination);
     }
@@ -137,18 +140,19 @@ export class RuleEngine implements IRuleEngine {
       return '';
     }
 
+    // arrivalTime의 단위는 초다 (BusArrival·SubwayArrival 엔티티). 분으로 환산해 비교한다.
     const fastestBus = busArrivals[0].arrivalTime;
     const fastestSubway = subwayArrivals[0].arrivalTime;
-    const diff = Math.abs(fastestBus - fastestSubway);
+    const diffMinutes = Math.round(Math.abs(fastestBus - fastestSubway) / 60);
 
-    if (diff <= 2) {
+    if (diffMinutes <= 2) {
       return '버스와 지하철 도착 시간이 비슷해요';
     }
 
     if (fastestBus < fastestSubway) {
-      return `버스가 지하철보다 ${diff}분 빨라요!`;
+      return `버스가 지하철보다 ${diffMinutes}분 빨라요!`;
     } else {
-      return `지하철이 버스보다 ${diff}분 빨라요!`;
+      return `지하철이 버스보다 ${diffMinutes}분 빨라요!`;
     }
   }
 
@@ -175,4 +179,10 @@ export class RuleEngine implements IRuleEngine {
 
     return metadata;
   }
+
+  /** arrivalTime은 초 단위 — 표시용 분으로 환산. */
+  private toMinutes(seconds: number): number {
+    return Math.round(seconds / 60);
+  }
+
 }

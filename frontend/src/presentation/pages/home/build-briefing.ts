@@ -1,6 +1,7 @@
 import type { WeatherData } from '@infrastructure/api';
 import type { CommuteStatsResponse } from '@infrastructure/api/commute-api.client';
 import type { TransitArrivalInfo } from './route-utils';
+import { formatArrivalWithSuffix } from '@presentation/utils/format-arrival';
 
 // ─── Types ─────────────────────────────────────────
 
@@ -109,9 +110,7 @@ function buildSubLine(
 
     const typeName = info.type === 'subway' ? '' : '';
     const name = info.name;
-    const timeText = arrival.arrivalTime > 0
-      ? `${arrival.arrivalTime}분 후 도착`
-      : '곧 도착';
+    const timeText = formatArrivalWithSuffix(arrival.arrivalTime);
 
     return `${typeName}${name} ${timeText}`.trim();
   }

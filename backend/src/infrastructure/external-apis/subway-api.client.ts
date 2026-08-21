@@ -53,8 +53,21 @@ export class SubwayApiClient implements ISubwayApiClient {
     }
   }
 
+  // 도메인 계약: 도착 시각은 "초" 단위다. 소비자들이 여기에 기대고 있다 —
+  // notification-message-builder.formatArrivalTime(seconds),
+  // widget-data.service(arrivalTime / 60), route-delay-check(shortestArrivalSeconds),
+  // send-notification(DELAY_THRESHOLD_SECONDS = 600).
+  // 앞의 아무 숫자나 집으면 "[2번째 전]"(남은 정류장 수)까지 시간으로 읽힌다.
   private parseArrivalTime(arvlMsg: string): number {
-    const match = arvlMsg.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
+    if (!arvlMsg) return 0;
+
+    const minutes = arvlMsg.match(/(\d+)\s*분/);
+    const seconds = arvlMsg.match(/(\d+)\s*초/);
+    if (!minutes && !seconds) return 0;
+
+    return (
+      (minutes ? parseInt(minutes[1], 10) * 60 : 0) +
+      (seconds ? parseInt(seconds[1], 10) : 0)
+    );
   }
 }

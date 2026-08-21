@@ -1,6 +1,8 @@
 -- Seed: System Notification Rules
 -- Date: 2026-01-20
 -- Description: Default system rules for smart notifications
+-- NOTE: arrivalTime 조건값의 단위는 **초**다 (BusArrival·SubwayArrival 엔티티).
+--       메시지에 "N분"으로 찍으려면 {{...arrivalMinutes}} 변수를 쓴다.
 
 -- Clear existing system rules (for re-seeding)
 DELETE FROM alert_system.notification_rules WHERE is_system_rule = true;
@@ -78,12 +80,12 @@ VALUES
 
 -- Subway arriving soon
 ('지하철 곧 도착', 'transit', 50,
- '[{"dataSource": "subwayArrival", "field": "arrivalTime", "operator": "lte", "value": 3}]',
- '🚇 지하철 {{subwayArrival.arrivalTime}}분 후 도착! 서두르세요.',
+ '[{"dataSource": "subwayArrival", "field": "arrivalTime", "operator": "lte", "value": 180}]',
+ '🚇 지하철 {{subwayArrival.arrivalMinutes}}분 후 도착! 서두르세요.',
  true),
 
 -- Bus arriving soon
 ('버스 곧 도착', 'transit', 50,
- '[{"dataSource": "busArrival", "field": "arrivalTime", "operator": "lte", "value": 3}]',
- '🚌 버스 {{busArrival.arrivalTime}}분 후 도착! 정류장으로 출발하세요.',
+ '[{"dataSource": "busArrival", "field": "arrivalTime", "operator": "lte", "value": 180}]',
+ '🚌 버스 {{busArrival.arrivalMinutes}}분 후 도착! 정류장으로 출발하세요.',
  true);

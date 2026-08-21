@@ -153,7 +153,7 @@ describe('CommuteSection', () => {
             stationId: 'station-1',
             lineId: 'line-2',
             direction: '성수',
-            arrivalTime: 3,
+            arrivalTime: 180,
             destination: '성수',
           },
         ],
@@ -179,7 +179,7 @@ describe('CommuteSection', () => {
             stationId: 'station-1',
             lineId: 'line-2',
             direction: '성수',
-            arrivalTime: 1,
+            arrivalTime: 90,
             destination: '성수',
           },
         ],
@@ -188,7 +188,7 @@ describe('CommuteSection', () => {
     ];
 
     renderComponent({ transitInfos, lastTransitUpdate: Date.now() });
-    // arrivalTime <= 2 is "arriving soon"
+    // arrivalTime(초) <= 120 is "arriving soon"
     expect(screen.getByText(/성수행 1분/)).toBeInTheDocument();
   });
 
@@ -252,7 +252,7 @@ describe('CommuteSection', () => {
             stopId: 'stop-1',
             routeId: 'bus-route-1',
             routeName: '472',
-            arrivalTime: 5,
+            arrivalTime: 300,
             remainingStops: 3,
           },
         ],
@@ -301,7 +301,7 @@ describe('CommuteSection', () => {
         type: 'subway',
         name: '강남역',
         arrivals: [
-          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 180, destination: '성수' },
         ],
         isLoading: false,
       },
@@ -322,7 +322,7 @@ describe('CommuteSection', () => {
         type: 'subway',
         name: '강남역',
         arrivals: [
-          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 180, destination: '성수' },
         ],
         isLoading: false,
       },
@@ -358,7 +358,7 @@ describe('CommuteSection', () => {
         type: 'subway',
         name: '강남역',
         arrivals: [
-          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 180, destination: '성수' },
         ],
         isLoading: false,
       },
@@ -401,7 +401,7 @@ describe('CommuteSection', () => {
         type: 'subway',
         name: '강남역',
         arrivals: [
-          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 3, destination: '성수' },
+          { stationId: 'station-1', lineId: 'line-2', direction: '성수', arrivalTime: 180, destination: '성수' },
         ],
         isLoading: false,
       },

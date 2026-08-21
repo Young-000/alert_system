@@ -5,6 +5,7 @@ import type { RouteCongestionCheckpoint } from '@infrastructure/api/commute-api.
 import { useRouteCongestion } from '@infrastructure/query/use-congestion-query';
 import { CongestionChip } from '@presentation/components/CongestionChip';
 import type { TransitArrivalInfo } from './route-utils';
+import { formatArrivalTime, isArrivingSoon } from '@presentation/utils/format-arrival';
 
 interface CommuteSectionProps {
   routes: RouteResponse[];
@@ -28,10 +29,6 @@ function formatRelativeTime(timestamp: number): string {
   return `${Math.floor(minutes / 60)}시간 전`;
 }
 
-/** Checks if arrival time is "soon" (2 minutes or less). */
-function isArrivingSoon(arrivalTime: number): boolean {
-  return arrivalTime > 0 && arrivalTime <= 2;
-}
 
 export function CommuteSection({
   routes,
@@ -144,10 +141,11 @@ export function CommuteSection({
                         {arrivingSoon && <span className="arriving-soon-icon" aria-hidden="true">⚡</span>}
                         {(() => {
                           const a = info.arrivals[0];
+                          const when = formatArrivalTime(a.arrivalTime);
                           if ('routeName' in a) {
-                            return `${a.routeName} ${a.arrivalTime > 0 ? `${a.arrivalTime}분` : '곧 도착'}`;
+                            return `${a.routeName} ${when}`;
                           }
-                          return `${a.destination}행 ${a.arrivalTime > 0 ? `${a.arrivalTime}분` : '곧 도착'}`;
+                          return `${a.destination}행 ${when}`;
                         })()}
                       </span>
                     ) : (
