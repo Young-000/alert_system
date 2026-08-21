@@ -54,4 +54,17 @@ describe('DeleteAlertUseCase', () => {
     expect(alertRepository.delete).not.toHaveBeenCalled();
     expect(notificationScheduler.cancelNotification).not.toHaveBeenCalled();
   });
+
+  // 두 저장소(DB·EventBridge)를 함께 바꾸는 동작이라 실패 순서가 곧 계약이다.
+  it('스케줄 취소가 실패하면 DB 행을 지우지 않는다', async () => {
+    alertRepository.findById.mockResolvedValue(mockAlert);
+    alertRepository.delete.mockResolvedValue();
+    notificationScheduler.cancelNotification.mockRejectedValue(new Error('EventBridge down'));
+
+    await expect(useCase.execute('alert-id')).rejects.toThrow('EventBridge down');
+
+    // DB 행이 먼저 사라지면 남은 스케줄을 취소할 근거가 없어진다 —
+    // 사용자는 목록에 없는 알림을 계속 받게 된다.
+    expect(alertRepository.delete).not.toHaveBeenCalled();
+  });
 });

@@ -251,4 +251,42 @@ describe('UpdateAlertUseCase', () => {
       expect(mockAlertRepository.save).toHaveBeenCalled();
     });
   });
+
+  // DB와 EventBridge를 함께 바꾸는 동작 — 한쪽만 반영되면 화면과 실제 발송이 갈린다.
+  describe('execute - 스케줄러 실패 시 롤백', () => {
+    it('재스케줄링이 실패하면 DB의 스케줄을 원래 값으로 되돌린다', async () => {
+      const alert = createMockAlert({ schedule: '0 8 * * 1-5' });
+      mockAlertRepository.findById.mockResolvedValue(alert);
+      mockNotificationScheduler.scheduleNotification.mockRejectedValue(
+        new Error('EventBridge down'),
+      );
+
+      await expect(
+        useCase.execute('alert-1', { schedule: '0 9 * * 1-5' }),
+      ).rejects.toThrow('EventBridge down');
+
+      // 롤백 저장이 한 번 더 일어나고, 마지막으로 저장된 상태가 원래 스케줄이어야 한다.
+      const lastSaved = mockAlertRepository.save.mock.calls.at(-1)?.[0] as Alert;
+      expect(lastSaved.schedule).toBe('0 8 * * 1-5');
+      expect(alert.schedule).toBe('0 8 * * 1-5');
+    });
+
+    it('취소가 실패하면 알림을 다시 활성 상태로 되돌린다', async () => {
+      const alert = createMockAlert({ enabled: true });
+      mockAlertRepository.findById.mockResolvedValue(alert);
+      mockNotificationScheduler.cancelNotification.mockRejectedValue(
+        new Error('EventBridge down'),
+      );
+
+      await expect(useCase.execute('alert-1', { enabled: false })).rejects.toThrow(
+        'EventBridge down',
+      );
+
+      // DB만 비활성으로 남으면 다음 수정 때 wasEnabled=false라 취소를 재시도조차 하지 않는다 —
+      // 스케줄이 영구히 고아가 되어 끈 알림이 계속 발송된다.
+      const lastSaved = mockAlertRepository.save.mock.calls.at(-1)?.[0] as Alert;
+      expect(lastSaved.enabled).toBe(true);
+      expect(alert.enabled).toBe(true);
+    });
+  });
 });
