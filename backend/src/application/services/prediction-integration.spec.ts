@@ -35,6 +35,23 @@ const createRecord = (
   });
 };
 
+/**
+ * Measures CPU time (user + system) consumed by `run`, in milliseconds.
+ *
+ * The BE-11 budgets below guard against algorithmic regressions, so they must
+ * measure work done — not time waited. Wall-clock (`performance.now()`) also
+ * counts scheduler wait, which balloons when Jest runs these workers alongside
+ * the rest of the suite: the same call that takes 1ms alone was measured at
+ * 79ms and >200ms under full-suite load, failing budgets it clears 200x over.
+ * `process.cpuUsage()` is per-process, so contention no longer leaks in.
+ */
+const measureCpuMs = async (run: () => unknown): Promise<number> => {
+  const start = process.cpuUsage();
+  await run();
+  const elapsed = process.cpuUsage(start);
+  return (elapsed.user + elapsed.system) / 1000;
+};
+
 const generateWeekdayRecords = (
   count: number,
   baseHour = 8,
@@ -386,38 +403,38 @@ describe('Prediction Pipeline Integration', () => {
       const records = generateWeekdayRecords(100, 8, 10);
       commuteRepo.findByUserIdAndType.mockResolvedValue(records);
 
-      const start = performance.now();
-      const result = await predictionEngine.predict('user-1', {
-        weather: 'rain',
-        transitDelayMinutes: 8,
-        targetDate: new Date('2026-03-02'),
+      let result: Awaited<ReturnType<typeof predictionEngine.predict>>;
+      const duration = await measureCpuMs(async () => {
+        result = await predictionEngine.predict('user-1', {
+          weather: 'rain',
+          transitDelayMinutes: 8,
+          targetDate: new Date('2026-03-02'),
+        });
       });
-      const duration = performance.now() - start;
 
-      expect(result.tier).toBe('full');
-      expect(duration).toBeLessThan(100); // < 100ms
+      expect(result!.tier).toBe('full');
+      expect(duration).toBeLessThan(100); // < 100ms of CPU
     });
 
     it('full analysis with 100 records completes under 200ms', async () => {
       const records = generateWeekdayRecords(100, 8, 10);
       commuteRepo.findByUserIdAndType.mockResolvedValue(records);
 
-      const start = performance.now();
-      await analysisService.runFullAnalysis('user-1');
-      const duration = performance.now() - start;
+      const duration = await measureCpuMs(() => analysisService.runFullAnalysis('user-1'));
 
-      expect(duration).toBeLessThan(200); // < 200ms
+      expect(duration).toBeLessThan(200); // < 200ms of CPU
     });
 
     it('feature extraction for 100 records is O(n)', async () => {
       const records = generateWeekdayRecords(100, 8, 10);
 
-      const start = performance.now();
-      const rows = featureService.transformRecordsToFeatureRows(records);
-      const duration = performance.now() - start;
+      let rows: ReturnType<typeof featureService.transformRecordsToFeatureRows>;
+      const duration = await measureCpuMs(() => {
+        rows = featureService.transformRecordsToFeatureRows(records);
+      });
 
-      expect(rows.length).toBe(100);
-      expect(duration).toBeLessThan(50); // Should be very fast
+      expect(rows!.length).toBe(100);
+      expect(duration).toBeLessThan(50); // < 50ms of CPU
     });
 
     it('repository calls are minimal (no N+1)', async () => {
