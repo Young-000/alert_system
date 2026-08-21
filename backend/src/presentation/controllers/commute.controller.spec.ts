@@ -317,7 +317,7 @@ describe('CommuteController', () => {
     it('자신의 주간 리포트 조회 성공 (기본 weekOffset)', async () => {
       getWeeklyReportUseCase.execute.mockResolvedValue(mockReport as any);
 
-      const result = await controller.getWeeklyReport(OWNER_ID, undefined, mockRequest(OWNER_ID));
+      const result = await controller.getWeeklyReport(OWNER_ID, {}, mockRequest(OWNER_ID));
 
       expect(getWeeklyReportUseCase.execute).toHaveBeenCalledWith(OWNER_ID, 0);
       expect(result).toEqual(mockReport);
@@ -326,14 +326,14 @@ describe('CommuteController', () => {
     it('weekOffset 쿼리 파라미터 파싱', async () => {
       getWeeklyReportUseCase.execute.mockResolvedValue(mockReport as any);
 
-      await controller.getWeeklyReport(OWNER_ID, '2', mockRequest(OWNER_ID));
+      await controller.getWeeklyReport(OWNER_ID, { weekOffset: 2 }, mockRequest(OWNER_ID));
 
       expect(getWeeklyReportUseCase.execute).toHaveBeenCalledWith(OWNER_ID, 2);
     });
 
     it('다른 사용자의 주간 리포트 조회 시 ForbiddenException', async () => {
       await expect(
-        controller.getWeeklyReport(OWNER_ID, undefined, mockRequest(OTHER_USER_ID)),
+        controller.getWeeklyReport(OWNER_ID, {}, mockRequest(OTHER_USER_ID)),
       ).rejects.toThrow(ForbiddenException);
 
       expect(getWeeklyReportUseCase.execute).not.toHaveBeenCalled();
@@ -341,7 +341,7 @@ describe('CommuteController', () => {
 
     it('다른 사용자의 주간 리포트 조회 시 올바른 에러 메시지', async () => {
       await expect(
-        controller.getWeeklyReport(OWNER_ID, undefined, mockRequest(OTHER_USER_ID)),
+        controller.getWeeklyReport(OWNER_ID, {}, mockRequest(OTHER_USER_ID)),
       ).rejects.toThrow('다른 사용자의 주간 리포트에 접근할 수 없습니다.');
     });
   });

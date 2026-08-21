@@ -35,6 +35,7 @@ import {
   StreakResponseDto,
   MilestonesResponseDto,
 } from '@application/dto/streak.dto';
+import { WeeklyReportQueryDto } from '@application/dto/weekly-report.dto';
 import type { WeeklyReportResponseDto } from '@application/dto/weekly-report.dto';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
 import { parseBoundedInt, MAX_OFFSET } from '../utils/query-param';
@@ -241,14 +242,16 @@ export class CommuteController {
   @Get('weekly-report/:userId')
   async getWeeklyReport(
     @Param('userId') userId: string,
-    @Query('weekOffset') weekOffsetStr: string | undefined,
+    @Query() query: WeeklyReportQueryDto,
     @Request() req: AuthenticatedRequest,
   ): Promise<WeeklyReportResponseDto> {
     // 권한 검사: 자신의 리포트만 조회 가능
     if (userId !== req.user.userId) {
       throw new ForbiddenException('다른 사용자의 주간 리포트에 접근할 수 없습니다.');
     }
-    const weekOffset = weekOffsetStr ? (parseInt(weekOffsetStr, 10) || 0) : 0;
+    // 범위 검증은 WeeklyReportQueryDto(@Min(0) @Max(4))가 전역 ValidationPipe에서 수행한다.
+    // 직접 parseInt를 쓰면 `?weekOffset=abc`가 400이 아니라 조용히 0주차로 바뀐다.
+    const weekOffset = query.weekOffset ?? 0;
     this.logger.log(`Getting weekly report for user ${userId}, weekOffset=${weekOffset}`);
     return this.getWeeklyReportUseCase.execute(userId, weekOffset);
   }
