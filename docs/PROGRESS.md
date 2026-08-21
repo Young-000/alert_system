@@ -1,5 +1,49 @@
 # Alert System - 진행 기록
 
+## [2026-08-21] Auto E2E Review 16:00 — 1건 수정 (BE + FE)
+
+### Completed
+- fix(transit): **버스·지하철 도착 시각의 단위가 생산자와 소비자 사이에서 어긋나 있었다.**
+  `parseArrivalTime`이 "3분 후"를 `3`(분)으로 내려보내는데 소비자 대부분은 초를 전제한다.
+  그래서 `formatArrivalTime(3)`이 `3 <= 60`에 걸려 **알림톡의 도착 시각이 언제나 "곧 도착"**으로
+  나갔다(3분 뒤든 45분 뒤든). 같은 이유로 지하철 지연 감지(`>= 600`초)는 영영 참이 되지 않았고,
+  위젯·대안 경로 대기시간은 `0분`으로 뭉개졌다
+- 정본은 **초**로 잡았다 — `route-delay-check`의 `shortestArrivalSeconds` 주석,
+  `formatArrivalTime(seconds)` 시그니처, `DELAY_THRESHOLD_SECONDS` 상수명이 모두 초를 가리키고,
+  버스 API는 `"3분30초후"`처럼 초까지 주는데 분 파싱이 그 정보를 버리고 있었다
+- 부수 수확: 기존 정규식 `/(\d+)/`가 `"곧 도착[1번째 전]"`에서 **정류장 수 `1`을 시간으로 읽던**
+  버그도 함께 사라졌다
+- 컨트롤러가 엔티티를 무변환으로 내리므로 **프론트도 함께 수정** —
+  `presentation/utils/format-arrival.ts` 신설, 표기 규칙을 백엔드와 일치시킴.
+  백엔드만 고쳤다면 홈이 "180분 후 도착"이 됐을 자리
+- 휴면 경로(`smart-message-builder`·`rule-engine`)와 시드 규칙(임계값 `3 → 180`,
+  표기용 `{{...arrivalMinutes}}` 변수 추가)까지 같은 단위로 정렬
+- 재발 방지로 `BusArrival`·`SubwayArrival`의 `arrivalTime`에 단위 주석 명시
+
+### Verification
+- FE: lint 0 · tsc 0 · build 성공(index 43.52 kB / gzip 14.43 · precache 943.80 KiB) ·
+  **855 passed / 81 files** (847 → 855)
+- BE: lint 0 · `nest build` 성공 · **1665 passed** (1656 → 1665, 10 skipped)
+- Red → Green: 초 계약 테스트 추가 후 수정 전 **7건 실패** 확인 → 수정 후 전부 통과. 회귀 0
+- 배포: FE는 머지 시 Vercel 자동. BE는 코드 변경 있으나 **ECS/ECR 실물 부재**로 미실행
+  (`aws ecs list-clusters` 0건 · `describe-repositories alert-system` → RepositoryNotFoundException)
+
+### Next Steps
+- [ ] 스마트 알림 규칙 엔진 휴면 클러스터 — 살릴지 걷어낼지 **제품 결정** 필요.
+      ① `data.recommendations` 읽는 곳 0건 ② `SmartMessageBuilder` 호출 0건
+      ③ context에 교통 데이터가 안 실려 transit 조건은 항상 false
+      ④ `getRelevantCategories`가 `TRANSIT_COMPARISON`을 요청하지 않음 — 4개가 한 작업 단위
+- [ ] 스마트 출발 사전 알림 배선 — **D1 게이트** (알림 발송 + terraform 룰 추가)
+- [ ] branch protection required checks 이름 정정 (`CI / frontend` → `frontend`) — 대표 승인 필요.
+      이번에도 `--admin`으로 머지
+- [ ] NestJS 10 / react-router v6 메이저 업그레이드 — 런타임 이미지 잔여 HIGH 11건
+
+### Notes
+- 리뷰 리포트는 `.gitignore` 대상이라 커밋에 담기지 않는다 —
+  `.claude/e2e-reports/auto-review/20260821_160002.md` (메인 리포에 보관)
+- 08-19·08-20 라운드의 PROGRESS 항목은 별도 sync 커밋으로 배치되다가 유실됐다.
+  각 라운드 리포트는 `.claude/e2e-reports/auto-review/`에 남아 있다
+
 ## [2026-08-18] Auto E2E Review 00:00 — 2건 수정 (FE + BE)
 
 ### Completed
