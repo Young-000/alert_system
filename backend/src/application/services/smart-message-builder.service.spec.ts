@@ -69,7 +69,7 @@ describe('SmartMessageBuilder', () => {
     it('지하철 도착 정보를 포함한다', () => {
       const context = createContext({
         subwayArrivals: [
-          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 3, destination: '강남' },
+          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 180, destination: '강남' },
         ],
         subwayStationName: '역삼역',
       });
@@ -84,7 +84,7 @@ describe('SmartMessageBuilder', () => {
     it('버스 도착 정보를 포함한다', () => {
       const context = createContext({
         busArrivals: [
-          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 5, remainingStops: 3 },
+          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 300, remainingStops: 3 },
         ],
         busStopName: '강남역 정류장',
       });
@@ -99,10 +99,10 @@ describe('SmartMessageBuilder', () => {
     it('버스와 지하철 비교 메시지를 포함한다 (버스가 빠를 때)', () => {
       const context = createContext({
         busArrivals: [
-          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 2, remainingStops: 3 },
+          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 120, remainingStops: 3 },
         ],
         subwayArrivals: [
-          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 8, destination: '강남' },
+          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 480, destination: '강남' },
         ],
       });
 
@@ -115,10 +115,10 @@ describe('SmartMessageBuilder', () => {
     it('도착 시간이 비슷하면(차이 2분 이내) 비교 메시지를 넣지 않는다', () => {
       const context = createContext({
         busArrivals: [
-          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 4, remainingStops: 3 },
+          { stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 240, remainingStops: 3 },
         ],
         subwayArrivals: [
-          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 5, destination: '강남' },
+          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 300, destination: '강남' },
         ],
       });
 

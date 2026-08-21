@@ -58,4 +58,49 @@ describe('BusApiClient', () => {
 
     await expect(client.getBusArrival('stop-123')).rejects.toThrow('API Error');
   });
+
+  // 도착 시각의 도메인 단위는 "초"다. 소비자들이 그 계약에 기대고 있다 —
+  // notification-message-builder.formatArrivalTime(seconds),
+  // widget-data.service(arrivalTime / 60), route-delay-check(shortestArrivalSeconds),
+  // send-notification(DELAY_THRESHOLD_SECONDS = 600).
+  describe('parseArrivalTime (초 단위 계약)', () => {
+    async function arrivalTimeFor(arrmsg1: string): Promise<number> {
+      mockGet.mockResolvedValue({
+        data: {
+          msgBody: {
+            itemList: [
+              {
+                stId: 'stop-123',
+                busRouteId: 'route-456',
+                busRouteNm: '123번',
+                arrmsg1,
+                staOrd: 10,
+              },
+            ],
+          },
+        },
+      });
+      const result = await client.getBusArrival('stop-123');
+      return result[0].arrivalTime;
+    }
+
+    it('converts minutes to seconds', async () => {
+      await expect(arrivalTimeFor('3분 후 도착')).resolves.toBe(180);
+    });
+
+    it('adds the seconds component when present', async () => {
+      // 서울 TOPIS arrmsg1 실제 형식
+      await expect(arrivalTimeFor('3분30초후[2번째 전]')).resolves.toBe(210);
+    });
+
+    it('returns 0 when no time is given', async () => {
+      await expect(arrivalTimeFor('곧 도착[1번째 전]')).resolves.toBe(0);
+      await expect(arrivalTimeFor('운행종료')).resolves.toBe(0);
+    });
+
+    it('does not read a stop count as a duration', async () => {
+      // "[2번째 전]"은 남은 정류장 수지 시간이 아니다
+      await expect(arrivalTimeFor('출발대기[2번째 전]')).resolves.toBe(0);
+    });
+  });
 });

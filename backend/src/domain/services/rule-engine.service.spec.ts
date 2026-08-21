@@ -23,10 +23,10 @@ describe('RuleEngine', () => {
     weather: new Weather('서울', 5, 'Clear', 40, 3.5),
     airQuality: new AirQuality('서울', 45, 22, 65, 'moderate'),
     busArrivals: [
-      { stopId: 'stop-1', routeId: 'r1', routeName: '146', arrivalTime: 3, remainingStops: 5 },
+      { stopId: 'stop-1', routeId: 'r1', routeName: '146', arrivalTime: 180, remainingStops: 5 },
     ],
     subwayArrivals: [
-      { stationId: 'st-1', lineId: '2', direction: '상행', arrivalTime: 5, destination: '강남' },
+      { stationId: 'st-1', lineId: '2', direction: '상행', arrivalTime: 300, destination: '강남' },
     ],
     ...overrides,
   });
@@ -270,7 +270,8 @@ describe('RuleEngine', () => {
             dataSource: DataSource.BUS_ARRIVAL,
             field: 'arrivalTime',
             operator: ComparisonOperator.LESS_THAN,
-            value: 10,
+            // arrivalTime은 초 단위 — 10분 이내
+            value: 600,
           },
         ],
         {
@@ -282,8 +283,36 @@ describe('RuleEngine', () => {
       const context = createContext();
       const results = ruleEngine.evaluate(context, [rule]);
 
-      // bus 3min, subway 5min, diff=2 -> 비슷
+      // bus 180s(3분), subway 300s(5분), diff=2분 -> 비슷
       expect(results[0].message).toBe('버스와 지하철 도착 시간이 비슷해요');
+    });
+
+    it('arrivalMinutes 변수는 초를 분으로 환산해 채운다', () => {
+      // 시드 규칙('지하철 곧 도착')이 쓰는 표기 변수. arrivalTime을 그대로 쓰면
+      // 180초가 "180분 후 도착"이 된다.
+      const rule = createRule(
+        [
+          {
+            dataSource: DataSource.SUBWAY_ARRIVAL,
+            field: 'arrivalTime',
+            operator: ComparisonOperator.LESS_THAN_OR_EQUAL,
+            value: 180,
+          },
+        ],
+        {
+          category: RuleCategory.TRANSIT,
+          messageTemplate: '지하철 {{subwayArrival.arrivalMinutes}}분 후 도착',
+        },
+      );
+
+      const context = createContext({
+        subwayArrivals: [
+          { stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 180, destination: '강남' },
+        ],
+      });
+      const results = ruleEngine.evaluate(context, [rule]);
+
+      expect(results[0].message).toBe('지하철 3분 후 도착');
     });
 
     it('버스가 지하철보다 빠르면 비교 메시지에 반영한다', () => {
@@ -293,7 +322,8 @@ describe('RuleEngine', () => {
             dataSource: DataSource.BUS_ARRIVAL,
             field: 'arrivalTime',
             operator: ComparisonOperator.LESS_THAN,
-            value: 10,
+            // arrivalTime은 초 단위 — 10분 이내
+            value: 600,
           },
         ],
         {
@@ -303,8 +333,8 @@ describe('RuleEngine', () => {
       );
 
       const context = createContext({
-        busArrivals: [{ stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 2, remainingStops: 5 }],
-        subwayArrivals: [{ stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 8, destination: '강남' }],
+        busArrivals: [{ stopId: 's1', routeId: 'r1', routeName: '146', arrivalTime: 120, remainingStops: 5 }],
+        subwayArrivals: [{ stationId: 'st1', lineId: '2', direction: '상행', arrivalTime: 480, destination: '강남' }],
       });
       const results = ruleEngine.evaluate(context, [rule]);
 

@@ -112,12 +112,12 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
     if (busArrivals?.length && subwayArrivals?.length) {
       const fastestBus = busArrivals[0].arrivalTime;
       const fastestSubway = subwayArrivals[0].arrivalTime;
-      const diff = Math.abs(fastestBus - fastestSubway);
+      const diffMinutes = this.toMinutes(Math.abs(fastestBus - fastestSubway));
 
-      if (diff > 2) {
+      if (diffMinutes > 2) {
         const faster = fastestBus < fastestSubway ? '버스' : '지하철';
         const slower = fastestBus < fastestSubway ? '지하철' : '버스';
-        transitParts.push(`🚦 오늘은 ${faster}가 ${slower}보다 ${diff}분 빨라요!`);
+        transitParts.push(`🚦 오늘은 ${faster}가 ${slower}보다 ${diffMinutes}분 빨라요!`);
       }
     }
 
@@ -125,13 +125,13 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
     if (subwayArrivals?.length) {
       const first = subwayArrivals[0];
       const stationLabel = subwayStationName || '지하철';
-      transitParts.push(`🚇 ${stationLabel} ${first.arrivalTime}분 후 (${first.destination}행)`);
+      transitParts.push(`🚇 ${stationLabel} ${this.toMinutes(first.arrivalTime)}분 후 (${first.destination}행)`);
     }
 
     if (busArrivals?.length) {
       const first = busArrivals[0];
       const stopLabel = busStopName || '';
-      transitParts.push(`🚌 ${first.routeName}번 ${first.arrivalTime}분 후${stopLabel ? ` (${stopLabel})` : ''}`);
+      transitParts.push(`🚌 ${first.routeName}번 ${this.toMinutes(first.arrivalTime)}분 후${stopLabel ? ` (${stopLabel})` : ''}`);
     }
 
     return transitParts.length > 0 ? transitParts.join('\n') : null;
@@ -156,4 +156,10 @@ export class SmartMessageBuilder implements ISmartMessageBuilder {
     const lowerStatus = status.toLowerCase();
     return statusMap[lowerStatus] || status;
   }
+
+  /** arrivalTime의 단위는 초다 (BusArrival·SubwayArrival 엔티티). 표시 직전에만 분으로 환산한다. */
+  private toMinutes(seconds: number): number {
+    return Math.round(seconds / 60);
+  }
+
 }
