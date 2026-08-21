@@ -15,7 +15,10 @@ export class DeleteAlertUseCase {
     if (!alert) {
       throw new NotFoundException('알림을 찾을 수 없습니다.');
     }
-    await this.alertRepository.delete(alertId);
+    // 스케줄을 먼저 취소한다. 순서를 뒤집으면 취소가 실패했을 때 DB 행은 이미 사라지고
+    // EventBridge 스케줄만 남아, 목록에 없는 알림이 계속 발송되는데 되돌릴 근거가 없다.
+    // 이미 없는 스케줄은 ResourceNotFoundException을 삼키므로 이 순서가 삭제를 막지 않는다.
     await this.notificationScheduler.cancelNotification(alertId);
+    await this.alertRepository.delete(alertId);
   }
 }
