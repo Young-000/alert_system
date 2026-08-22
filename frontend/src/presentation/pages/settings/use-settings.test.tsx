@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { queryKeys } from '@infrastructure/query/query-keys';
+import { subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
 import { useSettings } from './use-settings';
 
 const mockDeleteAllData = vi.fn();
@@ -142,6 +143,71 @@ describe('useSettings', () => {
       expect(
         queryClient.getQueryState(queryKeys.commuteStats.byUser(USER_ID, 30))?.isInvalidated
       ).toBe(false);
+    });
+  });
+  describe('handleTogglePush', () => {
+    it('권한을 못 받아 구독이 false를 돌려주면 해제 방법을 알려준다', async () => {
+      // 브라우저는 한 번 차단한 사이트에 권한 창을 다시 띄우지 않는다.
+      // 안내가 없으면 사용자는 눌러도 안 켜지는 이유를 끝내 알 수 없다.
+      vi.mocked(subscribeToPush).mockResolvedValue(false);
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleTogglePush();
+      });
+
+      expect(result.current.pushEnabled).toBe(false);
+      expect(result.current.actionError).toBe(
+        '알림 권한이 없어 켜지 못했습니다. 브라우저 설정에서 알림을 허용해주세요.'
+      );
+    });
+
+    it('구독에 성공하면 경고 없이 켜진다', async () => {
+      vi.mocked(subscribeToPush).mockResolvedValue(true);
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleTogglePush();
+      });
+
+      expect(result.current.pushEnabled).toBe(true);
+      expect(result.current.actionError).toBe('');
+    });
+
+    it('구독이 던지면 기존 실패 메시지를 유지한다', async () => {
+      vi.mocked(subscribeToPush).mockRejectedValue(new Error('network'));
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleTogglePush();
+      });
+
+      expect(result.current.actionError).toBe('푸시 알림 설정에 실패했습니다.');
+    });
+
+    it('구독 해제는 안내 없이 꺼진다', async () => {
+      vi.mocked(unsubscribeFromPush).mockResolvedValue(true);
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      // 켠 뒤 다시 끈다
+      vi.mocked(subscribeToPush).mockResolvedValue(true);
+      await act(async () => {
+        await result.current.handleTogglePush();
+      });
+      await act(async () => {
+        await result.current.handleTogglePush();
+      });
+
+      expect(result.current.pushEnabled).toBe(false);
+      expect(result.current.actionError).toBe('');
     });
   });
 });
