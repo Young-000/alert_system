@@ -119,6 +119,14 @@ export function useSettings(): UseSettingsReturn {
       } else {
         const ok = await subscribeToPush();
         setPushEnabled(ok);
+        // subscribeToPush는 알림 권한을 못 받으면 던지지 않고 false를 돌려준다.
+        // 그대로 두면 토글이 꺼진 자리로 돌아갈 뿐 화면에 아무 흔적이 없어,
+        // 한 번 차단한 사용자는 눌러도 켜지지 않는 이유도 해제 방법도 알 수 없다.
+        // (브라우저는 이미 거부된 사이트에 권한 창을 다시 띄우지 않는다.)
+        if (!ok) {
+          setActionError('알림 권한이 없어 켜지 못했습니다. 브라우저 설정에서 알림을 허용해주세요.');
+          setTimeout(() => setActionError(''), TOAST_DURATION_MS);
+        }
       }
     } catch {
       setActionError('푸시 알림 설정에 실패했습니다.');
