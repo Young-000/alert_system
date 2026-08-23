@@ -7,6 +7,7 @@ import type {
   WeatherData,
 } from '@/types/home';
 
+import { formatArrivalWithSuffix } from './arrival';
 import { getTimeContext } from './route';
 
 /**
@@ -75,10 +76,7 @@ function buildSubLine(
     if (!arrival) continue;
 
     const name = info.name;
-    const timeText =
-      arrival.arrivalTime > 0
-        ? `${arrival.arrivalTime}분 후 도착`
-        : '곧 도착';
+    const timeText = formatArrivalWithSuffix(arrival.arrivalTime);
 
     return `${name} ${timeText}`;
   }

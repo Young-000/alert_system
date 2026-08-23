@@ -5,6 +5,7 @@ import {
   getBriefingContextLabel,
   pickSummary,
 } from '@/utils/briefing-advice';
+import { toArrivalMinutes } from '@/utils/arrival';
 
 import type {
   AirQualityData,
@@ -117,14 +118,14 @@ function mapTransitInput(
     if (info.type === 'subway' && !subway) {
       subway = {
         stationName: info.name,
-        arrivalMinutes: firstArrival.arrivalTime,
+        arrivalMinutes: toArrivalMinutes(firstArrival.arrivalTime),
       };
     }
 
     if (info.type === 'bus' && !bus && 'remainingStops' in firstArrival) {
       bus = {
         routeName: firstArrival.routeName,
-        arrivalMinutes: firstArrival.arrivalTime,
+        arrivalMinutes: toArrivalMinutes(firstArrival.arrivalTime),
         remainingStops: firstArrival.remainingStops,
       };
     }
