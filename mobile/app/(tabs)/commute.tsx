@@ -104,7 +104,13 @@ export default function CommuteScreen(): React.JSX.Element {
           {
             text: '삭제',
             style: 'destructive',
-            onPress: () => void deleteRoute(route.id),
+            onPress: () => {
+              void deleteRoute(route.id).then((success) => {
+                if (!success) {
+                  RNAlert.alert('오류', '삭제에 실패했습니다. 다시 시도해주세요.');
+                }
+              });
+            },
           },
         ],
       );

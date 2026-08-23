@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert as RNAlert,
   Modal,
   Pressable,
   RefreshControl,
@@ -86,7 +87,12 @@ export default function SmartDepartureScreen(): React.JSX.Element {
 
   const handleDeleteConfirm = useCallback(async (): Promise<void> => {
     if (showDeleteConfirm) {
-      await handleDelete(showDeleteConfirm);
+      // 폼의 onDelete는 확인 모달만 열고 항상 true를 돌려주므로, 실제 삭제 실패는
+      // 여기서만 드러난다. 알리지 않으면 확인 모달만 그대로 남아 아무 일도 안 한 것처럼 보인다.
+      const success = await handleDelete(showDeleteConfirm);
+      if (!success) {
+        RNAlert.alert('삭제하지 못했어요', '잠시 후 다시 시도해주세요.');
+      }
     }
   }, [showDeleteConfirm, handleDelete]);
 

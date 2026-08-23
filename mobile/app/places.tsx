@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert as RNAlert,
   Modal,
   Pressable,
   RefreshControl,
@@ -90,6 +91,8 @@ export default function PlacesScreen(): React.JSX.Element {
         if (remaining.length > 0) {
           void startMonitoring(remaining);
         }
+      } else {
+        RNAlert.alert('삭제하지 못했어요', '잠시 후 다시 시도해주세요.');
       }
       setShowDeleteConfirm(null);
     },

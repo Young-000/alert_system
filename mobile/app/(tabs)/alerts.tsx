@@ -70,7 +70,10 @@ export default function AlertsScreen(): React.JSX.Element {
       }
       if (success) {
         handleCloseModal();
+        return;
       }
+      // 실패해도 모달은 열어둔다 — 입력한 내용을 잃지 않게.
+      RNAlert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요.');
     },
     [editingAlert, createAlert, updateAlert, handleCloseModal],
   );
@@ -85,7 +88,13 @@ export default function AlertsScreen(): React.JSX.Element {
           {
             text: '삭제',
             style: 'destructive',
-            onPress: () => void deleteAlert(alert.id),
+            onPress: () => {
+              void deleteAlert(alert.id).then((success) => {
+                if (!success) {
+                  RNAlert.alert('삭제하지 못했어요', '잠시 후 다시 시도해주세요.');
+                }
+              });
+            },
           },
         ],
       );
