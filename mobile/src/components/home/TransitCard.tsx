@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/colors';
 import { formatRelativeTime } from '@/utils/format';
+import { formatArrivalTime, isArrivingSoon } from '@/utils/arrival';
 import { buildRouteSummary } from '@/utils/route';
 import { SkeletonBox } from '@/components/SkeletonBox';
 
@@ -165,7 +166,7 @@ function TransitItem({
   }
 
   const arrival = info.arrivals[0]!;
-  const isSoon = arrival.arrivalTime <= 2;
+  const isSoon = isArrivingSoon(arrival.arrivalTime);
 
   return (
     <View style={styles.transitItem}>
@@ -197,8 +198,7 @@ function SubwayArrivalInfo({
   arrival: SubwayArrival;
   isSoon: boolean;
 }): React.JSX.Element {
-  const timeText =
-    arrival.arrivalTime <= 0 ? '곧 도착' : `${arrival.arrivalTime}분`;
+  const timeText = formatArrivalTime(arrival.arrivalTime);
 
   return (
     <View style={styles.arrivalInfo}>
@@ -224,8 +224,7 @@ function BusArrivalInfo({
   arrival: BusArrival;
   isSoon: boolean;
 }): React.JSX.Element {
-  const timeText =
-    arrival.arrivalTime <= 0 ? '곧 도착' : `${arrival.arrivalTime}분`;
+  const timeText = formatArrivalTime(arrival.arrivalTime);
   const stopsText = `(${arrival.remainingStops}정거장)`;
 
   return (

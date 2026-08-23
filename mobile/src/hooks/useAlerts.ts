@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { alertService } from '@/services/alert.service';
+import { parseCronTime } from '@/utils/cron';
 import { useAuth } from './useAuth';
 
 import type { Alert, CreateAlertPayload, UpdateAlertPayload } from '@/types/alert';
@@ -32,14 +33,16 @@ export function useAlerts(): UseAlertsReturn {
 
     try {
       const data = await alertService.fetchAlerts(user.id);
-      // Sort by schedule time (ascending)
-      const sorted = [...data].sort((a, b) => {
-        const [aMin, aHour] = a.schedule.split(' ').map(Number);
-        const [bMin, bHour] = b.schedule.split(' ').map(Number);
-        const aTime = (aHour ?? 0) * 60 + (aMin ?? 0);
-        const bTime = (bHour ?? 0) * 60 + (bMin ?? 0);
-        return aTime - bTime;
-      });
+      // Sort by schedule time (ascending). 시각 파싱은 `parseCronTime`에 맡긴다 —
+      // 직접 `Number('7,18')`을 쓰면 NaN이 되고, `?? 0`은 NaN을 걸러내지 못해
+      // 비교 함수가 NaN을 반환하면서 목록 순서가 통째로 무너진다.
+      const scheduleMinutes = (schedule: string): number => {
+        const { hour, minute } = parseCronTime(schedule);
+        return hour * 60 + minute;
+      };
+      const sorted = [...data].sort(
+        (a, b) => scheduleMinutes(a.schedule) - scheduleMinutes(b.schedule),
+      );
       setAlerts(sorted);
       setError(null);
     } catch {

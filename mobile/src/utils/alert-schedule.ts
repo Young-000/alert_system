@@ -1,3 +1,5 @@
+import { parseCronHours, parseCronTime } from './cron';
+
 import type { Alert } from '@/types/home';
 
 /**
@@ -19,13 +21,10 @@ export function computeNextAlert(
     null;
 
   for (const alert of enabled) {
-    const parts = alert.schedule.split(' ');
-    if (parts.length < 2) continue;
+    const hours = parseCronHours(alert.schedule);
+    if (!hours) continue;
 
-    const cronMin = isNaN(Number(parts[0])) ? 0 : Number(parts[0]);
-    const hours = (parts[1] ?? '').includes(',')
-      ? (parts[1] ?? '').split(',').map(Number).filter((h) => !isNaN(h))
-      : [Number(parts[1])].filter((h) => !isNaN(h));
+    const { minute: cronMin } = parseCronTime(alert.schedule);
 
     const label = alert.alertTypes.includes('weather') ? '날씨 + 교통 알림' : '교통 알림';
 

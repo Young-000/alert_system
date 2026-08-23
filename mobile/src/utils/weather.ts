@@ -38,7 +38,7 @@ export function getGreeting(): string {
   if (hour < 9) return '좋은 아침이에요';
   if (hour < 12) return '좋은 오전이에요';
   if (hour < 14) return '점심 시간이에요';
-  if (hour < 18) return '좋은 오후에요';
+  if (hour < 18) return '좋은 오후예요';
   if (hour < 21) return '좋은 저녁이에요';
   return '좋은 밤이에요';
 }

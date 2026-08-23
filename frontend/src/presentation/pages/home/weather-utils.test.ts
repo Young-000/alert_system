@@ -263,9 +263,9 @@ describe('getGreeting', () => {
     expect(getGreeting()).toBe('점심 시간이에요');
   });
 
-  it('returns 좋은 오후에요 for hour 15', () => {
+  it('returns 좋은 오후예요 for hour 15', () => {
     vi.setSystemTime(new Date(2026, 1, 17, 15, 0));
-    expect(getGreeting()).toBe('좋은 오후에요');
+    expect(getGreeting()).toBe('좋은 오후예요');
   });
 
   it('returns 좋은 저녁이에요 for hour 19', () => {

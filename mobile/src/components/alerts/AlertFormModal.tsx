@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { colors } from '@/constants/colors';
-import { buildCronExpression, parseCronDays, parseCronTime } from '@/utils/cron';
+import { applyAlertTime, buildCronExpression, parseCronDays, parseCronTime } from '@/utils/cron';
 
 import { AlertTypeSelector } from './AlertTypeSelector';
 import { DaySelector } from './DaySelector';
@@ -91,13 +91,17 @@ export function AlertFormModal({
 
     if (hasError) return;
 
-    const schedule = buildCronExpression(hour, minute, selectedDays);
+    // 수정일 때는 기존 크론의 나머지 시각을 보존한다 (`0 7,18 * * 1-5`의 18시가
+    // 시각 입력 하나 때문에 지워지지 않도록).
+    const schedule = editingAlert
+      ? applyAlertTime(editingAlert.schedule, { hour, minute, days: selectedDays })
+      : buildCronExpression(hour, minute, selectedDays);
     onSave({
       name: trimmedName,
       schedule,
       alertTypes: selectedTypes,
     });
-  }, [name, hour, minute, selectedDays, selectedTypes, onSave]);
+  }, [name, hour, minute, selectedDays, selectedTypes, onSave, editingAlert]);
 
   const isEditing = editingAlert !== null;
   const title = isEditing ? '알림 수정' : '새 알림 추가';
