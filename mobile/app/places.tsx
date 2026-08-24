@@ -20,6 +20,7 @@ import { PlaceFormModal } from '@/components/places/PlaceFormModal';
 import { colors } from '@/constants/colors';
 import { useGeofence } from '@/hooks/useGeofence';
 import { usePlaces } from '@/hooks/usePlaces';
+import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
 import type { CreatePlaceDto, Place, PlaceType, UpdatePlaceDto } from '@/types/place';
 
@@ -101,7 +102,7 @@ export default function PlacesScreen(): React.JSX.Element {
 
   const handleToggle = useCallback(
     (id: string): void => {
-      togglePlace(id);
+      notifyIfToggleFailed(togglePlace(id));
       // Geofence will be re-registered on next app activation
     },
     [togglePlace],

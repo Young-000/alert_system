@@ -14,6 +14,7 @@ import { useGeofence } from '@/hooks/useGeofence';
 import { usePlaces } from '@/hooks/usePlaces';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useSmartDeparture } from '@/hooks/useSmartDeparture';
+import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
 export default function SettingsScreen(): React.JSX.Element {
   const { user, isLoggedIn, logout } = useAuth();
@@ -114,7 +115,7 @@ export default function SettingsScreen(): React.JSX.Element {
           <SmartDepartureSection
             settings={smartDepartureSettings}
             isLoading={isSmartDepartureLoading}
-            onToggle={toggleSmartDeparture}
+            onToggle={(id) => notifyIfToggleFailed(toggleSmartDeparture(id))}
           />
         )}
 

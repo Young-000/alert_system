@@ -16,7 +16,7 @@ type UseAlertsReturn = {
   createAlert: (payload: Omit<CreateAlertPayload, 'userId'>) => Promise<boolean>;
   updateAlert: (id: string, payload: UpdateAlertPayload) => Promise<boolean>;
   deleteAlert: (id: string) => Promise<boolean>;
-  toggleAlert: (id: string) => void;
+  toggleAlert: (id: string) => Promise<boolean>;
 };
 
 export function useAlerts(): UseAlertsReturn {
@@ -118,10 +118,14 @@ export function useAlerts(): UseAlertsReturn {
   );
 
   // Toggle (optimistic update + rollback)
+  //
+  // 생성·수정·삭제와 같은 계약: 실패하면 boolean으로 알린다.
+  // 되돌리기만 하고 조용히 끝내면 스위치가 잠깐 깜빡였다 제자리로 돌아올 뿐이라,
+  // 알림을 껐다고 믿은 사용자가 다음 날 아침 그대로 알림을 받는다.
   const toggleAlert = useCallback(
-    (id: string): void => {
-      // Prevent duplicate toggle
-      if (togglingIds.current.has(id)) return;
+    async (id: string): Promise<boolean> => {
+      // 이미 진행 중인 요청이 있으면 중복 탭이다 — 실패가 아니므로 true.
+      if (togglingIds.current.has(id)) return true;
       togglingIds.current.add(id);
 
       // Optimistic UI update
@@ -129,19 +133,18 @@ export function useAlerts(): UseAlertsReturn {
         prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a)),
       );
 
-      alertService
-        .toggleAlert(id)
-        .catch(() => {
-          // Rollback on failure
-          setAlerts((prev) =>
-            prev.map((a) =>
-              a.id === id ? { ...a, enabled: !a.enabled } : a,
-            ),
-          );
-        })
-        .finally(() => {
-          togglingIds.current.delete(id);
-        });
+      try {
+        await alertService.toggleAlert(id);
+        return true;
+      } catch {
+        // Rollback on failure
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a)),
+        );
+        return false;
+      } finally {
+        togglingIds.current.delete(id);
+      }
     },
     [],
   );

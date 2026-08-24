@@ -18,6 +18,7 @@ import { SkeletonCard } from '@/components/SkeletonBox';
 import { colors } from '@/constants/colors';
 import { useAlerts } from '@/hooks/useAlerts';
 import { useAuth } from '@/hooks/useAuth';
+import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
 import type { Alert, AlertType } from '@/types/alert';
 
@@ -108,7 +109,7 @@ export default function AlertsScreen(): React.JSX.Element {
         <AlertListItem
           alert={item}
           onPress={() => handleOpenEdit(item)}
-          onToggle={() => toggleAlert(item.id)}
+          onToggle={() => notifyIfToggleFailed(toggleAlert(item.id))}
         />
       </SwipeableRow>
     ),

@@ -22,6 +22,7 @@ import { colors } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationHistory } from '@/hooks/useNotificationHistory';
 import { useRoutes } from '@/hooks/useRoutes';
+import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
 import type { RouteResponse } from '@/types/home';
 import type { CreateRouteDto, UpdateRouteDto } from '@/types/route';
@@ -208,7 +209,7 @@ export default function CommuteScreen(): React.JSX.Element {
                   <RouteCard
                     route={route}
                     onPress={() => handleOpenEdit(route)}
-                    onTogglePreferred={() => togglePreferred(route.id)}
+                    onTogglePreferred={() => notifyIfToggleFailed(togglePreferred(route.id))}
                   />
                 </SwipeableRow>
               ))
