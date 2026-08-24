@@ -23,7 +23,7 @@ type UseSmartDepartureReturn = {
     dto: UpdateSmartDepartureSettingDto,
   ) => Promise<boolean>;
   deleteSetting: (id: string) => Promise<boolean>;
-  toggleSetting: (id: string) => void;
+  toggleSetting: (id: string) => Promise<boolean>;
   getSettingByType: (
     type: DepartureType,
   ) => SmartDepartureSettingDto | undefined;
@@ -123,29 +123,29 @@ export function useSmartDeparture(): UseSmartDepartureReturn {
   );
 
   // Toggle (optimistic + rollback)
+  //
+  // 생성·수정·삭제와 같은 계약: 실패하면 boolean으로 알린다.
   const toggleSetting = useCallback(
-    (id: string): void => {
-      if (togglingIds.current.has(id)) return;
+    async (id: string): Promise<boolean> => {
+      // 이미 진행 중인 요청이 있으면 중복 탭이다 — 실패가 아니므로 true.
+      if (togglingIds.current.has(id)) return true;
       togglingIds.current.add(id);
 
       setSettings((prev) =>
-        prev.map((s) =>
-          s.id === id ? { ...s, isEnabled: !s.isEnabled } : s,
-        ),
+        prev.map((s) => (s.id === id ? { ...s, isEnabled: !s.isEnabled } : s)),
       );
 
-      smartDepartureService
-        .toggleSetting(id)
-        .catch(() => {
-          setSettings((prev) =>
-            prev.map((s) =>
-              s.id === id ? { ...s, isEnabled: !s.isEnabled } : s,
-            ),
-          );
-        })
-        .finally(() => {
-          togglingIds.current.delete(id);
-        });
+      try {
+        await smartDepartureService.toggleSetting(id);
+        return true;
+      } catch {
+        setSettings((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, isEnabled: !s.isEnabled } : s)),
+        );
+        return false;
+      } finally {
+        togglingIds.current.delete(id);
+      }
     },
     [],
   );

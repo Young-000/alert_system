@@ -19,6 +19,7 @@ import { SmartDepartureSettingForm } from '@/components/smart-departure/SmartDep
 import { colors } from '@/constants/colors';
 import { useRoutes } from '@/hooks/useRoutes';
 import { useSmartDeparture } from '@/hooks/useSmartDeparture';
+import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
 import type {
   CreateSmartDepartureSettingDto,
@@ -255,7 +256,7 @@ export default function SmartDepartureScreen(): React.JSX.Element {
             setting={commuteSetting}
             label="출근"
             icon="🌅"
-            onToggle={toggleSetting}
+            onToggle={(id) => notifyIfToggleFailed(toggleSetting(id))}
             onEdit={() =>
               setFormMode({ type: 'edit', departureType: 'commute' })
             }
@@ -276,7 +277,7 @@ export default function SmartDepartureScreen(): React.JSX.Element {
             setting={returnSetting}
             label="퇴근"
             icon="🌙"
-            onToggle={toggleSetting}
+            onToggle={(id) => notifyIfToggleFailed(toggleSetting(id))}
             onEdit={() =>
               setFormMode({ type: 'edit', departureType: 'return' })
             }

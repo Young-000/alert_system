@@ -16,7 +16,7 @@ type UseRoutesReturn = {
   createRoute: (dto: Omit<CreateRouteDto, 'userId'>) => Promise<boolean>;
   updateRoute: (id: string, dto: UpdateRouteDto) => Promise<boolean>;
   deleteRoute: (id: string) => Promise<boolean>;
-  togglePreferred: (id: string) => void;
+  togglePreferred: (id: string) => Promise<boolean>;
 };
 
 function sortRoutes(routes: RouteResponse[]): RouteResponse[] {
@@ -122,9 +122,12 @@ export function useRoutes(): UseRoutesReturn {
   );
 
   // Toggle preferred (optimistic + rollback)
+  //
+  // 생성·수정·삭제와 같은 계약: 실패하면 boolean으로 알린다.
   const togglePreferred = useCallback(
-    (id: string): void => {
-      if (togglingIds.current.has(id)) return;
+    async (id: string): Promise<boolean> => {
+      // 이미 진행 중인 요청이 있으면 중복 탭이다 — 실패가 아니므로 true.
+      if (togglingIds.current.has(id)) return true;
       togglingIds.current.add(id);
 
       // Optimistic UI update
@@ -136,23 +139,24 @@ export function useRoutes(): UseRoutesReturn {
         ),
       );
 
-      routeService
-        .updateRoute(id, {
+      try {
+        await routeService.updateRoute(id, {
           isPreferred: !routes.find((r) => r.id === id)?.isPreferred,
-        })
-        .catch(() => {
-          // Rollback on failure
-          setRoutes((prev) =>
-            sortRoutes(
-              prev.map((r) =>
-                r.id === id ? { ...r, isPreferred: !r.isPreferred } : r,
-              ),
-            ),
-          );
-        })
-        .finally(() => {
-          togglingIds.current.delete(id);
         });
+        return true;
+      } catch {
+        // Rollback on failure
+        setRoutes((prev) =>
+          sortRoutes(
+            prev.map((r) =>
+              r.id === id ? { ...r, isPreferred: !r.isPreferred } : r,
+            ),
+          ),
+        );
+        return false;
+      } finally {
+        togglingIds.current.delete(id);
+      }
     },
     [routes],
   );

@@ -15,7 +15,7 @@ type UsePlacesReturn = {
   createPlace: (dto: CreatePlaceDto) => Promise<boolean>;
   updatePlace: (id: string, dto: UpdatePlaceDto) => Promise<boolean>;
   deletePlace: (id: string) => Promise<boolean>;
-  togglePlace: (id: string) => void;
+  togglePlace: (id: string) => Promise<boolean>;
   getPlaceByType: (type: 'home' | 'work') => Place | undefined;
 };
 
@@ -110,25 +110,30 @@ export function usePlaces(): UsePlacesReturn {
   );
 
   // Toggle active (optimistic + rollback)
+  //
+  // 생성·수정·삭제와 같은 계약: 실패하면 boolean으로 알린다.
+  // 되돌리기만 하고 끝내면 껐다고 믿은 장소가 계속 지오펜스 대상으로 남는다.
   const togglePlace = useCallback(
-    (id: string): void => {
-      if (togglingIds.current.has(id)) return;
+    async (id: string): Promise<boolean> => {
+      // 이미 진행 중인 요청이 있으면 중복 탭이다 — 실패가 아니므로 true.
+      if (togglingIds.current.has(id)) return true;
       togglingIds.current.add(id);
 
       setPlaces((prev) =>
         prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
       );
 
-      placeService
-        .togglePlace(id)
-        .catch(() => {
-          setPlaces((prev) =>
-            prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
-          );
-        })
-        .finally(() => {
-          togglingIds.current.delete(id);
-        });
+      try {
+        await placeService.togglePlace(id);
+        return true;
+      } catch {
+        setPlaces((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
+        );
+        return false;
+      } finally {
+        togglingIds.current.delete(id);
+      }
     },
     [],
   );
