@@ -1,5 +1,9 @@
 import { ArgumentMetadata, ValidationPipe } from '@nestjs/common';
-import { CreateMissionDto, UpdateMissionDto } from './mission.dto';
+import {
+  CreateMissionDto,
+  ReorderMissionDto,
+  UpdateMissionDto,
+} from './mission.dto';
 
 /**
  * main.ts의 전역 ValidationPipe와 동일한 설정.
@@ -95,6 +99,48 @@ describe('Mission DTO ↔ 프론트 전송 body 계약', () => {
       await expect(
         pipe.transform(body, asBody(UpdateMissionDto)),
       ).rejects.toThrow();
+    });
+  });
+  describe('ReorderMissionDto', () => {
+    // sort_order는 Postgres INTEGER(int4) 컬럼이다
+    // (20260803_add_mission_challenge_cache_tables.sql:38).
+    // 통과한 값은 그대로 UPDATE에 실려 "integer out of range" 500이 된다.
+    it.each(['1e15', '2147483648', '-2147483649'])(
+      'int4 범위를 벗어난 %s를 거부한다',
+      async (sortOrder) => {
+        await expect(
+          pipe.transform({ sortOrder }, asBody(ReorderMissionDto)),
+        ).rejects.toThrow();
+      },
+    );
+
+    // int4 최대값 자체는 저장에 성공하지만, 다음 미션 생성이 마지막 sort_order + 1을
+    // 쓰므로(manage-mission.use-case.ts:61-64) 그 유형의 미션 생성이 계속 실패하게 된다.
+    it('다음 값이 int4를 넘기는 경계값 2147483647을 거부한다', async () => {
+      await expect(
+        pipe.transform({ sortOrder: '2147483647' }, asBody(ReorderMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    // Postgres가 1.5를 2로 반올림해 기존 미션과 자리가 겹친다 — 목록 순서가 비결정적이 된다.
+    it('소수를 거부한다', async () => {
+      await expect(
+        pipe.transform({ sortOrder: '1.5' }, asBody(ReorderMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    // 정렬 키에 음수가 들어가면 사용자가 만든 적 없는 배치가 된다.
+    it('음수를 거부한다', async () => {
+      await expect(
+        pipe.transform({ sortOrder: '-1' }, asBody(ReorderMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    // 프론트는 서버가 준 sort_order끼리 맞바꾼다(MissionSettingsPage.tsx:382-383).
+    it.each(['0', '2', '2147483646'])('정상 값 %s는 통과한다', async (sortOrder) => {
+      await expect(
+        pipe.transform({ sortOrder }, asBody(ReorderMissionDto)),
+      ).resolves.toMatchObject({ sortOrder: Number(sortOrder) });
     });
   });
 });

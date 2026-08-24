@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 import { pushService } from '@/services/push.service';
 
 const STORED_TOKEN_KEY = 'push_expo_token';
-const MAX_REGISTER_RETRIES = 3;
+const MAX_PUSH_RETRIES = 3;
 
 // Configure foreground notification behavior
 Notifications.setNotificationHandler({
@@ -108,18 +108,34 @@ async function requestAndGetToken(): Promise<string | null> {
   return tokenData.data;
 }
 
-async function registerTokenWithRetry(token: string): Promise<boolean> {
-  for (let attempt = 0; attempt < MAX_REGISTER_RETRIES; attempt++) {
+async function retryPushCall(action: () => Promise<unknown>): Promise<boolean> {
+  for (let attempt = 0; attempt < MAX_PUSH_RETRIES; attempt++) {
     try {
-      await pushService.registerToken(token);
+      await action();
       return true;
     } catch {
-      if (attempt < MAX_REGISTER_RETRIES - 1) {
+      if (attempt < MAX_PUSH_RETRIES - 1) {
         await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
       }
     }
   }
   return false;
+}
+
+async function registerTokenWithRetry(token: string): Promise<boolean> {
+  return retryPushCall(() => pushService.registerToken(token));
+}
+
+/**
+ * 해제도 등록과 같은 무게로 다룬다.
+ *
+ * `DELETE /push/expo-token`은 멱등이라(`push.controller.ts:127-139`) 예외가 났다는 건
+ * "이미 지워져 있었다"가 아니라 **토큰이 서버에 그대로 남아 있다**는 뜻이다.
+ * Expo 토큰은 브라우저 구독과 달리 클라이언트가 잊어도 살아 있어서, 실패를 삼키면
+ * 사용자는 알림을 껐는데 푸시를 계속 받는다.
+ */
+async function removeTokenWithRetry(token: string): Promise<boolean> {
+  return retryPushCall(() => pushService.removeToken(token));
 }
 
 export function usePushNotifications({
@@ -275,10 +291,13 @@ export function usePushNotifications({
     try {
       const tokenToRemove = currentTokenRef.current ?? (await getStoredToken());
       if (tokenToRemove) {
-        try {
-          await pushService.removeToken(tokenToRemove);
-        } catch {
-          // Server removal is best-effort
+        const removed = await removeTokenWithRetry(tokenToRemove);
+        // 실패했는데 토글만 끄면 화면은 "꺼짐"인데 푸시는 계속 온다.
+        // 저장된 토큰도 남겨둔다 — 지우면 다시 시도할 대상 자체가 사라져
+        // 사용자가 알림을 끌 방법이 없어진다.
+        if (!removed) {
+          setError('푸시 알림 해제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          return;
         }
       }
       await clearStoredToken();
