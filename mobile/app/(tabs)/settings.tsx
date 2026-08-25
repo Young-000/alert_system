@@ -57,12 +57,12 @@ export default function SettingsScreen(): React.JSX.Element {
     setShowLogoutConfirm(false);
   };
 
+  // 같은 화면의 형제 토글과 같은 계약으로 맞춘다 — 스마트 출발은
+  // `notifyIfToggleFailed`, 푸시는 `pushError`를 섹션에 그려 실패를 표면화한다.
+  // 자동 감지만 boolean을 버리고 있어서, 실패하면 스위치가 깜빡였다 제자리로
+  // 돌아올 뿐 이유가 어디에도 없었다.
   const handleGeofenceToggle = (value: boolean): void => {
-    if (value) {
-      void startMonitoring(places);
-    } else {
-      void stopMonitoring();
-    }
+    notifyIfToggleFailed(value ? startMonitoring(places) : stopMonitoring());
   };
 
   return (

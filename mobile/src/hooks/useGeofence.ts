@@ -16,7 +16,7 @@ type UseGeofenceReturn = {
   permissionStatus: 'undetermined' | 'foreground_only' | 'always' | 'denied';
   isPermissionLoading: boolean;
   startMonitoring: (places: Place[]) => Promise<boolean>;
-  stopMonitoring: () => Promise<void>;
+  stopMonitoring: () => Promise<boolean>;
   syncOfflineEvents: () => Promise<number>;
   requestPermission: () => Promise<boolean>;
   openSettings: () => Promise<void>;
@@ -158,10 +158,22 @@ export function useGeofence(): UseGeofenceReturn {
     [permissionStatus, requestBackground],
   );
 
-  const stopMonitoring = useCallback(async (): Promise<void> => {
-    await geofenceService.stopGeofencing();
-    setIsMonitoring(false);
-    setIsEnabled(false);
+  // startMonitoring과 같은 계약: 실패하면 boolean으로 알린다.
+  //
+  // 예전에는 Promise<void>였다. stopGeofencing()이 거절하면(네이티브 태스크 해제 실패 등)
+  // setIsEnabled(false)까지 닿지 못해 스위치가 켜진 채로 남고, 호출부의 `void`가 거절을
+  // 삼켜 화면 어디에도 흔적이 없었다. 감지를 껐다고 믿은 사용자는 실제로는 계속
+  // 감지되는 상태로 남는다 — 끄기 실패가 켜기 실패보다 위험한 쪽이다.
+  const stopMonitoring = useCallback(async (): Promise<boolean> => {
+    try {
+      await geofenceService.stopGeofencing();
+      setIsMonitoring(false);
+      setIsEnabled(false);
+      return true;
+    } catch (error) {
+      console.error('[Geofence] Failed to stop monitoring:', error);
+      return false;
+    }
   }, []);
 
   const syncOfflineEvents = useCallback(async (): Promise<number> => {
