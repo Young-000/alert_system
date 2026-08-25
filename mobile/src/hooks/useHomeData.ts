@@ -220,11 +220,12 @@ export function useHomeData(): UseHomeDataReturn {
     if (!isMountedRef.current) return;
 
     // Routes result
+    // 조회 실패를 빈 배열로 덮으면 홈이 EmptyRouteCard("출근 경로를 등록해보세요")를 띄운다.
+    // 이미 경로를 등록한 사용자에게는 등록이 사라진 것처럼 보인다 — 실패를 성공(빈 데이터)으로
+    // 표시하는 꼴이다. alerts·stats와 같은 계약으로 기존 값을 유지하고, 실패는 아래에서 알린다.
     const routesResult = results[1];
     if (routesResult?.status === 'fulfilled') {
       setRoutes(routesResult.value);
-    } else {
-      setRoutes([]);
     }
 
     // Alerts result
@@ -245,6 +246,10 @@ export function useHomeData(): UseHomeDataReturn {
     );
     if (criticalFailures.length === results.length - 1) {
       setLoadError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
+    } else if (routesResult?.status === 'rejected') {
+      // 셋 다 실패했을 때만 알리면, 경로 조회만 실패한 흔한 경우가 무음으로 지나간다.
+      // 그 상태의 홈은 경로 카드가 사라진 화면이라 사용자가 이유를 알 방법이 없다.
+      setLoadError('경로 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
     }
 
     // Sync widget data (fire-and-forget, non-blocking)
