@@ -65,23 +65,27 @@ export default function PlacesScreen(): React.JSX.Element {
     async (
       data: CreatePlaceDto | { id: string; dto: UpdatePlaceDto },
     ): Promise<boolean> => {
-      if ('id' in data) {
-        const success = await updatePlace(data.id, data.dto);
-        if (success) {
-          // Re-register geofences with updated places
-          void startMonitoring(places);
-        }
-        return success;
+      // 지오펜스는 저장 직후 서버가 돌려준 목록으로 다시 등록한다.
+      //
+      // 예전에는 렌더 클로저의 `places`를 썼다. 수정은 저장 전 좌표·반경으로
+      // 다시 등록됐고, 생성은 `id: 'temp'`인 가짜 장소를 끼워 넣어 등록했다.
+      // 'temp'는 지오펜스 region의 identifier가 그대로 되고, 그 지점을 드나들면
+      // 서버에 `placeId: 'temp'`로 올라가 존재하지 않는 장소로 거절된다
+      // (이벤트는 오프라인 큐로 갔다가 버려진다). 앱을 다시 켜도 재등록하는
+      // 경로가 없어서, 설정에서 토글하거나 장소를 다시 건드릴 때까지 남는다.
+      const result =
+        'id' in data
+          ? await updatePlace(data.id, data.dto)
+          : await createPlace(data);
+
+      // 재조회가 실패하면(places === null) 재등록을 건너뛴다. 옛 목록으로
+      // 등록하느니 다음 등록 시점까지 그대로 두는 편이 낫다.
+      if (result.places) {
+        void startMonitoring(result.places);
       }
-      const success = await createPlace(data);
-      if (success) {
-        // Start monitoring with new place included
-        const updatedPlaces = [...places, { ...data, id: 'temp', isActive: true } as Place];
-        void startMonitoring(updatedPlaces);
-      }
-      return success;
+      return result.saved;
     },
-    [createPlace, updatePlace, places, startMonitoring],
+    [createPlace, updatePlace, startMonitoring],
   );
 
   const handleDeleteConfirm = useCallback(
