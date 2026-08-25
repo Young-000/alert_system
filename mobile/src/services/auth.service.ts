@@ -1,3 +1,4 @@
+import { serverMessage } from '@/utils/api-error';
 import { apiClient, ApiError } from './api-client';
 
 import type { AuthResponse, LoginDto, RegisterDto, UserProfile } from '@/types/auth';
@@ -19,19 +20,11 @@ export const authService = {
 /** API 에러를 사용자 친화적 메시지로 변환 */
 export function toUserMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    // 서버가 보낸 JSON 메시지 파싱 시도
-    try {
-      const parsed = JSON.parse(error.body) as { message?: string | string[] };
-      if (parsed.message) {
-        if (Array.isArray(parsed.message)) {
-          return parsed.message[0] ?? '오류가 발생했습니다.';
-        }
-        return parsed.message;
-      }
-    } catch {
-      // JSON 파싱 실패 시 상태 코드별 기본 메시지
-    }
+    // 서버가 보낸 메시지가 있으면 그게 가장 정확하다.
+    const fromServer = serverMessage(error);
+    if (fromServer) return fromServer;
 
+    // 없을 때만 상태 코드별 기본 메시지 — 아래 표는 인증 화면 기준이다.
     const messages: Record<number, string> = {
       400: '잘못된 요청입니다.',
       401: '이메일 또는 비밀번호가 올바르지 않습니다.',
