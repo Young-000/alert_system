@@ -127,11 +127,14 @@ export function useGeofence(): UseGeofenceReturn {
 
     // Attempt sync; if network is unavailable, sendEventToServer will fail
     // and the queue remains intact
-    const synced = await geofenceService.syncOfflineEvents();
-    if (synced > 0) {
-      const remaining = await geofenceService.getOfflineQueueCount();
-      setOfflineCount(remaining);
-    }
+    //
+    // 반환값으로 갱신 여부를 가르면 안 된다. 서버가 배치를 전부 ignored(디바운스)나
+    // failed(삭제된 장소)로 처리하면 processed=0으로 정상 응답하고, 그때도
+    // syncOfflineEvents는 큐를 비운다(막힌 큐 방지). 큐가 실제로 비었는지는
+    // 반환값이 아니라 큐를 다시 세어서 판단한다.
+    await geofenceService.syncOfflineEvents();
+    const remaining = await geofenceService.getOfflineQueueCount();
+    setOfflineCount(remaining);
   };
 
   const startMonitoring = useCallback(
