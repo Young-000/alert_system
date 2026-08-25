@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { challengeService } from '@/services/challenge.service';
+import { serverMessage } from '@/utils/api-error';
 import { useAuth } from './useAuth';
 
 import type { Challenge, ChallengeTemplate, TemplateCategory } from '@/types/challenge';
+
+/**
+ * 참가 결과. 실패하면 사유를 반드시 들고 온다.
+ *
+ * 서버는 참가 상한(최대 3개)과 중복 참가를 **서로 다른 문구의 409**로 구분한다
+ * (`manage-challenge.use-case.ts:50-64`). 성패만 boolean으로 돌려주면 그 구분이
+ * 호출부에 닿지 못해, 상한에 걸린 사용자가 이유를 모른 채 계속 다시 누른다.
+ */
+export type JoinChallengeResult =
+  | { joined: true }
+  | { joined: false; message: string };
 
 type UseChallengesReturn = {
   templates: ChallengeTemplate[];
@@ -13,7 +25,7 @@ type UseChallengesReturn = {
   isRefreshing: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  joinChallenge: (templateId: string) => Promise<boolean>;
+  joinChallenge: (templateId: string) => Promise<JoinChallengeResult>;
   abandonChallenge: (challengeId: string) => Promise<boolean>;
 };
 
@@ -74,15 +86,20 @@ export function useChallenges(): UseChallengesReturn {
 
   // Join
   const joinChallenge = useCallback(
-    async (templateId: string): Promise<boolean> => {
-      if (!user) return false;
+    async (templateId: string): Promise<JoinChallengeResult> => {
+      if (!user) return { joined: false, message: '로그인이 필요해요.' };
 
       try {
         await challengeService.joinChallenge(templateId);
         await fetchAll();
-        return true;
-      } catch {
-        return false;
+        return { joined: true };
+      } catch (err) {
+        // 서버 문구가 곧 사용자가 할 수 있는 다음 행동이다 ("최대 3개" → 하나 포기).
+        // 꺼낼 수 없을 때(네트워크 단절 등)만 이 화면의 기본 문구로 떨어진다.
+        return {
+          joined: false,
+          message: serverMessage(err) ?? '도전에 참가하지 못했어요. 잠시 후 다시 시도해주세요.',
+        };
       }
     },
     [user, fetchAll],

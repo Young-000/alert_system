@@ -16,7 +16,6 @@ import { BadgeCollectionView } from '@/components/challenge/BadgeCollectionView'
 import { colors } from '@/constants/colors';
 import { useBadges } from '@/hooks/useBadges';
 import { useChallenges } from '@/hooks/useChallenges';
-import { ApiError } from '@/services/api-client';
 
 import type { Challenge, ChallengeTemplate, ChallengeDifficulty } from '@/types/challenge';
 
@@ -376,21 +375,12 @@ export default function ChallengesScreen(): React.JSX.Element {
       setJoiningId(templateId);
 
       try {
-        const success = await joinChallenge(templateId);
-        if (success) {
+        const result = await joinChallenge(templateId);
+        if (result.joined) {
           void refreshBadges();
         } else {
-          RNAlert.alert('오류', '도전 참가에 실패했습니다.');
-        }
-      } catch (err) {
-        if (err instanceof ApiError) {
-          if (err.status === 409) {
-            RNAlert.alert('알림', '이미 진행 중인 동일 도전이 있습니다');
-          } else if (err.status === 400) {
-            RNAlert.alert('알림', '동시 진행 가능한 도전은 최대 3개입니다');
-          } else {
-            RNAlert.alert('오류', '도전 참가에 실패했습니다.');
-          }
+          // 사유는 서버가 정한다 — 참가 상한과 중복 참가는 문구가 다르다.
+          RNAlert.alert('알림', result.message);
         }
       } finally {
         setJoiningId(null);
@@ -481,10 +471,21 @@ export default function ChallengesScreen(): React.JSX.Element {
           <Text style={styles.title}>도전 목록</Text>
         </View>
 
-        {/* Error notice */}
+        {/* Error notice — 읽고 끝나지 않도록 다음 행동을 같이 둔다. */}
         {error ? (
           <View style={styles.errorNotice}>
             <Text style={styles.errorText}>{error}</Text>
+            <Pressable
+              style={styles.retryButton}
+              onPress={() => void handleRefresh()}
+              disabled={isRefreshing}
+              accessibilityRole="button"
+              accessibilityLabel="다시 불러오기"
+            >
+              <Text style={styles.retryText}>
+                {isRefreshing ? '불러오는 중…' : '다시 시도'}
+              </Text>
+            </Pressable>
           </View>
         ) : null}
 
@@ -509,9 +510,11 @@ export default function ChallengesScreen(): React.JSX.Element {
           </View>
         ) : null}
 
-        {/* ── Template Categories ── */}
+        {/* ── Template Categories ──
+            목록이 비는 이유는 둘이다: 정말 없거나, 못 불러왔거나.
+            후자에 "등록된 도전이 없어요"를 띄우면 위 에러 배너와 정면으로 어긋난다. */}
         {groupedTemplates.length === 0 ? (
-          <EmptyTemplates />
+          error ? null : <EmptyTemplates />
         ) : (
           groupedTemplates.map((group) => (
             <View key={group.key} style={styles.section}>
@@ -592,6 +595,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.danger,
     textAlign: 'center',
+  },
+  retryButton: {
+    alignSelf: 'center',
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  retryText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.danger,
   },
   section: {
     marginBottom: 20,
