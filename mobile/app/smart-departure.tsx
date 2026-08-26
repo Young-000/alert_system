@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ErrorRetryView } from '@/components/ErrorRetryView';
 import { EmptySmartDepartureView } from '@/components/smart-departure/EmptySmartDepartureView';
 import { SmartDepartureSettingForm } from '@/components/smart-departure/SmartDepartureSettingForm';
 import { colors } from '@/constants/colors';
@@ -46,7 +47,9 @@ export default function SmartDepartureScreen(): React.JSX.Element {
     toggleSetting,
     getSettingByType,
   } = useSmartDeparture();
-  const { routes } = useRoutes();
+  // 경로 조회 실패를 받지 않으면 `routes`가 빈 배열로 남아 "경로를 먼저 설정해주세요"가
+  // 뜬다 — 경로를 이미 만들어 둔 사용자를 경로 화면으로 되돌려 보내는 잘못된 안내다.
+  const { routes, error: routesError, refresh: refreshRoutes } = useRoutes();
 
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
@@ -55,6 +58,16 @@ export default function SmartDepartureScreen(): React.JSX.Element {
 
   const commuteSetting = getSettingByType('commute');
   const returnSetting = getSettingByType('return');
+
+  // 두 조회 중 하나라도 실패하면 화면이 말할 수 있는 건 "못 불러왔다"뿐이다.
+  const loadError = error ?? routesError;
+
+  const handleRetry = useCallback(
+    async (): Promise<void> => {
+      await Promise.all([refresh(), refreshRoutes()]);
+    },
+    [refresh, refreshRoutes],
+  );
 
   const handleFormSubmit = useCallback(
     async (
@@ -217,15 +230,15 @@ export default function SmartDepartureScreen(): React.JSX.Element {
           <Text style={styles.title}>스마트 출발</Text>
         </View>
 
-        {/* Error */}
-        {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-
-        {/* Empty State */}
-        {settings.length === 0 && routes.length === 0 ? (
+        {/* 목록이 비는 이유는 둘이다: 정말 없거나, 못 불러왔거나.
+            후자에 안내 문구를 띄우면 이미 설정해 둔 사용자를 엉뚱한 화면으로 보낸다. */}
+        {loadError ? (
+          <ErrorRetryView
+            message={loadError}
+            onRetry={() => void handleRetry()}
+            isRetrying={isRefreshing}
+          />
+        ) : settings.length === 0 && routes.length === 0 ? (
           <View style={styles.emptyRouteContainer}>
             <Text style={styles.emptyRouteIcon}>🗺️</Text>
             <Text style={styles.emptyRouteTitle}>경로를 먼저 설정해주세요</Text>
@@ -560,16 +573,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.gray900,
-  },
-  errorContainer: {
-    backgroundColor: colors.dangerLight,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 13,
-    color: colors.danger,
   },
   emptyRouteContainer: {
     alignItems: 'center',

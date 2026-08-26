@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { placeService } from '@/services/place.service';
+import { serverMessage } from '@/utils/api-error';
 import { useAuth } from './useAuth';
 
 import type { CreatePlaceDto, Place, UpdatePlaceDto } from '@/types/place';
@@ -11,13 +12,22 @@ import type { CreatePlaceDto, Place, UpdatePlaceDto } from '@/types/place';
  * 둘을 하나로 합치면, 저장은 됐는데 재조회만 실패한 경우(저장 직후 네트워크가
  * 끊긴 경우)에 폼이 "저장에 실패했습니다"를 띄운다. 사용자가 다시 저장하면
  * 같은 장소가 두 번 만들어진다.
+ *
+ * 실패 가지가 `message`를 들고 있는 이유: 서버는 거절 사유를 문장으로 내려준다
+ * (`이미 등록된 집 장소가 있습니다.`). 이걸 boolean으로 접으면 폼이 사유를
+ * 추측할 수밖에 없다. 유니온이면 실패 가지에서 `message`가 `string`으로
+ * 타입상 보장되므로 빈 에러 문구가 뜰 수 없다.
  */
-type SaveResult = {
-  /** 서버 저장이 성공했는가. 폼의 성공·실패 판정은 이 값만 본다. */
-  saved: boolean;
-  /** 재조회에 성공했을 때의 최신 목록(서버가 매긴 실제 id 포함). 실패하면 null. */
-  places: Place[] | null;
-};
+export type SaveResult =
+  | {
+      saved: true;
+      /** 재조회에 성공했을 때의 최신 목록(서버가 매긴 실제 id 포함). 실패하면 null. */
+      places: Place[] | null;
+    }
+  | { saved: false; message: string };
+
+/** 서버가 사유를 안 줬을 때(네트워크 단절 등)의 폼 문구. */
+const SAVE_FAILED_FALLBACK = '저장하지 못했습니다. 잠시 후 다시 시도해주세요.';
 
 type UsePlacesReturn = {
   places: Place[];
@@ -86,8 +96,9 @@ export function usePlaces(): UsePlacesReturn {
       try {
         try {
           await save();
-        } catch {
-          return { saved: false, places: null };
+        } catch (err) {
+          // 서버가 말해준 사유를 그대로 넘긴다. 폼이 추측하지 않도록.
+          return { saved: false, message: serverMessage(err) ?? SAVE_FAILED_FALLBACK };
         }
         // 저장은 끝났다. 재조회가 실패해도 저장 자체는 성공이다.
         return { saved: true, places: await fetchPlaces() };
@@ -101,7 +112,7 @@ export function usePlaces(): UsePlacesReturn {
   // Create
   const createPlace = useCallback(
     async (dto: CreatePlaceDto): Promise<SaveResult> => {
-      if (!user) return { saved: false, places: null };
+      if (!user) return { saved: false, message: '로그인이 필요합니다.' };
       return saveThenReload(() => placeService.createPlace(dto));
     },
     [user, saveThenReload],
