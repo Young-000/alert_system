@@ -16,12 +16,19 @@ import { RadiusSlider } from './RadiusSlider';
 
 import type { CreatePlaceDto, Place, PlaceType, UpdatePlaceDto } from '@/types/place';
 
+/**
+ * 제출 결과. 실패 가지가 사유를 들고 온다 — 폼은 사유를 만들어내지 않고 그대로 보여준다.
+ */
+export type PlaceSubmitResult = { ok: true } | { ok: false; message: string };
+
 type PlaceFormModalProps = {
   visible: boolean;
   editingPlace?: Place;
   existingTypes: PlaceType[];
   onClose: () => void;
-  onSubmit: (data: CreatePlaceDto | { id: string; dto: UpdatePlaceDto }) => Promise<boolean>;
+  onSubmit: (
+    data: CreatePlaceDto | { id: string; dto: UpdatePlaceDto },
+  ) => Promise<PlaceSubmitResult>;
 };
 
 const PLACE_TYPE_OPTIONS: { value: PlaceType; label: string; icon: string }[] = [
@@ -158,9 +165,9 @@ export function PlaceFormModal({
           address: address.trim() || undefined,
           radiusM,
         };
-        const success = await onSubmit({ id: editingPlace.id, dto });
-        if (success) onClose();
-        else setError('저장에 실패했습니다.');
+        const result = await onSubmit({ id: editingPlace.id, dto });
+        if (result.ok) onClose();
+        else setError(result.message);
       } else {
         const dto: CreatePlaceDto = {
           placeType,
@@ -170,9 +177,9 @@ export function PlaceFormModal({
           address: address.trim() || undefined,
           radiusM,
         };
-        const success = await onSubmit(dto);
-        if (success) onClose();
-        else setError('저장에 실패했습니다. 이미 등록된 장소 유형일 수 있습니다.');
+        const result = await onSubmit(dto);
+        if (result.ok) onClose();
+        else setError(result.message);
       }
     } catch {
       setError('저장 중 오류가 발생했습니다.');

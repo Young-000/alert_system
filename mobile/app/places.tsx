@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ErrorRetryView } from '@/components/ErrorRetryView';
 import { EmptyPlaceView } from '@/components/places/EmptyPlaceView';
 import { LocationPermissionBanner } from '@/components/places/LocationPermissionBanner';
 import { PlaceCard } from '@/components/places/PlaceCard';
@@ -22,6 +23,7 @@ import { useGeofence } from '@/hooks/useGeofence';
 import { usePlaces } from '@/hooks/usePlaces';
 import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
+import type { PlaceSubmitResult } from '@/components/places/PlaceFormModal';
 import type { CreatePlaceDto, Place, PlaceType, UpdatePlaceDto } from '@/types/place';
 
 export default function PlacesScreen(): React.JSX.Element {
@@ -64,7 +66,7 @@ export default function PlacesScreen(): React.JSX.Element {
   const handleFormSubmit = useCallback(
     async (
       data: CreatePlaceDto | { id: string; dto: UpdatePlaceDto },
-    ): Promise<boolean> => {
+    ): Promise<PlaceSubmitResult> => {
       // 지오펜스는 저장 직후 서버가 돌려준 목록으로 다시 등록한다.
       //
       // 예전에는 렌더 클로저의 `places`를 썼다. 수정은 저장 전 좌표·반경으로
@@ -78,12 +80,14 @@ export default function PlacesScreen(): React.JSX.Element {
           ? await updatePlace(data.id, data.dto)
           : await createPlace(data);
 
+      if (!result.saved) return { ok: false, message: result.message };
+
       // 재조회가 실패하면(places === null) 재등록을 건너뛴다. 옛 목록으로
       // 등록하느니 다음 등록 시점까지 그대로 두는 편이 낫다.
       if (result.places) {
         void startMonitoring(result.places);
       }
-      return result.saved;
+      return { ok: true };
     },
     [createPlace, updatePlace, startMonitoring],
   );
@@ -112,7 +116,9 @@ export default function PlacesScreen(): React.JSX.Element {
     [togglePlace],
   );
 
-  const canAddMore = existingTypes.length < 2;
+  // 조회에 실패했으면 `existingTypes`가 빈 배열이라 이미 2개를 등록한 사용자에게도
+  // 추가 버튼이 열린다. 무엇이 등록돼 있는지 모르는 상태에서는 권하지 않는다.
+  const canAddMore = !error && existingTypes.length < 2;
 
   if (isLoading) {
     return (
@@ -168,15 +174,18 @@ export default function PlacesScreen(): React.JSX.Element {
           onOpenSettings={openSettings}
         />
 
-        {/* Error */}
+        {/* Content
+            목록이 비는 이유는 둘이다: 정말 없거나, 못 불러왔거나.
+            후자에 "등록된 장소가 없어요 / 장소 등록하기"를 띄우면 이미 집·회사를
+            등록해 둔 사용자를 실패가 예정된 등록 폼으로 밀어 넣는다
+            (서버가 409 `이미 등록된 집 장소가 있습니다.`로 거절한다). */}
         {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-
-        {/* Content */}
-        {places.length === 0 ? (
+          <ErrorRetryView
+            message={error}
+            onRetry={() => void refresh()}
+            isRetrying={isRefreshing}
+          />
+        ) : places.length === 0 ? (
           <EmptyPlaceView onAddPlace={handleAddPlace} />
         ) : (
           <View>
@@ -300,16 +309,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 14,
     fontWeight: '600',
-  },
-  errorContainer: {
-    backgroundColor: colors.dangerLight,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 13,
-    color: colors.danger,
   },
   // Delete confirmation modal (same style as settings logout modal)
   modalOverlay: {
