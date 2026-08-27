@@ -16,13 +16,22 @@ type GeofenceSectionProps = {
   isLoading: boolean;
   permissionStatus: 'undetermined' | 'foreground_only' | 'always' | 'denied';
   placesCount: number;
+  /** 실제로 감지 대상이 되는 장소 수. 꺼둔 장소는 감지되지 않는다. */
+  activePlacesCount: number;
+  /** 장소 조회가 실패했을 때의 사유. 있으면 장소 수를 신뢰할 수 없다. */
+  placesError: string | null;
   offlineCount: number;
   onToggle: (value: boolean) => void;
 };
 
+// 조회 실패를 장소 수 0으로 흘려보내면 화면이 사실이 아닌 말을 한다.
+// 장소를 이미 등록한 사용자에게 "장소를 등록하면 자동 감지가 시작됩니다"를
+// 띄우는 상황이 그것이었다. 모를 때는 모른다고 말한다.
 function getStatusText(
   permissionStatus: string,
   placesCount: number,
+  activePlacesCount: number,
+  placesError: string | null,
   isEnabled: boolean,
 ): string {
   if (permissionStatus === 'denied') {
@@ -31,11 +40,19 @@ function getStatusText(
   if (permissionStatus === 'undetermined' || permissionStatus === 'foreground_only') {
     return '위치 권한 설정이 필요합니다.';
   }
+  if (placesError) {
+    return isEnabled
+      ? '감지 중입니다. 장소 목록은 불러오지 못했습니다.'
+      : '장소를 불러오지 못했습니다.';
+  }
   if (placesCount === 0) {
     return '장소를 등록하면 자동 감지가 시작됩니다.';
   }
+  if (activePlacesCount === 0) {
+    return '켜둔 장소가 없습니다.';
+  }
   if (isEnabled) {
-    return `${placesCount}개 장소 감지 중`;
+    return `${activePlacesCount}개 장소 감지 중`;
   }
   return '자동 감지가 꺼져 있습니다.';
 }
@@ -45,12 +62,28 @@ export function GeofenceSection({
   isLoading,
   permissionStatus,
   placesCount,
+  activePlacesCount,
+  placesError,
   offlineCount,
   onToggle,
 }: GeofenceSectionProps): React.JSX.Element {
   const router = useRouter();
-  const statusText = getStatusText(permissionStatus, placesCount, isEnabled);
-  const canToggle = permissionStatus === 'always' && placesCount > 0;
+  const statusText = getStatusText(
+    permissionStatus,
+    placesCount,
+    activePlacesCount,
+    placesError,
+    isEnabled,
+  );
+
+  // 켜져 있으면 언제나 끌 수 있어야 한다.
+  //
+  // 예전 조건(`permissionStatus === 'always' && placesCount > 0`)은 감지가 도는
+  // 중에도 장소 수가 0이면 스위치를 잠갔다. 장소 조회가 실패했거나 마지막 장소를
+  // 지운 사용자는 백그라운드 위치 감지가 돌고 있는데 화면에서 끌 방법이 없었다.
+  // 켜는 쪽만 조건을 건다 — 감지할 장소가 없으면 켤 이유가 없으니까.
+  const canToggle =
+    isEnabled || (permissionStatus === 'always' && activePlacesCount > 0);
 
   return (
     <View style={styles.container}>

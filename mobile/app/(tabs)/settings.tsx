@@ -20,7 +20,10 @@ export default function SettingsScreen(): React.JSX.Element {
   const { user, isLoggedIn, logout } = useAuth();
   const { isEnabled, isLoading: isPushLoading, error: pushError, enable, disable } =
     usePushNotifications({ enabled: isLoggedIn });
-  const { places } = usePlaces();
+  // `error`를 버리면 조회 실패가 "장소 0개"로 위장된다 — 장소를 등록해 둔
+  // 사용자가 "장소를 등록하면 자동 감지가 시작됩니다"를 읽게 된다.
+  const { places, error: placesError } = usePlaces();
+  const activePlacesCount = places.filter((place) => place.isActive).length;
   const {
     settings: smartDepartureSettings,
     isLoading: isSmartDepartureLoading,
@@ -31,7 +34,7 @@ export default function SettingsScreen(): React.JSX.Element {
     isPermissionLoading: isGeofenceLoading,
     permissionStatus,
     offlineCount,
-    startMonitoring,
+    syncMonitoredPlaces,
     stopMonitoring,
   } = useGeofence();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -62,7 +65,7 @@ export default function SettingsScreen(): React.JSX.Element {
   // 자동 감지만 boolean을 버리고 있어서, 실패하면 스위치가 깜빡였다 제자리로
   // 돌아올 뿐 이유가 어디에도 없었다.
   const handleGeofenceToggle = (value: boolean): void => {
-    notifyIfToggleFailed(value ? startMonitoring(places) : stopMonitoring());
+    notifyIfToggleFailed(value ? syncMonitoredPlaces(places) : stopMonitoring());
   };
 
   return (
@@ -105,6 +108,8 @@ export default function SettingsScreen(): React.JSX.Element {
             isLoading={isGeofenceLoading}
             permissionStatus={permissionStatus}
             placesCount={places.length}
+            activePlacesCount={activePlacesCount}
+            placesError={placesError}
             offlineCount={offlineCount}
             onToggle={handleGeofenceToggle}
           />
