@@ -15,8 +15,25 @@ type UseGeofenceReturn = {
   offlineCount: number;
   permissionStatus: 'undetermined' | 'foreground_only' | 'always' | 'denied';
   isPermissionLoading: boolean;
+  /**
+   * 감지를 켠다. 권한이 'always'가 아니면 먼저 묻는다.
+   *
+   * 목록 변경에 맞춰 부를 때는 `syncMonitoredPlaces`를 쓴다 — 이쪽은 활성 장소가
+   * 없는 경우를 호출부가 알아서 처리해야 하고, 그걸 빠뜨린 것이 지운 장소가
+   * 계속 감지되던 원인이었다.
+   */
   startMonitoring: (places: Place[]) => Promise<boolean>;
   stopMonitoring: () => Promise<boolean>;
+  /**
+   * 장소 목록에 감시 대상을 맞춘다. 활성 장소가 없으면 감지를 끈다.
+   * 꺼져 있었다면 켠다 — "장소를 등록하면 자동 감지가 시작됩니다"를 따르는 쪽이다.
+   */
+  syncMonitoredPlaces: (places: Place[]) => Promise<boolean>;
+  /**
+   * 감지가 돌고 있을 때만 대상을 맞춘다. 활성 장소가 없으면 언제나 끈다.
+   * 삭제·끄기처럼 감지를 시작할 이유가 없는 변경에 쓴다.
+   */
+  syncIfMonitoring: (places: Place[]) => Promise<boolean>;
   syncOfflineEvents: () => Promise<number>;
   requestPermission: () => Promise<boolean>;
   openSettings: () => Promise<void>;
@@ -145,10 +162,17 @@ export function useGeofence(): UseGeofenceReturn {
         if (!granted) return false;
       }
 
+      // 감시 대상이 되는 건 활성 장소뿐이고, 하나도 없으면 startGeofencing은
+      // 등록이 아니라 stopGeofencing을 한다(geofence.service.ts:140-145).
+      // 예전에는 그 경우에도 setIsEnabled(true)를 해서, 실제로는 멈춘 감지를
+      // 설정 화면이 "켜짐 · N개 장소 감지 중"으로 표시했다.
+      // 서비스가 실제로 한 일에서 상태를 끌어낸다.
+      const isActiveAfter = places.some((place) => place.isActive);
+
       try {
         await geofenceService.startGeofencing(places);
-        setIsMonitoring(true);
-        setIsEnabled(true);
+        setIsMonitoring(isActiveAfter);
+        setIsEnabled(isActiveAfter);
         return true;
       } catch (error) {
         console.error('[Geofence] Failed to start monitoring:', error);
@@ -176,6 +200,42 @@ export function useGeofence(): UseGeofenceReturn {
     }
   }, []);
 
+  // 장소 목록이 바뀐 뒤 감시 대상을 목록에 맞춘다.
+  //
+  // 화면마다 따로 판단하면 방향이 갈린다. 실제로 삭제 핸들러는 남은 장소가
+  // 없을 때 아무것도 하지 않아서, 지운 장소의 region이 네이티브에 등록된 채로
+  // 남았다 — 그 지점을 드나들 때마다 서버가 모르는 placeId로 이벤트가 올라가고
+  // (오프라인 큐로 갔다가 버려진다), 설정 화면은 장소가 0개라 스위치를 잠가서
+  // 끄지도 못했다.
+  //
+  // 활성 장소가 없으면 `stopMonitoring`으로 간다. `startMonitoring([])`도
+  // 서비스 단에서는 정지로 귀결되지만, 그 경로는 권한이 'always'가 아닐 때
+  // 백그라운드 위치 권한을 먼저 묻는다 — 감지를 *끄는* 데 권한을 물을 이유는 없다.
+  const syncMonitoredPlaces = useCallback(
+    async (places: Place[]): Promise<boolean> => {
+      const hasActive = places.some((place) => place.isActive);
+      return hasActive ? startMonitoring(places) : stopMonitoring();
+    },
+    [startMonitoring, stopMonitoring],
+  );
+
+  // 감지가 돌고 있을 때만 대상을 맞춘다. 정리(활성 장소 0개)는 언제나 한다.
+  //
+  // 삭제·끄기는 감지를 *켜는* 동작이 아니다. 그런데 삭제 핸들러가 남은 장소로
+  // 그냥 `startMonitoring`을 불러서, 자동 감지를 꺼둔 사용자가 장소 하나를
+  // 지우면 백그라운드 위치 감지가 다시 켜졌다(권한이 'always'가 아니면 권한
+  // 요청까지 떴다). 등록은 감지를 시작한다는 제품 규칙(`syncMonitoredPlaces`)이
+  // 삭제에까지 번진 결과다.
+  const syncIfMonitoring = useCallback(
+    async (places: Place[]): Promise<boolean> => {
+      const hasActive = places.some((place) => place.isActive);
+      if (!hasActive) return stopMonitoring();
+      if (!isMonitoring) return true;
+      return startMonitoring(places);
+    },
+    [isMonitoring, startMonitoring, stopMonitoring],
+  );
+
   const syncOfflineEvents = useCallback(async (): Promise<number> => {
     const synced = await geofenceService.syncOfflineEvents();
     const remaining = await geofenceService.getOfflineQueueCount();
@@ -202,6 +262,8 @@ export function useGeofence(): UseGeofenceReturn {
     isPermissionLoading,
     startMonitoring,
     stopMonitoring,
+    syncMonitoredPlaces,
+    syncIfMonitoring,
     syncOfflineEvents,
     requestPermission,
     openSettings,

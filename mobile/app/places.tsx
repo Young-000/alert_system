@@ -44,7 +44,8 @@ export default function PlacesScreen(): React.JSX.Element {
     permissionStatus,
     requestPermission,
     openSettings,
-    startMonitoring,
+    syncMonitoredPlaces,
+    syncIfMonitoring,
   } = useGeofence();
 
   const [showForm, setShowForm] = useState(false);
@@ -85,35 +86,51 @@ export default function PlacesScreen(): React.JSX.Element {
       // 재조회가 실패하면(places === null) 재등록을 건너뛴다. 옛 목록으로
       // 등록하느니 다음 등록 시점까지 그대로 두는 편이 낫다.
       if (result.places) {
-        void startMonitoring(result.places);
+        void syncMonitoredPlaces(result.places);
       }
       return { ok: true };
     },
-    [createPlace, updatePlace, startMonitoring],
+    [createPlace, updatePlace, syncMonitoredPlaces],
   );
 
   const handleDeleteConfirm = useCallback(
     async (id: string): Promise<void> => {
       const success = await deletePlace(id);
       if (success) {
+        // 남은 장소가 없어도 맞춰야 한다. 예전에는 `remaining.length > 0`일 때만
+        // 재등록해서, 마지막 장소를 지우면 지운 장소의 region이 네이티브에 그대로
+        // 남았다 — 감지는 계속 돌고, 설정 화면은 장소가 0개라 스위치를 잠가
+        // 끌 방법도 없었다.
         const remaining = places.filter((p) => p.id !== id);
-        if (remaining.length > 0) {
-          void startMonitoring(remaining);
-        }
+        void syncIfMonitoring(remaining);
       } else {
         RNAlert.alert('삭제하지 못했어요', '잠시 후 다시 시도해주세요.');
       }
       setShowDeleteConfirm(null);
     },
-    [deletePlace, places, startMonitoring],
+    [deletePlace, places, syncIfMonitoring],
   );
 
+  // 끄기로 바꾼 장소는 바로 감시에서 빠져야 한다.
+  //
+  // 예전 주석은 "다음 앱 실행 때 재등록된다"고 했지만 그런 경로는 없다 —
+  // `startGeofencing`을 부르는 곳은 이 화면의 저장·삭제와 설정 화면의 토글뿐이라,
+  // 끈 장소가 다음에 장소를 건드릴 때까지 계속 감지됐다.
   const handleToggle = useCallback(
     (id: string): void => {
-      notifyIfToggleFailed(togglePlace(id));
-      // Geofence will be re-registered on next app activation
+      const result = togglePlace(id);
+      notifyIfToggleFailed(result);
+
+      // 훅이 목록에 적용하는 것과 같은 변환. 재조회를 기다리지 않는 이유는
+      // `togglePlace`가 낙관적 갱신이라 서버 응답에 새 목록이 없기 때문이다.
+      const next = places.map((p) =>
+        p.id === id ? { ...p, isActive: !p.isActive } : p,
+      );
+      void result.then((success) => {
+        if (success) void syncIfMonitoring(next);
+      });
     },
-    [togglePlace],
+    [togglePlace, places, syncIfMonitoring],
   );
 
   // 조회에 실패했으면 `existingTypes`가 빈 배열이라 이미 2개를 등록한 사용자에게도
