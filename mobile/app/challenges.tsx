@@ -355,15 +355,22 @@ export default function ChallengesScreen(): React.JSX.Element {
     abandonChallenge,
   } = useChallenges();
 
+  // 배지 조회 실패를 받지 않으면 badges가 빈 배열로 남아 배지 6개가 전부 잠금(0/6)으로
+  // 그려진다 — 이미 배지를 딴 사용자에게 "하나도 없다"고 말하는 거짓 화면이고,
+  // 화면 어디에도 못 불러왔다는 흔적이 없다.
   const {
     badges,
     totalBadges,
     earnedCount,
     isLoading: isBadgesLoading,
+    error: badgesError,
     refresh: refreshBadges,
   } = useBadges();
 
   const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  // 두 조회 중 하나라도 실패하면 배너로 알린다. 재시도는 두 조회를 함께 다시 태운다.
+  const loadError = error ?? badgesError;
 
   const handleRefresh = useCallback(async (): Promise<void> => {
     await Promise.all([refresh(), refreshBadges()]);
@@ -472,9 +479,9 @@ export default function ChallengesScreen(): React.JSX.Element {
         </View>
 
         {/* Error notice — 읽고 끝나지 않도록 다음 행동을 같이 둔다. */}
-        {error ? (
+        {loadError ? (
           <View style={styles.errorNotice}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{loadError}</Text>
             <Pressable
               style={styles.retryButton}
               onPress={() => void handleRefresh()}
@@ -489,12 +496,17 @@ export default function ChallengesScreen(): React.JSX.Element {
           </View>
         ) : null}
 
-        {/* ── Badge Collection ── */}
-        <BadgeCollectionView
-          badges={badges}
-          totalBadges={totalBadges}
-          earnedCount={earnedCount}
-        />
+        {/* ── Badge Collection ──
+            못 불러온 배지를 "미획득"으로 그리면 안 된다. 잠금 아이콘과 0/6은
+            "아직 못 땄다"는 뜻이라, 조회 실패를 그대로 두면 화면이 거짓말을 한다.
+            (챌린지만 실패한 경우에는 배지를 계속 보여준다 — 그건 받아온 값이다) */}
+        {badgesError ? null : (
+          <BadgeCollectionView
+            badges={badges}
+            totalBadges={totalBadges}
+            earnedCount={earnedCount}
+          />
+        )}
 
         {/* ── My Active Challenges ── */}
         {activeChallenges.length > 0 ? (

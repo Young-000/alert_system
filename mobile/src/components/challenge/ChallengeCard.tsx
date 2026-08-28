@@ -7,6 +7,8 @@ import type { Challenge } from '@/types/challenge';
 
 type ChallengeCardProps = {
   challenges: Challenge[];
+  /** 조회 실패 사유. 있으면 진행 중인 도전을 아는 척하지 않는다. */
+  error: string | null;
   onPress: () => void;
 };
 
@@ -59,6 +61,36 @@ function EmptyState({ onPress }: { onPress: () => void }): React.JSX.Element {
           <Text style={styles.emptyDescription}>
             매일의 출퇴근이 더 재미있어져요
           </Text>
+        </View>
+        <Text style={styles.emptyArrow}>{'>'}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+/**
+ * 조회 실패. 여기서 바로 재시도하지는 않고 도전 목록으로 보낸다 —
+ * 그 화면에 이미 재시도 배너가 있어서, 카드마다 재시도를 늘리지 않고도 길이 이어진다.
+ */
+function ErrorState({
+  message,
+  onPress,
+}: {
+  message: string;
+  onPress: () => void;
+}): React.JSX.Element {
+  return (
+    <Pressable
+      style={styles.card}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${message}. 도전 목록으로 이동`}
+    >
+      <View style={styles.emptyContent}>
+        <Text style={styles.emptyEmoji}>⚠️</Text>
+        <View style={styles.emptyTextContainer}>
+          <Text style={styles.emptyTitle}>{message}</Text>
+          <Text style={styles.emptyDescription}>탭하면 다시 시도할 수 있어요</Text>
         </View>
         <Text style={styles.emptyArrow}>{'>'}</Text>
       </View>
@@ -127,8 +159,15 @@ function ActiveState({
 
 export function ChallengeCard({
   challenges,
+  error,
   onPress,
 }: ChallengeCardProps): React.JSX.Element {
+  // 목록이 비는 이유는 둘이다: 정말 없거나, 못 불러왔거나.
+  // 후자에 "도전을 시작해보세요"를 띄우면 이미 도전 중인 사용자에게 거짓말이 된다.
+  if (error) {
+    return <ErrorState message={error} onPress={onPress} />;
+  }
+
   if (challenges.length === 0) {
     return <EmptyState onPress={onPress} />;
   }

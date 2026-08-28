@@ -27,6 +27,7 @@ export default function SettingsScreen(): React.JSX.Element {
   const {
     settings: smartDepartureSettings,
     isLoading: isSmartDepartureLoading,
+    error: smartDepartureError,
     toggleSetting: toggleSmartDeparture,
   } = useSmartDeparture();
   const {
@@ -120,6 +121,7 @@ export default function SettingsScreen(): React.JSX.Element {
           <SmartDepartureSection
             settings={smartDepartureSettings}
             isLoading={isSmartDepartureLoading}
+            error={smartDepartureError}
             onToggle={(id) => notifyIfToggleFailed(toggleSmartDeparture(id))}
           />
         )}
