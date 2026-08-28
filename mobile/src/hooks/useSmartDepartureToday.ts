@@ -42,6 +42,36 @@ function determineStatus(minutesUntil: number): LiveActivityStatus {
   return 'preparing';
 }
 
+/**
+ * 오늘의 스냅샷 중 지금 Live Activity 로 띄워야 할 출발을 고른다.
+ *
+ * `GET /smart-departure/today` 는 오늘 것이면 이미 지난 출발도 그대로 돌려주므로
+ * (`calculate-departure.use-case.ts` `getTodayDeparture` — 시간 필터 없음),
+ * `commute ?? return` 로 고르면 출근 설정이 있는 날에는 퇴근이 영영 선택되지 않는다.
+ *
+ * 규칙은 백엔드 위젯(`getWidgetDepartureData`)과 같다 — 다음 출발, 전부 지났으면 가장 최근 것.
+ * 다만 경계는 `>= now` 가 아니라 자동 종료 임계값을 쓴다. 출발 직후 몇 분은
+ * 아직 Activity 를 띄워 둬야 하는 구간이라 `>= now` 로 자르면 조기 전환된다.
+ */
+export function selectLiveSnapshot(
+  data: SmartDepartureTodayResponse,
+): SmartDepartureSnapshotDto | null {
+  const byDeparture = [data.commute, data.return]
+    .filter((snapshot): snapshot is SmartDepartureSnapshotDto => !!snapshot)
+    .sort(
+      (a, b) =>
+        new Date(a.optimalDepartureAt).getTime() -
+        new Date(b.optimalDepartureAt).getTime(),
+    );
+
+  const live = byDeparture.find(
+    (snapshot) =>
+      calcMinutesUntil(snapshot.optimalDepartureAt) > -LIVE_ACTIVITY_TIMEOUT_MIN,
+  );
+
+  return live ?? byDeparture[byDeparture.length - 1] ?? null;
+}
+
 export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
   const { user } = useAuth();
   const liveActivity = useLiveActivity();
@@ -52,6 +82,8 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
   const [returnMinutes, setReturnMinutes] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const liveActivityStartedRef = useRef(false);
+  /** 이 훅이 띄운 Live Activity 의 settingId. 복원된 Activity 는 알 수 없어 null 이다. */
+  const startedSettingIdRef = useRef<string | null>(null);
 
   const updateCountdowns = useCallback(
     (todayData: SmartDepartureTodayResponse | null): void => {
@@ -126,7 +158,7 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
     if (!liveActivity.isSupported || !data) return;
 
     // Determine which snapshot is relevant (commute or return)
-    const snapshot = data.commute ?? data.return;
+    const snapshot = selectLiveSnapshot(data);
     if (!snapshot) return;
 
     const minutesUntil = calcMinutesUntil(snapshot.optimalDepartureAt);
@@ -137,6 +169,22 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
     if (minutesUntil < -LIVE_ACTIVITY_TIMEOUT_MIN && liveActivity.isActive) {
       void liveActivity.end();
       liveActivityStartedRef.current = false;
+      startedSettingIdRef.current = null;
+      return;
+    }
+
+    // 선택이 다른 출발로 넘어갔다면 옛 Activity 를 먼저 끊는다.
+    // `update` 는 mode 를 바꾸지 않으므로(useLiveActivity 는 start 때만 정한다)
+    // 그냥 두면 아래 자동 갱신 분기가 출근 카드를 퇴근 시각으로 덮어쓴다.
+    // 복원된 Activity(settingId 미상 = null)는 종전 동작을 그대로 따른다.
+    if (
+      liveActivity.isActive &&
+      startedSettingIdRef.current !== null &&
+      startedSettingIdRef.current !== snapshot.settingId
+    ) {
+      void liveActivity.end();
+      liveActivityStartedRef.current = false;
+      startedSettingIdRef.current = null;
       return;
     }
 
@@ -148,6 +196,7 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
       !liveActivityStartedRef.current
     ) {
       liveActivityStartedRef.current = true;
+      startedSettingIdRef.current = snapshot.settingId;
       const modeLabel = mode === 'return' ? '퇴근' : '출근';
       void liveActivity.start(
         {
@@ -192,6 +241,7 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
   useEffect(() => {
     if (!liveActivity.isActive) {
       liveActivityStartedRef.current = false;
+      startedSettingIdRef.current = null;
     }
   }, [liveActivity.isActive]);
 

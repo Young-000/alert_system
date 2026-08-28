@@ -16,10 +16,20 @@ import type { SmartDepartureSettingDto } from '@/types/smart-departure';
 type SmartDepartureSectionProps = {
   settings: SmartDepartureSettingDto[];
   isLoading: boolean;
+  error: string | null;
   onToggle: (id: string) => void;
 };
 
-function getStatusText(settings: SmartDepartureSettingDto[]): string {
+// 조회 실패를 설정 0개로 흘려보내면 화면이 사실이 아닌 말을 한다.
+// 이미 설정해 둔 사용자에게 "설정하면 최적 출발 시각을 알려드려요"를 띄우는 것이
+// 그것이다. 바로 위 GeofenceSection이 같은 이유로 같은 규칙을 쓴다.
+function getStatusText(
+  settings: SmartDepartureSettingDto[],
+  error: string | null,
+): string {
+  if (error) {
+    return '설정을 불러오지 못했습니다.';
+  }
   const enabledCount = settings.filter((s) => s.isEnabled).length;
   if (settings.length === 0) {
     return '설정하면 최적 출발 시각을 알려드려요';
@@ -33,10 +43,11 @@ function getStatusText(settings: SmartDepartureSettingDto[]): string {
 export function SmartDepartureSection({
   settings,
   isLoading,
+  error,
   onToggle,
 }: SmartDepartureSectionProps): React.JSX.Element {
   const router = useRouter();
-  const statusText = getStatusText(settings);
+  const statusText = getStatusText(settings, error);
   const commute = settings.find((s) => s.departureType === 'commute');
   const returnSetting = settings.find((s) => s.departureType === 'return');
 

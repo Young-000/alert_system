@@ -1,5 +1,12 @@
 import React from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,7 +35,9 @@ export default function HomeScreen(): React.JSX.Element {
   const data = useHomeData();
   const departure = useSmartDepartureToday();
   const commuteMode = useCommuteMode();
-  const { activeChallenges } = useChallenges();
+  // `error`를 버리면 조회 실패가 "도전 0개"로 위장돼 이미 도전 중인 사용자가
+  // "출퇴근 도전을 시작해보세요!"를 읽게 된다.
+  const { activeChallenges, error: challengesError } = useChallenges();
   const contextBriefing = useBriefingAdvice({
     weather: data.weather,
     airQuality: data.airQuality,
@@ -116,6 +125,14 @@ export default function HomeScreen(): React.JSX.Element {
         {data.loadError ? (
           <View style={styles.errorNotice}>
             <Text style={styles.errorNoticeText}>{data.loadError}</Text>
+            <Pressable
+              style={styles.errorRetryButton}
+              onPress={data.retryLoad}
+              accessibilityRole="button"
+              accessibilityLabel="다시 불러오기"
+            >
+              <Text style={styles.errorRetryText}>다시 시도</Text>
+            </Pressable>
           </View>
         ) : null}
 
@@ -142,6 +159,7 @@ export default function HomeScreen(): React.JSX.Element {
         {data.isLoggedIn && (
           <ChallengeCard
             challenges={activeChallenges}
+            error={challengesError}
             onPress={() => router.push('/challenges')}
           />
         )}
@@ -229,6 +247,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
+  },
+  errorRetryButton: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.danger,
+  },
+  errorRetryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.white,
   },
   errorNoticeText: {
     fontSize: 13,
