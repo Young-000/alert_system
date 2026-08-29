@@ -14,6 +14,9 @@ import type { Place, PlaceType } from '@infrastructure/api';
 const PLACE_ICONS: Record<PlaceType, string> = { home: '🏠', work: '🏢' };
 const PLACE_LABELS: Record<PlaceType, string> = { home: '집', work: '직장' };
 
+/** 등록 가능한 유형은 이 둘뿐이다. 사용자당 유형별 1개까지만 서버가 받는다. */
+const PLACE_TYPE_ORDER: PlaceType[] = ['home', 'work'];
+
 function PlaceCard({
   place,
   onToggle,
@@ -81,6 +84,27 @@ export function PlacesTab(): JSX.Element {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
   const [actionError, setActionError] = useState('');
+
+  // 서버는 같은 유형이 이미 있으면 409로 거절한다(manage-places.use-case.ts createPlace).
+  // 유형이 집·직장 둘뿐이라, 이미 등록한 유형을 고를 수 있게 두면 제출이 반드시 실패한다.
+  const availableTypes = PLACE_TYPE_ORDER.filter(
+    (type) => !places?.some((p) => p.placeType === type),
+  );
+
+  // 조회에 실패하면 places가 undefined라 availableTypes가 두 개 다 열린다.
+  // 무엇이 등록돼 있는지 모르는 상태에서는 등록을 권하지 않는다 — 이미 둘 다
+  // 등록해 둔 사용자를 실패가 예정된 폼으로 밀어 넣게 된다.
+  const canAddMore = !isError && availableTypes.length > 0;
+
+  const handleToggleForm = useCallback(() => {
+    setShowForm((prev) => {
+      if (prev) return false;
+      // 폼을 열 때마다 고를 수 있는 유형으로 맞춘다. 'home' 고정 기본값은
+      // 집을 이미 등록한 사용자에게 그대로 409를 안긴다.
+      setFormType(availableTypes[0] ?? 'home');
+      return true;
+    });
+  }, [availableTypes]);
 
   const handleCreate = useCallback(async () => {
     if (!formLabel.trim()) return;
@@ -150,13 +174,15 @@ export function PlacesTab(): JSX.Element {
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">내 장소</h2>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setShowForm(!showForm)}
-          >
-            {showForm ? '취소' : '+ 추가'}
-          </button>
+          {(canAddMore || showForm) && (
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={handleToggleForm}
+            >
+              {showForm ? '취소' : '+ 추가'}
+            </button>
+          )}
         </div>
 
         <p className="settings-section-desc">
@@ -172,8 +198,11 @@ export function PlacesTab(): JSX.Element {
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as PlaceType)}
               >
-                <option value="home">🏠 집</option>
-                <option value="work">🏢 직장</option>
+                {availableTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {PLACE_ICONS[type]} {PLACE_LABELS[type]}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="settings-form-row">

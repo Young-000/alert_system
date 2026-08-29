@@ -152,3 +152,68 @@ describe('PlacesTab — 조회 실패', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+describe('PlacesTab — 실패가 예정된 등록 폼으로 밀지 않는다', () => {
+  // 서버는 같은 유형이 이미 있으면 409 `이미 등록된 집 장소가 있습니다.`로 거절한다
+  // (manage-places.use-case.ts createPlace). 유형은 집·직장 둘뿐이라
+  // 둘 다 등록해 둔 사용자에게 등록 폼을 열어주면 무엇을 골라도 실패한다.
+  // 모바일(`mobile/app/places.tsx` canAddMore)에는 이 방어가 있었고 웹에만 없었다.
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('집·직장을 모두 등록했으면 추가 버튼을 열어주지 않는다', async () => {
+    placeApi.getPlaces.mockResolvedValue([
+      place({ id: 'p1', placeType: 'home', label: '우리집' }),
+      place({ id: 'p2', placeType: 'work', label: '사무실' }),
+    ]);
+
+    renderTab();
+
+    expect(await screen.findByText('우리집')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '+ 추가' })).not.toBeInTheDocument();
+  });
+
+  it('조회에 실패했으면 추가 버튼을 열어주지 않는다', async () => {
+    // 무엇이 등록돼 있는지 모르는 상태다. 이미 2개를 등록한 사용자에게
+    // 빈 목록처럼 보인다고 등록을 권하면 409로 끝난다.
+    placeApi.getPlaces.mockRejectedValue(new Error('500'));
+
+    renderTab();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: '+ 추가' })).not.toBeInTheDocument();
+  });
+
+  it('이미 등록된 유형은 폼의 선택지에서 뺀다', async () => {
+    // 기본값이 '집'으로 고정돼 있어, 집만 등록한 사용자가 폼을 열면
+    // 그대로 제출하는 순간 409가 난다.
+    placeApi.getPlaces.mockResolvedValue([
+      place({ id: 'p1', placeType: 'home', label: '우리집' }),
+    ]);
+    const user = userEvent.setup();
+
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    const select = screen.getByLabelText('유형') as HTMLSelectElement;
+    expect(select.value).toBe('work');
+    expect(
+      screen.queryByRole('option', { name: '🏠 집' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('아무것도 등록하지 않았으면 두 유형 모두 고를 수 있다', async () => {
+    // 대조군 — 정상 경로까지 막아버리지 않는다는 것을 고정한다.
+    placeApi.getPlaces.mockResolvedValue([]);
+    const user = userEvent.setup();
+
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    expect(screen.getByRole('option', { name: '🏠 집' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '🏢 직장' })).toBeInTheDocument();
+  });
+});

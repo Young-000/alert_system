@@ -214,3 +214,89 @@ describe('SmartDepartureTab — 조회 실패', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+describe('SmartDepartureTab — 실패가 예정된 등록 폼으로 밀지 않는다', () => {
+  // 서버는 같은 departureType이 이미 있으면 409 `이미 출근 설정이 존재합니다.`로
+  // 거절한다(manage-smart-departure.use-case.ts:55). 유형은 출근·퇴근 둘뿐이라
+  // 둘 다 등록해 둔 사용자에게 폼을 열어주면 무엇을 골라도 실패한다.
+  function setting(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      id: 'sd-1',
+      userId: 'user-1',
+      routeId: 'route-1',
+      departureType: 'commute',
+      arrivalTarget: '09:00',
+      prepTimeMinutes: 15,
+      isEnabled: true,
+      activeDays: [1, 2, 3, 4, 5],
+      preAlerts: [],
+      createdAt: '2026-08-12T00:00:00.000Z',
+      updatedAt: '2026-08-12T00:00:00.000Z',
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    commuteApi.getUserRoutes.mockResolvedValue([{ id: 'route-1', name: '출근길' }]);
+  });
+
+  it('출근·퇴근을 모두 등록했으면 추가 버튼을 열어주지 않는다', async () => {
+    mockSmartDepartureApi.getSettings.mockResolvedValue([
+      setting({ id: 'sd-1', departureType: 'commute' }),
+      setting({ id: 'sd-2', departureType: 'return' }),
+    ]);
+
+    renderTab();
+
+    // 로딩 중에는 헤더 자체가 없으므로, 목록이 그려진 뒤에 판정해야 한다.
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: '삭제' })).toHaveLength(2);
+    });
+    expect(
+      screen.queryByRole('button', { name: '+ 추가' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('조회에 실패했으면 추가 버튼을 열어주지 않는다', async () => {
+    mockSmartDepartureApi.getSettings.mockRejectedValue(new Error('500'));
+
+    renderTab();
+
+    // 에러 화면이 확정된 뒤에 판정한다 (로딩 중 통과하는 가짜 성공 방지).
+    await screen.findByRole('button', { name: '다시 시도' });
+    expect(
+      screen.queryByRole('button', { name: '+ 추가' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('이미 등록된 유형은 폼의 선택지에서 뺀다', async () => {
+    // 기본값이 '출근'으로 고정돼 있어, 출근을 이미 등록한 사용자가 폼을 열면
+    // 그대로 제출하는 순간 409가 난다.
+    mockSmartDepartureApi.getSettings.mockResolvedValue([
+      setting({ id: 'sd-1', departureType: 'commute' }),
+    ]);
+    const user = userEvent.setup();
+
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    const select = screen.getByLabelText('유형') as HTMLSelectElement;
+    expect(select.value).toBe('return');
+    expect(
+      screen.queryByRole('option', { name: '🌅 출근' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('아무것도 등록하지 않았으면 두 유형 모두 고를 수 있다', async () => {
+    // 대조군 — 정상 경로까지 막아버리지 않는다는 것을 고정한다.
+    mockSmartDepartureApi.getSettings.mockResolvedValue([]);
+    const user = userEvent.setup();
+
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    expect(screen.getByRole('option', { name: '🌅 출근' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '🌇 퇴근' })).toBeInTheDocument();
+  });
+});
