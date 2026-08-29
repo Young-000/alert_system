@@ -17,6 +17,9 @@ const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 const TYPE_LABELS: Record<DepartureType, string> = { commute: '출근', return: '퇴근' };
 const TYPE_ICONS: Record<DepartureType, string> = { commute: '🌅', return: '🌇' };
 
+/** 등록 가능한 유형은 이 둘뿐이다. 사용자당 유형별 1개까지만 서버가 받는다. */
+const DEPARTURE_TYPE_ORDER: DepartureType[] = ['commute', 'return'];
+
 function SettingCard({
   setting,
   routeName,
@@ -116,6 +119,26 @@ export function SmartDepartureTab(): JSX.Element {
 
   const routeMap = new Map((routes ?? []).map((r) => [r.id, r.name]));
 
+  // 서버는 같은 departureType이 이미 있으면 409로 거절한다
+  // (manage-smart-departure.use-case.ts createSetting). 유형이 출근·퇴근 둘뿐이라
+  // 이미 등록한 유형을 고를 수 있게 두면 제출이 반드시 실패한다.
+  const availableTypes = DEPARTURE_TYPE_ORDER.filter(
+    (type) => !settings?.some((s) => s.departureType === type),
+  );
+
+  // 조회에 실패하면 settings가 undefined라 두 유형 다 열린다. 무엇이 등록돼
+  // 있는지 모르는 상태에서는 등록을 권하지 않는다.
+  const canAddMore = !isLoadError && availableTypes.length > 0;
+
+  const handleToggleForm = useCallback(() => {
+    setShowForm((prev) => {
+      if (prev) return false;
+      // 'commute' 고정 기본값은 출근을 이미 등록한 사용자에게 그대로 409를 안긴다.
+      setFormType(availableTypes[0] ?? 'commute');
+      return true;
+    });
+  }, [availableTypes]);
+
   const handleCreate = useCallback(async () => {
     const routeId = formRouteId || routes?.[0]?.id;
     if (!routeId) {
@@ -189,13 +212,15 @@ export function SmartDepartureTab(): JSX.Element {
       <section className="settings-section">
         <div className="settings-section-header">
           <h2 className="settings-section-title">스마트 출발</h2>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setShowForm(!showForm)}
-          >
-            {showForm ? '취소' : '+ 추가'}
-          </button>
+          {(canAddMore || showForm) && (
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={handleToggleForm}
+            >
+              {showForm ? '취소' : '+ 추가'}
+            </button>
+          )}
         </div>
 
         <p className="settings-section-desc">
@@ -211,8 +236,11 @@ export function SmartDepartureTab(): JSX.Element {
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as DepartureType)}
               >
-                <option value="commute">🌅 출근</option>
-                <option value="return">🌇 퇴근</option>
+                {availableTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {TYPE_ICONS[type]} {TYPE_LABELS[type]}
+                  </option>
+                ))}
               </select>
             </div>
             {routes && routes.length > 0 && (
