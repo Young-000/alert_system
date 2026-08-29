@@ -73,7 +73,17 @@ export class SendNotificationUseCase {
     }
 
     const user = await this.userRepository.findById(alert.userId);
-    if (!user || !user.location) {
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // 위치는 날씨·미세먼지 조회에만 쓰인다(collectWeatherData). 그 외 타입까지 위치를
+    // 요구하면 위치가 없는 사용자의 교통 알림이 매 트리거마다 예외로 끝나고,
+    // EventBridge 재시도 3회 뒤 DLQ로 사라져 사용자에게는 아무 흔적도 남지 않는다.
+    const needsLocation =
+      alert.alertTypes.includes(AlertType.WEATHER) ||
+      alert.alertTypes.includes(AlertType.AIR_QUALITY);
+    if (needsLocation && !user.location) {
       throw new NotFoundException('사용자 위치 정보를 찾을 수 없습니다.');
     }
 
@@ -112,10 +122,14 @@ export class SendNotificationUseCase {
 
   private async collectWeatherData(
     alert: Alert,
-    location: { lat: number; lng: number },
+    location: { lat: number; lng: number } | undefined,
     data: NotificationData,
     contextBuilder: NotificationContextBuilder,
   ): Promise<void> {
+    // execute()의 needsLocation 검사가 이 두 타입에 대해 location을 이미 보장한다.
+    // 여기 도달하는 undefined는 위치를 쓰지 않는 교통 전용 알림뿐이다.
+    if (!location) return;
+
     const tasks: Promise<void>[] = [];
 
     if (alert.alertTypes.includes(AlertType.WEATHER)) {
