@@ -129,6 +129,36 @@ describe('SendNotificationUseCase', () => {
     await expect(useCase.execute(alert.id)).rejects.toThrow(NotFoundException);
   });
 
+  it('should send a transit-only notification when the user has no location', async () => {
+    // 위치는 날씨/미세먼지 수집에만 쓰인다. 교통 전용 알림까지 위치를 요구하면
+    // 위치가 없는 사용자의 알림이 매 트리거마다 예외로 끝나 DLQ로 사라진다.
+    const user = new User('user@example.com', 'John Doe', '01012345678');
+    const alert = new Alert(user.id, '지하철 알림', '0 8 * * *', [AlertType.SUBWAY], undefined, 'station-456');
+    const station = new SubwayStation('강남', '2', 'station-456');
+
+    alertRepository.findById.mockResolvedValue(alert);
+    userRepository.findById.mockResolvedValue(user);
+    subwayStationRepository.findById.mockResolvedValue(station);
+    subwayApiClient.getSubwayArrival.mockResolvedValue([
+      new SubwayArrival('강남', '2', '외선', 180, '성수'),
+    ]);
+    solapiService.sendTransitAlert.mockResolvedValue();
+
+    await useCase.execute(alert.id);
+
+    expect(solapiService.sendTransitAlert).toHaveBeenCalled();
+    expect(weatherApiClient.getWeatherWithForecast).not.toHaveBeenCalled();
+  });
+
+  it('should still throw when a weather alert has no location to query', async () => {
+    const user = new User('user@example.com', 'John Doe', '01012345678');
+    const alert = new Alert(user.id, '알림', '0 8 * * *', [AlertType.AIR_QUALITY]);
+    alertRepository.findById.mockResolvedValue(alert);
+    userRepository.findById.mockResolvedValue(user);
+
+    await expect(useCase.execute(alert.id)).rejects.toThrow(NotFoundException);
+  });
+
   it('should return early if user has no phone number', async () => {
     // User 엔티티에서 phoneNumber는 필수이지만, 빈 문자열로 설정하여 알림 발송 안되는 케이스 테스트
     const user = new User('user@example.com', 'John Doe', '', undefined, {
