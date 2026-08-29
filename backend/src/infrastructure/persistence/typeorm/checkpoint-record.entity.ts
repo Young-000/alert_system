@@ -15,6 +15,7 @@ import { TIMESTAMPTZ } from './column-types';
 @Index(['sessionId'])
 @Index(['checkpointId'])
 @Index(['sessionId', 'arrivedAt'])
+@Index(['sessionId', 'checkpointId'])
 export class CheckpointRecordEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
