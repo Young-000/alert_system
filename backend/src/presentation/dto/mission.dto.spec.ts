@@ -49,6 +49,31 @@ describe('Mission DTO ↔ 프론트 전송 body 계약', () => {
       ).rejects.toThrow();
     });
 
+    /**
+     * `missions.emoji`는 VARCHAR(10)이다(20260803_add_mission_challenge_cache_tables.sql:35).
+     * Postgres varchar(n)은 문자(코드포인트)를 세지만 `MaxLength`는 UTF-16 코드유닛을 센다.
+     * 11자 BMP 문자열은 코드유닛 11개라 상한 16을 통과하고, 코드포인트도 11개라
+     * Postgres가 `value too long for type character varying(10)`으로 끊는다 — 400이 아니라 500이다.
+     * 도메인 계층도 제목만 검사하므로(mission.entity.ts:16-20) 여기서 막지 않으면 막을 곳이 없다.
+     */
+    it('컬럼 폭(10자)을 넘는 emoji를 400으로 거부한다 (DB까지 내려가 500이 되지 않도록)', async () => {
+      const body = { title: '독서하기', emoji: 'x'.repeat(11), missionType: 'commute' };
+
+      await expect(
+        pipe.transform(body, asBody(CreateMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    // 대조군: 상한을 코드유닛 10으로 낮추는 실수를 잡는다.
+    // 👨‍👩‍👧‍👦는 코드유닛 11개지만 코드포인트는 7개라 varchar(10)에 들어간다 — 막으면 안 된다.
+    it('ZWJ 결합 이모지는 코드유닛이 10을 넘어도 통과한다 (대조군)', async () => {
+      const body = { title: '독서하기', emoji: '👨‍👩‍👧‍👦', missionType: 'commute' };
+
+      await expect(
+        pipe.transform(body, asBody(CreateMissionDto)),
+      ).resolves.toMatchObject({ emoji: '👨‍👩‍👧‍👦' });
+    });
+
     it('공백뿐인 제목은 400으로 거부한다', async () => {
       // IsNotEmpty는 ''만 막는다 — 공백은 통과해 엔티티에서 터지고 500이 된다.
       const body = { title: '   ', missionType: 'commute' };
@@ -83,6 +108,23 @@ describe('Mission DTO ↔ 프론트 전송 body 계약', () => {
       await expect(
         pipe.transform(body, asBody(UpdateMissionDto)),
       ).resolves.toMatchObject({ emoji: '🎧' });
+    });
+
+    it('컬럼 폭(10자)을 넘는 emoji로는 수정할 수 없다', async () => {
+      const body = { emoji: 'x'.repeat(11) };
+
+      await expect(
+        pipe.transform(body, asBody(UpdateMissionDto)),
+      ).rejects.toThrow();
+    });
+
+    // 대조군 — 수정 경로도 저장 가능한 ZWJ 이모지는 받아야 한다.
+    it('ZWJ 결합 이모지로 수정할 수 있다 (대조군)', async () => {
+      const body = { emoji: '👨‍👩‍👧‍👦' };
+
+      await expect(
+        pipe.transform(body, asBody(UpdateMissionDto)),
+      ).resolves.toMatchObject({ emoji: '👨‍👩‍👧‍👦' });
     });
 
     it('빈 제목으로는 수정할 수 없다', async () => {
