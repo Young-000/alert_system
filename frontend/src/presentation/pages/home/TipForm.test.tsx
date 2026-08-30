@@ -107,4 +107,37 @@ describe('TipForm', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  // 서버는 content에 @MinLength(2)를 건다 (community.dto.ts).
+  // 한 글자를 보낼 수 있게 두면 그 제출은 반드시 400으로 돌아온다.
+  it('한 글자만 입력하면 등록 버튼을 열어주지 않는다', () => {
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
+    const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
+    fireEvent.change(textarea, { target: { value: '팁' } });
+    expect(screen.getByRole('button', { name: '등록' })).toBeDisabled();
+  });
+
+  it('공백을 뺀 길이가 한 글자면 등록 버튼을 열어주지 않는다', () => {
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
+    const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
+    fireEvent.change(textarea, { target: { value: '   팁   ' } });
+    expect(screen.getByRole('button', { name: '등록' })).toBeDisabled();
+  });
+
+  it('한 글자에서는 Enter로도 제출되지 않는다', () => {
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
+    const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
+    fireEvent.change(textarea, { target: { value: '팁' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  // 대조군 — 최소 길이를 막다가 정상 입력까지 막지 않는지 본다.
+  it('두 글자면 등록할 수 있다', () => {
+    render(<TipForm checkpointKey="station:1" onSubmit={onSubmit} />);
+    const textarea = screen.getByPlaceholderText(/이 구간 팁을 남겨보세요/);
+    fireEvent.change(textarea, { target: { value: '좋음' } });
+    fireEvent.click(screen.getByRole('button', { name: '등록' }));
+    expect(onSubmit).toHaveBeenCalledWith('station:1', '좋음', expect.any(Function));
+  });
 });
