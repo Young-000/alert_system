@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 
 const MAX_TIP_LENGTH = 100;
+// 서버가 content에 @MinLength(2)를 걸어 둔다 (backend community.dto.ts).
+// 클라이언트가 한 글자를 보낼 수 있게 두면 그 제출은 반드시 400으로 돌아온다.
+const MIN_TIP_LENGTH = 2;
 const MAX_DAILY_TIPS = 3;
 
 interface TipFormProps {
@@ -23,7 +26,9 @@ export function TipForm({
   const [content, setContent] = useState('');
   const charCount = content.length;
   const isOverLimit = charCount > MAX_TIP_LENGTH;
-  const canSubmit = content.trim().length > 0 && !isOverLimit && !isSubmitting && !isRateLimited;
+  const trimmedLength = content.trim().length;
+  const canSubmit =
+    trimmedLength >= MIN_TIP_LENGTH && !isOverLimit && !isSubmitting && !isRateLimited;
 
   const clearForm = useCallback((): void => setContent(''), []);
 
@@ -57,7 +62,7 @@ export function TipForm({
       <div className="tip-form-input-wrapper">
         <textarea
           className="tip-form-input"
-          placeholder="이 구간 팁을 남겨보세요 (100자)"
+          placeholder="이 구간 팁을 남겨보세요 (2~100자)"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
