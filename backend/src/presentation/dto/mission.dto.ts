@@ -8,12 +8,43 @@ import {
   Max,
   MaxLength,
   Min,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
 } from 'class-validator';
 
 const MISSION_TYPES = ['commute', 'return'] as const;
 
-// 이모지 하나는 ZWJ·변이 선택자 조합으로 여러 코드유닛이 될 수 있다.
-const MAX_EMOJI_LENGTH = 16;
+/**
+ * `missions.emoji`는 `VARCHAR(10)`이다
+ * (`20260803_add_mission_challenge_cache_tables.sql:35`, `mission.entity.ts:25`).
+ *
+ * Postgres varchar(n)은 **문자(코드포인트)** 수를 세는데 class-validator의 `MaxLength`는
+ * JS `.length` = **UTF-16 코드유닛** 수를 센다. 세는 단위가 달라 상한이 양쪽으로 어긋났다:
+ *
+ * - 코드유닛 상한만 두면 11~16자 BMP 문자열(`'x'.repeat(11)`)이 검증을 통과해 INSERT까지
+ *   내려가고, Postgres가 `value too long for type character varying(10)`으로 끊는다 —
+ *   400이 아니라 **500**이다. 도메인 계층은 제목만 검사하므로(`mission.entity.ts:16-20`)
+ *   여기서 막지 않으면 막을 곳이 없다.
+ * - 반대로 상한을 코드유닛 10으로 낮추면 **저장 가능한 값까지** 막힌다 —
+ *   👨‍👩‍👧‍👦는 코드유닛 11개지만 코드포인트는 7개라 varchar(10)에 들어간다.
+ *
+ * 그래서 Postgres와 같은 단위로 센다.
+ */
+const MAX_EMOJI_CODE_POINTS = 10;
+
+@ValidatorConstraint({ name: 'emojiFitsColumn', async: false })
+export class EmojiColumnWidthValidator implements ValidatorConstraintInterface {
+  validate(value: unknown): boolean {
+    if (typeof value !== 'string') return false;
+    // 전개 연산자는 서로게이트 쌍을 한 글자로 세므로 Postgres의 문자 수와 일치한다.
+    return [...value].length <= MAX_EMOJI_CODE_POINTS;
+  }
+
+  defaultMessage(): string {
+    return '이모지 형식이 올바르지 않습니다.';
+  }
+}
 
 /**
  * 제목은 검증 전에 잘라낸다.
@@ -34,7 +65,7 @@ export class CreateMissionDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(MAX_EMOJI_LENGTH, { message: '이모지 형식이 올바르지 않습니다.' })
+  @Validate(EmojiColumnWidthValidator)
   emoji?: string;
 
   @IsIn(MISSION_TYPES, { message: '미션 타입은 commute 또는 return이어야 합니다.' })
@@ -51,7 +82,7 @@ export class UpdateMissionDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(MAX_EMOJI_LENGTH, { message: '이모지 형식이 올바르지 않습니다.' })
+  @Validate(EmojiColumnWidthValidator)
   emoji?: string;
 
   @IsOptional()
