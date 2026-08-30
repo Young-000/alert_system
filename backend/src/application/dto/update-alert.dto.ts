@@ -2,6 +2,7 @@ import {
   IsOptional,
   IsString,
   IsBoolean,
+  MaxLength,
   IsArray,
   IsEnum,
   Validate,
@@ -12,6 +13,8 @@ import { CronExpressionValidator } from './create-alert.dto';
 export class UpdateAlertDto {
   @IsOptional()
   @IsString({ message: '알림 이름은 문자열이어야 합니다.' })
+  // alerts.name 은 varchar(255)다. 여기서 안 막으면 DB가 500으로 끊는다.
+  @MaxLength(255, { message: '알림 이름은 255자 이하여야 합니다.' })
   name?: string;
 
   @IsOptional()
