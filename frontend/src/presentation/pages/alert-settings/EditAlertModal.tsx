@@ -56,6 +56,10 @@ export function EditAlertModal({
               onChange={(e) => onFormChange({ ...editForm, name: e.target.value })}
               className="form-input"
               placeholder="알림 이름"
+              // 서버 alerts.name 은 varchar(255)다. 여기서 안 막으면 저장이
+              // 500으로 돌아오고, 아래 catch 는 사유를 구분하지 못해
+              // "수정에 실패했습니다"만 뜬다.
+              maxLength={255}
             />
           </div>
           <div className="form-group">
