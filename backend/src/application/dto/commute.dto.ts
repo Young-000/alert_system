@@ -7,6 +7,7 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  Max,
   IsNotEmpty,
   IsUUID,
   ArrayMinSize,
@@ -14,6 +15,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RouteType, CheckpointType, TransportMode } from '@domain/entities/commute-route.entity';
+import { INT4_MAX } from './column-limits';
 
 /**
  * 문자열 상한은 `20260208_add_commute_tracking_tables.sql`의 컬럼 폭과 같은 값이다.
@@ -30,6 +32,8 @@ const MAX_LINE_INFO = 50; // route_checkpoints.line_info VARCHAR(50)
 export class CreateCheckpointDto {
   @IsNumber({}, { message: '순서는 숫자여야 합니다.' })
   @Min(0, { message: '순서는 0 이상이어야 합니다.' })
+  // route_checkpoints.sequence_order 는 INTEGER — 상한이 없으면 int4 초과가 500이 된다.
+  @Max(INT4_MAX, { message: '순서가 저장 가능한 범위를 벗어났습니다.' })
   sequenceOrder: number;
 
   @IsString({ message: '체크포인트 이름은 문자열이어야 합니다.' })
@@ -66,11 +70,15 @@ export class CreateCheckpointDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  // route_checkpoints.expected_duration_to_next 는 INTEGER
+  @Max(INT4_MAX, { message: '예상 소요 시간이 저장 가능한 범위를 벗어났습니다.' })
   expectedDurationToNext?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
+  // route_checkpoints.expected_wait_time 은 INTEGER
+  @Max(INT4_MAX, { message: '예상 대기 시간이 저장 가능한 범위를 벗어났습니다.' })
   expectedWaitTime?: number;
 
   @IsOptional()
@@ -197,6 +205,8 @@ export class RecordCheckpointDto {
   @IsOptional()
   @IsNumber({}, { message: '대기 시간은 숫자여야 합니다.' })
   @Min(0, { message: '대기 시간은 0 이상이어야 합니다.' })
+  // checkpoint_records.actual_wait_time 은 INTEGER
+  @Max(INT4_MAX, { message: '대기 시간이 저장 가능한 범위를 벗어났습니다.' })
   actualWaitTime?: number;
 
   @IsOptional()

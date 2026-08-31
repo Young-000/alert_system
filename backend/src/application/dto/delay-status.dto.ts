@@ -3,9 +3,11 @@ import {
   IsNotEmpty,
   IsInt,
   Min,
+  Max,
   IsOptional,
   IsBoolean,
 } from 'class-validator';
+import { INT4_MAX } from './column-limits';
 
 export type OverallDelayStatus =
   | 'normal'
@@ -105,6 +107,8 @@ export class CreateAlternativeMappingDto {
   @IsOptional()
   @IsInt()
   @Min(0)
+  // alternative_mappings.walking_distance_meters 는 INTEGER
+  @Max(INT4_MAX, { message: '도보 거리가 저장 가능한 범위를 벗어났습니다.' })
   walkingDistanceMeters?: number;
 
   @IsOptional()

@@ -69,7 +69,10 @@ export class CreateAlertDto {
   busStopId?: string;
 
   @IsOptional()
-  @IsString()
+  // alerts.subway_station_id 는 uuid 컬럼이다 (schema.sql:37).
+  // @IsString()만 걸면 '강남역' 같은 값이 INSERT까지 내려가 Postgres가 500으로 끊는다.
+  // 버전 미고정 — 컬럼이 요구하는 것은 "uuid"이지 "v4"가 아니다.
+  @IsUUID(undefined, { message: '유효한 지하철역 ID가 아닙니다.' })
   subwayStationId?: string;
 
   @IsOptional()
