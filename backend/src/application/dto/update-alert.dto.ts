@@ -5,6 +5,7 @@ import {
   MaxLength,
   IsArray,
   IsEnum,
+  IsUUID,
   Validate,
 } from 'class-validator';
 import { AlertType } from '@domain/entities/alert.entity';
@@ -36,6 +37,7 @@ export class UpdateAlertDto {
   busStopId?: string;
 
   @IsOptional()
-  @IsString({ message: '지하철역 ID는 문자열이어야 합니다.' })
+  // alerts.subway_station_id 는 uuid 컬럼이다 (schema.sql:37).
+  @IsUUID(undefined, { message: '유효한 지하철역 ID가 아닙니다.' })
   subwayStationId?: string;
 }
