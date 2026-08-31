@@ -9,7 +9,11 @@ import {
   Validate,
 } from 'class-validator';
 import { AlertType } from '@domain/entities/alert.entity';
-import { CronExpressionValidator } from './create-alert.dto';
+import {
+  CronExpressionValidator,
+  MAX_SCHEDULE_LENGTH,
+  MAX_BUS_STOP_ID_LENGTH,
+} from './create-alert.dto';
 
 export class UpdateAlertDto {
   @IsOptional()
@@ -20,6 +24,8 @@ export class UpdateAlertDto {
 
   @IsOptional()
   @IsString()
+  // 생성 경로와 같은 상한 — 한쪽만 막으면 수정으로 우회된다.
+  @MaxLength(MAX_SCHEDULE_LENGTH, { message: '스케줄은 100자 이하여야 합니다.' })
   @Validate(CronExpressionValidator)
   schedule?: string;
 
@@ -34,6 +40,9 @@ export class UpdateAlertDto {
 
   @IsOptional()
   @IsString({ message: '버스 정류장 ID는 문자열이어야 합니다.' })
+  @MaxLength(MAX_BUS_STOP_ID_LENGTH, {
+    message: '버스 정류장 ID는 100자 이하여야 합니다.',
+  })
   busStopId?: string;
 
   @IsOptional()

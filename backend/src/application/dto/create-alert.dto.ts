@@ -39,6 +39,16 @@ export class CronExpressionValidator implements ValidatorConstraintInterface {
   }
 }
 
+/**
+ * `alerts.schedule`·`alerts.bus_stop_id`는 둘 다 `VARCHAR(100)`이다
+ * (`schema.sql:33,36`). 엔티티가 길이를 생략해 TypeORM 기본값 255로 잡히는 바람에
+ * 테스트(`synchronize: true`)는 255짜리 컬럼을 만들어 이 상한을 볼 수 없었다.
+ * 여기서 막지 않으면 Postgres가 `value too long for type character varying(100)`으로
+ * 끊어 400이 아니라 500이 된다.
+ */
+export const MAX_SCHEDULE_LENGTH = 100;
+export const MAX_BUS_STOP_ID_LENGTH = 100;
+
 export class CreateAlertDto {
   @IsUUID('4', { message: '유효한 사용자 ID가 필요합니다.' })
   @IsNotEmpty({ message: '사용자 ID는 필수입니다.' })
@@ -52,6 +62,9 @@ export class CreateAlertDto {
 
   @IsString()
   @IsNotEmpty({ message: '스케줄은 필수입니다.' })
+  // alerts.schedule 은 varchar(100)다 (schema.sql:33). cron 문법상 100자를 넘는
+  // *유효한* 식이 존재하므로(분 0~59 나열 = 177자) cron 검증만으로는 못 막는다.
+  @MaxLength(MAX_SCHEDULE_LENGTH, { message: '스케줄은 100자 이하여야 합니다.' })
   @Validate(CronExpressionValidator)
   schedule: string;
 
@@ -66,6 +79,10 @@ export class CreateAlertDto {
 
   @IsOptional()
   @IsString()
+  // alerts.bus_stop_id 는 varchar(100)다 (schema.sql:36).
+  @MaxLength(MAX_BUS_STOP_ID_LENGTH, {
+    message: '버스 정류장 ID는 100자 이하여야 합니다.',
+  })
   busStopId?: string;
 
   @IsOptional()
