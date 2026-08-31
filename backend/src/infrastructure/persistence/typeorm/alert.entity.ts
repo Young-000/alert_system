@@ -33,7 +33,9 @@ export class AlertEntity {
   @Column()
   name: string;
 
-  @Column()
+  // DDL은 varchar(100)이다 (schema.sql:33). 길이를 생략하면 TypeORM이 255로 잡아
+  // synchronize 기반 테스트가 실제 컬럼 폭을 못 본다.
+  @Column({ length: 100 })
   schedule: string;
 
   @Column({ type: 'simple-json', name: 'alert_types' })
@@ -42,7 +44,8 @@ export class AlertEntity {
   @Column({ default: true })
   enabled: boolean;
 
-  @Column({ nullable: true, name: 'bus_stop_id' })
+  // DDL은 varchar(100)이다 (schema.sql:36).
+  @Column({ length: 100, nullable: true, name: 'bus_stop_id' })
   busStopId?: string;
 
   @Column({ type: 'uuid', nullable: true, name: 'subway_station_id' })
