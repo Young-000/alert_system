@@ -10,9 +10,20 @@ import {
   IsNotEmpty,
   IsUUID,
   ArrayMinSize,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RouteType, CheckpointType, TransportMode } from '@domain/entities/commute-route.entity';
+
+/**
+ * 문자열 상한은 `20260208_add_commute_tracking_tables.sql`의 컬럼 폭과 같은 값이다.
+ * 상한이 없으면 검증을 통과한 값이 INSERT까지 내려가고 Postgres가
+ * `value too long for type character varying(n)`으로 끊어 400이 아니라 500이 된다.
+ */
+const MAX_ROUTE_NAME = 100; // commute_routes.name VARCHAR(100)
+const MAX_CHECKPOINT_NAME = 100; // route_checkpoints.name VARCHAR(100)
+const MAX_LINKED_BUS_STOP_ID = 100; // route_checkpoints.linked_bus_stop_id VARCHAR(100)
+const MAX_LINE_INFO = 50; // route_checkpoints.line_info VARCHAR(50)
 
 // ========== Route DTOs ==========
 
@@ -23,21 +34,33 @@ export class CreateCheckpointDto {
 
   @IsString({ message: '체크포인트 이름은 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '체크포인트 이름은 필수입니다.' })
+  @MaxLength(MAX_CHECKPOINT_NAME, {
+    message: `체크포인트 이름은 최대 ${MAX_CHECKPOINT_NAME}자까지 가능합니다.`,
+  })
   name: string;
 
   @IsEnum(CheckpointType, { message: '유효한 체크포인트 유형이 아닙니다.' })
   checkpointType: CheckpointType;
 
+  // uuid 컬럼(route-checkpoint.entity.ts:54)이라 형식을 여기서 막지 않으면
+  // 'invalid input syntax for type uuid'로 500이 된다. 컬럼이 요구하는 것은
+  // uuid이지 특정 버전이 아니므로 버전은 고정하지 않는다.
   @IsOptional()
-  @IsString()
+  @IsUUID(undefined, { message: '유효한 지하철역 ID가 아닙니다.' })
   linkedStationId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(MAX_LINKED_BUS_STOP_ID, {
+    message: `정류장 ID는 최대 ${MAX_LINKED_BUS_STOP_ID}자까지 가능합니다.`,
+  })
   linkedBusStopId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(MAX_LINE_INFO, {
+    message: `노선 정보는 최대 ${MAX_LINE_INFO}자까지 가능합니다.`,
+  })
   lineInfo?: string;
 
   @IsOptional()
@@ -62,6 +85,9 @@ export class CreateRouteDto {
 
   @IsString({ message: '경로 이름은 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '경로 이름은 필수입니다.' })
+  @MaxLength(MAX_ROUTE_NAME, {
+    message: `경로 이름은 최대 ${MAX_ROUTE_NAME}자까지 가능합니다.`,
+  })
   name: string;
 
   @IsEnum(RouteType, { message: '유효한 경로 유형이 아닙니다.' })
@@ -92,6 +118,9 @@ export class UpdateCheckpointDto extends CreateCheckpointDto {
 export class UpdateRouteDto {
   @IsOptional()
   @IsString()
+  @MaxLength(MAX_ROUTE_NAME, {
+    message: `경로 이름은 최대 ${MAX_ROUTE_NAME}자까지 가능합니다.`,
+  })
   name?: string;
 
   @IsOptional()
