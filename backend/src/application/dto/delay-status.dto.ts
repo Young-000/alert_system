@@ -6,8 +6,9 @@ import {
   Max,
   IsOptional,
   IsBoolean,
+  MaxLength,
 } from 'class-validator';
-import { INT4_MAX } from './column-limits';
+import { INT4_MAX, MAX_STATION_NAME_LENGTH, MAX_LINE_NAME_LENGTH } from './column-limits';
 
 export type OverallDelayStatus =
   | 'normal'
@@ -86,18 +87,25 @@ export interface AlternativeMappingResponseDto {
 export class CreateAlternativeMappingDto {
   @IsString()
   @IsNotEmpty()
+  // alternative_mappings.from_station_name 은 VARCHAR(100) 이다
+  // (20260205_add_route_analytics.sql). 상한이 없으면 초과분이 INSERT까지 내려가 500이 된다.
+  @MaxLength(MAX_STATION_NAME_LENGTH, { message: '역 이름은 100자 이하여야 합니다.' })
   fromStationName!: string;
 
   @IsString()
   @IsNotEmpty()
+  // alternative_mappings.from_line 은 VARCHAR(50) 이다 — 역 이름(100)보다 좁다.
+  @MaxLength(MAX_LINE_NAME_LENGTH, { message: '노선 이름은 50자 이하여야 합니다.' })
   fromLine!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(MAX_STATION_NAME_LENGTH, { message: '역 이름은 100자 이하여야 합니다.' })
   toStationName!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(MAX_LINE_NAME_LENGTH, { message: '노선 이름은 50자 이하여야 합니다.' })
   toLine!: string;
 
   @IsInt()

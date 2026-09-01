@@ -26,6 +26,8 @@ const MAX_ROUTE_NAME = 100; // commute_routes.name VARCHAR(100)
 const MAX_CHECKPOINT_NAME = 100; // route_checkpoints.name VARCHAR(100)
 const MAX_LINKED_BUS_STOP_ID = 100; // route_checkpoints.linked_bus_stop_id VARCHAR(100)
 const MAX_LINE_INFO = 50; // route_checkpoints.line_info VARCHAR(50)
+const MAX_SESSION_WEATHER_CONDITION = 50; // commute_sessions.weather_condition VARCHAR(50)
+const MAX_CHECKPOINT_RECORD_NOTES = 255; // checkpoint_records.notes VARCHAR(255)
 
 // ========== Route DTOs ==========
 
@@ -190,6 +192,9 @@ export class StartSessionDto {
 
   @IsOptional()
   @IsString({ message: '날씨 조건은 문자열이어야 합니다.' })
+  @MaxLength(MAX_SESSION_WEATHER_CONDITION, {
+    message: '날씨 조건은 50자 이하여야 합니다.',
+  })
   weatherCondition?: string;
 }
 
@@ -211,6 +216,10 @@ export class RecordCheckpointDto {
 
   @IsOptional()
   @IsString({ message: '메모는 문자열이어야 합니다.' })
+  // checkpoint_records.notes 는 VARCHAR(255) 다 — commute_sessions.notes(TEXT)와 다르다.
+  @MaxLength(MAX_CHECKPOINT_RECORD_NOTES, {
+    message: '메모는 255자 이하여야 합니다.',
+  })
   notes?: string;
 }
 
