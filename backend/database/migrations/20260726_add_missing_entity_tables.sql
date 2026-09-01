@@ -88,11 +88,11 @@ CREATE TABLE IF NOT EXISTS alert_system.smart_departure_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES alert_system.users(id) ON DELETE CASCADE,
   route_id UUID NOT NULL REFERENCES alert_system.commute_routes(id) ON DELETE CASCADE,
-  departure_type VARCHAR(20) NOT NULL,        -- 'morning' | 'evening'
+  departure_type VARCHAR(20) NOT NULL,        -- 'commute' | 'return'
   arrival_target TIME NOT NULL,               -- 도착 목표 시각
   prep_time_minutes INTEGER NOT NULL DEFAULT 30,
   is_enabled BOOLEAN NOT NULL DEFAULT true,
-  active_days TEXT NOT NULL,                  -- simple-array: 'mon,tue,...'
+  active_days TEXT NOT NULL,                  -- simple-array: '1,2,3,4,5' (0=Sun..6=Sat)
   pre_alerts TEXT NOT NULL,                   -- simple-array: '30,15,5' (분 전)
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
