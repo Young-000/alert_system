@@ -8,8 +8,9 @@ import {
   IsInt,
   Min,
   Max,
+  MaxLength,
 } from 'class-validator';
-import { INT4_MAX, INT4_MIN } from './column-limits';
+import { INT4_MAX, INT4_MIN, MAX_WEATHER_CONDITION_LENGTH } from './column-limits';
 
 // behavior_events.alert_id / commute_records.alert_id 는 uuid 컬럼이다
 // (20260120_add_behavior_tracking.sql:11, :39). @IsString()만 걸면 비-uuid 문자열이
@@ -52,6 +53,11 @@ export class DepartureConfirmedDto {
   source: 'push' | 'app';
 
   @IsString()
+  // commute_records.weather_condition 은 VARCHAR(50) 이다
+  // (20260120_add_behavior_tracking.sql:43). 상한이 없어 51자가 INSERT까지 내려갔다 — 500.
+  @MaxLength(MAX_WEATHER_CONDITION_LENGTH, {
+    message: '날씨 조건은 50자 이하여야 합니다.',
+  })
   @IsOptional()
   weatherCondition?: string;
 
