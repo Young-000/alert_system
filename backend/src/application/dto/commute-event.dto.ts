@@ -10,6 +10,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { CommuteEventAction } from '@domain/entities/commute-event.entity';
@@ -29,10 +30,16 @@ export class RecordCommuteEventDto {
 
   @IsOptional()
   @IsNumber({}, { message: '위도는 숫자여야 합니다.' })
+  // 좌표계 정의대로 묶는다 — CreatePlaceDto·UpdatePlaceDto·LocationDto·
+  // LocationQueryDto·WidgetDataQueryDto 가 이미 쓰는 값이고, 이 DTO 만 빠져 있었다.
+  @Min(-90, { message: '위도는 -90 이상이어야 합니다.' })
+  @Max(90, { message: '위도는 90 이하여야 합니다.' })
   latitude?: number;
 
   @IsOptional()
   @IsNumber({}, { message: '경도는 숫자여야 합니다.' })
+  @Min(-180, { message: '경도는 -180 이상이어야 합니다.' })
+  @Max(180, { message: '경도는 180 이하여야 합니다.' })
   longitude?: number;
 
   @IsOptional()

@@ -110,6 +110,8 @@ export class CreateAlternativeMappingDto {
 
   @IsInt()
   @Min(0)
+  // alternative_mappings.walking_minutes 도 INTEGER 다 (아래 walking_distance_meters 와 같다).
+  @Max(INT4_MAX, { message: '도보 시간이 저장 가능한 범위를 벗어났습니다.' })
   walkingMinutes!: number;
 
   @IsOptional()

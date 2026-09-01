@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DepartureConfirmedDto } from './behavior.dto';
 import { CreateRouteDto, RecordCheckpointDto } from './commute.dto';
 import { CreateAlternativeMappingDto } from './delay-status.dto';
+import { RecordCommuteEventDto } from './commute-event.dto';
 import { CheckpointType, RouteType } from '@domain/entities/commute-route.entity';
 
 /**
@@ -143,5 +144,115 @@ describe('정수 컬럼 계약 (b) - alternative_mappings.walking_distance_meter
       metadata,
     )) as CreateAlternativeMappingDto;
     expect(result.walkingDistanceMeters).toBe(400);
+  });
+});
+
+/**
+ * (c) 형제 필드 누락 — 위 (b) 스윕이 같은 DTO 안에서 한 칸 옆을 비워 뒀다.
+ *
+ * `CreateAlternativeMappingDto.walkingDistanceMeters`에는 `@Max(INT4_MAX)`가 붙었는데,
+ * 바로 위 `walkingMinutes`에는 `@IsInt() @Min(0)`만 있고 상한이 없다. 두 필드는 같은
+ * 테이블의 같은 타입 컬럼이다 —
+ * `alternative_mappings.walking_minutes INTEGER NOT NULL`
+ * (`20260726_add_missing_entity_tables.sql:256`).
+ *
+ * `POST alternatives/mappings` → `delay-status.controller.ts:99` → `AlternativeMapping` →
+ * `alternative-mapping.repository.ts:95` `entity.walkingMinutes = mapping.walkingMinutes`
+ * → `save`. 경로 어디에도 절단·클램프가 없다 → `integer out of range`, **500**.
+ */
+describe('정수 컬럼 계약 (c) - alternative_mappings.walking_minutes 상한 (형제 필드)', () => {
+  const metadata = { type: 'body' as const, metatype: CreateAlternativeMappingDto };
+  const base = {
+    fromStationName: '강남',
+    fromLine: '2호선',
+    toStationName: '역삼',
+    toLine: '2호선',
+  };
+
+  it('int4를 넘는 walkingMinutes는 400으로 거절한다', async () => {
+    await expect(
+      pipe.transform({ ...base, walkingMinutes: OVER_INT4 }, metadata),
+    ).rejects.toThrow();
+  });
+
+  it('int4 상한값 자체는 통과한다 (대조군 - 경계를 반대로 잡지 않았는지)', async () => {
+    const result = (await pipe.transform(
+      { ...base, walkingMinutes: INT4_MAX },
+      metadata,
+    )) as CreateAlternativeMappingDto;
+    expect(result.walkingMinutes).toBe(INT4_MAX);
+  });
+
+  it('실제 도보 시간은 통과한다 (대조군)', async () => {
+    const result = (await pipe.transform(
+      { ...base, walkingMinutes: 5 },
+      metadata,
+    )) as CreateAlternativeMappingDto;
+    expect(result.walkingMinutes).toBe(5);
+  });
+});
+
+/**
+ * (d) 좌표 범위 — `RecordCommuteEventDto`의 위/경도에만 범위 검증이 없다.
+ *
+ * 같은 개념을 받는 다른 DTO는 **전부** 좌표계 정의대로 묶여 있다:
+ * `CreatePlaceDto`(±90/±180) · `UpdatePlaceDto` · `LocationDto`(create-user) ·
+ * `LocationQueryDto` · `WidgetDataQueryDto`. 이 DTO만 빠졌다.
+ *
+ * 컬럼이 `DOUBLE PRECISION`이라(`20260726_add_missing_entity_tables.sql:60-61`)
+ * 오버플로 500은 나지 않는다. 대신 위도 500 같은 값이 그대로 저장된다
+ * (`process-commute-event.use-case.ts:87,109` → `eventRepository.save`, 절단 없음).
+ *
+ * 상한을 도메인 감각으로 지어내지 않았다 — ±90/±180은 좌표계의 정의이고 이미 이 리포의
+ * 5개 DTO가 쓰는 값이다. 실제 GPS 값은 전부 이 범위 안이라 통과하던 요청을 막지 않는다.
+ * `accuracyM`은 컬럼(DOUBLE)에서도 물리에서도 상한이 나오지 않아 **손대지 않았다.**
+ */
+describe('좌표 범위 계약 - RecordCommuteEventDto', () => {
+  const metadata = { type: 'body' as const, metatype: RecordCommuteEventDto };
+  const base = {
+    placeId: UUID,
+    eventType: 'enter' as const,
+    triggeredAt: '2026-09-02T00:00:00.000Z',
+  };
+
+  it('범위를 벗어난 latitude는 400으로 거절한다', async () => {
+    await expect(pipe.transform({ ...base, latitude: 500 }, metadata)).rejects.toThrow();
+  });
+
+  it('범위를 벗어난 longitude는 400으로 거절한다', async () => {
+    await expect(pipe.transform({ ...base, longitude: 200 }, metadata)).rejects.toThrow();
+  });
+
+  it('실제 서울 좌표는 통과한다 (대조군)', async () => {
+    const result = (await pipe.transform(
+      { ...base, latitude: 37.4979, longitude: 127.0276, accuracyM: 12.5 },
+      metadata,
+    )) as RecordCommuteEventDto;
+    expect(result.latitude).toBe(37.4979);
+    expect(result.longitude).toBe(127.0276);
+    expect(result.accuracyM).toBe(12.5);
+  });
+
+  it.each([
+    ['위도 하한', { latitude: -90 }],
+    ['위도 상한', { latitude: 90 }],
+    ['경도 하한', { longitude: -180 }],
+    ['경도 상한', { longitude: 180 }],
+  ])('%s 경계값은 통과한다 (대조군 - 경계를 반대로 잡지 않았는지)', async (_n, coord) => {
+    await expect(pipe.transform({ ...base, ...coord }, metadata)).resolves.toBeDefined();
+  });
+
+  it('좌표 생략은 통과한다 (대조군 - optional 보존)', async () => {
+    const result = (await pipe.transform({ ...base }, metadata)) as RecordCommuteEventDto;
+    expect(result.latitude).toBeUndefined();
+    expect(result.longitude).toBeUndefined();
+  });
+
+  it('큰 accuracyM은 통과한다 (대조군 - 상한을 지어내지 않았다)', async () => {
+    const result = (await pipe.transform(
+      { ...base, accuracyM: 100000 },
+      metadata,
+    )) as RecordCommuteEventDto;
+    expect(result.accuracyM).toBe(100000);
   });
 });
