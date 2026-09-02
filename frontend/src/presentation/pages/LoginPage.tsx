@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApiClient } from '@infrastructure/api';
+import { getApiErrorStatus } from '@infrastructure/query/error-utils';
 import {
   safeSetItem,
   saveCredentials,
@@ -82,9 +83,8 @@ export function LoginPage(): JSX.Element {
         notifyAuthChange();
         navigate('/');
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : '오류가 발생했습니다.';
         if (mode === 'register') {
-          setError(errorMessage.includes('409') ? '이미 등록된 이메일입니다.' : '회원가입에 실패했습니다.');
+          setError(getApiErrorStatus(err) === 409 ? '이미 등록된 이메일입니다.' : '회원가입에 실패했습니다.');
         } else {
           setError('이메일 또는 비밀번호가 일치하지 않습니다.');
         }

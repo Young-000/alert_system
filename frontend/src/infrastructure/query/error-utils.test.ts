@@ -1,4 +1,4 @@
-import { getApiErrorMessage, getQueryErrorMessage } from './error-utils';
+import { getApiErrorMessage, getApiErrorStatus, getQueryErrorMessage } from './error-utils';
 
 /**
  * ApiClient가 던지는 에러의 실제 모양.
@@ -103,5 +103,65 @@ describe('getQueryErrorMessage', () => {
     expect(getQueryErrorMessage(new Error('boom'), '불러올 수 없습니다.')).toBe(
       '불러올 수 없습니다.',
     );
+  });
+});
+
+/**
+ * 상태 코드는 `API Error {status}:` 자리에서만 읽어야 한다.
+ * 서버 응답 본문에는 AllExceptionsFilter가 넣은 `path`(사용자 UUID 포함)가 항상 들어 있어서,
+ * 메시지 전체를 substring 으로 훑으면 남의 상태 코드를 자기 것으로 착각한다.
+ */
+describe('getQueryErrorMessage — 상태 코드 오인', () => {
+  it('경로에 "401"이 든 404를 로그인 만료로 오인하지 않는다', () => {
+    const error = apiError(404, {
+      statusCode: 404,
+      message: '분석 데이터를 찾을 수 없습니다.',
+      path: '/analytics/summary/9c401f7a-1d2e-4b3c-8a90-5f6e7d8c9b0a',
+    });
+
+    expect(getQueryErrorMessage(error, '분석 요약을 불러올 수 없습니다.')).toBe(
+      '분석 요약을 불러올 수 없습니다.',
+    );
+  });
+
+  it('경로에 "403"이 든 500을 권한 오류로 오인하지 않는다', () => {
+    const error = apiError(500, {
+      statusCode: 500,
+      message: 'Internal server error',
+      path: '/commute/weekly-report/1b403e55-9a7c-4d21-b8f3-0e2a6c4d1f88',
+    });
+
+    expect(getQueryErrorMessage(error, '주간 리포트를 불러올 수 없습니다.')).toBe(
+      '주간 리포트를 불러올 수 없습니다.',
+    );
+  });
+
+  it('실제 401/403은 그대로 안내 문구로 바꾼다', () => {
+    const unauthorized = apiError(401, { statusCode: 401, message: 'Unauthorized', path: '/x' });
+    const forbidden = apiError(403, { statusCode: 403, message: 'Forbidden resource', path: '/x' });
+
+    expect(getQueryErrorMessage(unauthorized, '불러올 수 없습니다.')).toBe('로그인이 필요합니다.');
+    expect(getQueryErrorMessage(forbidden, '불러올 수 없습니다.')).toBe('권한이 없습니다.');
+  });
+
+  it('네트워크 오류는 그대로 네트워크 안내로 바꾼다', () => {
+    expect(getQueryErrorMessage(new TypeError('Network request failed'), '불러올 수 없습니다.')).toBe(
+      '네트워크 오류가 발생했습니다.',
+    );
+  });
+});
+
+describe('getApiErrorStatus', () => {
+  it('상태 코드 자리에서만 코드를 읽는다', () => {
+    expect(getApiErrorStatus(apiError(404, { path: '/x/9c401f7a' }))).toBe(404);
+    expect(getApiErrorStatus(apiError(500, { path: '/x/1b403e55' }))).toBe(500);
+    expect(getApiErrorStatus(apiError(401, { message: 'Unauthorized' }))).toBe(401);
+  });
+
+  it('API 에러 형태가 아니면 null을 준다', () => {
+    expect(getApiErrorStatus(new Error('boom'))).toBeNull();
+    expect(getApiErrorStatus(new TypeError('Failed to fetch'))).toBeNull();
+    expect(getApiErrorStatus('문자열')).toBeNull();
+    expect(getApiErrorStatus(null)).toBeNull();
   });
 });

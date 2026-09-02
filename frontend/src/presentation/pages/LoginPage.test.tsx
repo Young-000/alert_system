@@ -161,7 +161,10 @@ describe('LoginPage', () => {
     });
 
     it('이미 등록된 이메일로 회원가입 시 에러 메시지를 표시해야 한다', async () => {
-      mockAuthApiClient.register.mockRejectedValue(new Error('409 Conflict'));
+      // ApiClient가 실제로 던지는 모양: `API Error {status}: {body}`
+      mockAuthApiClient.register.mockRejectedValue(
+        new Error('API Error 409: {"statusCode":409,"message":"이미 사용 중인 이메일입니다.","path":"/auth/register"}'),
+      );
 
       render(
         <MemoryRouter>
@@ -195,6 +198,38 @@ describe('LoginPage', () => {
 
       await waitFor(() => {
         expect(screen.getByRole('alert')).toHaveTextContent('이미 등록된 이메일입니다.');
+      });
+    });
+
+    it('본문에 "409"가 섞인 다른 실패를 이메일 중복으로 오인하지 않는다', async () => {
+      // 상태는 400인데 응답 본문(path)에 409라는 숫자가 들어 있는 경우.
+      mockAuthApiClient.register.mockRejectedValue(
+        new Error('API Error 400: {"statusCode":400,"message":"Bad Request","path":"/auth/register?trace=409"}'),
+      );
+
+      render(
+        <MemoryRouter>
+          <LoginPage />
+        </MemoryRouter>
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: '회원가입' }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('이름')).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'new@example.com' } });
+      fireEvent.change(screen.getByLabelText('이름'), { target: { value: '홍길동' } });
+      fireEvent.change(screen.getByLabelText('전화번호'), { target: { value: '01012345678' } });
+      fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'password123' } });
+
+      const buttons = screen.getAllByRole('button');
+      const submitButton = buttons.find((btn) => btn.getAttribute('type') === 'submit');
+      fireEvent.click(submitButton!);
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('회원가입에 실패했습니다.');
       });
     });
   });

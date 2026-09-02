@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@presentation/hooks/useAuth';
+import { getApiErrorStatus } from '@infrastructure/query/error-utils';
 import {
   getCommuteApiClient,
   type RouteResponse,
@@ -202,7 +203,7 @@ export function CommuteTrackingPage(): JSX.Element {
       const completed = await commuteApi.completeSession({ sessionId: session.id });
       setSession(completed);
     } catch (err) {
-      const message = err instanceof Error && err.message.includes('401')
+      const message = getApiErrorStatus(err) === 401
         ? '로그인이 만료되었습니다. 다시 로그인해주세요.'
         : '기록 완료에 실패했습니다. 네트워크 연결을 확인해주세요.';
       setError(message);
