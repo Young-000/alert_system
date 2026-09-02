@@ -132,6 +132,9 @@ export function useToggleCheckMutation() {
       void qc.invalidateQueries({ queryKey: queryKeys.missions.daily });
       void qc.invalidateQueries({ queryKey: queryKeys.missions.dailyScore });
       void qc.invalidateQueries({ queryKey: queryKeys.missions.weeklyStats });
+      // 주간·월간은 같은 findScoreRange 결과를 창만 달리해 집계하고(6일 vs 29일)
+      // 두 창 모두 오늘을 포함한다 — 주간만 무효화하면 두 통계가 서로 어긋난다.
+      void qc.invalidateQueries({ queryKey: queryKeys.missions.monthlyStats });
       void qc.invalidateQueries({ queryKey: queryKeys.missions.streak });
     },
   });

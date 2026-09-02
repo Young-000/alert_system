@@ -410,9 +410,9 @@ export default function ChallengesScreen(): React.JSX.Element {
             text: '포기',
             style: 'destructive',
             onPress: async () => {
-              const success = await abandonChallenge(challengeId);
-              if (!success) {
-                RNAlert.alert('오류', '도전 포기에 실패했습니다.');
+              const result = await abandonChallenge(challengeId);
+              if (!result.abandoned) {
+                RNAlert.alert('도전을 포기하지 못했어요', result.message);
               }
             },
           },

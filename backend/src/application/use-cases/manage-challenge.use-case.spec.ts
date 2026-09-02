@@ -1,4 +1,9 @@
 import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import {
   ManageChallengeUseCase,
   ChallengeConflictError,
 } from './manage-challenge.use-case';
@@ -96,9 +101,14 @@ describe('ManageChallengeUseCase', () => {
       expect(challengeRepo.saveChallenge).toHaveBeenCalled();
     });
 
-    it('존재하지 않는 템플릿이면 에러를 던진다', async () => {
+    it('존재하지 않는 템플릿이면 404 NotFoundException을 던진다', async () => {
       challengeRepo.findTemplateById.mockResolvedValue(null);
 
+      // 타입까지 봐야 한다 — bare Error면 AllExceptionsFilter가 500 +
+      // 'Internal server error'로 바꿔 아래 문구를 지운다.
+      await expect(
+        useCase.joinChallenge(userId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
       await expect(
         useCase.joinChallenge(userId, 'non-existent'),
       ).rejects.toThrow('챌린지 템플릿을 찾을 수 없습니다.');
@@ -145,21 +155,40 @@ describe('ManageChallengeUseCase', () => {
       );
     });
 
-    it('존재하지 않는 챌린지면 에러를 던진다', async () => {
+    it('존재하지 않는 챌린지면 404 NotFoundException을 던진다', async () => {
       challengeRepo.findChallengeById.mockResolvedValue(null);
 
+      await expect(
+        useCase.abandonChallenge(userId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
       await expect(
         useCase.abandonChallenge(userId, 'non-existent'),
       ).rejects.toThrow('챌린지를 찾을 수 없습니다.');
     });
 
-    it('다른 사용자의 챌린지를 포기하려 하면 에러를 던진다', async () => {
+    it('다른 사용자의 챌린지를 포기하려 하면 403 ForbiddenException을 던진다', async () => {
       const challenge = makeActiveChallenge({ userId: 'other-user' });
       challengeRepo.findChallengeById.mockResolvedValue(challenge);
 
       await expect(
         useCase.abandonChallenge(userId, 'challenge-1'),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        useCase.abandonChallenge(userId, 'challenge-1'),
       ).rejects.toThrow('본인의 챌린지만 포기할 수 있습니다.');
+    });
+
+    // 목록을 그린 뒤 마감이 지나거나 다른 기기에서 이미 포기한 도전을 탭하면 여기에 온다.
+    // 엔티티의 `Cannot abandon ${status} challenge`가 그대로 새면 500이 나가고,
+    // 모바일은 낙관적 삭제를 되돌린 뒤 "도전 포기에 실패했습니다"만 띄운다.
+    it('이미 끝난 챌린지를 포기하면 409 ConflictException을 던진다', async () => {
+      const challenge = makeActiveChallenge({ status: 'completed' });
+      challengeRepo.findChallengeById.mockResolvedValue(challenge);
+
+      await expect(
+        useCase.abandonChallenge(userId, 'challenge-1'),
+      ).rejects.toThrow(ConflictException);
+      expect(challengeRepo.saveChallenge).not.toHaveBeenCalled();
     });
   });
 

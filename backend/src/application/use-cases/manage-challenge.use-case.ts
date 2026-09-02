@@ -1,4 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   ChallengeRepository,
   TemplateMap,
@@ -43,7 +49,7 @@ export class ManageChallengeUseCase {
   ): Promise<UserChallenge> {
     const template = await this.challengeRepo.findTemplateById(templateId);
     if (!template) {
-      throw new Error('챌린지 템플릿을 찾을 수 없습니다.');
+      throw new NotFoundException('챌린지 템플릿을 찾을 수 없습니다.');
     }
 
     const activeCount = await this.challengeRepo.countActiveChallenges(userId);
@@ -79,11 +85,18 @@ export class ManageChallengeUseCase {
   ): Promise<void> {
     const challenge = await this.challengeRepo.findChallengeById(challengeId);
     if (!challenge) {
-      throw new Error('챌린지를 찾을 수 없습니다.');
+      throw new NotFoundException('챌린지를 찾을 수 없습니다.');
     }
 
     if (challenge.userId !== userId) {
-      throw new Error('본인의 챌린지만 포기할 수 있습니다.');
+      throw new ForbiddenException('본인의 챌린지만 포기할 수 있습니다.');
+    }
+
+    // 엔티티의 abandon()도 같은 조건을 막지만 그쪽은 bare Error라 500이 된다.
+    // 목록을 그린 뒤 마감이 지나거나 다른 기기에서 이미 포기한 도전을 탭하는 경로가
+    // 실제로 있으므로, 사용자가 읽을 수 있는 409로 여기서 끊는다.
+    if (challenge.status !== 'active') {
+      throw new ConflictException('이미 끝난 도전이에요.');
     }
 
     const abandoned = challenge.abandon();
