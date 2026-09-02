@@ -122,8 +122,11 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       await alertApiClient.deleteAlert(deleteTarget.id);
       await reloadAlerts();
       setDeleteTarget(null);
-    } catch {
-      setError('삭제에 실패했습니다.');
+    } catch (err) {
+      // 생성(:232)과 같은 계약: 서버가 준 사유를 그대로 올린다.
+      // 고정 문구로 덮으면 이미 지워진 알림(404)에도 "다시 시도"로 읽혀
+      // 같은 버튼을 눌러도 매번 같은 실패만 돌아온다.
+      setError(getApiErrorMessage(err, '삭제에 실패했습니다.'));
     } finally {
       setIsDeleting(false);
     }
@@ -154,8 +157,8 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
       setTimeout(() => setSuccess(''), TOAST_DURATION_MS);
-    } catch {
-      setError('수정에 실패했습니다.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, '수정에 실패했습니다.'));
     } finally {
       setIsEditing(false);
     }
@@ -174,9 +177,9 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       // 낙관적 변경은 로컬 state에만 남는다. 캐시를 그대로 두면 staleTime(2분) 안에
       // 이 화면을 다시 열었을 때 옛 enabled 값이 그려져 껐던 알림이 켜진 것처럼 보인다.
       await reloadAlerts();
-    } catch {
+    } catch (err) {
       setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
-      setError('알림 상태 변경에 실패했습니다.');
+      setError(getApiErrorMessage(err, '알림 상태 변경에 실패했습니다.'));
       setTimeout(() => setError(''), TOAST_DURATION_MS);
     } finally {
       setTogglingIds(prev => {

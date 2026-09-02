@@ -26,8 +26,24 @@ export type SaveResult =
     }
   | { saved: false; message: string };
 
+/**
+ * 삭제 결과. 저장(`SaveResult`)과 같은 계약을 따른다.
+ *
+ * boolean으로 접으면 화면은 사유를 추측할 수밖에 없어 "잠시 후 다시 시도해주세요"만
+ * 띄운다. 그런데 서버가 거절하는 대표 사유는 404(`장소를 찾을 수 없습니다.`)로,
+ * 목록이 낡아 이미 지워진 장소를 지우려 한 경우다 — 다시 시도해도 결과는 같고
+ * 필요한 행동은 목록 새로고침이다. 유니온이면 실패 가지의 `message`가 타입상
+ * 보장되므로 빈 문구가 뜰 수 없다.
+ */
+export type DeleteResult =
+  | { deleted: true }
+  | { deleted: false; message: string };
+
 /** 서버가 사유를 안 줬을 때(네트워크 단절 등)의 폼 문구. */
 const SAVE_FAILED_FALLBACK = '저장하지 못했습니다. 잠시 후 다시 시도해주세요.';
+
+/** 서버가 사유를 안 줬을 때의 삭제 문구. */
+const DELETE_FAILED_FALLBACK = '삭제하지 못했습니다. 잠시 후 다시 시도해주세요.';
 
 type UsePlacesReturn = {
   places: Place[];
@@ -38,7 +54,7 @@ type UsePlacesReturn = {
   refresh: () => Promise<void>;
   createPlace: (dto: CreatePlaceDto) => Promise<SaveResult>;
   updatePlace: (id: string, dto: UpdatePlaceDto) => Promise<SaveResult>;
-  deletePlace: (id: string) => Promise<boolean>;
+  deletePlace: (id: string) => Promise<DeleteResult>;
   togglePlace: (id: string) => Promise<boolean>;
   getPlaceByType: (type: 'home' | 'work') => Place | undefined;
 };
@@ -127,15 +143,16 @@ export function usePlaces(): UsePlacesReturn {
 
   // Delete (optimistic)
   const deletePlace = useCallback(
-    async (id: string): Promise<boolean> => {
+    async (id: string): Promise<DeleteResult> => {
       const previous = places;
       setPlaces((prev) => prev.filter((p) => p.id !== id));
       try {
         await placeService.deletePlace(id);
-        return true;
-      } catch {
+        return { deleted: true };
+      } catch (err) {
         setPlaces(previous);
-        return false;
+        // 생성·수정과 같은 계약: 서버가 말해준 사유를 그대로 넘긴다.
+        return { deleted: false, message: serverMessage(err) ?? DELETE_FAILED_FALLBACK };
       }
     },
     [places],

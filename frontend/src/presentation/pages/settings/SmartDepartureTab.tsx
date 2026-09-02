@@ -175,8 +175,10 @@ export function SmartDepartureTab(): JSX.Element {
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
-    } catch {
-      setActionError('삭제에 실패했습니다.');
+    } catch (err) {
+      // 생성(:159)과 같은 계약: 서버가 준 사유를 그대로 올린다.
+      // 고정 문구로 덮으면 이미 지워진 설정(404)에도 "다시 시도"로 읽힌다.
+      setActionError(getApiErrorMessage(err, '삭제에 실패했습니다.'));
     } finally {
       setDeletingId(null);
     }

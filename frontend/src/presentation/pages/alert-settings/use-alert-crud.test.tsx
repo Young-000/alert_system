@@ -89,3 +89,72 @@ describe('useAlertCrud', () => {
     });
   });
 });
+
+describe('useAlertCrud — 실패 사유 전달', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('삭제가 거절되면 서버가 준 사유를 그대로 알린다', async () => {
+    // 생성(:232)은 이미 서버 사유를 올린다. 삭제만 '삭제에 실패했습니다.'로
+    // 덮으면 이미 지워진 알림(404)에도 사용자가 같은 버튼을 다시 누르게 된다.
+    mockGetAlertsByUser.mockResolvedValue([alertOn]);
+    mockDeleteAlert.mockRejectedValue(
+      new Error('API Error 404: {"message":"알림을 찾을 수 없습니다."}'),
+    );
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    act(() => {
+      result.current.handleDeleteClick(alertOn);
+    });
+    await act(async () => {
+      await result.current.handleDeleteConfirm();
+    });
+
+    expect(result.current.error).toBe('알림을 찾을 수 없습니다.');
+  });
+
+  it('토글이 거절되면 서버가 준 사유를 그대로 알린다', async () => {
+    mockGetAlertsByUser.mockResolvedValue([alertOn]);
+    mockToggleAlert.mockRejectedValue(
+      new Error('API Error 404: {"message":"알림을 찾을 수 없습니다."}'),
+    );
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.handleToggleAlert(alertOn);
+    });
+
+    expect(result.current.error).toBe('알림을 찾을 수 없습니다.');
+    // 되돌리기는 그대로 유지된다 — 사유를 올리느라 롤백을 잃으면 안 된다.
+    expect(result.current.alerts[0].enabled).toBe(true);
+  });
+
+  it('사유를 못 꺼내면 기존 문구로 되돌아간다', async () => {
+    // 대조군 — 본문 없는 실패까지 빈 문구로 만들지 않는다.
+    mockGetAlertsByUser.mockResolvedValue([alertOn]);
+    mockDeleteAlert.mockRejectedValue(new Error('boom'));
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    act(() => {
+      result.current.handleDeleteClick(alertOn);
+    });
+    await act(async () => {
+      await result.current.handleDeleteConfirm();
+    });
+
+    expect(result.current.error).toBe('삭제에 실패했습니다.');
+  });
+});

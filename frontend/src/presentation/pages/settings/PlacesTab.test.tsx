@@ -217,3 +217,43 @@ describe('PlacesTab — 실패가 예정된 등록 폼으로 밀지 않는다', 
     expect(screen.getByRole('option', { name: '🏢 직장' })).toBeInTheDocument();
   });
 });
+
+describe('PlacesTab — 삭제 실패 사유 전달', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('서버가 준 삭제 거절 사유를 그대로 보여준다', async () => {
+    // 목록이 낡아 이미 지워진 장소를 삭제하면 서버는 404 + 사유를 준다.
+    // 고정 문구 '장소 삭제에 실패했습니다.'로 덮으면 사용자는 다시 삭제를 눌러보고
+    // 매번 같은 실패를 본다 — 해야 할 일은 재시도가 아니라 목록 새로고침이다.
+    placeApi.getPlaces.mockResolvedValue([place({ id: 'p1', label: '우리집' })]);
+    placeApi.deletePlace.mockRejectedValue(
+      new Error('API Error 404: {"message":"장소를 찾을 수 없습니다."}'),
+    );
+    const user = userEvent.setup();
+
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '우리집 삭제' }));
+    await user.click(screen.getByRole('button', { name: '삭제' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '장소를 찾을 수 없습니다.',
+    );
+  });
+
+  it('사유를 못 꺼내면 기존 문구로 되돌아간다', async () => {
+    // 대조군 — 네트워크 단절처럼 본문이 없는 실패까지 빈 배너로 만들지 않는다.
+    placeApi.getPlaces.mockResolvedValue([place({ id: 'p1', label: '우리집' })]);
+    placeApi.deletePlace.mockRejectedValue(new Error('boom'));
+    const user = userEvent.setup();
+
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '우리집 삭제' }));
+    await user.click(screen.getByRole('button', { name: '삭제' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '장소 삭제에 실패했습니다.',
+    );
+  });
+});
