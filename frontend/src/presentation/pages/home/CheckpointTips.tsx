@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { getApiErrorStatus } from '@infrastructure/query/error-utils';
 import {
   useCheckpointTips,
   useCreateTip,
@@ -42,7 +43,8 @@ export function CheckpointTips({
           },
           onError: (error) => {
             // 429 rate limit error
-            if (error.message.includes('429') || error.message.includes('Too Many')) {
+            const status = getApiErrorStatus(error);
+            if (status === 429 || (status === null && error.message.includes('Too Many'))) {
               setIsRateLimited(true);
             } else {
               // 500/네트워크 등 그 외 실패 — 조용히 무시하지 말고 사용자에게 알림 (입력은 보존됨)

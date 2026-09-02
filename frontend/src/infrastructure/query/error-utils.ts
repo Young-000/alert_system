@@ -1,15 +1,40 @@
+/** ApiClient가 던지는 에러 메시지 형태: `API Error {status}: {body}` */
+const API_ERROR_PATTERN = /^API Error (\d{3}): ([\s\S]*)$/;
+
+/**
+ * 에러에서 HTTP 상태 코드만 꺼낸다. API 에러가 아니면 `null`.
+ *
+ * 상태 코드를 알아야 할 때는 반드시 이 함수를 쓴다. `message.includes('401')` 같은
+ * substring 검사는 응답 본문에 늘 들어 있는 `path`(사용자·리소스 UUID)의 숫자를
+ * 상태 코드로 착각한다 — 예: `/analytics/summary/9c401f7a-...`의 404가 401이 된다.
+ */
+export function getApiErrorStatus(error: unknown): number | null {
+  if (!(error instanceof Error)) return null;
+  const match = API_ERROR_PATTERN.exec(error.message);
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * 조회(read) 실패를 사용자 문장으로 바꾼다.
+ *
+ * 상태 코드는 반드시 `API Error {status}:` 자리에서만 읽는다. 응답 본문에는
+ * `AllExceptionsFilter`가 넣은 `path`(사용자·리소스 UUID 포함)가 항상 들어 있어서,
+ * 메시지 전체를 substring으로 훑으면 UUID 안의 `401`·`403`을 상태 코드로 착각한다.
+ * 쓰기 실패에는 `getApiErrorMessage`를 쓴다.
+ */
 export function getQueryErrorMessage(error: unknown, fallback: string): string {
   if (!error) return '';
   if (error instanceof Error) {
-    if (error.message.includes('401')) return '로그인이 필요합니다.';
-    if (error.message.includes('403')) return '권한이 없습니다.';
-    if (error.message.includes('Network')) return '네트워크 오류가 발생했습니다.';
+    if (error instanceof TypeError || error.message.includes('Network')) {
+      return '네트워크 오류가 발생했습니다.';
+    }
+
+    const status = getApiErrorStatus(error);
+    if (status === 401) return '로그인이 필요합니다.';
+    if (status === 403) return '권한이 없습니다.';
   }
   return fallback;
 }
-
-/** ApiClient가 던지는 에러 메시지 형태: `API Error {status}: {body}` */
-const API_ERROR_PATTERN = /^API Error (\d{3}): ([\s\S]*)$/;
 
 /** 한글이 하나라도 있으면 사용자에게 보여주려고 쓴 문구로 간주한다. */
 const HANGUL_PATTERN = /[가-힣]/;

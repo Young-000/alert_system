@@ -15,6 +15,7 @@ import {
 import { alertApiClient, type Alert, type CreateAlertDto, type AlertType } from '@infrastructure/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@infrastructure/query/query-keys';
+import { getApiErrorStatus } from '@infrastructure/query/error-utils';
 import { useToast, ToastContainer } from '../components/Toast';
 
 import type { SetupStep, LocalTransportMode, SelectedStop, SharedRouteData } from './route-setup';
@@ -391,7 +392,8 @@ export function RouteSetupPage(): JSX.Element {
       navigateTimerRef.current = setTimeout(() => navigate('/'), 1500);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '';
-      if (message.includes('401') || message.includes('Unauthorized')) {
+      const status = getApiErrorStatus(err);
+      if (status === 401 || (status === null && message.includes('Unauthorized'))) {
         setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
       } else if (message.includes('network') || message.includes('fetch')) {
         setError('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
