@@ -17,6 +17,18 @@ export type JoinChallengeResult =
   | { joined: true }
   | { joined: false; message: string };
 
+/**
+ * 포기 결과. 참가와 같은 이유로 사유를 들고 온다.
+ *
+ * 목록을 그린 뒤 마감이 지나거나 다른 기기에서 이미 포기한 도전을 탭하면 서버가
+ * 409 '이미 끝난 도전이에요.'로 답한다. 성패만 boolean으로 돌려주면 그 문구가
+ * 버려지고 "도전 포기에 실패했습니다"만 남아, 사용자는 목록만 새로고침하면
+ * 되는 상황에서 같은 버튼을 계속 누른다.
+ */
+export type AbandonChallengeResult =
+  | { abandoned: true }
+  | { abandoned: false; message: string };
+
 type UseChallengesReturn = {
   templates: ChallengeTemplate[];
   categories: TemplateCategory[];
@@ -26,7 +38,7 @@ type UseChallengesReturn = {
   error: string | null;
   refresh: () => Promise<void>;
   joinChallenge: (templateId: string) => Promise<JoinChallengeResult>;
-  abandonChallenge: (challengeId: string) => Promise<boolean>;
+  abandonChallenge: (challengeId: string) => Promise<AbandonChallengeResult>;
 };
 
 export function useChallenges(): UseChallengesReturn {
@@ -107,17 +119,21 @@ export function useChallenges(): UseChallengesReturn {
 
   // Abandon (optimistic update)
   const abandonChallenge = useCallback(
-    async (challengeId: string): Promise<boolean> => {
+    async (challengeId: string): Promise<AbandonChallengeResult> => {
       const previous = activeChallenges;
       setActiveChallenges((prev) => prev.filter((c) => c.id !== challengeId));
 
       try {
         await challengeService.abandonChallenge(challengeId);
         await fetchAll();
-        return true;
-      } catch {
+        return { abandoned: true };
+      } catch (err) {
         setActiveChallenges(previous);
-        return false;
+        return {
+          abandoned: false,
+          message:
+            serverMessage(err) ?? '도전을 포기하지 못했어요. 잠시 후 다시 시도해주세요.',
+        };
       }
     },
     [activeChallenges, fetchAll],
