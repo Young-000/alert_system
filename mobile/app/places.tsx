@@ -95,8 +95,8 @@ export default function PlacesScreen(): React.JSX.Element {
 
   const handleDeleteConfirm = useCallback(
     async (id: string): Promise<void> => {
-      const success = await deletePlace(id);
-      if (success) {
+      const result = await deletePlace(id);
+      if (result.deleted) {
         // 남은 장소가 없어도 맞춰야 한다. 예전에는 `remaining.length > 0`일 때만
         // 재등록해서, 마지막 장소를 지우면 지운 장소의 region이 네이티브에 그대로
         // 남았다 — 감지는 계속 돌고, 설정 화면은 장소가 0개라 스위치를 잠가
@@ -104,7 +104,9 @@ export default function PlacesScreen(): React.JSX.Element {
         const remaining = places.filter((p) => p.id !== id);
         void syncIfMonitoring(remaining);
       } else {
-        RNAlert.alert('삭제하지 못했어요', '잠시 후 다시 시도해주세요.');
+        // 서버 사유를 그대로 띄운다. "잠시 후 다시 시도해주세요"는 404
+        // (이미 지워진 장소)에 틀린 안내다 — 다시 눌러도 결과가 같다.
+        RNAlert.alert('삭제하지 못했어요', result.message);
       }
       setShowDeleteConfirm(null);
     },

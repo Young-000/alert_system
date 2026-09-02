@@ -137,8 +137,11 @@ export function PlacesTab(): JSX.Element {
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
-    } catch {
-      setActionError('장소 삭제에 실패했습니다.');
+    } catch (err) {
+      // 등록(:124)과 같은 계약: 서버가 준 사유를 그대로 올린다.
+      // 고정 문구로 덮으면 이미 지워진 장소(404)에도 "다시 시도"로 읽혀
+      // 눌러도 매번 같은 실패만 돌아온다 — 필요한 행동은 목록 새로고침이다.
+      setActionError(getApiErrorMessage(err, '장소 삭제에 실패했습니다.'));
     } finally {
       setDeletingId(null);
     }

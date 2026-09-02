@@ -300,3 +300,67 @@ describe('SmartDepartureTab — 실패가 예정된 등록 폼으로 밀지 않�
     expect(screen.getByRole('option', { name: '🌇 퇴근' })).toBeInTheDocument();
   });
 });
+
+describe('SmartDepartureTab — 삭제 실패 사유 전달', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    commuteApi.getUserRoutes.mockResolvedValue([
+      { id: 'route-1', name: '출근 경로', routeType: 'morning' },
+    ] as never);
+    mockSmartDepartureApi.getSettings.mockResolvedValue([
+      {
+        id: 'setting-1',
+        userId: 'user-1',
+        routeId: 'route-1',
+        departureType: 'commute',
+        arrivalTarget: '09:00',
+        prepTimeMinutes: 15,
+        isEnabled: true,
+        activeDays: [1, 2, 3, 4, 5],
+        preAlerts: [10],
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+      },
+    ] as never);
+  });
+
+  it('서버가 준 삭제 거절 사유를 그대로 보여준다', async () => {
+    // 생성(:159)은 이미 서버 사유를 올린다. 삭제만 고정 문구로 덮으면
+    // 이미 지워진 설정(404)에도 "삭제에 실패했습니다."만 남아, 사용자는
+    // 같은 버튼을 다시 누르는 것 말고 할 수 있는 일을 알 수 없다.
+    mockSmartDepartureApi.deleteSetting.mockRejectedValue(
+      new Error('API Error 404: {"message":"스마트 출발 설정을 찾을 수 없습니다."}'),
+    );
+    const user = userEvent.setup();
+
+    renderTab();
+    const deleteButtons = await screen.findAllByRole('button', { name: '삭제' });
+    await user.click(deleteButtons[0]);
+
+    const confirmButtons = screen.getAllByRole('button', { name: '삭제' });
+    await user.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '스마트 출발 설정을 찾을 수 없습니다.',
+      );
+    });
+  });
+
+  it('사유를 못 꺼내면 기존 문구로 되돌아간다', async () => {
+    // 대조군 — 본문 없는 실패까지 빈 배너로 만들지 않는다.
+    mockSmartDepartureApi.deleteSetting.mockRejectedValue(new Error('boom'));
+    const user = userEvent.setup();
+
+    renderTab();
+    const deleteButtons = await screen.findAllByRole('button', { name: '삭제' });
+    await user.click(deleteButtons[0]);
+
+    const confirmButtons = screen.getAllByRole('button', { name: '삭제' });
+    await user.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('삭제에 실패했습니다.');
+    });
+  });
+});

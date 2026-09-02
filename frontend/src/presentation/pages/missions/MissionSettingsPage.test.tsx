@@ -117,3 +117,57 @@ describe('MissionSettingsPage — 활성/비활성 토글', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+describe('MissionSettingsPage — 저장 실패 사유 전달', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('서버가 준 저장 거절 사유를 그대로 보여준다', async () => {
+    // 추가 버튼은 상한(3개)에서 잠기지만, 다른 탭·기기에서 먼저 만들면
+    // 목록이 낡은 채로 4번째 요청이 나가 서버가 400 + 사유로 거절한다.
+    // 고정 문구 '저장에 실패했습니다. 다시 시도해주세요.'는 이때 틀린 안내다 —
+    // 다시 시도해도 상한은 그대로라 매번 같은 실패만 돌아온다.
+    mockMissionApiClient.getMissions.mockResolvedValue([
+      mission('m1', '영어 단어', 1),
+      mission('m2', '뉴스 읽기', 2),
+    ]);
+    mockMissionApiClient.createMission.mockRejectedValue(
+      new Error(
+        'API Error 400: {"message":"commute 미션은 최대 3개까지 설정할 수 있습니다"}',
+      ),
+    );
+    const user = userEvent.setup();
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: '출근 미션 추가' }));
+    await user.type(screen.getByLabelText('미션 이름'), '독서하기');
+    await user.click(screen.getByRole('button', { name: '추가' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'commute 미션은 최대 3개까지 설정할 수 있습니다',
+      );
+    });
+  });
+
+  it('사유를 못 꺼내면 기존 문구로 되돌아간다', async () => {
+    // 대조군 — 본문 없는 실패까지 빈 문구로 만들지 않는다.
+    mockMissionApiClient.getMissions.mockResolvedValue([
+      mission('m1', '영어 단어', 1),
+    ]);
+    mockMissionApiClient.createMission.mockRejectedValue(new Error('boom'));
+    const user = userEvent.setup();
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: '출근 미션 추가' }));
+    await user.type(screen.getByLabelText('미션 이름'), '독서하기');
+    await user.click(screen.getByRole('button', { name: '추가' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '저장에 실패했습니다. 다시 시도해주세요.',
+      );
+    });
+  });
+});

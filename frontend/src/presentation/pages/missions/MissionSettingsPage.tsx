@@ -10,6 +10,7 @@ import {
   useReorderMissionMutation,
   useToggleActiveMutation,
 } from '@infrastructure/query';
+import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import type { Mission, MissionType } from '@infrastructure/api';
 import { MissionAddModal } from './MissionAddModal';
 
@@ -333,8 +334,11 @@ export function MissionSettingsPage(): JSX.Element {
         }
         setModalOpen(false);
         setEditingMission(null);
-      } catch {
-        setSaveError('저장에 실패했습니다. 다시 시도해주세요.');
+      } catch (err) {
+        // 서버가 준 사유를 그대로 올린다. 고정 문구는 상한 초과(400,
+        // "commute 미션은 최대 3개까지...")에 "다시 시도"로 읽혀,
+        // 눌러도 매번 같은 실패만 돌아오는 막다른 길이 된다.
+        setSaveError(getApiErrorMessage(err, '저장에 실패했습니다. 다시 시도해주세요.'));
       }
     },
     [editingMission, modalType, createMutation, updateMutation],
