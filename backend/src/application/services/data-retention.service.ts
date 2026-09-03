@@ -4,19 +4,21 @@ import { IBehaviorEventRepository } from '../../domain/repositories/behavior-eve
 import { ICommuteRecordRepository } from '../../domain/repositories/commute-record.repository';
 import { DEFAULT_PRIVACY_SETTINGS } from '../../domain/entities/privacy-settings.entity';
 
-export const BEHAVIOR_EVENT_REPOSITORY = Symbol('BEHAVIOR_EVENT_REPOSITORY');
-export const COMMUTE_RECORD_REPOSITORY = Symbol('COMMUTE_RECORD_REPOSITORY');
-
 @Injectable()
 export class DataRetentionService {
   private readonly logger = new Logger(DataRetentionService.name);
 
   constructor(
+    // 토큰은 문자열이어야 한다 — 이 서비스를 등록하는 PrivacyModule이
+    // 'BEHAVIOR_EVENT_REPOSITORY'/'COMMUTE_RECORD_REPOSITORY' 문자열로 저장소를 제공하고,
+    // 같은 모듈의 ExportUserDataUseCase도 같은 문자열을 쓴다.
+    // 여기서 자체 Symbol을 쓰면 @Optional() 탓에 부팅은 되지만 저장소가 조용히 null이 되어
+    // GDPR 삭제와 보관기간 크론이 아무 일도 하지 않는다.
     @Optional()
-    @Inject(BEHAVIOR_EVENT_REPOSITORY)
+    @Inject('BEHAVIOR_EVENT_REPOSITORY')
     private readonly behaviorEventRepository: IBehaviorEventRepository | null,
     @Optional()
-    @Inject(COMMUTE_RECORD_REPOSITORY)
+    @Inject('COMMUTE_RECORD_REPOSITORY')
     private readonly commuteRecordRepository: ICommuteRecordRepository | null,
   ) {}
 
