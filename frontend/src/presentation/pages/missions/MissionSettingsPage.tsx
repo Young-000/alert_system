@@ -375,17 +375,39 @@ export function MissionSettingsPage(): JSX.Element {
 
   /**
    * 두 미션의 sortOrder를 맞바꾼다.
-   * 두 요청을 순차로 보내고 실패를 표면화한다 — 병렬 fire-and-forget이면
-   * 첫 요청만 성공했을 때 두 미션이 같은 sortOrder로 남고 사용자는 알 수 없다.
+   * 두 요청을 순차로 보내되, 두 번째가 실패하면 첫 요청을 되돌린다.
+   * 순차 실행만으로는 부족하다 — 첫 요청만 반영되면 두 미션이 같은 sortOrder로 남고,
+   * 그 뒤 같은 쌍의 순서 변경은 같은 값끼리 맞바꾸므로 버튼이 영구히 무반응이 된다.
    */
   const swapSortOrder = useCallback(
     async (a: Mission, b: Mission) => {
       if (reorderMutation.isPending) return;
       setReorderError('');
+      const originalOrderOfA = a.sortOrder;
+
       try {
         await reorderMutation.mutateAsync({ id: a.id, sortOrder: b.sortOrder });
-        await reorderMutation.mutateAsync({ id: b.id, sortOrder: a.sortOrder });
       } catch {
+        // 아무것도 반영되지 않았다 — 되돌릴 것이 없다.
+        setReorderError('순서 변경에 실패했습니다. 다시 시도해주세요.');
+        return;
+      }
+
+      try {
+        await reorderMutation.mutateAsync({
+          id: b.id,
+          sortOrder: originalOrderOfA,
+        });
+      } catch {
+        try {
+          await reorderMutation.mutateAsync({
+            id: a.id,
+            sortOrder: originalOrderOfA,
+          });
+        } catch {
+          // 되돌리기까지 실패하면 서버 순서를 여기서 복구할 수 없다.
+          // 목록은 무효화되어 다시 조회되므로 화면은 실제 저장된 순서를 보여준다.
+        }
         setReorderError('순서 변경에 실패했습니다. 다시 시도해주세요.');
       }
     },
