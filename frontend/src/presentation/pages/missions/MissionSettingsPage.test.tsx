@@ -80,6 +80,26 @@ describe('MissionSettingsPage — 순서 변경', () => {
     await screen.findByRole('alert');
     expect(mockMissionApiClient.reorder).toHaveBeenCalledTimes(1);
   });
+
+  it('두 번째 요청이 실패하면 첫 요청을 되돌린다 (sortOrder 중복 방지)', async () => {
+    // 첫 요청만 성공하면 m2는 0으로 바뀌고 m1은 0에 그대로 남아 둘의 sortOrder가 같아진다.
+    // 그 뒤로 같은 쌍의 순서 변경은 같은 값끼리 맞바꾸므로 버튼이 영구히 무반응이 된다.
+    mockMissionApiClient.reorder
+      .mockResolvedValueOnce(mission('m2', '두 번째 미션', 0))
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(mission('m2', '두 번째 미션', 1));
+    renderPage();
+
+    const moveUp = await screen.findByLabelText('두 번째 미션 위로 이동');
+    await userEvent.click(moveUp);
+
+    await waitFor(() => {
+      expect(mockMissionApiClient.reorder).toHaveBeenCalledTimes(3);
+    });
+    // 세 번째 요청이 m2를 원래 자리(1)로 되돌린다.
+    expect(mockMissionApiClient.reorder).toHaveBeenNthCalledWith(3, 'm2', 1);
+    expect(await screen.findByRole('alert')).toHaveTextContent('순서 변경에 실패');
+  });
 });
 
 describe('MissionSettingsPage — 활성/비활성 토글', () => {
