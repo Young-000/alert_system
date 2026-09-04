@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   alertApiClient,
@@ -20,6 +20,7 @@ interface AlertCrudState {
   alerts: Alert[];
   isLoadingAlerts: boolean;
   loadError: string;
+  routesError: string;
   error: string;
   success: string;
   deleteTarget: { id: string; name: string } | null;
@@ -64,6 +65,11 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const isLoadingAlerts = alertsQuery.isLoading;
   const loadError = alertsQuery.isError ? '알림 목록을 불러올 수 없습니다' : '';
   const savedRoutes = routesQuery.data ?? [];
+  // 경로 조회 실패는 loadError와 합치지 않는다.
+  // loadError는 "서버의 기존 알림을 알 수 없다"는 뜻이라 중복 생성을 막으려
+  // 위저드와 빠른 프리셋을 닫는다(AlertSettingsPage). 경로 조회 실패는 그 근거가
+  // 아니므로, 합치면 부차 조회의 실패가 알림 생성 자체를 막게 된다.
+  const routesError = routesQuery.isError ? '저장된 경로를 불러오지 못했습니다' : '';
 
   const retryLoad = useCallback(() => {
     void alertsQuery.refetch();
@@ -87,6 +93,27 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const [isEditing, setIsEditing] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState<Alert | null>(null);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+
+  // 토스트 문구를 지우는 타이머는 한 번에 하나만 살아 있어야 한다.
+  // 앞선 타이머를 취소하지 않으면, 재시도 직후 뜬 문구가 이전 타이머의 남은 시간만큼만
+  // 보이고 사라진다 — 실패 문구가 순식간에 없어져 성공한 것처럼 보인다.
+  // 이 화면은 success/error 토스트를 동시에 띄우지 않으므로 한 타이머로 둘 다 지운다.
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleToastClear = useCallback((durationMs: number): void => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      toastTimerRef.current = null;
+      setSuccess('');
+      setError('');
+    }, durationMs);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const reloadAlerts = useCallback(async (): Promise<void> => {
     if (!userId) return;
@@ -156,7 +183,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       await reloadAlerts();
       setEditTarget(null);
       setSuccess('알림이 수정되었습니다.');
-      setTimeout(() => setSuccess(''), TOAST_DURATION_MS);
+      scheduleToastClear(TOAST_DURATION_MS);
     } catch (err) {
       setError(getApiErrorMessage(err, '수정에 실패했습니다.'));
     } finally {
@@ -180,7 +207,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     } catch (err) {
       setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, enabled: !a.enabled } : a));
       setError(getApiErrorMessage(err, '알림 상태 변경에 실패했습니다.'));
-      setTimeout(() => setError(''), TOAST_DURATION_MS);
+      scheduleToastClear(TOAST_DURATION_MS);
     } finally {
       setTogglingIds(prev => {
         const next = new Set(prev);
@@ -228,9 +255,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
         alertsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);
 
-      setTimeout(() => {
-        setSuccess('');
-      }, 5000);
+      scheduleToastClear(5000);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, '알림 생성에 실패했습니다.'));
     } finally {
@@ -256,6 +281,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     alerts,
     isLoadingAlerts,
     loadError,
+    routesError,
     error,
     success,
     deleteTarget,
