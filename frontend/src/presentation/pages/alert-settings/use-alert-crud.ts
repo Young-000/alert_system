@@ -20,6 +20,7 @@ interface AlertCrudState {
   alerts: Alert[];
   isLoadingAlerts: boolean;
   loadError: string;
+  routesError: string;
   error: string;
   success: string;
   deleteTarget: { id: string; name: string } | null;
@@ -63,6 +64,12 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const isLoadingAlerts = alertsQuery.isLoading;
   const loadError = alertsQuery.isError ? '알림 목록을 불러올 수 없습니다' : '';
+  // 경로 조회는 알림 목록과 별개로 실패할 수 있다. 이때 savedRoutes가 빈 배열이
+  // 되면 저장된 경로가 있는 사용자에게도 "저장된 경로에서 가져오기"가 사라지고
+  // 기존 알림의 연결 경로 이름도 빈다 — 실패를 "경로가 없다"로 보여주지 않는다.
+  // loadError와 합치지 않는 이유: loadError는 "기존 알림을 알 수 없다"는 뜻이라
+  // 위저드와 빠른 프리셋을 막는다. 경로 실패로 그것까지 막으면 과잉 차단이다.
+  const routesError = routesQuery.isError ? '저장된 경로를 불러올 수 없습니다' : '';
   const savedRoutes = routesQuery.data ?? [];
 
   const retryLoad = useCallback(() => {
@@ -256,6 +263,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     alerts,
     isLoadingAlerts,
     loadError,
+    routesError,
     error,
     success,
     deleteTarget,
