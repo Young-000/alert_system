@@ -83,8 +83,8 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     }
   }, [alertsQuery.data]);
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setErrorState] = useState('');
+  const [success, setSuccessState] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,14 +100,35 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   // 이 화면은 success/error 토스트를 동시에 띄우지 않으므로 한 타이머로 둘 다 지운다.
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const cancelToastClear = useCallback((): void => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+  }, []);
+
+  // 예약된 타이머는 그것을 예약한 문구의 것이다. 새 문구를 띄울 때 앞선 타이머를
+  // 취소하지 않으면, 자동 해제가 예약된 성공 문구 뒤에 뜬 실패 사유가 남은 시간만큼만
+  // 보이고 사라진다 — 삭제 모달이 열린 채 사유만 증발한다(AlertSettingsPage:453).
+  // 그래서 문구를 세우는 입구를 하나로 모으고, 자동 해제가 필요한 곳만 뒤이어 예약한다.
+  const setError = useCallback((message: string): void => {
+    cancelToastClear();
+    setErrorState(message);
+  }, [cancelToastClear]);
+
+  const setSuccess = useCallback((message: string): void => {
+    cancelToastClear();
+    setSuccessState(message);
+  }, [cancelToastClear]);
+
   const scheduleToastClear = useCallback((durationMs: number): void => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    cancelToastClear();
     toastTimerRef.current = setTimeout(() => {
       toastTimerRef.current = null;
-      setSuccess('');
-      setError('');
+      setSuccessState('');
+      setErrorState('');
     }, durationMs);
-  }, []);
+  }, [cancelToastClear]);
 
   useEffect(() => {
     return () => {
@@ -162,7 +183,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   const handleDeleteCancel = useCallback((): void => {
     setError('');
     setDeleteTarget(null);
-  }, []);
+  }, [setError]);
 
   const handleEditClick = (alert: Alert): void => {
     setEditTarget(alert);
@@ -261,7 +282,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, alerts, reloadAlerts]);
+  }, [userId, alerts, reloadAlerts, setError, setSuccess, scheduleToastClear]);
 
   // ESC key to close delete modal
   useEffect(() => {

@@ -7,13 +7,14 @@ import type { Alert } from '@infrastructure/api';
 const mockGetAlertsByUser = vi.fn();
 const mockToggleAlert = vi.fn();
 const mockDeleteAlert = vi.fn();
+const mockCreateAlert = vi.fn();
 
 vi.mock('@infrastructure/api', () => ({
   alertApiClient: {
     getAlertsByUser: (...args: unknown[]) => mockGetAlertsByUser(...args),
     toggleAlert: (...args: unknown[]) => mockToggleAlert(...args),
     deleteAlert: (...args: unknown[]) => mockDeleteAlert(...args),
-    createAlert: vi.fn(),
+    createAlert: (...args: unknown[]) => mockCreateAlert(...args),
     updateAlert: vi.fn(),
   },
 }));
@@ -94,6 +95,72 @@ describe('useAlertCrud', () => {
 
       expect(result.current.loadError).toBe('');
       expect(result.current.routesError).toBe('');
+    });
+  });
+
+  describe('토스트 타이머와 실패 문구', () => {
+    it('앞선 성공의 자동 해제 타이머가 뒤이어 뜬 실패 문구를 지우지 않는다', async () => {
+      // 타이머는 그것을 예약한 문구의 것이다. 성공 문구가 5초 뒤 사라지도록 예약된 뒤
+      // 그 사이에 삭제가 실패하면, 만료된 타이머가 success와 error를 함께 지워
+      // 열려 있는 삭제 모달에서 실패 사유만 증발한다(모달은 alertCrud.error를 그린다).
+      mockGetAlertsByUser.mockResolvedValue([alertOn]);
+      mockCreateAlert.mockResolvedValue(undefined);
+      mockDeleteAlert.mockRejectedValue(
+        new Error('API Error 409: {"message":"이미 삭제된 알림입니다."}'),
+      );
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+      await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+      vi.useFakeTimers();
+      try {
+        // 빠른 날씨 알림 성공 → 5초 뒤 토스트를 지우는 타이머가 예약된다
+        await act(async () => {
+          await result.current.handleQuickWeatherAlert();
+        });
+        expect(result.current.success).toBe('날씨 알림이 설정되었습니다!');
+
+        // 5초가 지나기 전에 삭제가 실패한다
+        act(() => result.current.handleDeleteClick(alertOn));
+        await act(async () => {
+          await result.current.handleDeleteConfirm();
+        });
+        expect(result.current.error).toBe('이미 삭제된 알림입니다.');
+
+        // 앞선 성공의 타이머가 만료돼도 실패 사유는 화면에 남아 있어야 한다
+        await act(async () => {
+          vi.advanceTimersByTime(5000);
+        });
+        expect(result.current.error).toBe('이미 삭제된 알림입니다.');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('성공 문구는 예약대로 자동으로 사라진다', async () => {
+      // 대조군 — 타이머 취소가 자동 해제 자체를 없애버리면 안 된다.
+      mockGetAlertsByUser.mockResolvedValue([alertOn]);
+      mockCreateAlert.mockResolvedValue(undefined);
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+      await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+      vi.useFakeTimers();
+      try {
+        await act(async () => {
+          await result.current.handleQuickWeatherAlert();
+        });
+        expect(result.current.success).toBe('날씨 알림이 설정되었습니다!');
+
+        await act(async () => {
+          vi.advanceTimersByTime(5000);
+        });
+        expect(result.current.success).toBe('');
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
