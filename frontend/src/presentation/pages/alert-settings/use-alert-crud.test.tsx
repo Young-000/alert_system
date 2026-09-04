@@ -18,8 +18,18 @@ vi.mock('@infrastructure/api', () => ({
   },
 }));
 
+type RoutesQueryStub = { data: unknown[]; isError: boolean; error: Error | null; refetch: () => void };
+
+// 테스트마다 경로 조회의 성공/실패를 바꿔야 해서 가변 객체로 둔다.
+const mockRoutesQuery: RoutesQueryStub = {
+  data: [],
+  isError: false,
+  error: null,
+  refetch: vi.fn(),
+};
+
 vi.mock('@infrastructure/query/use-routes-query', () => ({
-  useRoutesQuery: () => ({ data: [], refetch: vi.fn() }),
+  useRoutesQuery: () => mockRoutesQuery,
 }));
 
 const USER_ID = 'user-1';
@@ -42,6 +52,12 @@ function createWrapper() {
   );
   return { wrapper, queryClient };
 }
+
+beforeEach(() => {
+  mockRoutesQuery.data = [];
+  mockRoutesQuery.isError = false;
+  mockRoutesQuery.error = null;
+});
 
 describe('useAlertCrud', () => {
   beforeEach(() => {
@@ -156,5 +172,52 @@ describe('useAlertCrud — 실패 사유 전달', () => {
     });
 
     expect(result.current.error).toBe('삭제에 실패했습니다.');
+  });
+});
+
+describe('경로 목록 조회 실패', () => {
+  // 알림 목록과 경로 목록은 같은 화면을 채우는 형제 쿼리다.
+  // 경로 조회만 실패하면 savedRoutes가 빈 배열이 되어, 저장된 경로가 있는
+  // 사용자에게도 "저장된 경로에서 가져오기" 단축 경로가 사라지고
+  // 기존 알림의 연결 경로 이름도 지워진다 — 그런데 화면에는 아무 표시가 없다.
+  it('경로 조회가 실패하면 routesError로 알린다', async () => {
+    mockGetAlertsByUser.mockResolvedValue([alertOn]);
+    mockRoutesQuery.isError = true;
+    mockRoutesQuery.error = new Error('network');
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    expect(result.current.routesError).not.toBe('');
+  });
+
+  it('경로만 실패해도 알림 목록은 계속 쓸 수 있다', async () => {
+    // loadError는 "기존 알림을 알 수 없다"는 뜻이라 위저드·빠른 프리셋을 막는다.
+    // 경로 조회 실패로 그걸 막으면 부차 쿼리가 주 기능을 가린다.
+    mockGetAlertsByUser.mockResolvedValue([alertOn]);
+    mockRoutesQuery.isError = true;
+    mockRoutesQuery.error = new Error('network');
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    expect(result.current.loadError).toBe('');
+  });
+
+  it('둘 다 성공하면 아무 에러도 알리지 않는다', async () => {
+    // 대조군 — 정상 경로에서 에러 배너가 뜨면 안 된다.
+    mockGetAlertsByUser.mockResolvedValue([alertOn]);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    expect(result.current.loadError).toBe('');
+    expect(result.current.routesError).toBe('');
   });
 });

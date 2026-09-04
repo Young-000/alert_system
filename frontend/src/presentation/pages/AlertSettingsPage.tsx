@@ -308,6 +308,17 @@ export function AlertSettingsPage(): JSX.Element {
         </div>
       )}
 
+      {/* 경로 조회만 실패한 경우 — 알림 기능은 그대로 두고 사실만 알린다.
+          저장된 경로에서 가져오기가 사라진 이유를 모른 채 다시 입력하게 두지 않는다. */}
+      {!alertCrud.loadError && alertCrud.routesError && (
+        <div className="notice warning" role="status">
+          <p>{alertCrud.routesError}</p>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={alertCrud.retryLoad}>
+            다시 시도
+          </button>
+        </div>
+      )}
+
       {/* Existing Alerts */}
       {!alertCrud.isLoadingAlerts && alertCrud.alerts.length > 0 && (
         <AlertList
