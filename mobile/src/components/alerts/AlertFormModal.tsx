@@ -45,6 +45,7 @@ export function AlertFormModal({
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([1, 2, 3, 4, 5]);
   const [selectedTypes, setSelectedTypes] = useState<AlertType[]>(['weather']);
   const [nameError, setNameError] = useState('');
+  const [dayError, setDayError] = useState('');
   const [typeError, setTypeError] = useState('');
 
   // Pre-fill form when editing
@@ -66,6 +67,7 @@ export function AlertFormModal({
         setSelectedTypes(['weather']);
       }
       setNameError('');
+      setDayError('');
       setTypeError('');
     }
   }, [visible, editingAlert]);
@@ -80,6 +82,16 @@ export function AlertFormModal({
       hasError = true;
     } else {
       setNameError('');
+    }
+
+    // 요일을 하나도 고르지 않으면 `buildDayField`가 크론 요일 필드를 `*`로 쓴다.
+    // 화면에는 "반복 요일 없음"인데 실제로는 **매일** 발송된다 — 알림을 끄려던
+    // 사용자가 매일 받는다. 크론에는 "아무 날도 아님"을 적을 수 없으므로 막는다.
+    if (selectedDays.length === 0) {
+      setDayError('최소 1개 요일을 선택해주세요');
+      hasError = true;
+    } else {
+      setDayError('');
     }
 
     if (selectedTypes.length === 0) {
@@ -178,8 +190,12 @@ export function AlertFormModal({
             <Text style={styles.sectionLabel}>반복 요일</Text>
             <DaySelector
               selectedDays={selectedDays}
-              onChangeDays={setSelectedDays}
+              onChangeDays={(days) => {
+                setSelectedDays(days);
+                if (days.length > 0) setDayError('');
+              }}
             />
+            {dayError ? <Text style={styles.errorText}>{dayError}</Text> : null}
           </View>
 
           {/* Alert Type Selector */}

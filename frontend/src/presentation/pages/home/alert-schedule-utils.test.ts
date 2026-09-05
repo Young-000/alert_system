@@ -125,6 +125,16 @@ describe('computeNextAlert', () => {
       expect(result).toEqual({ time: '월 08:00', label: '날씨' });
     });
 
+    it('주 1회 알림은 그날 시각이 지나도 다음 주 발화를 알려준다', () => {
+      // '0 8 * * 1' = 월요일에만 울리는 알림. 월요일 09:00에는 오늘 발화가 끝났고
+      // 다음 발화는 7일 뒤다. offset 6까지만 훑으면 활성일을 못 찾아 null이 되고,
+      // 홈 화면의 "다음 알림"이 통째로 사라진다.
+      const mondayAfterAlert = new Date(2026, 7, 3, 9, 0); // 2026-08-03 (월) 09:00
+      const alerts = [buildAlert({ schedule: '0 8 * * 1' })];
+      const result = computeNextAlert(alerts, mondayAfterAlert);
+      expect(result).toEqual({ time: '다음 주 월 08:00', label: '날씨' });
+    });
+
     it('요일이 다른 알림들 중 실제로 가장 먼저 발화하는 것을 고른다', () => {
       const alerts = [
         buildAlert({ id: 'a1', schedule: '0 7 * * 1-5', alertTypes: ['weather'] }), // → 월 07:00
