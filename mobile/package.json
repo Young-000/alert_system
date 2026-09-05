@@ -8,6 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "generate-assets": "bash scripts/generate-assets.sh"
   },
   "dependencies": {
@@ -31,7 +33,8 @@
   "devDependencies": {
     "@bacons/apple-targets": "~3.0.5",
     "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.11"
   },
   "private": true,
   "overrides": {

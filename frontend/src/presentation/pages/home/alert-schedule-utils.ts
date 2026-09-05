@@ -37,13 +37,20 @@ function parseCronDaysOfWeek(schedule: string): ReadonlySet<number> {
   return days.size > 0 ? days : ALL_DAYS_OF_WEEK;
 }
 
-/** 오늘(0)부터 세어 알림이 실제로 발화하는 가장 가까운 날까지의 일수. */
+/**
+ * 오늘(0)부터 세어 알림이 실제로 발화하는 가장 가까운 날까지의 일수.
+ *
+ * offset 6까지만 훑으면 **주 1회 알림이 그날 시각을 넘긴 순간 사라진다.**
+ * `0 8 * * 1`(월요일만)을 월요일 09:00에 보면 오늘은 이미 지났고 화~일요일은
+ * 활성일이 아니라 후보가 없다 — 실제로는 7일 뒤에 울리는데 화면에는
+ * "다음 알림 없음"이 뜬다. 다음 주 같은 요일(offset 7)까지 본다.
+ */
 function findNextActiveDayOffset(
   activeDays: ReadonlySet<number>,
   currentDayOfWeek: number,
   isStillUpcomingToday: boolean,
 ): number | null {
-  for (let offset = 0; offset < DAYS_PER_WEEK; offset++) {
+  for (let offset = 0; offset <= DAYS_PER_WEEK; offset++) {
     if (offset === 0 && !isStillUpcomingToday) continue;
     if (activeDays.has((currentDayOfWeek + offset) % DAYS_PER_WEEK)) return offset;
   }
@@ -59,7 +66,12 @@ function formatAlertTime(
   const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   if (dayOffset === 0) return timeStr;
   if (dayOffset === 1) return `내일 ${timeStr}`;
-  return `${DAY_NAMES_KR[(currentDayOfWeek + dayOffset) % DAYS_PER_WEEK]} ${timeStr}`;
+
+  const dayName = DAY_NAMES_KR[(currentDayOfWeek + dayOffset) % DAYS_PER_WEEK];
+  // offset 7 = 오늘과 같은 요일. "월 08:00"이라고만 하면 월요일에 보는 사용자가
+  // 오늘로 오해한다.
+  if (dayOffset === DAYS_PER_WEEK) return `다음 주 ${dayName} ${timeStr}`;
+  return `${dayName} ${timeStr}`;
 }
 
 /**
