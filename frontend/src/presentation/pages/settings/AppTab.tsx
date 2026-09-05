@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import type { PrivacyMessageTone } from './use-settings';
 
 interface AppTabProps {
   pushSupported: boolean;
@@ -6,6 +7,7 @@ interface AppTabProps {
   pushLoading: boolean;
   isExporting: boolean;
   privacyMessage: string;
+  privacyMessageTone: PrivacyMessageTone;
   onTogglePush: () => Promise<void>;
   onShowLocalDataReset: () => void;
   onExportData: () => Promise<void>;
@@ -18,6 +20,7 @@ export function AppTab({
   pushLoading,
   isExporting,
   privacyMessage,
+  privacyMessageTone,
   onTogglePush,
   onShowLocalDataReset,
   onExportData,
@@ -142,7 +145,12 @@ export function AppTab({
         </div>
 
         {privacyMessage && (
-          <div className="toast-success" role="status" aria-live="polite" style={{ position: 'relative', marginTop: '0.75rem' }}>
+          <div
+            className={privacyMessageTone === 'error' ? 'toast-error' : 'toast-success'}
+            role={privacyMessageTone === 'error' ? 'alert' : 'status'}
+            aria-live={privacyMessageTone === 'error' ? 'assertive' : 'polite'}
+            style={{ position: 'relative', marginTop: '0.75rem' }}
+          >
             {privacyMessage}
           </div>
         )}

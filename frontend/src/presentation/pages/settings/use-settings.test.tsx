@@ -3,14 +3,15 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { queryKeys } from '@infrastructure/query/query-keys';
 import { subscribeToPush, unsubscribeFromPush } from '@infrastructure/push/push-manager';
-import { useSettings } from './use-settings';
+import { useSettings, TOAST_DURATION_MS } from './use-settings';
 
 const mockDeleteAllData = vi.fn();
+const mockExportData = vi.fn();
 
 vi.mock('@infrastructure/api', () => ({
   userApiClient: {
     deleteAllData: (...args: unknown[]) => mockDeleteAllData(...args),
-    exportData: vi.fn(),
+    exportData: (...args: unknown[]) => mockExportData(...args),
   },
 }));
 
@@ -208,6 +209,146 @@ describe('useSettings', () => {
 
       expect(result.current.pushEnabled).toBe(false);
       expect(result.current.actionError).toBe('');
+    });
+  });
+
+  // privacyMessage는 성공과 실패를 같은 자리에 쓰는 유일한 채널이다. 톤이 없으면
+  // 화면이 둘을 구별하지 못해 실패가 초록 성공 토스트로 뜬다 — 색이 문구와 반대를 말한다.
+  describe('privacyMessage 톤', () => {
+    it('삭제 실패는 error 톤으로 알린다', async () => {
+      mockDeleteAllData.mockRejectedValue(new Error('server'));
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleDeleteAllData();
+      });
+
+      expect(result.current.privacyMessage).toBe('데이터 삭제에 실패했습니다.');
+      expect(result.current.privacyMessageTone).toBe('error');
+    });
+
+    it('삭제 성공은 success 톤으로 알린다', async () => {
+      mockDeleteAllData.mockResolvedValue({ deleted: {} });
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleDeleteAllData();
+      });
+
+      expect(result.current.privacyMessageTone).toBe('success');
+    });
+
+    it('내보내기 실패는 error 톤으로 알린다', async () => {
+      mockExportData.mockRejectedValue(new Error('server'));
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleExportData();
+      });
+
+      expect(result.current.privacyMessage).toBe('데이터 내보내기에 실패했습니다.');
+      expect(result.current.privacyMessageTone).toBe('error');
+    });
+  });
+
+  describe('토스트 자동 해제 타이머', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    // 개인정보 카드에서 "내보내기"와 "삭제"는 나란히 붙어 있고 같은 privacyMessage 자리에
+    // 결과를 쓴다. 내보내기가 건 해제 타이머가 살아 있는 채로 삭제 결과가 뜨면,
+    // 앞선 타이머가 만료되며 **뒤에 뜬 문구**를 지운다.
+    // 삭제 실패 문구가 순식간에 사라지면 사용자는 지워진 줄 알고 화면을 떠난다.
+    it('앞선 내보내기의 해제 타이머가 뒤이어 뜬 삭제 실패 문구를 지우지 않는다', async () => {
+      mockExportData.mockResolvedValue({ alerts: [] });
+      mockDeleteAllData.mockRejectedValue(new Error('server'));
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleExportData();
+      });
+      expect(result.current.privacyMessage).toBe('데이터가 다운로드되었습니다.');
+
+      // 해제까지 3000ms 중 2500ms가 지난 시점에 삭제를 시도한다
+      await act(async () => {
+        vi.advanceTimersByTime(2500);
+      });
+      await act(async () => {
+        await result.current.handleDeleteAllData();
+      });
+      expect(result.current.privacyMessage).toBe('데이터 삭제에 실패했습니다.');
+
+      // 내보내기가 건 타이머가 만료되는 시점
+      await act(async () => {
+        vi.advanceTimersByTime(600);
+      });
+
+      expect(result.current.privacyMessage).toBe('데이터 삭제에 실패했습니다.');
+    });
+
+    // 대조군 — 자동 해제 자체는 그대로 살아 있어야 한다
+    it('삭제 실패 문구는 예약대로 자동으로 사라진다', async () => {
+      mockDeleteAllData.mockRejectedValue(new Error('server'));
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleDeleteAllData();
+      });
+      expect(result.current.privacyMessage).toBe('데이터 삭제에 실패했습니다.');
+
+      await act(async () => {
+        vi.advanceTimersByTime(TOAST_DURATION_MS);
+      });
+
+      expect(result.current.privacyMessage).toBe('');
+    });
+
+    // actionError도 같은 구조다 — 푸시 토글 실패가 건 타이머가
+    // 뒤이어 뜬 복사 실패 문구를 지운다.
+    it('앞선 푸시 실패의 해제 타이머가 뒤이어 뜬 복사 실패 문구를 지우지 않는다', async () => {
+      vi.mocked(subscribeToPush).mockRejectedValue(new Error('network'));
+
+      const { wrapper } = createWrapper();
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await act(async () => {
+        await result.current.handleTogglePush();
+      });
+      expect(result.current.actionError).toBe('푸시 알림 설정에 실패했습니다.');
+
+      await act(async () => {
+        vi.advanceTimersByTime(2500);
+      });
+
+      Object.assign(navigator, {
+        clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
+      });
+      await act(async () => {
+        result.current.handleCopyUserId();
+        await Promise.resolve();
+      });
+      expect(result.current.actionError).toBe('복사에 실패했습니다.');
+
+      await act(async () => {
+        vi.advanceTimersByTime(600);
+      });
+
+      expect(result.current.actionError).toBe('복사에 실패했습니다.');
     });
   });
 });

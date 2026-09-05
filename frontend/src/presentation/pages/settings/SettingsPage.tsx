@@ -104,6 +104,7 @@ export function SettingsPage(): JSX.Element {
               pushLoading={settings.pushLoading}
               isExporting={settings.isExporting}
               privacyMessage={settings.privacyMessage}
+              privacyMessageTone={settings.privacyMessageTone}
               onTogglePush={settings.handleTogglePush}
               onShowLocalDataReset={() => settings.setShowLocalDataReset(true)}
               onExportData={settings.handleExportData}

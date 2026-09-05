@@ -39,6 +39,7 @@ function baseSettings(overrides: Partial<UseSettingsReturn> = {}): UseSettingsRe
     isDeletingAllData: false,
     isExporting: false,
     privacyMessage: '',
+    privacyMessageTone: 'success',
     handleTogglePush: vi.fn(),
     handleExportData: vi.fn(),
     handleDeleteAllData: vi.fn(),
