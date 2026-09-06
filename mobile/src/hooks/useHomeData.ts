@@ -16,6 +16,7 @@ import { widgetSyncService } from '@/services/widget-sync.service';
 import { getAqiStatus } from '@/utils/weather';
 import { getActiveRoute } from '@/utils/route';
 import { computeNextAlert } from '@/utils/alert-schedule';
+import { resolveHomeLoadError } from '@/utils/home-load-error';
 
 import type {
   AirQualityData,
@@ -240,17 +241,16 @@ export function useHomeData(): UseHomeDataReturn {
       setCommuteStats(statsResult.value);
     }
 
-    // Check for critical failures (routes + alerts + stats all failed)
-    const criticalFailures = results.slice(1).filter(
-      (r) => r?.status === 'rejected',
+    // 실패한 조회는 기존 값을 유지하므로, 알리지 않으면 실패가 빈 데이터로 위장된다.
+    // 판정은 `resolveHomeLoadError`가 한다 — 어느 조합이 어떤 문구가 되는지는
+    // 거기 테스트가 정본이다.
+    setLoadError(
+      resolveHomeLoadError({
+        routes: routesResult?.status === 'rejected' ? 'failed' : 'ok',
+        alerts: alertsResult?.status === 'rejected' ? 'failed' : 'ok',
+        stats: statsResult?.status === 'rejected' ? 'failed' : 'ok',
+      }),
     );
-    if (criticalFailures.length === results.length - 1) {
-      setLoadError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
-    } else if (routesResult?.status === 'rejected') {
-      // 셋 다 실패했을 때만 알리면, 경로 조회만 실패한 흔한 경우가 무음으로 지나간다.
-      // 그 상태의 홈은 경로 카드가 사라진 화면이라 사용자가 이유를 알 방법이 없다.
-      setLoadError('경로 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
-    }
 
     // Sync widget data (fire-and-forget, non-blocking)
     void syncWidgetDataFromApi();

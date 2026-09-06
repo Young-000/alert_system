@@ -145,3 +145,62 @@ describe('computeNextAlert', () => {
     });
   });
 });
+
+// ── 폼이 만들지 않는 스케줄 (2026-09-07 auto-review) ──────────────
+//
+// 백엔드는 `CronExpressionParser.parse`를 통과하는 **모든** cron을 받는다
+// (`create-alert.dto.ts:31`). 폼이 만드는 `M H * * D` 말고도 범위·스텝이
+// 저장될 수 있고, 같은 리포의 `cron-utils.ts`는 이미 그 경우를 전제로
+// 방어한다(`normalizeCronForComparison`·`applyTimeToCron`).
+describe('computeNextAlert — 폼 밖 스케줄', () => {
+  it('공백이 겹쳐도 시각을 옳게 읽는다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    // `split(' ')`은 시각 필드를 빈 문자열로 잡아 `Number('')`=0으로 읽었다.
+    const alerts = [buildAlert({ schedule: '30  8  *  *  *' })];
+    expect(computeNextAlert(alerts, now)?.time).toBe('08:30');
+  });
+
+  it('분이 범위면 시작 분부터 울린다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    // 07:10부터 울리는데 분을 못 읽어 0으로 때우면 "07:00"이라고 예고한다.
+    const alerts = [buildAlert({ schedule: '10-30 7 * * *' })];
+    expect(computeNextAlert(alerts, now)?.time).toBe('07:10');
+  });
+
+  it('분이 목록이면 가장 이른 분을 쓴다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    const alerts = [buildAlert({ schedule: '45,15 7 * * *' })];
+    expect(computeNextAlert(alerts, now)?.time).toBe('07:15');
+  });
+
+  it('분이 스텝이면 0분부터 울린다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    const alerts = [buildAlert({ schedule: '*/5 7 * * *' })];
+    expect(computeNextAlert(alerts, now)?.time).toBe('07:00');
+  });
+
+  it('필드가 5개가 아니면 읽지 않는다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    expect(computeNextAlert([buildAlert({ schedule: '0 7' })], now)).toBeNull();
+  });
+
+  it('시각이 범위인 알림은 지어내지 않고 건너뛴다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    const alerts = [buildAlert({ schedule: '0 7-9 * * *' })];
+    expect(computeNextAlert(alerts, now)).toBeNull();
+  });
+
+  it('읽을 수 없는 알림이 섞여 있어도 나머지는 정상 계산한다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    const alerts = [
+      buildAlert({ id: 'a', schedule: '0 7-9 * * *' }),
+      buildAlert({ id: 'b', schedule: '30 8 * * *' }),
+    ];
+    expect(computeNextAlert(alerts, now)?.time).toBe('08:30');
+  });
+
+  it('시각이 24를 넘으면 읽지 않는다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    expect(computeNextAlert([buildAlert({ schedule: '0 25 * * *' })], now)).toBeNull();
+  });
+});

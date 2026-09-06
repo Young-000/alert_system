@@ -70,6 +70,49 @@ export function parseCronDays(cron: string): DayOfWeek[] {
 }
 
 /**
+ * 분 필드가 **처음 발화하는 분**. 표시 전용이다.
+ *
+ * `parseCronTime`의 `?? 0` 폴백은 수정 폼용이다 — 폼은 시각 입력이 하나뿐이라
+ * 읽을 수 없으면 0을 채워 넣는다. 그 폴백을 "다음 알림" 표시에 쓰면
+ * `10-30 7 * * *`(실제로는 07:10부터 발화)이 **"07:00"으로 예고된다.**
+ * 웹도 같은 결함이 있었고 같은 계약으로 맞췄다
+ * (`frontend/.../cron-utils.ts` `earliestCronMinute`).
+ *
+ * `*`·`*​/5`는 0분부터, `10-30`은 10분부터, `45,15`는 15분부터 울린다.
+ */
+export function earliestCronMinute(field: string | undefined): number | null {
+  const trimmed = field?.trim();
+  if (!trimmed) return null;
+
+  const candidates: number[] = [];
+  for (const part of trimmed.split(',')) {
+    const [value, step] = part.trim().split('/');
+    if (step !== undefined && !/^\d+$/.test(step)) return null;
+
+    if (value === '*') {
+      candidates.push(0);
+      continue;
+    }
+
+    const range = /^(\d+)-(\d+)$/.exec(value!);
+    if (range) {
+      const start = Number(range[1]);
+      const end = Number(range[2]);
+      if (start > end || end > 59) return null;
+      candidates.push(start);
+      continue;
+    }
+
+    if (!/^\d+$/.test(value!)) return null;
+    const num = Number(value);
+    if (num < 0 || num > 59) return null;
+    candidates.push(num);
+  }
+
+  return candidates.length > 0 ? Math.min(...candidates) : null;
+}
+
+/**
  * 크론에 담긴 **모든 시각**을 오름차순으로 돌려준다. 숫자 목록으로 읽히지 않으면 null.
  */
 export function parseCronHours(cron: string): number[] | null {

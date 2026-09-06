@@ -1,4 +1,4 @@
-import { parseCronDays, parseCronHours, parseCronTime } from './cron';
+import { earliestCronMinute, parseCronDays, parseCronHours } from './cron';
 
 import type { Alert } from '@/types/home';
 
@@ -82,7 +82,10 @@ export function computeNextAlert(
     const hours = parseCronHours(alert.schedule);
     if (!hours) continue;
 
-    const { minute: cronMin } = parseCronTime(alert.schedule);
+    // `parseCronTime`은 수정 폼용이라 못 읽은 분을 0으로 채운다. 표시에 그 값을
+    // 쓰면 `10-30 7 * * *`(07:10부터 발화)을 "07:00"이라고 예고한다.
+    const cronMin = earliestCronMinute(alert.schedule.trim().split(/\s+/)[0]);
+    if (cronMin === null) continue;
 
     const label = alert.alertTypes.includes('weather') ? '날씨 + 교통 알림' : '교통 알림';
     const activeDays = activeDaysOf(alert.schedule);
