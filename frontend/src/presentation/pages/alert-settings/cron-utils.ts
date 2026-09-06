@@ -48,7 +48,7 @@ const DEFAULT_TIME_INPUT = '07:00';
  * Falls back to `07:00` when the expression can't be parsed.
  */
 export function cronToTimeInput(cron: string): string {
-  const parsed = parseSchedule(cron);
+  const parsed = parseCronSchedule(cron);
   if (!parsed) return DEFAULT_TIME_INPUT;
 
   const [firstHour] = parsed.hours;
@@ -67,7 +67,7 @@ export function applyTimeToCron(cron: string, timeInput: string): string {
   const time = parseTimeInput(timeInput);
   if (!time) return cron;
 
-  const parsed = parseSchedule(cron);
+  const parsed = parseCronSchedule(cron);
   if (!parsed) {
     // 시각 필드를 숫자로 못 읽어도(`7-9`·`*/2`) 요일·일·월 제한은 살려둔다 —
     // 시각 하나를 고치려다 "평일만"까지 잃게 하지 않는다.
@@ -92,7 +92,7 @@ export function applyTimeToCron(cron: string, timeInput: string): string {
  * 숫자 목록으로 확실히 읽히지 않으면 정규화를 포기하고 원본을 그대로 쓴다.
  */
 export function normalizeCronForComparison(cron: string): string {
-  const parsed = parseSchedule(cron);
+  const parsed = parseCronSchedule(cron);
   if (!parsed) return cron.trim().replace(/\s+/g, ' ');
 
   return `${parsed.minute} ${parsed.hours.join(',')} ${parsed.restFields.join(' ')}`;
@@ -109,7 +109,14 @@ function parseTimeInput(timeInput: string): { hour: number; minute: number } | n
   return { hour, minute };
 }
 
-function parseSchedule(
+/**
+ * 5필드 cron을 **숫자로 확실히 읽힐 때만** 분/시각으로 분해한다.
+ *
+ * 화면에서 이 계약을 각자 다시 구현하면 갈라진다 — `alert-schedule-utils.ts`가
+ * 자체 파서를 쓰다가 `*​/5`를 0분으로, 겹친 공백을 0시로 읽어 실재하지 않는
+ * 시각을 예고했다. 파서는 여기 하나만 둔다.
+ */
+export function parseCronSchedule(
   cron: string,
 ): { minute: number; hours: number[]; restFields: string[] } | null {
   if (!cron || typeof cron !== 'string') return null;
@@ -128,10 +135,15 @@ function parseSchedule(
   };
 }
 
+/**
+ * `parseInt('10-30')`은 NaN이 아니라 `10`이다. 범위·스텝을 분으로 읽어버리면
+ * 화면이 실제로는 울리지 않는 시각을 예고한다 — 시각 필드와 같은 규칙으로
+ * 순수 숫자만 받는다.
+ */
 function parseMinute(field: string): number | null {
-  const num = parseInt(field, 10);
-  if (isNaN(num) || num < 0 || num > 59) return null;
-  return num;
+  if (!/^\d+$/.test(field.trim())) return null;
+  const num = parseInt(field.trim(), 10);
+  return num >= 0 && num <= 59 ? num : null;
 }
 
 /**
@@ -141,6 +153,56 @@ function parseMinute(field: string): number | null {
  * 숫자로 읽어버리면 호출부가 그 스케줄을 "07시 단일 알림"으로 오해하고,
  * 저장 시 범위를 조용히 지운다. 해석할 수 없으면 실패로 알린다.
  */
+/**
+ * 시각 필드를 숫자 목록으로 읽는다. 범위·스텝은 실패로 돌려준다 —
+ * 저장 경로가 그것을 숫자로 오해하면 범위를 조용히 지우기 때문이다.
+ */
+export function parseCronHourList(field: string): number[] | null {
+  return parseNumericList(field);
+}
+
+/**
+ * 분 필드가 **처음 발화하는 분**. 표시 전용이다.
+ *
+ * `parseCronSchedule`(엄격)은 크론을 다시 쓸 때 쓴다 — 거기서 `10-30`을 10으로
+ * 읽으면 저장 시 범위가 사라진다. 반대로 "다음 알림"을 보여줄 때는 읽을 수 있는
+ * 만큼 읽어야 한다. 실패로 처리하면 실제로 울리는 알림이 화면에서 사라진다.
+ *
+ * `*`·`*​/5`는 0분부터, `10-30`은 10분부터, `15,45`는 15분부터 울린다.
+ */
+export function earliestCronMinute(field: string): number | null {
+  const trimmed = field.trim();
+  if (!trimmed) return null;
+
+  const candidates: number[] = [];
+  for (const part of trimmed.split(',')) {
+    const piece = part.trim();
+    const [value, step] = piece.split('/');
+    if (step !== undefined && !/^\d+$/.test(step)) return null;
+
+    if (value === '*') {
+      candidates.push(0);
+      continue;
+    }
+
+    const range = /^(\d+)-(\d+)$/.exec(value);
+    if (range) {
+      const start = parseInt(range[1], 10);
+      const end = parseInt(range[2], 10);
+      if (start > end || end > 59) return null;
+      candidates.push(start);
+      continue;
+    }
+
+    if (!/^\d+$/.test(value)) return null;
+    const num = parseInt(value, 10);
+    if (num < 0 || num > 59) return null;
+    candidates.push(num);
+  }
+
+  return candidates.length > 0 ? Math.min(...candidates) : null;
+}
+
 function parseNumericList(field: string): number[] | null {
   if (field === '*') return null;
 
@@ -149,7 +211,9 @@ function parseNumericList(field: string): number[] | null {
   for (const part of field.split(',')) {
     const trimmed = part.trim();
     if (!/^\d+$/.test(trimmed)) return null;
-    values.push(parseInt(trimmed, 10));
+    const value = parseInt(trimmed, 10);
+    if (value < 0 || value > 23) return null;
+    values.push(value);
   }
 
   return values.length > 0 ? values : null;

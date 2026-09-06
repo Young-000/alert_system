@@ -71,3 +71,36 @@ describe('computeNextAlert', () => {
     expect(result).toEqual({ time: '다음 주 월 08:00', label: '날씨 + 교통 알림' });
   });
 });
+
+// 분을 숫자로 못 읽어도 0으로 때우지 않는다 (2026-09-07 auto-review).
+describe('computeNextAlert — 분 필드', () => {
+  it('분이 범위면 시작 분부터 예고한다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    expect(
+      computeNextAlert(
+        [{ id: 'a', schedule: '10-30 7 * * *', alertTypes: ['bus'], enabled: true } as never],
+        now,
+      )?.time,
+    ).toBe('07:10');
+  });
+
+  it('분이 목록이면 가장 이른 분을 쓴다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    expect(
+      computeNextAlert(
+        [{ id: 'a', schedule: '45,15 7 * * *', alertTypes: ['bus'], enabled: true } as never],
+        now,
+      )?.time,
+    ).toBe('07:15');
+  });
+
+  it('분이 스텝이면 0분부터 예고한다', () => {
+    const now = new Date(2026, 1, 17, 6, 0);
+    expect(
+      computeNextAlert(
+        [{ id: 'a', schedule: '*/5 7 * * *', alertTypes: ['bus'], enabled: true } as never],
+        now,
+      )?.time,
+    ).toBe('07:00');
+  });
+});

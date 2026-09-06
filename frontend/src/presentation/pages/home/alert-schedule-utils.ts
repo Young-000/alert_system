@@ -1,4 +1,5 @@
 import type { Alert } from '@infrastructure/api';
+import { earliestCronMinute, parseCronHourList } from '../alert-settings/cron-utils';
 
 const DAYS_PER_WEEK = 7;
 const DAY_NAMES_KR = ['일', '월', '화', '수', '목', '금', '토'] as const;
@@ -93,12 +94,20 @@ export function computeNextAlert(
   let best: { h: number; m: number; label: string; dayOffset: number } | null = null;
 
   for (const alert of enabled) {
-    const parts = alert.schedule.split(' ');
-    if (parts.length < 2) continue;
-    const cronMin = isNaN(Number(parts[0])) ? 0 : Number(parts[0]);
-    const hours = parts[1].includes(',')
-      ? parts[1].split(',').map(Number).filter(h => !isNaN(h))
-      : [Number(parts[1])].filter(h => !isNaN(h));
+    // 자체 파서를 두지 않는다. 예전에는 `split(' ')` + `Number()`로 직접 읽어
+    // 두 가지가 틀렸다.
+    //  · 공백이 겹치면(`30  8  * * *`) 시각 필드가 빈 문자열로 잡혀 `Number('')`가
+    //    0이 됐다 — 08:30 알림이 "내일 00:30"으로 표시됐다.
+    //  · 분을 숫자로 못 읽으면 무조건 0으로 때웠다 — `10-30 7 * * *`는 07:10부터
+    //    울리는데 "07:00"이라고 예고했다.
+    // 백엔드는 `CronExpressionParser`를 통과하는 모든 cron을 받으므로
+    // (`create-alert.dto.ts`) 폼이 만드는 `M H * * D`만 가정할 수 없다.
+    const fields = alert.schedule.trim().split(/\s+/);
+    if (fields.length !== 5) continue;
+
+    const cronMin = earliestCronMinute(fields[0]);
+    const hours = parseCronHourList(fields[1]);
+    if (cronMin === null || hours === null) continue;
 
     const label = alert.alertTypes.includes('weather') ? '날씨' : '교통';
     const activeDays = parseCronDaysOfWeek(alert.schedule);

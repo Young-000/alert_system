@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyAlertTime,
   buildCronExpression,
+  earliestCronMinute,
   formatAlertTime,
   formatAlertTypes,
   formatDaysShort,
@@ -118,5 +119,39 @@ describe('formatAlertTypes', () => {
   it('알려진 유형은 한국어로 바꾸고 모르는 값은 그대로 둔다', () => {
     expect(formatAlertTypes(['weather', 'airQuality'])).toBe('날씨, 미세먼지');
     expect(formatAlertTypes(['unknown'])).toBe('unknown');
+  });
+});
+
+// ── 표시용 분 파서 (2026-09-07 auto-review) ──────────────────────
+//
+// `parseCronTime`의 `?? 0` 폴백은 수정 폼용이다. "다음 알림"을 표시할 때
+// 그 폴백을 쓰면 `10-30 7 * * *`(07:10부터 발화)이 "07:00"으로 예고된다.
+describe('earliestCronMinute', () => {
+  it('숫자는 그대로', () => {
+    expect(earliestCronMinute('30')).toBe(30);
+  });
+
+  it('*는 0분부터', () => {
+    expect(earliestCronMinute('*')).toBe(0);
+  });
+
+  it('스텝은 0분부터', () => {
+    expect(earliestCronMinute('*/5')).toBe(0);
+  });
+
+  it('범위는 시작 분부터', () => {
+    expect(earliestCronMinute('10-30')).toBe(10);
+  });
+
+  it('목록은 가장 이른 분', () => {
+    expect(earliestCronMinute('45,15')).toBe(15);
+  });
+
+  it('60분 이상은 읽지 않는다', () => {
+    expect(earliestCronMinute('75')).toBeNull();
+  });
+
+  it('숫자가 아니면 읽지 않는다', () => {
+    expect(earliestCronMinute('abc')).toBeNull();
   });
 });
