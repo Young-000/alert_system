@@ -70,6 +70,27 @@ export function getAqiStatus(pm10: number | undefined): AqiStatus {
   return { label: '매우나쁨', color: '#DC2626', backgroundColor: '#FEE2E2' };
 }
 
+/**
+ * 미세먼지 칸에 무엇을 보여줄지 정한다.
+ *
+ * `getAqiStatus(undefined)`가 주는 `'-'`는 "값이 없다"는 뜻일 뿐이라, 그대로 배지에
+ * 찍으면 조회 실패가 정상 표시처럼 보인다. 웹은 같은 자리에서 실패 사유를 띄운다
+ * (`WeatherHeroSection.tsx` `airQualityError` 분기) — 같은 계약을 맞춘다.
+ */
+export type AqiDisplay =
+  | { kind: 'value'; label: string }
+  | { kind: 'error'; message: string }
+  | { kind: 'hidden' };
+
+export function resolveAqiDisplay(
+  aqiStatus: AqiStatus,
+  airQualityError: string | null,
+): AqiDisplay {
+  if (aqiStatus.label !== '-') return { kind: 'value', label: aqiStatus.label };
+  if (airQualityError) return { kind: 'error', message: airQualityError };
+  return { kind: 'hidden' };
+}
+
 type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'default';
 
 function getWeatherType(condition: string): WeatherType {

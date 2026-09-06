@@ -152,6 +152,7 @@ export default function HomeScreen(): React.JSX.Element {
             commuteMinutes={departure.commuteMinutes}
             returnMinutes={departure.returnMinutes}
             isLoading={departure.isLoading}
+            error={departure.error}
           />
         )}
 
@@ -169,6 +170,7 @@ export default function HomeScreen(): React.JSX.Element {
           weather={data.weather}
           weatherError={data.weatherError}
           airQuality={data.airQuality}
+          airQualityError={data.airQualityError}
           aqiStatus={data.aqiStatus}
           onRetry={data.retryLoad}
         />

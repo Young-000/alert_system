@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { DepartureCountdown } from './DepartureCountdown';
 import { EmptySmartDepartureView } from './EmptySmartDepartureView';
+import { resolveDepartureCardState } from '@/utils/departure-card';
 
 import type { SmartDepartureSnapshotDto } from '@/types/smart-departure';
 
@@ -14,6 +15,8 @@ type SmartDepartureCardProps = {
   commuteMinutes: number | null;
   returnMinutes: number | null;
   isLoading: boolean;
+  /** 조회 실패 사유. 있으면 설정이 없는 척하지 않는다. */
+  error: string | null;
 };
 
 type CardState = 'relaxed' | 'warning' | 'urgent' | 'past' | 'departed' | 'empty';
@@ -114,6 +117,7 @@ export function SmartDepartureCard({
   commuteMinutes,
   returnMinutes,
   isLoading,
+  error,
 }: SmartDepartureCardProps): React.JSX.Element {
   const router = useRouter();
 
@@ -148,8 +152,37 @@ export function SmartDepartureCard({
     router.push('/smart-departure');
   };
 
+  const cardStateKind = resolveDepartureCardState({
+    error,
+    isLoading,
+    hasSetting: !!commute || !!return_,
+  });
+
+  // 조회 실패 — 빈 상태로 위장하지 않는다. 설정이 없다고 말하면 이미 설정한
+  // 사용자가 다시 만들게 되고, 서버는 409로 거절한다.
+  if (cardStateKind === 'error') {
+    return (
+      <View style={[styles.card, { borderColor: colors.gray200 }]}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>오늘의 스마트 출발</Text>
+        </View>
+        <Text style={styles.noDataText} accessibilityRole="alert">
+          {error}
+        </Text>
+        <Pressable
+          style={styles.retryButton}
+          onPress={handleSetup}
+          accessibilityRole="button"
+          accessibilityLabel="스마트 출발 설정 열기"
+        >
+          <Text style={styles.retryButtonText}>설정 확인하기</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   // Empty state
-  if (!commute && !return_ && !isLoading) {
+  if (cardStateKind === 'empty') {
     return (
       <View style={[styles.card, { borderColor: colors.gray200 }]}>
         <EmptySmartDepartureView onSetup={handleSetup} />
@@ -158,7 +191,7 @@ export function SmartDepartureCard({
   }
 
   // Loading skeleton
-  if (isLoading) {
+  if (cardStateKind === 'loading') {
     return (
       <View style={[styles.card, { borderColor: colors.gray200 }]}>
         <View style={styles.header}>
@@ -240,6 +273,16 @@ const styles = StyleSheet.create({
     color: colors.gray400,
     textAlign: 'center',
     paddingVertical: 12,
+  },
+  retryButton: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
   },
   skeletonRow: {
     gap: 8,
