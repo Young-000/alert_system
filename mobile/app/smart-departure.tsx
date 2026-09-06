@@ -27,6 +27,10 @@ import type {
   DepartureType,
   UpdateSmartDepartureSettingDto,
 } from '@/types/smart-departure';
+import type {
+  DeleteSettingResult,
+  SaveSettingResult,
+} from '@/hooks/useSmartDeparture';
 
 type FormMode =
   | { type: 'closed' }
@@ -74,27 +78,25 @@ export default function SmartDepartureScreen(): React.JSX.Element {
       data:
         | CreateSmartDepartureSettingDto
         | { id: string; dto: UpdateSmartDepartureSettingDto },
-    ): Promise<boolean> => {
-      if ('id' in data) {
-        const success = await updateSetting(data.id, data.dto);
-        if (success) setFormMode({ type: 'closed' });
-        return success;
-      }
-      const success = await createSetting(data);
-      if (success) setFormMode({ type: 'closed' });
-      return success;
+    ): Promise<SaveSettingResult> => {
+      const result =
+        'id' in data
+          ? await updateSetting(data.id, data.dto)
+          : await createSetting(data);
+      if (result.saved) setFormMode({ type: 'closed' });
+      return result;
     },
     [createSetting, updateSetting],
   );
 
   const handleDelete = useCallback(
-    async (id: string): Promise<boolean> => {
-      const success = await deleteSetting(id);
-      if (success) {
+    async (id: string): Promise<DeleteSettingResult> => {
+      const result = await deleteSetting(id);
+      if (result.deleted) {
         setFormMode({ type: 'closed' });
         setShowDeleteConfirm(null);
       }
-      return success;
+      return result;
     },
     [deleteSetting],
   );
@@ -103,9 +105,10 @@ export default function SmartDepartureScreen(): React.JSX.Element {
     if (showDeleteConfirm) {
       // 폼의 onDelete는 확인 모달만 열고 항상 true를 돌려주므로, 실제 삭제 실패는
       // 여기서만 드러난다. 알리지 않으면 확인 모달만 그대로 남아 아무 일도 안 한 것처럼 보인다.
-      const success = await handleDelete(showDeleteConfirm);
-      if (!success) {
-        RNAlert.alert('삭제하지 못했어요', '잠시 후 다시 시도해주세요.');
+      const result = await handleDelete(showDeleteConfirm);
+      if (!result.deleted) {
+        // 장소 화면(`app/places.tsx`)과 같은 계약: 서버가 준 사유를 그대로 띄운다.
+        RNAlert.alert('삭제하지 못했어요', result.message);
       }
     }
   }, [showDeleteConfirm, handleDelete]);
@@ -155,7 +158,9 @@ export default function SmartDepartureScreen(): React.JSX.Element {
             onSubmit={handleFormSubmit}
             onDelete={(id) => {
               setShowDeleteConfirm(id);
-              return Promise.resolve(true);
+              // 여기서는 확인 모달만 연다. 실제 삭제와 그 실패 사유는
+              // `handleDeleteConfirm`이 다룬다.
+              return Promise.resolve({ deleted: true as const });
             }}
           />
         </ScrollView>

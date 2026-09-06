@@ -21,17 +21,25 @@ import type {
   UpdateSmartDepartureSettingDto,
 } from '@/types/smart-departure';
 import type { RouteResponse } from '@/types/home';
+import type {
+  DeleteSettingResult,
+  SaveSettingResult,
+} from '@/hooks/useSmartDeparture';
 
 type SmartDepartureSettingFormProps = {
   departureType: DepartureType;
   existingSetting?: SmartDepartureSettingDto;
   routes: RouteResponse[];
+  /**
+   * 저장 결과를 사유와 함께 돌려준다. boolean으로 접으면 폼이 사유를 추측해야 하고,
+   * 서버가 실제로 준 문구(`경로를 찾을 수 없습니다: <id>` 등)가 화면에 닿지 못한다.
+   */
   onSubmit: (
     data:
       | CreateSmartDepartureSettingDto
       | { id: string; dto: UpdateSmartDepartureSettingDto },
-  ) => Promise<boolean>;
-  onDelete?: (id: string) => Promise<boolean>;
+  ) => Promise<SaveSettingResult>;
+  onDelete?: (id: string) => Promise<DeleteSettingResult>;
 };
 
 const DEFAULT_ARRIVAL_COMMUTE = '09:00';
@@ -107,8 +115,8 @@ export function SmartDepartureSettingForm({
           activeDays,
           preAlerts,
         };
-        const success = await onSubmit({ id: existingSetting.id, dto });
-        if (!success) setError('저장에 실패했습니다.');
+        const result = await onSubmit({ id: existingSetting.id, dto });
+        if (!result.saved) setError(result.message);
       } else {
         const dto: CreateSmartDepartureSettingDto = {
           routeId,
@@ -118,12 +126,8 @@ export function SmartDepartureSettingForm({
           activeDays,
           preAlerts,
         };
-        const success = await onSubmit(dto);
-        if (!success) {
-          setError(
-            '저장에 실패했습니다. 이미 설정이 존재할 수 있습니다.',
-          );
-        }
+        const result = await onSubmit(dto);
+        if (!result.saved) setError(result.message);
       }
     } catch {
       setError('저장 중 오류가 발생했습니다.');
@@ -136,8 +140,8 @@ export function SmartDepartureSettingForm({
     if (!existingSetting || !onDelete) return;
     setIsSubmitting(true);
     try {
-      const success = await onDelete(existingSetting.id);
-      if (!success) setError('삭제에 실패했습니다.');
+      const result = await onDelete(existingSetting.id);
+      if (!result.deleted) setError(result.message);
     } catch {
       setError('삭제 중 오류가 발생했습니다.');
     } finally {

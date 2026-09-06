@@ -1,3 +1,5 @@
+import { getTimeContext } from './route';
+
 import type {
   AdviceAirQualityInput,
   AdviceTransitInput,
@@ -58,13 +60,25 @@ export function generateAdvices(
 }
 
 /**
- * Determines the briefing context label based on current hour.
+ * 브리핑 카드의 구간 라벨.
+ *
+ * 경계는 `getTimeContext` 하나에서만 온다. 직접 시각을 나누면 안 된다 —
+ * `BriefingCard`는 라벨을 이 함수로, 배경색을 `getTimeContext`로 정하고,
+ * 조언이 하나도 없을 때 그리는 legacy 경로는 `getTimeContext` 라벨을 쓴다.
+ * 경계가 갈리면 라벨이 자기 배경색과 반대되는 시간대를 말하고, 같은 시각의
+ * 같은 카드가 조언 유무에 따라 다른 라벨을 단다.
+ *
+ * 웹도 `build-briefing.ts` 한곳에서 둘 다 파생시킨다 — 같은 계약이다.
  */
 export function getBriefingContextLabel(hour?: number): string {
-  const h = hour ?? new Date().getHours();
-  if (h >= 6 && h < 12) return '출근 브리핑';
-  if (h >= 12 && h < 21) return '퇴근 브리핑';
-  return '내일 출근 브리핑';
+  switch (getTimeContext(hour)) {
+    case 'morning':
+      return '출근 브리핑';
+    case 'evening':
+      return '퇴근 브리핑';
+    case 'tomorrow':
+      return '내일 출근 브리핑';
+  }
 }
 
 /**
