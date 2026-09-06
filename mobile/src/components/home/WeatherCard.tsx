@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/colors';
 import { formatTemperature } from '@/utils/format';
-import { getWeatherAdvice, translateCondition } from '@/utils/weather';
+import { getWeatherAdvice, resolveAqiDisplay, translateCondition } from '@/utils/weather';
 import { SkeletonBox } from '@/components/SkeletonBox';
 
 import type { AirQualityData, AqiStatus, WeatherData } from '@/types/home';
@@ -12,6 +12,7 @@ type WeatherCardProps = {
   weather: WeatherData | null;
   weatherError: string | null;
   airQuality: AirQualityData | null;
+  airQualityError: string | null;
   aqiStatus: AqiStatus;
   onRetry: () => void;
 };
@@ -20,6 +21,7 @@ export function WeatherCard({
   weather,
   weatherError,
   airQuality,
+  airQualityError,
   aqiStatus,
   onRetry,
 }: WeatherCardProps): React.JSX.Element {
@@ -52,6 +54,7 @@ export function WeatherCard({
 
   const conditionText = weather.conditionKr || translateCondition(weather.condition);
   const advice = getWeatherAdvice(weather, aqiStatus);
+  const aqiDisplay = resolveAqiDisplay(aqiStatus, airQualityError);
 
   return (
     <View style={styles.card} accessibilityRole="summary">
@@ -68,19 +71,27 @@ export function WeatherCard({
 
       {/* Detail row: AQI + Humidity */}
       <View style={styles.detailRow}>
-        <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>미세먼지</Text>
-          <View
-            style={[
-              styles.aqiBadge,
-              { backgroundColor: aqiStatus.backgroundColor },
-            ]}
-          >
-            <Text style={[styles.aqiText, { color: aqiStatus.color }]}>
-              {aqiStatus.label}
-            </Text>
+        {aqiDisplay.kind !== 'hidden' && (
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>미세먼지</Text>
+            {aqiDisplay.kind === 'value' ? (
+              <View
+                style={[
+                  styles.aqiBadge,
+                  { backgroundColor: aqiStatus.backgroundColor },
+                ]}
+              >
+                <Text style={[styles.aqiText, { color: aqiStatus.color }]}>
+                  {aqiDisplay.label}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.aqiErrorText} accessibilityRole="alert">
+                {aqiDisplay.message}
+              </Text>
+            )}
           </View>
-        </View>
+        )}
 
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>습도</Text>
@@ -161,6 +172,10 @@ const styles = StyleSheet.create({
   aqiText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  aqiErrorText: {
+    fontSize: 13,
+    color: colors.gray500,
   },
   feelsLike: {
     fontSize: 14,
