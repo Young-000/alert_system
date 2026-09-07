@@ -96,6 +96,22 @@ export function generateSchedule(
   return `${minute} ${hours.join(',')} * * *`;
 }
 
+/**
+ * 저장·표시에 실제로 반영할 교통수단.
+ *
+ * 위저드는 정류장을 고른 뒤에도 '교통' 체크를 끌 수 있고(`use-wizard-navigation.ts`의
+ * goBack으로 'type' 단계까지 되돌아간다), 이때 고른 정류장은 지워지지 않는다.
+ * 그 값을 그대로 저장하면 사용자가 끈 교통 알림이 만들어진다 — 게다가 스케줄은
+ * `wantsTransport === false`로 계산돼 출근 시각이 빠지므로, 지하철 알림이 기상
+ * 시각에 울린다. 표시·미리보기·저장이 모두 이 함수를 거쳐 한 값을 본다.
+ */
+export function getEffectiveTransports(
+  wantsTransport: boolean,
+  selectedTransports: readonly TransportItem[],
+): readonly TransportItem[] {
+  return wantsTransport ? selectedTransports : [];
+}
+
 export function generateAlertName(
   wantsWeather: boolean,
   selectedTransports: readonly TransportItem[],

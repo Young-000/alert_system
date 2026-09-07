@@ -3,7 +3,7 @@ import type { TransportItem } from './types';
 
 interface ConfirmStepProps {
   readonly wantsWeather: boolean;
-  readonly selectedTransports: TransportItem[];
+  readonly selectedTransports: readonly TransportItem[];
   readonly notificationTimes: { time: string; content: string }[];
   readonly error: string;
   readonly success: string;
