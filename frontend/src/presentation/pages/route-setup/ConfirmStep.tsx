@@ -147,7 +147,26 @@ export function ConfirmStep({
           <p>소요시간은 실제 출퇴근을 기록하면서 자동으로 측정됩니다</p>
         </div>
 
-        {error && <div className="apple-error" role="alert">{error}</div>}
+        {/*
+          저장이 막힌 이유를 이 화면이 직접 말한다.
+
+          `validation.errors`를 읽는 곳은 원래 `handleSave` 하나뿐이었는데, 저장 버튼이
+          `!validation.isValid`로 disabled라 그 코드는 실행될 수가 없다. 정류장을 고를
+          때는 검증을 통과한 것만 목록에 들어가지만, 그 뒤에 목록을 바꾸는 세 경로
+          (삭제·드래그 순서 변경·기존 경로 수정 진입)는 검증을 다시 태우지 않는다.
+          예: 환승역을 지우면 앞뒤 구간이 이어지지 않아 여기서 저장이 막히는데,
+          화면에는 눌리지 않는 버튼만 남아 이유도 다음 행동도 없었다.
+
+          사유는 첫 줄만 그린다 — 인접 중복은 중복 검사와 연속 구간 검사에 동시에
+          걸려 같은 말이 두 줄로 쌓인다. 페이지의 `error`가 이미 있으면 그쪽을 우선한다.
+        */}
+        {error ? (
+          <div className="apple-error" role="alert">{error}</div>
+        ) : (
+          !validation.isValid && validation.errors.length > 0 && (
+            <div className="apple-error" role="alert">{validation.errors[0]}</div>
+          )
+        )}
       </div>
 
       <div className="apple-step-footer">
