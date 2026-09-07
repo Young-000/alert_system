@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { generateSchedule, generateAlertName, getNotificationTimes } from './alert-utils';
+import {
+  generateSchedule,
+  generateAlertName,
+  getNotificationTimes,
+  getEffectiveTransports,
+} from './alert-utils';
 import type { Routine, TransportItem } from './types';
 
 const SUBWAY: TransportItem = {
@@ -100,5 +105,30 @@ describe('generateAlertName', () => {
 
   it('아무것도 없으면 기본 이름을 쓴다', () => {
     expect(generateAlertName(false, [])).toBe('출퇴근 알림');
+  });
+});
+
+/**
+ * 교통을 껐는데 고른 정류장이 남아 있으면, 화면과 저장이 갈린다.
+ *
+ * 위저드는 `selectedTransports`를 지우지 않은 채 '교통' 체크만 끌 수 있다
+ * (`use-wizard-navigation.ts`의 goBack으로 'type' 단계까지 되돌아갈 수 있다).
+ * 그때 미리보기(`getNotificationTimes`)는 `wantsTransport`를 보고 교통 알림을
+ * 빼지만, 저장 payload와 확인 화면은 `selectedTransports`를 그대로 읽는다.
+ */
+describe('getEffectiveTransports', () => {
+  it('교통을 껐으면 고른 정류장이 남아 있어도 비운다', () => {
+    expect(getEffectiveTransports(false, [SUBWAY])).toEqual([]);
+  });
+
+  it('교통을 켰으면 고른 정류장을 그대로 돌려준다', () => {
+    expect(getEffectiveTransports(true, [SUBWAY])).toEqual([SUBWAY]);
+  });
+
+  it('미리보기가 교통 알림을 빼면 알림 이름에도 정류장이 남지 않는다', () => {
+    const transports = getEffectiveTransports(false, [SUBWAY]);
+
+    expect(getNotificationTimes(true, false, routine(), transports)).toHaveLength(1);
+    expect(generateAlertName(true, transports)).toBe('날씨 알림');
   });
 });

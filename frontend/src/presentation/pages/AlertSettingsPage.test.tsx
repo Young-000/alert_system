@@ -568,4 +568,97 @@ describe('AlertSettingsPage', () => {
       expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
     });
   });
+
+  /**
+   * 정류장을 고른 뒤 '교통'을 다시 끄면, 화면·미리보기·저장이 갈렸다.
+   *
+   * 미리보기(`getNotificationTimes`)는 `wantsTransport`를 보고 교통 알림을 뺐지만
+   * 확인 화면과 저장 payload는 `selectedTransports`를 그대로 읽었다. 그 결과 사용자가
+   * 끈 지하철 알림이 저장되고, 스케줄은 교통 시각 없이 계산되므로 기상 시각에 울렸다.
+   */
+  it('should drop stations from the saved alert when transport is unchecked again', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
+    mockCommuteApiClient.getUserRoutes.mockResolvedValue([
+      {
+        id: 'route-1',
+        userId: 'user-1',
+        name: '출근길',
+        routeType: 'morning',
+        isPreferred: true,
+        totalTransferTime: 0,
+        pureMovementTime: 0,
+        checkpoints: [
+          {
+            id: 'cp-1',
+            sequenceOrder: 1,
+            name: '강남역',
+            checkpointType: 'subway',
+            linkedStationId: 'S1',
+            lineInfo: '2호선',
+            expectedWaitTime: 0,
+            totalExpectedTime: 0,
+            isTransferRelated: false,
+          },
+        ],
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    ] as never);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
+    });
+
+    // 교통을 켜고 저장된 경로에서 강남역을 가져온다 → routine 단계로 점프
+    fireEvent.click(screen.getByRole('button', { name: '교통 알림 선택' }));
+    fireEvent.click(screen.getByText('다음 →'));
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 교통수단을 이용하세요?')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('선택'));
+    fireEvent.click(await screen.findByText('출근길'));
+
+    await waitFor(() => {
+      expect(screen.getByText('하루 루틴을 알려주세요')).toBeInTheDocument();
+    });
+
+    // routine → station → transport → type 으로 되돌아간다
+    fireEvent.click(screen.getByText('← 이전'));
+    await screen.findByText('자주 이용하는 역/정류장을 검색하세요');
+    fireEvent.click(screen.getByText('← 이전'));
+    await screen.findByText('어떤 교통수단을 이용하세요?');
+    fireEvent.click(screen.getByText('← 이전'));
+    await screen.findByText('어떤 정보를 받고 싶으세요?');
+
+    // 교통을 끄고 날씨만 켠다
+    fireEvent.click(screen.getByRole('button', { name: '교통 알림 선택' }));
+    fireEvent.click(screen.getByRole('button', { name: '날씨 알림 선택' }));
+
+    fireEvent.click(screen.getByText('다음 →'));
+    await screen.findByText('하루 루틴을 알려주세요');
+    fireEvent.click(screen.getByText('다음 →'));
+    await screen.findByText('설정을 확인해주세요');
+
+    // 확인 화면에 끈 교통이 남아 있으면 안 된다
+    expect(screen.queryByText(/강남역/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('알림 시작하기'));
+
+    await waitFor(() => {
+      expect(mockAlertApiClient.createAlert).toHaveBeenCalled();
+    });
+
+    const dto = mockAlertApiClient.createAlert.mock.calls[0][0];
+    expect(dto.alertTypes).not.toContain('subway');
+    expect(dto.subwayStationId).toBeUndefined();
+    // 경로는 교통 단계에서만 가져올 수 있다 — 교통을 끄면 연결도 남지 않아야 한다.
+    // (남으면 백엔드가 날씨 알림에 "출근길 출발 준비하세요"를 붙인다:
+    //  notification-message-builder.service.ts:288)
+    expect(dto.routeId).toBeUndefined();
+  });
 });

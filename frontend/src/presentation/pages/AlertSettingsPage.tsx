@@ -17,6 +17,7 @@ import {
   generateSchedule,
   generateAlertName,
   getNotificationTimes,
+  getEffectiveTransports,
   AlertList,
   DeleteConfirmModal,
   EditAlertModal,
@@ -65,7 +66,6 @@ export function AlertSettingsPage(): JSX.Element {
   // Transport search
   const transportSearch = useTransportSearch(transportTypes);
   const {
-    selectedTransports,
     setSelectedTransports,
     setSearchQuery: setTransportSearchQuery,
   } = transportSearch;
@@ -76,14 +76,21 @@ export function AlertSettingsPage(): JSX.Element {
     [wantsWeather, wantsTransport, routine],
   );
 
+  // '교통' 체크를 끈 뒤에도 고른 정류장은 남는다. 표시·미리보기·저장이 갈리지
+  // 않도록 실제로 반영할 값을 한 번만 정한다.
+  const effectiveTransports = useMemo(
+    () => getEffectiveTransports(wantsTransport, transportSearch.selectedTransports),
+    [wantsTransport, transportSearch.selectedTransports],
+  );
+
   const alertName = useMemo(
-    () => generateAlertName(wantsWeather, transportSearch.selectedTransports),
-    [wantsWeather, transportSearch.selectedTransports],
+    () => generateAlertName(wantsWeather, effectiveTransports),
+    [wantsWeather, effectiveTransports],
   );
 
   const notificationTimes = useMemo(
-    () => getNotificationTimes(wantsWeather, wantsTransport, routine, transportSearch.selectedTransports),
-    [wantsWeather, wantsTransport, routine, transportSearch.selectedTransports],
+    () => getNotificationTimes(wantsWeather, wantsTransport, routine, effectiveTransports),
+    [wantsWeather, wantsTransport, routine, effectiveTransports],
   );
 
   // Submit handler
@@ -101,8 +108,8 @@ export function AlertSettingsPage(): JSX.Element {
       alertTypes.push('weather', 'airQuality');
     }
 
-    const subwayStation = selectedTransports.find((t) => t.type === 'subway');
-    const busStop = selectedTransports.find((t) => t.type === 'bus');
+    const subwayStation = effectiveTransports.find((t) => t.type === 'subway');
+    const busStop = effectiveTransports.find((t) => t.type === 'bus');
 
     if (subwayStation) alertTypes.push('subway');
     if (busStop) alertTypes.push('bus');
@@ -126,7 +133,8 @@ export function AlertSettingsPage(): JSX.Element {
         alertTypes,
         subwayStationId: subwayStation?.id,
         busStopId: busStop?.id,
-        routeId: selectedRouteId || undefined,
+        // 경로는 교통 단계에서만 가져온다. 교통을 끄면 연결도 함께 놓는다.
+        routeId: (wantsTransport && selectedRouteId) || undefined,
       };
 
       await alertApiClient.createAlert(dto);
@@ -151,7 +159,8 @@ export function AlertSettingsPage(): JSX.Element {
   }, [
     userId,
     wantsWeather,
-    selectedTransports,
+    wantsTransport,
+    effectiveTransports,
     selectedRouteId,
     schedule,
     alertName,
@@ -412,7 +421,7 @@ export function AlertSettingsPage(): JSX.Element {
         {wizard.step === 'confirm' && (
           <ConfirmStep
             wantsWeather={wantsWeather}
-            selectedTransports={transportSearch.selectedTransports}
+            selectedTransports={effectiveTransports}
             notificationTimes={notificationTimes}
             error={alertCrud.error}
             success={alertCrud.success}
