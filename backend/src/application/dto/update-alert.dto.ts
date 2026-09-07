@@ -4,6 +4,7 @@ import {
   IsBoolean,
   MaxLength,
   IsArray,
+  ArrayMinSize,
   IsEnum,
   IsUUID,
   Validate,
@@ -31,6 +32,11 @@ export class UpdateAlertDto {
 
   @IsOptional()
   @IsArray({ message: '알림 유형은 배열이어야 합니다.' })
+  // 생성과 같은 하한 — 한쪽만 막으면 수정으로 우회된다.
+  // 빈 배열이 저장되면 `SendNotificationUseCase`의 타입별 수집 분기가 전부
+  // 건너뛰어지는데(:135·143·155·176) schedule·enabled는 그대로라 크론은 정시에
+  // 발화한다. 결과: 내용이 하나도 없는 알림톡이 건당 과금되며 나간다.
+  @ArrayMinSize(1, { message: '최소 하나의 알림 타입이 필요합니다.' })
   @IsEnum(AlertType, { each: true, message: '올바른 알림 유형이 아닙니다.' })
   alertTypes?: AlertType[];
 
