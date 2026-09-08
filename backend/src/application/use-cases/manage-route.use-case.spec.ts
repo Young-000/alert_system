@@ -1,3 +1,5 @@
+import { NotFoundException } from '@nestjs/common';
+
 import { ManageRouteUseCase } from './manage-route.use-case';
 import {
   CommuteRoute,
@@ -212,5 +214,54 @@ describe('ManageRouteUseCase - 대표 경로 유일성', () => {
       const updated = repo.update.mock.calls.find(([route]) => route.id === 'route-1');
       expect(updated![0].checkpoints.map((cp) => cp.id)).toEqual(['cp-1', '']);
     });
+  });
+});
+
+/**
+ * 경로를 못 찾았을 때의 사유는 **사용자에게 그대로 보인다.**
+ * 모바일 경로 화면(`mobile/src/hooks/useRoutes.ts`)이 형제 훅(`usePlaces`·
+ * `useSmartDeparture`)과 같은 계약으로 서버 메시지를 그대로 띄우기 때문이다
+ * (`serverMessage(err)`). 목록이 낡아 이미 지워진 경로를 수정·삭제하려는 것이
+ * 이 404의 대표 경로라 실제로 도달한다.
+ *
+ * 상태 코드까지 함께 단언하는 이유: `.rejects.toThrow('문구')`만 쓰면 문구가 같은
+ * bare `Error`도 통과하는데, 그 경우 전역 필터가 500으로 치환해 사유가 사라진다
+ * (`http-exception.filter.ts` — HttpException이 아니면 'Internal server error').
+ */
+describe('ManageRouteUseCase - 없는 경로의 사유는 한국어로 전달된다', () => {
+  let useCase: ManageRouteUseCase;
+  let repo: jest.Mocked<ICommuteRouteRepository>;
+
+  beforeEach(() => {
+    repo = {
+      save: jest.fn(),
+      findById: jest.fn().mockResolvedValue(undefined),
+      findByIds: jest.fn(),
+      findByUserId: jest.fn(),
+      findByUserIdAndType: jest.fn(),
+      findPreferredByUserId: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      deleteByUserId: jest.fn(),
+    } as unknown as jest.Mocked<ICommuteRouteRepository>;
+
+    useCase = new ManageRouteUseCase(repo);
+  });
+
+  const cases: [string, () => Promise<unknown>][] = [
+    ['getRouteById', (): Promise<unknown> => useCase.getRouteById('missing')],
+    ['updateRoute', (): Promise<unknown> => useCase.updateRoute('missing', { name: '새 이름' })],
+    ['deleteRoute', (): Promise<unknown> => useCase.deleteRoute('missing')],
+  ];
+
+  it.each(cases)('%s — NotFoundException + 한국어 사유', async (_name, run) => {
+    await expect(run()).rejects.toBeInstanceOf(NotFoundException);
+    await expect(run()).rejects.toThrow('경로를 찾을 수 없습니다.');
+  });
+
+  it('사유에 내부 식별자(UUID)를 섞지 않는다', async () => {
+    await expect(useCase.deleteRoute('9c401f7a-0000-4000-8000-000000000000')).rejects.toThrow(
+      /^경로를 찾을 수 없습니다\.$/,
+    );
   });
 });

@@ -80,17 +80,17 @@ export default function CommuteScreen(): React.JSX.Element {
 
   const handleSave = useCallback(
     async (dto: Omit<CreateRouteDto, 'userId'> | UpdateRouteDto) => {
-      let success: boolean;
-      if (editingRoute) {
-        success = await updateRoute(editingRoute.id, dto as UpdateRouteDto);
-      } else {
-        success = await createRoute(dto as Omit<CreateRouteDto, 'userId'>);
-      }
-      if (success) {
+      const result = editingRoute
+        ? await updateRoute(editingRoute.id, dto as UpdateRouteDto)
+        : await createRoute(dto as Omit<CreateRouteDto, 'userId'>);
+      if (result.saved) {
         handleCloseModal();
-      } else {
-        RNAlert.alert('오류', '저장에 실패했습니다. 다시 시도해주세요.');
+        return;
       }
+      // 장소·스마트 출발 화면과 같은 계약: 서버가 준 사유를 그대로 띄운다.
+      // 고정 문구("다시 시도해주세요")는 이름이 비었는지 이미 지워진 경로인지를
+      // 사용자가 알 수 없게 만들고, 같은 실패를 반복하게 한다.
+      RNAlert.alert('저장하지 못했어요', result.message);
     },
     [editingRoute, createRoute, updateRoute, handleCloseModal],
   );
@@ -106,9 +106,9 @@ export default function CommuteScreen(): React.JSX.Element {
             text: '삭제',
             style: 'destructive',
             onPress: () => {
-              void deleteRoute(route.id).then((success) => {
-                if (!success) {
-                  RNAlert.alert('오류', '삭제에 실패했습니다. 다시 시도해주세요.');
+              void deleteRoute(route.id).then((result) => {
+                if (!result.deleted) {
+                  RNAlert.alert('삭제하지 못했어요', result.message);
                 }
               });
             },
