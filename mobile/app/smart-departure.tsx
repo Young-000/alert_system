@@ -20,6 +20,7 @@ import { SmartDepartureSettingForm } from '@/components/smart-departure/SmartDep
 import { colors } from '@/constants/colors';
 import { useRoutes } from '@/hooks/useRoutes';
 import { useSmartDeparture } from '@/hooks/useSmartDeparture';
+import { canAddSetting } from '@/utils/smart-departure-cta';
 import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
 import type {
@@ -65,6 +66,13 @@ export default function SmartDepartureScreen(): React.JSX.Element {
 
   // 두 조회 중 하나라도 실패하면 화면이 말할 수 있는 건 "못 불러왔다"뿐이다.
   const loadError = error ?? routesError;
+
+  // 조회에 실패했으면 추가를 권하지 않는다 — 사유는 `canAddSetting` 참고.
+  const canAdd = canAddSetting({
+    loadError,
+    hasSettings: settings.length > 0,
+    hasRoutes: routes.length > 0,
+  });
 
   const handleRetry = useCallback(
     async (): Promise<void> => {
@@ -279,7 +287,7 @@ export default function SmartDepartureScreen(): React.JSX.Element {
               setFormMode({ type: 'edit', departureType: 'commute' })
             }
           />
-        ) : settings.length > 0 || routes.length > 0 ? (
+        ) : canAdd ? (
           <AddSettingCard
             label="출근 설정 추가"
             icon="🌅"
@@ -300,7 +308,7 @@ export default function SmartDepartureScreen(): React.JSX.Element {
               setFormMode({ type: 'edit', departureType: 'return' })
             }
           />
-        ) : settings.length > 0 || routes.length > 0 ? (
+        ) : canAdd ? (
           <AddSettingCard
             label="퇴근 설정 추가"
             icon="🌙"

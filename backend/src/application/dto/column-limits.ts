@@ -24,3 +24,13 @@ export const MAX_STATION_NAME_LENGTH = 100;
 export const MAX_LINE_NAME_LENGTH = 50;
 /** `live_activity_tokens.activity_id` */
 export const MAX_ACTIVITY_ID_LENGTH = 255;
+
+/**
+ * 이름·라벨이 **보이지 않는 값**으로 저장되는 것을 막는 패턴.
+ *
+ * `@IsNotEmpty()`는 `''`만 거른다 — `'   '`는 통과해서 목록에 빈 칸으로 그려진다.
+ * 사용자는 어느 알림·경로·장소인지 구분할 수 없고, 지울 때도 무엇을 지우는지
+ * 확인할 방법이 없다. 생성·수정 **양쪽에** 같이 건다 (한쪽만 막으면 우회된다).
+ */
+export const NON_BLANK = /\S/;
+export const NON_BLANK_MESSAGE = '공백만으로는 지을 수 없습니다.';

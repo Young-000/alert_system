@@ -12,10 +12,11 @@ import {
   IsUUID,
   ArrayMinSize,
   MaxLength,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RouteType, CheckpointType, TransportMode } from '@domain/entities/commute-route.entity';
-import { INT4_MAX } from './column-limits';
+import { INT4_MAX, NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
 
 /**
  * 문자열 상한은 `20260208_add_commute_tracking_tables.sql`의 컬럼 폭과 같은 값이다.
@@ -40,6 +41,7 @@ export class CreateCheckpointDto {
 
   @IsString({ message: '체크포인트 이름은 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '체크포인트 이름은 필수입니다.' })
+  @Matches(NON_BLANK, { message: `체크포인트 이름은 ${NON_BLANK_MESSAGE}` })
   @MaxLength(MAX_CHECKPOINT_NAME, {
     message: `체크포인트 이름은 최대 ${MAX_CHECKPOINT_NAME}자까지 가능합니다.`,
   })
@@ -95,6 +97,7 @@ export class CreateRouteDto {
 
   @IsString({ message: '경로 이름은 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '경로 이름은 필수입니다.' })
+  @Matches(NON_BLANK, { message: `경로 이름은 ${NON_BLANK_MESSAGE}` })
   @MaxLength(MAX_ROUTE_NAME, {
     message: `경로 이름은 최대 ${MAX_ROUTE_NAME}자까지 가능합니다.`,
   })
@@ -128,6 +131,11 @@ export class UpdateCheckpointDto extends CreateCheckpointDto {
 export class UpdateRouteDto {
   @IsOptional()
   @IsString()
+  // 생성과 같은 하한 — 한쪽만 막으면 수정으로 우회된다. 빈 이름이 저장되면
+  // `manage-route.use-case.ts:181`이 그대로 대입해(`'' ?? existing`은 ''다)
+  // 경로 목록의 이름 칸이 빈 채로 남는다.
+  @IsNotEmpty({ message: '경로 이름은 필수입니다.' })
+  @Matches(NON_BLANK, { message: `경로 이름은 ${NON_BLANK_MESSAGE}` })
   @MaxLength(MAX_ROUTE_NAME, {
     message: `경로 이름은 최대 ${MAX_ROUTE_NAME}자까지 가능합니다.`,
   })

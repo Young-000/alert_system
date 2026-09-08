@@ -11,9 +11,11 @@ import {
   Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
+  Matches,
 } from 'class-validator';
 import { AlertType } from '@domain/entities/alert.entity';
 import { CronExpressionParser } from 'cron-parser';
+import { NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
 
 const ALERT_TYPES: AlertType[] = [
   AlertType.WEATHER,
@@ -56,6 +58,8 @@ export class CreateAlertDto {
 
   @IsString()
   @IsNotEmpty({ message: '알림 이름은 필수입니다.' })
+  // `@IsNotEmpty`는 ''만 거른다 — '   '는 통과해 목록에 빈 칸으로 그려진다.
+  @Matches(NON_BLANK, { message: `알림 이름은 ${NON_BLANK_MESSAGE}` })
   // alerts.name 은 varchar(255)다. 여기서 안 막으면 DB가 500으로 끊는다.
   @MaxLength(255, { message: '알림 이름은 255자 이하여야 합니다.' })
   name: string;
