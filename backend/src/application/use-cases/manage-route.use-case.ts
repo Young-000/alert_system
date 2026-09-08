@@ -86,7 +86,7 @@ export class ManageRouteUseCase {
 
     const route = await this.routeRepository.findById(id);
     if (!route) {
-      throw new NotFoundException(`Route with ID ${id} not found`);
+      throw new NotFoundException('경로를 찾을 수 없습니다.');
     }
 
     return this.toResponseDto(route);
@@ -117,7 +117,7 @@ export class ManageRouteUseCase {
 
     const existing = await this.routeRepository.findById(id);
     if (!existing) {
-      throw new NotFoundException(`Route with ID ${id} not found`);
+      throw new NotFoundException('경로를 찾을 수 없습니다.');
     }
 
     // Build checkpoints if provided
@@ -202,7 +202,7 @@ export class ManageRouteUseCase {
 
     const existing = await this.routeRepository.findById(id);
     if (!existing) {
-      throw new NotFoundException(`Route with ID ${id} not found`);
+      throw new NotFoundException('경로를 찾을 수 없습니다.');
     }
 
     await this.routeRepository.delete(id);
