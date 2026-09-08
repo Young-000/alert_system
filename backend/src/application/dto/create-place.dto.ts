@@ -7,7 +7,9 @@ import {
   Min,
   Max,
   MaxLength,
+  Matches,
 } from 'class-validator';
+import { NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
 
 export class CreatePlaceDto {
   @IsIn(['home', 'work'], { message: '장소 유형은 home 또는 work만 가능합니다.' })
@@ -16,6 +18,7 @@ export class CreatePlaceDto {
 
   @IsString({ message: '라벨은 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '라벨은 필수입니다.' })
+  @Matches(NON_BLANK, { message: `라벨은 ${NON_BLANK_MESSAGE}` })
   @MaxLength(100, { message: '라벨은 100자 이하여야 합니다.' })
   label: string;
 

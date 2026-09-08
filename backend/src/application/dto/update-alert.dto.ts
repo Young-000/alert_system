@@ -8,8 +8,11 @@ import {
   IsEnum,
   IsUUID,
   Validate,
+  IsNotEmpty,
+  Matches,
 } from 'class-validator';
 import { AlertType } from '@domain/entities/alert.entity';
+import { NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
 import {
   CronExpressionValidator,
   MAX_SCHEDULE_LENGTH,
@@ -19,6 +22,10 @@ import {
 export class UpdateAlertDto {
   @IsOptional()
   @IsString({ message: '알림 이름은 문자열이어야 합니다.' })
+  // 생성과 같은 하한 — 한쪽만 막으면 수정으로 우회된다. 빈 이름이 저장되면
+  // 목록 행의 이름 칸이 비어 어느 알림인지 구분할 수 없다.
+  @IsNotEmpty({ message: '알림 이름은 필수입니다.' })
+  @Matches(NON_BLANK, { message: `알림 이름은 ${NON_BLANK_MESSAGE}` })
   // alerts.name 은 varchar(255)다. 여기서 안 막으면 DB가 500으로 끊는다.
   @MaxLength(255, { message: '알림 이름은 255자 이하여야 합니다.' })
   name?: string;

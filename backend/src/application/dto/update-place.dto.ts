@@ -5,11 +5,17 @@ import {
   Min,
   Max,
   MaxLength,
+  IsNotEmpty,
+  Matches,
 } from 'class-validator';
+import { NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
 
 export class UpdatePlaceDto {
   @IsOptional()
   @IsString({ message: '라벨은 문자열이어야 합니다.' })
+  // 생성과 같은 하한(`create-place.dto.ts:18`) — 한쪽만 막으면 수정으로 우회된다.
+  @IsNotEmpty({ message: '라벨은 필수입니다.' })
+  @Matches(NON_BLANK, { message: `라벨은 ${NON_BLANK_MESSAGE}` })
   @MaxLength(100, { message: '라벨은 100자 이하여야 합니다.' })
   label?: string;
 
