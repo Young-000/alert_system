@@ -11,6 +11,7 @@ import {
 } from '@aws-sdk/client-scheduler';
 import { Alert } from '@domain/entities/alert.entity';
 import { INotificationScheduler } from '@application/ports/notification-scheduler';
+import { isSchedulerConvertible } from '@application/dto/schedule-format';
 
 interface ScheduleConfig {
   scheduleGroupName: string;
@@ -261,6 +262,12 @@ export class EventBridgeSchedulerService implements INotificationScheduler, OnMo
    * 출력: "cron(0 8 ? * MON-FRI *)" - EventBridge 6필드 cron
    */
   private convertToEventBridgeCron(schedule: string): string {
+    // 아래 분기들이 받는 집합 = DTO(`CronExpressionValidator`)가 통과시키는 집합이다.
+    // 여기서 먼저 걸러 두 판정이 갈라졌는지 즉시 드러나게 한다.
+    if (!isSchedulerConvertible(schedule)) {
+      throw new Error(`Invalid schedule format: ${schedule}`);
+    }
+
     const parts = schedule.trim().split(/\s+/);
 
     if (parts.length === 5) {

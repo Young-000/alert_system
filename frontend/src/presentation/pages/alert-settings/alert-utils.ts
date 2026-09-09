@@ -134,12 +134,26 @@ function formatTime(hour: number, minute: number): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
+/**
+ * 저장할 크론. 시각을 하나도 못 읽으면 **빈 문자열**을 돌려준다.
+ *
+ * 예전에는 `hours`가 비어도 문자열을 이어붙여 `"0  * * *"`를 만들었다 — 시각 필드가
+ * 통째로 빠진 4필드다. 서버 DTO는 cron-parser가 4필드를 관대하게 받는 바람에
+ * 통과시키고, 그 다음 `convertToEventBridgeCron`이 5필드가 아니라며 던진다.
+ * 알림 행은 롤백되고 화면에는 "알림 생성에 실패했습니다"만 남는다.
+ *
+ * 여기서 시각을 **지어내지는 않는다.** 사용자가 정하지 않은 시각에 알림톡이 나가는 쪽이
+ * 저장이 막히는 것보다 나쁘다(건당 과금). 호출부가 이 빈 값을 보고 저장을 막고,
+ * 위저드는 애초에 루틴 단계를 넘어가지 못하게 한다.
+ */
 export function generateSchedule(
   wantsWeather: boolean,
   wantsTransport: boolean,
   routine: Routine,
 ): string {
   const { minute, hours } = resolveSchedule(wantsWeather, wantsTransport, routine);
+  if (hours.length === 0) return '';
+
   return `${minute} ${hours.join(',')} * * *`;
 }
 
