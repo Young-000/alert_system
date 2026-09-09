@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApiClient } from '@infrastructure/api';
-import { getApiErrorStatus } from '@infrastructure/query/error-utils';
+import { getApiErrorMessage, getApiErrorStatus } from '@infrastructure/query/error-utils';
 import {
   safeSetItem,
   saveCredentials,
@@ -83,10 +83,24 @@ export function LoginPage(): JSX.Element {
         notifyAuthChange();
         navigate('/');
       } catch (err: unknown) {
+        // 서버는 거절 사유를 한국어로 내려준다 (create-user.dto의 message들,
+        // login.use-case의 UnauthorizedException). 고정 문구로 덮으면 사용자는
+        // 무엇을 고쳐야 하는지 모른 채 같은 버튼을 다시 누르게 된다.
+        const status = getApiErrorStatus(err);
         if (mode === 'register') {
-          setError(getApiErrorStatus(err) === 409 ? '이미 등록된 이메일입니다.' : '회원가입에 실패했습니다.');
-        } else {
+          setError(
+            status === 409
+              ? '이미 등록된 이메일입니다.'
+              : getApiErrorMessage(err, '회원가입에 실패했습니다.'),
+          );
+        } else if (status === 401) {
+          // 401만 고정 문구를 유지한다 — 서버는 "없는 이메일"과 "틀린 비밀번호"에
+          // 같은 문구를 쓰고, 여기서 갈라 보여주면 계정 존재 여부가 드러난다.
           setError('이메일 또는 비밀번호가 일치하지 않습니다.');
+        } else {
+          // 요청 제한(429)·서버 장애·네트워크 오류까지 "비밀번호가 틀렸다"고 말하면
+          // 맞는 비밀번호를 계속 고쳐 치게 만든다.
+          setError(getApiErrorMessage(err, '로그인에 실패했습니다.'));
         }
       } finally {
         setIsLoading(false);
