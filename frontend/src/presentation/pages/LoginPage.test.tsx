@@ -74,7 +74,12 @@ describe('LoginPage', () => {
     });
 
     it('로그인 실패 시 에러 메시지를 표시해야 한다', async () => {
-      mockAuthApiClient.login.mockRejectedValue(new Error('Login failed'));
+      // `ApiClient`는 HTTP 실패를 `API Error {status}: {body}` 형태로만 던진다.
+      // 예전 픽스처(`new Error('Login failed')`)는 실제로 생기지 않는 모양이라,
+      // 어떤 실패든 자격 증명 오류로 말하던 버그를 통과시키고 있었다.
+      mockAuthApiClient.login.mockRejectedValue(
+        new Error('API Error 401: {"statusCode":401,"message":"이메일 또는 비밀번호가 일치하지 않습니다."}'),
+      );
 
       render(
         <MemoryRouter>
@@ -308,6 +313,146 @@ describe('LoginPage', () => {
       await waitFor(() => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       });
+    });
+  });
+});
+
+describe('LoginPage — 실패 사유를 고정 문구로 덮지 않는다', () => {
+  // 서버는 사유를 **한국어로** 내려준다 (create-user.dto의 message들,
+  // login.use-case의 UnauthorizedException). 그런데 이 화면만 그것을 버리고
+  // 고정 문구를 썼다. 특히 로그인은 어떤 실패든 "비밀번호가 틀렸다"고 말해서,
+  // 요청 제한(@Throttle 5회/분)이나 서버 장애 때 사용자가 맞는 비밀번호를
+  // 계속 고쳐 치게 만든다 — 다시 눌러도 같은 실패다.
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  function fillLogin(): void {
+    fireEvent.change(screen.getByLabelText('이메일'), {
+      target: { value: 'user@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('비밀번호'), {
+      target: { value: 'password123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '로그인' }));
+  }
+
+  async function fillRegister(): Promise<void> {
+    fireEvent.click(screen.getByRole('button', { name: '회원가입' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('이름')).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('이름'), { target: { value: '홍길동' } });
+    fireEvent.change(screen.getByLabelText('전화번호'), { target: { value: '01012345678' } });
+    fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'abc' } });
+    const submit = screen
+      .getAllByRole('button')
+      .find((btn) => btn.getAttribute('type') === 'submit');
+    fireEvent.click(submit!);
+  }
+
+  it('회원가입 거절 사유(비밀번호 길이)를 그대로 보여준다', async () => {
+    mockAuthApiClient.register.mockRejectedValue(
+      new Error(
+        'API Error 400: {"statusCode":400,"message":["비밀번호는 최소 6자 이상이어야 합니다."],"path":"/auth/register"}',
+      ),
+    );
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    await fillRegister();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '비밀번호는 최소 6자 이상이어야 합니다.',
+      );
+    });
+  });
+
+  it('회원가입이 요청 제한에 걸리면 그 사실을 알린다', async () => {
+    // @Throttle 3회/분 (auth.controller.ts). 고정 문구로 덮으면 사용자는
+    // 입력을 고쳐가며 계속 눌러 제한을 더 키운다.
+    mockAuthApiClient.register.mockRejectedValue(
+      new Error('API Error 429: {"statusCode":429,"message":"ThrottlerException: Too Many Requests"}'),
+    );
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    await fillRegister();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
+      );
+    });
+  });
+
+  it('로그인이 요청 제한에 걸리면 비밀번호가 틀렸다고 말하지 않는다', async () => {
+    mockAuthApiClient.login.mockRejectedValue(
+      new Error('API Error 429: {"statusCode":429,"message":"ThrottlerException: Too Many Requests"}'),
+    );
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    fillLogin();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
+      );
+    });
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      '이메일 또는 비밀번호가 일치하지 않습니다.',
+    );
+  });
+
+  it('서버 장애를 자격 증명 오류로 말하지 않는다', async () => {
+    mockAuthApiClient.login.mockRejectedValue(
+      new Error('API Error 500: {"statusCode":500,"message":"Internal Server Error"}'),
+    );
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    fillLogin();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    });
+  });
+
+  it('자격 증명이 실제로 틀렸을 때는 기존 문구를 유지한다', async () => {
+    // 대조군 — 401은 사용자 열거를 피하려고 일부러 같은 문구를 쓴다.
+    mockAuthApiClient.login.mockRejectedValue(
+      new Error('API Error 401: {"statusCode":401,"message":"이메일 또는 비밀번호가 일치하지 않습니다."}'),
+    );
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    fillLogin();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '이메일 또는 비밀번호가 일치하지 않습니다.',
+      );
     });
   });
 });

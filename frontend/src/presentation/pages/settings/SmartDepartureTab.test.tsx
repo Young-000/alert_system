@@ -364,3 +364,142 @@ describe('SmartDepartureTab — 삭제 실패 사유 전달', () => {
     });
   });
 });
+
+describe('SmartDepartureTab — 준비 시간이 서버 범위를 벗어난 경우', () => {
+  // 서버는 prepTimeMinutes를 `@Min(10) @Max(60)`으로 거절한다
+  // (smart-departure.dto.ts CreateSmartDepartureSettingDto). 입력의 `min`/`max`는
+  // 숫자 입력에서 **타이핑을 막지 않고**, 저장 버튼도 `type="button"`이라
+  // 브라우저 폼 검증이 아예 돌지 않는다. 그래서 범위 밖 값이 그대로 전송됐다.
+  //
+  // 그 400은 class-validator의 영문 문구라 `getApiErrorMessage`의 한글 검사에서
+  // 걸러지고, `STATUS_MESSAGES`에는 400이 없어 결국 폴백 문구만 남는다 —
+  // 어느 칸이 잘못됐는지 화면에 흔적이 0이고 다시 눌러도 같은 실패다.
+  beforeEach(() => {
+    vi.clearAllMocks();
+    commuteApi.getUserRoutes.mockResolvedValue([
+      { id: 'route-1', name: '출근 경로', routeType: 'morning' },
+    ] as never);
+    mockSmartDepartureApi.getSettings.mockResolvedValue([]);
+  });
+
+  async function openFormAndSetPrep(value: string): Promise<void> {
+    const user = userEvent.setup();
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    const prep = screen.getByLabelText('준비 시간 (분)');
+    await user.clear(prep);
+    await user.type(prep, value);
+    await user.click(screen.getByRole('button', { name: '설정 저장' }));
+  }
+
+  it('준비 시간 칸을 지울 수 있다', async () => {
+    // 근본 원인 — 빈 문자열을 기본값 15로 되돌리면 칸이 **지워지지 않는다**.
+    // 그래서 15를 지우고 60을 치면 값이 "1560"이 되고, 그 값이 그대로 전송됐다.
+    const user = userEvent.setup();
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    const prep = screen.getByLabelText('준비 시간 (분)') as HTMLInputElement;
+    expect(prep.value).toBe('15');
+
+    await user.clear(prep);
+    expect(prep.value).toBe('');
+
+    await user.type(prep, '60');
+    expect(prep.value).toBe('60');
+  });
+
+  it('상한(60분)을 넘으면 요청을 보내지 않는다', async () => {
+    await openFormAndSetPrep('90');
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '준비 시간은 10분에서 60분 사이로 입력해주세요.',
+      );
+    });
+    expect(mockSmartDepartureApi.createSetting).not.toHaveBeenCalled();
+  });
+
+  it('하한(10분) 미만이면 요청을 보내지 않는다', async () => {
+    await openFormAndSetPrep('5');
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '준비 시간은 10분에서 60분 사이로 입력해주세요.',
+      );
+    });
+    expect(mockSmartDepartureApi.createSetting).not.toHaveBeenCalled();
+  });
+
+  it('범위 안 값은 그대로 전송한다', async () => {
+    // 대조군 — 과잉 차단이 아님을 고정한다.
+    mockSmartDepartureApi.createSetting.mockResolvedValue({ id: 'sd-new' } as never);
+
+    await openFormAndSetPrep('30');
+
+    await waitFor(() => {
+      expect(mockSmartDepartureApi.createSetting).toHaveBeenCalledWith(
+        expect.objectContaining({ prepTimeMinutes: 30 }),
+      );
+    });
+  });
+
+  it('경계값(10·60)은 통과시킨다', async () => {
+    // 대조군 — 경계에서 한 칸 어긋나면 정상 입력이 막힌다.
+    mockSmartDepartureApi.createSetting.mockResolvedValue({ id: 'sd-new' } as never);
+
+    await openFormAndSetPrep('60');
+
+    await waitFor(() => {
+      expect(mockSmartDepartureApi.createSetting).toHaveBeenCalledWith(
+        expect.objectContaining({ prepTimeMinutes: 60 }),
+      );
+    });
+  });
+});
+
+describe('SmartDepartureTab — 도착 목표 시간이 비어 있는 경우', () => {
+  // `<input type="time">`은 값을 지우면 빈 문자열이 된다. 서버는 arrivalTarget을
+  // `@Matches(/^([01]\d|2[0-3]):[0-5]\d$/)`로 거절하고(smart-departure.dto.ts),
+  // 그 400 문구는 영문이라 준비 시간과 **같은 이유로** 화면에 닿지 못한다.
+  // 같은 폼의 형제 칸이라 상한 스윕만으로는 드러나지 않는다.
+  beforeEach(() => {
+    vi.clearAllMocks();
+    commuteApi.getUserRoutes.mockResolvedValue([
+      { id: 'route-1', name: '출근 경로', routeType: 'morning' },
+    ] as never);
+    mockSmartDepartureApi.getSettings.mockResolvedValue([]);
+  });
+
+  it('도착 목표 시간을 비우면 요청을 보내지 않는다', async () => {
+    const user = userEvent.setup();
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+
+    await user.clear(screen.getByLabelText('도착 목표 시간'));
+    await user.click(screen.getByRole('button', { name: '설정 저장' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '도착 목표 시간을 입력해주세요.',
+      );
+    });
+    expect(mockSmartDepartureApi.createSetting).not.toHaveBeenCalled();
+  });
+
+  it('시간이 채워져 있으면 그대로 전송한다', async () => {
+    // 대조군 — 기본값(09:00)까지 막아버리지 않는다.
+    mockSmartDepartureApi.createSetting.mockResolvedValue({ id: 'sd-new' } as never);
+    const user = userEvent.setup();
+    renderTab();
+    await user.click(await screen.findByRole('button', { name: '+ 추가' }));
+    await user.click(screen.getByRole('button', { name: '설정 저장' }));
+
+    await waitFor(() => {
+      expect(mockSmartDepartureApi.createSetting).toHaveBeenCalledWith(
+        expect.objectContaining({ arrivalTarget: '09:00' }),
+      );
+    });
+  });
+});

@@ -20,6 +20,23 @@ const TYPE_ICONS: Record<DepartureType, string> = { commute: '🌅', return: '�
 /** 등록 가능한 유형은 이 둘뿐이다. 사용자당 유형별 1개까지만 서버가 받는다. */
 const DEPARTURE_TYPE_ORDER: DepartureType[] = ['commute', 'return'];
 
+/**
+ * 준비 시간의 허용 범위. 우리가 고르는 값이 아니라 **서버가 정한다** —
+ * `CreateSmartDepartureSettingDto.prepTimeMinutes`가 `@Min(10) @Max(60)`이고,
+ * 벗어나면 400으로 거절한다 (smart-departure.dto.ts).
+ *
+ * 그 400은 class-validator의 영문 문구라 `getApiErrorMessage`의 한글 검사에 걸러지고
+ * `STATUS_MESSAGES`에도 400이 없다. 즉 여기서 막지 않으면 사용자는 폴백 문구만 보고
+ * 어느 칸이 잘못됐는지 영영 알 수 없다 (ux-baseline 원칙 3 — dead-end 금지).
+ */
+const PREP_MIN_MINUTES = 10;
+const PREP_MAX_MINUTES = 60;
+const PREP_DEFAULT_MINUTES = 15;
+const PREP_RANGE_MESSAGE = `준비 시간은 ${PREP_MIN_MINUTES}분에서 ${PREP_MAX_MINUTES}분 사이로 입력해주세요.`;
+
+/** 서버 `CreateSmartDepartureSettingDto.arrivalTarget`의 `@Matches`와 같은 형식이다. */
+const ARRIVAL_TARGET_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 function SettingCard({
   setting,
   routeName,
@@ -112,7 +129,10 @@ export function SmartDepartureTab(): JSX.Element {
   const [formType, setFormType] = useState<DepartureType>('commute');
   const [formRouteId, setFormRouteId] = useState('');
   const [formTarget, setFormTarget] = useState('09:00');
-  const [formPrep, setFormPrep] = useState(15);
+  // 입력 중간 상태(빈 칸·"6")를 그대로 담기 위해 문자열로 둔다.
+  // 숫자 state에 빈 문자열을 기본값으로 되돌리면 칸을 **지울 수 없게** 되고,
+  // 이어서 친 숫자가 그 기본값에 덧붙는다 (15 → 지움 → "60" 입력 → "1560").
+  const [formPrep, setFormPrep] = useState(String(PREP_DEFAULT_MINUTES));
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
   const [actionError, setActionError] = useState('');
@@ -135,6 +155,8 @@ export function SmartDepartureTab(): JSX.Element {
       if (prev) return false;
       // 'commute' 고정 기본값은 출근을 이미 등록한 사용자에게 그대로 409를 안긴다.
       setFormType(availableTypes[0] ?? 'commute');
+      // 직전 시도에서 남은 범위 밖 값을 물려주지 않는다.
+      setFormPrep(String(PREP_DEFAULT_MINUTES));
       return true;
     });
   }, [availableTypes]);
@@ -145,13 +167,29 @@ export function SmartDepartureTab(): JSX.Element {
       setActionError('먼저 경로를 등록해주세요.');
       return;
     }
+    // 서버가 거절할 값을 보내면 사용자는 사유 없는 실패만 본다 (위 PREP_* 주석).
+    // 시각 칸도 같다 — `<input type="time">`은 지우면 빈 문자열이 되고,
+    // 서버 `@Matches(HH:mm)`의 거절 문구는 영문이라 화면에 닿지 못한다.
+    if (!ARRIVAL_TARGET_PATTERN.test(formTarget)) {
+      setActionError('도착 목표 시간을 입력해주세요.');
+      return;
+    }
+    const prepMinutes = Number(formPrep);
+    if (
+      !Number.isInteger(prepMinutes) ||
+      prepMinutes < PREP_MIN_MINUTES ||
+      prepMinutes > PREP_MAX_MINUTES
+    ) {
+      setActionError(PREP_RANGE_MESSAGE);
+      return;
+    }
     setActionError('');
     try {
       await createMutation.mutateAsync({
         routeId,
         departureType: formType,
         arrivalTarget: formTarget,
-        prepTimeMinutes: formPrep,
+        prepTimeMinutes: prepMinutes,
         activeDays: [1, 2, 3, 4, 5], // Mon-Fri default
       });
       setShowForm(false);
@@ -273,13 +311,10 @@ export function SmartDepartureTab(): JSX.Element {
               <input
                 id="dep-prep"
                 type="number"
-                min={10}
-                max={60}
+                min={PREP_MIN_MINUTES}
+                max={PREP_MAX_MINUTES}
                 value={formPrep}
-                onChange={(e) => {
-                  const parsed = parseInt(e.target.value, 10);
-                  setFormPrep(isNaN(parsed) ? 15 : parsed);
-                }}
+                onChange={(e) => setFormPrep(e.target.value)}
               />
             </div>
             <button
