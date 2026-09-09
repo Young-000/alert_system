@@ -103,6 +103,13 @@ export function AlertSettingsPage(): JSX.Element {
       return;
     }
 
+    // 시각을 못 읽으면 `generateSchedule`이 빈 문자열을 준다. 그대로 보내면 서버는
+    // 통과시키고 EventBridge 변환에서 던져, 원인을 알 수 없는 실패만 남는다.
+    if (!schedule) {
+      setCrudError('알림 시간을 입력해주세요.');
+      return;
+    }
+
     const alertTypes: AlertType[] = [];
     if (wantsWeather) {
       alertTypes.push('weather', 'airQuality');
@@ -183,6 +190,8 @@ export function AlertSettingsPage(): JSX.Element {
     deleteTarget: alertCrud.deleteTarget,
     isSubmitting: alertCrud.isSubmitting,
     success: alertCrud.success,
+    // 저장에 쓸 크론이 실제로 만들어졌는지. 루틴 단계의 시각을 비우면 만들어지지 않는다.
+    hasSchedule: schedule !== '',
     onSubmit: handleSubmit,
   });
 

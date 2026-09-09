@@ -186,3 +186,44 @@ describe('findDuplicateAlert — 같은 시각·같은 유형', () => {
     ).toBe(eightWeather);
   });
 });
+
+/**
+ * 시각 입력을 비우면 `<input type="time">`의 값은 빈 문자열이 된다.
+ *
+ * 예전에는 그 상태로도 확인 단계까지 갔고, 저장하면 크론이 `"0  * * *"`가 됐다 —
+ * 시각 필드가 통째로 빠진 4필드다. 서버 DTO의 `CronExpressionValidator`는
+ * cron-parser가 4필드를 관대하게 받아들이는 바람에 **통과시켰고**, 그 뒤
+ * `convertToEventBridgeCron`이 5필드가 아니라며 `Invalid schedule format`으로 던졌다.
+ * 알림 행은 롤백되고 사용자는 "알림 생성에 실패했습니다"만 본다 — 원인인 빈 입력은
+ * 두 화면 전에 있고 어디에도 표시되지 않아, 다시 눌러도 영원히 같은 실패였다.
+ *
+ * 시각을 모를 때 **크론을 지어내면 안 된다.** 사용자가 정하지 않은 시각에
+ * 알림톡이 나가고, 알림톡은 건당 과금이다. 만들 수 없으면 만들 수 없다고 알린다.
+ */
+describe('generateSchedule — 시각을 못 읽었을 때', () => {
+  const FIVE_FIELD = /^\S+( \S+){4}$/;
+
+  it('기상 시각이 비면 스케줄을 지어내지 않는다', () => {
+    expect(generateSchedule(true, false, routine({ wakeUp: '' }))).toBe('');
+  });
+
+  it('출퇴근 시각이 모두 비면 스케줄을 지어내지 않는다', () => {
+    expect(generateSchedule(false, true, routine({ leaveHome: '', leaveWork: '' }))).toBe('');
+  });
+
+  it('유형을 아무것도 고르지 않으면 스케줄이 없다', () => {
+    expect(generateSchedule(false, false, routine())).toBe('');
+  });
+
+  it('시각을 하나라도 읽으면 5필드 크론을 만든다 (대조군)', () => {
+    // 출근 시각만 남아도 저장은 되어야 한다 — 과잉 차단이 아님을 고정한다.
+    const cron = generateSchedule(false, true, routine({ leaveHome: '08:00', leaveWork: '' }));
+
+    expect(cron).toMatch(FIVE_FIELD);
+    expect(cron).toBe('45 7 * * *');
+  });
+
+  it('정상 입력은 그대로 5필드다 (대조군)', () => {
+    expect(generateSchedule(true, false, routine({ wakeUp: '07:30' }))).toMatch(FIVE_FIELD);
+  });
+});

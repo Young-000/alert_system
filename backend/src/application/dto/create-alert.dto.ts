@@ -16,6 +16,7 @@ import {
 import { AlertType } from '@domain/entities/alert.entity';
 import { CronExpressionParser } from 'cron-parser';
 import { NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
+import { isSchedulerConvertible } from './schedule-format';
 
 const ALERT_TYPES: AlertType[] = [
   AlertType.WEATHER,
@@ -28,6 +29,12 @@ const ALERT_TYPES: AlertType[] = [
 export class CronExpressionValidator implements ValidatorConstraintInterface {
   validate(expression: string): boolean {
     if (!expression) return false;
+
+    // cron-parser는 스케줄러가 등록할 수 없는 형식도 파싱한다(초 필드를 포함한 6필드,
+    // `@daily` 같은 매크로). 그대로 통과시키면 알림 행이 저장된 뒤 EventBridge 변환에서
+    // 던져 400이 아니라 500이 된다 — 등록 가능한 형식인지 함께 본다.
+    if (!isSchedulerConvertible(expression)) return false;
+
     try {
       CronExpressionParser.parse(expression);
       return true;
