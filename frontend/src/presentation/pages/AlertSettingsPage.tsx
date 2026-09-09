@@ -448,7 +448,7 @@ export function AlertSettingsPage(): JSX.Element {
           로드 실패 시에는 서버의 기존 알림을 알 수 없어 중복 생성 위험이 있으므로 숨긴다 */}
       {!shouldShowWizard && !alertCrud.loadError && (
         <QuickPresets
-          alerts={alertCrud.alerts}
+          hasWeatherAlert={alertCrud.hasQuickWeatherAlert}
           isSubmitting={alertCrud.isSubmitting}
           onQuickWeather={alertCrud.handleQuickWeatherAlert}
         />
@@ -471,6 +471,7 @@ export function AlertSettingsPage(): JSX.Element {
           editForm={alertCrud.editForm}
           originalSchedule={alertCrud.editTarget.schedule}
           isEditing={alertCrud.isEditing}
+          error={alertCrud.error}
           onFormChange={alertCrud.setEditForm}
           onConfirm={alertCrud.handleEditConfirm}
           onCancel={alertCrud.handleEditCancel}

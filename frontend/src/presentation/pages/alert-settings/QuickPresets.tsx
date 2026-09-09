@@ -1,17 +1,20 @@
-import type { Alert } from '@infrastructure/api';
-
 interface QuickPresetsProps {
-  readonly alerts: Alert[];
+  /**
+   * 프리셋이 만들 알림이 이미 있는지. 예전에는 이 컴포넌트가 알림 **이름**으로
+   * 직접 판단했다 — 위저드로 만든 같은 알림에 다른 이름이 붙어 있으면 버튼이
+   * 열린 채였고, 누르면 08시에 알림톡이 두 통 나가는 상태가 됐다.
+   * 판단은 `use-alert-crud`가 생성과 같은 규칙으로 한 번만 한다.
+   */
+  readonly hasWeatherAlert: boolean;
   readonly isSubmitting: boolean;
   readonly onQuickWeather: () => void;
 }
 
 export function QuickPresets({
-  alerts,
+  hasWeatherAlert,
   isSubmitting,
   onQuickWeather,
 }: QuickPresetsProps): JSX.Element {
-  const hasWeatherAlert = !!alerts.find(a => a.name === '아침 날씨 알림');
 
   return (
     <section className="alert-presets">

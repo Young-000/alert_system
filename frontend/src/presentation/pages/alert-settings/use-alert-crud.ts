@@ -10,10 +10,11 @@ import { useRoutesQuery } from '@infrastructure/query/use-routes-query';
 import { queryKeys } from '@infrastructure/query/query-keys';
 import { getApiErrorMessage } from '@infrastructure/query/error-utils';
 import {
+  cronToHuman,
   cronToTimeInput,
   applyTimeToCron,
-  normalizeCronForComparison,
 } from './cron-utils';
+import { findDuplicateAlert, QUICK_WEATHER_PRESET } from './alert-utils';
 import { TOAST_DURATION_MS } from './types';
 
 interface AlertCrudState {
@@ -31,6 +32,8 @@ interface AlertCrudState {
   isEditing: boolean;
   savedRoutes: RouteResponse[];
   duplicateAlert: Alert | null;
+  /** 빠른 프리셋이 만들 알림이 이미 있는지. 버튼 잠금과 생성이 같은 규칙을 본다. */
+  hasQuickWeatherAlert: boolean;
 }
 
 interface AlertCrudActions {
@@ -50,7 +53,11 @@ interface AlertCrudActions {
   setAlerts: React.Dispatch<React.SetStateAction<Alert[]>>;
   handleToggleAlert: (alert: Alert) => Promise<void>;
   handleQuickWeatherAlert: () => Promise<void>;
-  checkDuplicateAlert: (schedule: string, alertTypes: AlertType[]) => Alert | null;
+  checkDuplicateAlert: (
+    schedule: string,
+    alertTypes: AlertType[],
+    excludeId?: string,
+  ) => Alert | null;
 }
 
 export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions {
@@ -141,21 +148,19 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     await queryClient.invalidateQueries({ queryKey: queryKeys.alerts.byUser(userId) });
   }, [userId, queryClient]);
 
-  const checkDuplicateAlert = useCallback((schedule: string, alertTypes: AlertType[]): Alert | null => {
-    const normalizedNew = normalizeCronForComparison(schedule);
-    const newTypes = [...alertTypes].sort();
+  // 규칙 자체는 alert-utils에 하나만 둔다 — 화면마다 다시 구현하면 답이 갈린다.
+  const checkDuplicateAlert = useCallback((
+    schedule: string,
+    alertTypes: AlertType[],
+    excludeId?: string,
+  ): Alert | null => findDuplicateAlert(alerts, schedule, alertTypes, excludeId),
+  [alerts]);
 
-    return alerts.find(existing => {
-      const normalizedExisting = normalizeCronForComparison(existing.schedule);
-      if (normalizedNew !== normalizedExisting) return false;
-
-      const existingTypes = [...existing.alertTypes].sort();
-      const sameTypes = existingTypes.length === newTypes.length &&
-        existingTypes.every((t, i) => t === newTypes[i]);
-
-      return sameTypes;
-    }) || null;
-  }, [alerts]);
+  // 빠른 프리셋 버튼의 잠금 조건. 생성 요청과 같은 값·같은 규칙을 본다.
+  const hasQuickWeatherAlert = checkDuplicateAlert(
+    QUICK_WEATHER_PRESET.schedule,
+    QUICK_WEATHER_PRESET.alertTypes,
+  ) !== null;
 
   const handleDeleteClick = (alert: Alert): void => {
     // 다른 작업(토글·수정·이전 삭제)에서 남은 공유 error가 삭제 모달에 새어 나오는 것 방지
@@ -186,17 +191,37 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
   }, [setError]);
 
   const handleEditClick = (alert: Alert): void => {
+    // 삭제 모달(:handleDeleteClick)과 같은 계약: 다른 작업에서 남은 공유 error가
+    // 이제 이 모달에도 그려지므로, 열 때 비워 두지 않으면 남의 사유가 새어 나온다.
+    setError('');
     setEditTarget(alert);
     setEditForm({ name: alert.name, schedule: cronToTimeInput(alert.schedule) });
   };
 
   const handleEditConfirm = async (): Promise<void> => {
     if (!editTarget) return;
+
+    // 모달은 첫 시각만 보여주므로, 나머지 시각(예: 퇴근 알림)은 그대로 보존해야 한다.
+    const cronSchedule = applyTimeToCron(editTarget.schedule, editForm.schedule);
+
+    // 생성(AlertSettingsPage:117)이 막는 상태를 수정으로 만들 수 있었다.
+    // 서버는 중복을 거르지 않으므로 그대로 저장되고, 같은 분에 같은 유형의
+    // 알림톡이 두 통 나간다. 같은 규칙을 여기에도 건다.
+    const duplicate = checkDuplicateAlert(
+      cronSchedule,
+      editTarget.alertTypes,
+      editTarget.id,
+    );
+    if (duplicate) {
+      // 모달은 닫지 않는다 — 사유를 읽고 시각을 고치는 것이 다음 행동이다.
+      setError(
+        `이미 같은 시간(${cronToHuman(duplicate.schedule)})에 동일한 알림이 있습니다.`,
+      );
+      return;
+    }
+
     setIsEditing(true);
     try {
-      // 모달은 첫 시각만 보여주므로, 나머지 시각(예: 퇴근 알림)은 그대로 보존해야 한다.
-      const cronSchedule = applyTimeToCron(editTarget.schedule, editForm.schedule);
-
       await alertApiClient.updateAlert(editTarget.id, {
         name: editForm.name,
         schedule: cronSchedule,
@@ -247,7 +272,13 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
       return;
     }
 
-    const existingAlert = alerts.find(a => a.name === '아침 날씨 알림');
+    // 이름이 아니라 "같은 시각·같은 유형"으로 본다. 이름으로만 비교하던 시절에는
+    // 위저드로 만든 08시 날씨 알림에 다른 이름이 붙어 있으면 그대로 통과해,
+    // 같은 분에 알림톡이 두 통 나갔다.
+    const existingAlert = checkDuplicateAlert(
+      QUICK_WEATHER_PRESET.schedule,
+      QUICK_WEATHER_PRESET.alertTypes,
+    );
     if (existingAlert) {
       setError('이미 아침 날씨 알림이 설정되어 있습니다.');
       setTimeout(() => {
@@ -262,9 +293,9 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     try {
       const dto: CreateAlertDto = {
         userId,
-        name: '아침 날씨 알림',
-        schedule: '0 8 * * *',
-        alertTypes: ['weather', 'airQuality'],
+        name: QUICK_WEATHER_PRESET.name,
+        schedule: QUICK_WEATHER_PRESET.schedule,
+        alertTypes: [...QUICK_WEATHER_PRESET.alertTypes],
       };
 
       await alertApiClient.createAlert(dto);
@@ -282,7 +313,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     } finally {
       setIsSubmitting(false);
     }
-  }, [userId, alerts, reloadAlerts, setError, setSuccess, scheduleToastClear]);
+  }, [userId, checkDuplicateAlert, reloadAlerts, setError, setSuccess, scheduleToastClear]);
 
   // ESC key to close delete modal
   useEffect(() => {
@@ -313,6 +344,7 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     isEditing,
     savedRoutes,
     duplicateAlert,
+    hasQuickWeatherAlert,
     setError,
     setSuccess,
     setIsSubmitting,

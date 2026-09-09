@@ -4,8 +4,11 @@ import {
   generateAlertName,
   getNotificationTimes,
   getEffectiveTransports,
+  findDuplicateAlert,
+  QUICK_WEATHER_PRESET,
 } from './alert-utils';
 import type { Routine, TransportItem } from './types';
+import type { Alert } from '@infrastructure/api';
 
 const SUBWAY: TransportItem = {
   type: 'subway',
@@ -130,5 +133,56 @@ describe('getEffectiveTransports', () => {
 
     expect(getNotificationTimes(true, false, routine(), transports)).toHaveLength(1);
     expect(generateAlertName(true, transports)).toBe('날씨 알림');
+  });
+});
+
+describe('findDuplicateAlert — 같은 시각·같은 유형', () => {
+  // 서버에는 알림 중복 규칙이 없다(알림 경로에 ConflictException 0건).
+  // 이 함수가 유일한 방어선이라, 화면마다 다시 구현하면 화면마다 답이 갈린다.
+  const at = (id: string, name: string, schedule: string, alertTypes: string[]): Alert =>
+    ({ id, userId: 'u1', name, schedule, alertTypes, enabled: true }) as unknown as Alert;
+
+  const eightWeather = at('a1', '출근 날씨', '0 8 * * *', ['weather', 'airQuality']);
+
+  it('시각과 유형이 같으면 이름이 달라도 중복이다', () => {
+    // 이름으로만 비교하면 사용자가 지은 이름 하나로 규칙이 뚫린다.
+    expect(
+      findDuplicateAlert([eightWeather], '0 8 * * *', ['weather', 'airQuality']),
+    ).toBe(eightWeather);
+  });
+
+  it('유형 순서가 달라도 같은 집합이면 중복이다', () => {
+    expect(
+      findDuplicateAlert([eightWeather], '0 8 * * *', ['airQuality', 'weather']),
+    ).toBe(eightWeather);
+  });
+
+  it('시각이 다르면 중복이 아니다', () => {
+    expect(
+      findDuplicateAlert([eightWeather], '0 7 * * *', ['weather', 'airQuality']),
+    ).toBeNull();
+  });
+
+  it('유형이 다르면 중복이 아니다', () => {
+    expect(findDuplicateAlert([eightWeather], '0 8 * * *', ['weather'])).toBeNull();
+  });
+
+  it('excludeId로 지정한 알림은 후보에서 뺀다', () => {
+    // 수정 경로가 쓴다 — 자기 자신이 남아 있으면 시각을 그대로 둔 개명이 막힌다.
+    expect(
+      findDuplicateAlert([eightWeather], '0 8 * * *', ['weather', 'airQuality'], 'a1'),
+    ).toBeNull();
+  });
+
+  it('빠른 프리셋이 만드는 알림도 같은 규칙으로 걸린다', () => {
+    // 프리셋 버튼은 "매일 오전 8시 날씨+미세먼지"를 만든다. 위저드로 같은 알림을
+    // 이미 만들어 둔 사용자에게 버튼이 열려 있으면, 08시에 알림톡이 두 통 나간다.
+    expect(
+      findDuplicateAlert(
+        [eightWeather],
+        QUICK_WEATHER_PRESET.schedule,
+        QUICK_WEATHER_PRESET.alertTypes,
+      ),
+    ).toBe(eightWeather);
   });
 });
