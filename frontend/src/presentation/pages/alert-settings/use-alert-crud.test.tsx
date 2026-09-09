@@ -8,6 +8,7 @@ const mockGetAlertsByUser = vi.fn();
 const mockToggleAlert = vi.fn();
 const mockDeleteAlert = vi.fn();
 const mockCreateAlert = vi.fn();
+const mockUpdateAlert = vi.fn();
 
 vi.mock('@infrastructure/api', () => ({
   alertApiClient: {
@@ -15,7 +16,7 @@ vi.mock('@infrastructure/api', () => ({
     toggleAlert: (...args: unknown[]) => mockToggleAlert(...args),
     deleteAlert: (...args: unknown[]) => mockDeleteAlert(...args),
     createAlert: (...args: unknown[]) => mockCreateAlert(...args),
-    updateAlert: vi.fn(),
+    updateAlert: (...args: unknown[]) => mockUpdateAlert(...args),
   },
 }));
 
@@ -310,5 +311,140 @@ describe('useAlertCrud — 실패 사유 전달', () => {
     });
 
     expect(result.current.error).toBe('삭제에 실패했습니다.');
+  });
+});
+
+describe('useAlertCrud — 수정이 만드는 중복', () => {
+  // 생성은 같은 시각·같은 유형의 알림을 막는다(`AlertSettingsPage.tsx:117`).
+  // 서버에는 이 규칙이 없다(알림 경로에 ConflictException 0건) — 유일한 방어가
+  // 클라이언트다. 그런데 수정 경로에는 그 검사가 없어서, 생성이 거부하는 상태를
+  // 수정으로 만들 수 있었다. 결과는 같은 분에 같은 알림톡 두 통이다.
+  const alertEight: Alert = {
+    id: 'alert-1',
+    userId: USER_ID,
+    name: '아침 날씨 알림',
+    schedule: '0 8 * * *',
+    alertTypes: ['weather'],
+    enabled: true,
+  } as Alert;
+
+  const alertSeven: Alert = {
+    id: 'alert-2',
+    userId: USER_ID,
+    name: '출근 날씨 알림',
+    schedule: '0 7 * * *',
+    alertTypes: ['weather'],
+    enabled: true,
+  } as Alert;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    routesStub.current = { data: [], isError: false, refetch: vi.fn() };
+  });
+
+  it('다른 알림과 같은 시각·같은 유형이 되는 수정은 저장하지 않고 사유를 남긴다', async () => {
+    mockGetAlertsByUser.mockResolvedValue([alertEight, alertSeven]);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(2));
+
+    // 07:00 알림을 08:00으로 옮긴다 → 08:00 알림과 시각·유형이 모두 같아진다.
+    act(() => {
+      result.current.handleEditClick(alertSeven);
+    });
+    act(() => {
+      result.current.setEditForm({ name: '출근 날씨 알림', schedule: '08:00' });
+    });
+    await act(async () => {
+      await result.current.handleEditConfirm();
+    });
+
+    expect(mockUpdateAlert).not.toHaveBeenCalled();
+    expect(result.current.error).toContain('동일한 알림이 있습니다');
+    // 모달은 열린 채로 둔다 — 사유를 읽고 시각을 고칠 수 있어야 한다.
+    expect(result.current.editTarget).not.toBeNull();
+  });
+
+  it('이름만 바꾸는 수정은 자기 자신 때문에 막히지 않는다', async () => {
+    // 중복 후보에서 편집 대상을 빼지 않으면 시각을 그대로 둔 개명이 전부 막힌다.
+    mockGetAlertsByUser.mockResolvedValue([alertEight]);
+    mockUpdateAlert.mockResolvedValue({});
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    act(() => {
+      result.current.handleEditClick(alertEight);
+    });
+    act(() => {
+      result.current.setEditForm({ name: '새 이름', schedule: '08:00' });
+    });
+    await act(async () => {
+      await result.current.handleEditConfirm();
+    });
+
+    expect(mockUpdateAlert).toHaveBeenCalledTimes(1);
+    expect(result.current.error).toBe('');
+  });
+});
+
+describe('useAlertCrud — 빠른 프리셋과 위저드의 규칙 일치', () => {
+  // 프리셋은 "매일 오전 8시 날씨+미세먼지"를 만든다. 예전에는 알림 **이름**이
+  // '아침 날씨 알림'인지만 봤다 — 위저드로 만든 같은 알림에 다른 이름이 붙어 있으면
+  // 그대로 통과해 08시에 알림톡이 두 통 나갔다. 정작 위저드는 같은 알림 생성을 막는다.
+  const eightWeatherNamedDifferently: Alert = {
+    id: 'alert-9',
+    userId: USER_ID,
+    name: '출근 날씨',
+    schedule: '0 8 * * *',
+    alertTypes: ['weather', 'airQuality'],
+    enabled: true,
+  } as Alert;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    routesStub.current = { data: [], isError: false, refetch: vi.fn() };
+  });
+
+  it('이름이 달라도 같은 알림이 있으면 프리셋이 만들지 않는다', async () => {
+    mockGetAlertsByUser.mockResolvedValue([eightWeatherNamedDifferently]);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.handleQuickWeatherAlert();
+    });
+
+    expect(mockCreateAlert).not.toHaveBeenCalled();
+    // 버튼도 같은 판단을 해야 한다 — 갈라지면 열린 버튼이 눌러야만 거절된다.
+    expect(result.current.hasQuickWeatherAlert).toBe(true);
+  });
+
+  it('같은 알림이 없으면 프리셋이 만든다 (대조군)', async () => {
+    // 과잉 차단 회귀 방지 — 08시가 아닌 알림은 프리셋을 막지 않는다.
+    mockGetAlertsByUser.mockResolvedValue([
+      { ...eightWeatherNamedDifferently, schedule: '0 7 * * *' } as Alert,
+    ]);
+    mockCreateAlert.mockResolvedValue(undefined);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(1));
+
+    expect(result.current.hasQuickWeatherAlert).toBe(false);
+
+    await act(async () => {
+      await result.current.handleQuickWeatherAlert();
+    });
+
+    expect(mockCreateAlert).toHaveBeenCalledTimes(1);
   });
 });

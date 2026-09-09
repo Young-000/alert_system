@@ -6,6 +6,12 @@ interface EditAlertModalProps {
   /** 수정 전 원본 크론. 하루 여러 번 울리는 알림임을 사용자에게 보여주는 데 쓴다. */
   readonly originalSchedule: string;
   readonly isEditing: boolean;
+  /**
+   * 저장이 거절된 사유. 이 모달이 그리지 않으면 사유가 닿을 곳이 없다 —
+   * 사유를 렌더하는 다른 자리는 전부 위저드 안이고, 위저드는 알림이 하나라도
+   * 있으면 닫혀 있다(`AlertSettingsPage.tsx:193`). 수정은 목록에서만 열린다.
+   */
+  readonly error?: string;
   readonly onFormChange: (form: { name: string; schedule: string }) => void;
   readonly onConfirm: () => void;
   readonly onCancel: () => void;
@@ -15,6 +21,7 @@ export function EditAlertModal({
   editForm,
   originalSchedule,
   isEditing,
+  error,
   onFormChange,
   onConfirm,
   onCancel,
@@ -82,6 +89,11 @@ export function EditAlertModal({
           <p className="muted" style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
             알림 유형 변경은 새로운 알림을 생성해주세요.
           </p>
+          {error && (
+            <p className="notice error" role="alert" style={{ marginTop: '0.5rem' }}>
+              {error}
+            </p>
+          )}
         </div>
         <div className="modal-actions">
           <button

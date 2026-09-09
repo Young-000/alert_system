@@ -1,7 +1,54 @@
+import type { Alert, AlertType } from '@infrastructure/api';
 import type { TransportItem, Routine } from './types';
 import { TRANSPORT_NOTIFY_OFFSET_MIN } from './types';
+import { normalizeCronForComparison } from './cron-utils';
 
 const MINUTES_PER_HOUR = 60;
+
+/**
+ * "빠른 알림 설정" 프리셋이 만드는 알림. 버튼의 잠금 조건과 생성 요청이
+ * **같은 값**을 봐야 한다 — 갈라지면 버튼은 열려 있는데 누르면 거절되거나,
+ * 그 반대가 된다.
+ */
+export const QUICK_WEATHER_PRESET = {
+  name: '아침 날씨 알림',
+  schedule: '0 8 * * *',
+  alertTypes: ['weather', 'airQuality'] as AlertType[],
+} as const;
+
+/**
+ * 같은 시각에 같은 유형으로 울리는 알림. 있으면 그 알림을, 없으면 null.
+ *
+ * 서버에는 이 규칙이 없다(알림 경로에 `ConflictException` 0건) — 여기가 유일한
+ * 방어선이다. 그래서 규칙을 **한 곳에만** 둔다. 예전에는 위저드가 이 규칙으로
+ * 막는 동안 빠른 프리셋은 알림 **이름**만 비교했다. 사용자가 위저드로 만든
+ * 08시 날씨 알림에 다른 이름을 붙였으면 프리셋 버튼이 열려 있었고, 누르면
+ * 같은 분에 같은 알림톡이 두 통 나가는 상태가 만들어졌다.
+ *
+ * @param excludeId 수정 경로가 편집 대상 자신을 후보에서 뺄 때 쓴다.
+ */
+export function findDuplicateAlert(
+  alerts: readonly Alert[],
+  schedule: string,
+  alertTypes: readonly AlertType[],
+  excludeId?: string,
+): Alert | null {
+  const normalizedNew = normalizeCronForComparison(schedule);
+  const newTypes = [...alertTypes].sort();
+
+  return (
+    alerts.find((existing) => {
+      if (existing.id === excludeId) return false;
+      if (normalizeCronForComparison(existing.schedule) !== normalizedNew) return false;
+
+      const existingTypes = [...existing.alertTypes].sort();
+      return (
+        existingTypes.length === newTypes.length &&
+        existingTypes.every((type, i) => type === newTypes[i])
+      );
+    }) ?? null
+  );
+}
 
 interface TimeOfDay {
   hour: number;
