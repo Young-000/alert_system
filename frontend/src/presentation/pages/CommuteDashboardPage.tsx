@@ -10,6 +10,7 @@ import {
   StopwatchTab,
   AnalyticsTab,
   BehaviorTab,
+  TabLoadError,
 } from './commute-dashboard';
 
 export function CommuteDashboardPage(): JSX.Element {
@@ -128,6 +129,7 @@ export function CommuteDashboardPage(): JSX.Element {
               onSelectRoute={setSelectedRouteId}
               routeComparison={routeComparison}
               comparisonError={comparisonError}
+              onRetry={retryLoad}
             />
           )}
 
@@ -168,9 +170,15 @@ export function CommuteDashboardPage(): JSX.Element {
 
           {activeTab === 'analytics' && (
             routeAnalytics.length > 0 ? (
-              <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} />
+              <AnalyticsTab routeAnalytics={routeAnalytics} analyticsError={analyticsError} onRetry={retryLoad} />
             ) : (
-              <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>{analyticsError || '분석 데이터가 아직 없습니다.'}</div>
+              analyticsError ? (
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <TabLoadError message={analyticsError} onRetry={retryLoad} />
+                </div>
+              ) : (
+                <div className="muted" role="status" style={{ padding: '2rem', textAlign: 'center' }}>분석 데이터가 아직 없습니다.</div>
+              )
             )
           )}
 
@@ -179,6 +187,7 @@ export function CommuteDashboardPage(): JSX.Element {
               behaviorAnalytics={behaviorAnalytics}
               behaviorPatterns={behaviorPatterns}
               behaviorError={behaviorError}
+              onRetry={retryLoad}
             />
           )}
         </div>

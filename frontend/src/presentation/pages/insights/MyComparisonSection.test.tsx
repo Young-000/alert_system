@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MyComparisonSection } from './MyComparisonSection';
 import { commuteApiClient, getCommuteApiClient } from '@infrastructure/api';
 import type { Mocked, MockedFunction } from 'vitest';
@@ -182,5 +183,27 @@ describe('MyComparisonSection', () => {
       },
       { timeout: 3000 },
     );
+  });
+
+  // 실패 문구만 있고 되부를 길이 없으면 이 화면은 막다른 길이 된다.
+  it('API 에러 시 다시 시도로 재조회한다', async () => {
+    localStorage.setItem('userId', 'test-user');
+    mockCommuteApiClient.getMyComparison.mockRejectedValue(new Error('Network error'));
+
+    renderSection();
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('비교 데이터를 불러올 수 없습니다')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+
+    const callsBefore = mockCommuteApiClient.getMyComparison.mock.calls.length;
+    await userEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+
+    await waitFor(() => {
+      expect(mockCommuteApiClient.getMyComparison.mock.calls.length).toBeGreaterThan(callsBefore);
+    });
   });
 });

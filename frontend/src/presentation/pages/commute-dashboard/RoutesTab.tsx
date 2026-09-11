@@ -5,6 +5,7 @@ import type {
 import { CheckpointAnalysisBar } from './CheckpointAnalysisBar';
 import { RouteComparisonChart } from './RouteComparisonChart';
 import { DetailedRouteComparison } from './DetailedRouteComparison';
+import { TabLoadError } from './TabLoadError';
 
 interface RoutesTabProps {
   stats: CommuteStatsResponse;
@@ -12,6 +13,7 @@ interface RoutesTabProps {
   onSelectRoute: (routeId: string) => void;
   routeComparison: RouteComparisonResponse | null;
   comparisonError?: string;
+  onRetry?: () => void;
 }
 
 export function RoutesTab({
@@ -20,6 +22,7 @@ export function RoutesTab({
   onSelectRoute,
   routeComparison,
   comparisonError,
+  onRetry,
 }: RoutesTabProps): JSX.Element {
   const selectedRouteStats = stats.routeStats.find((r) => r.routeId === selectedRouteId);
 
@@ -110,9 +113,7 @@ export function RoutesTab({
       )}
 
       {/* A-4: Detailed Route Comparison */}
-      {comparisonError && (
-        <p className="muted" role="alert" style={{ margin: '0.75rem 0' }}>{comparisonError}</p>
-      )}
+      {comparisonError && <TabLoadError message={comparisonError} onRetry={onRetry} />}
       {routeComparison && routeComparison.routes.length >= 2 && (
         <DetailedRouteComparison routeComparison={routeComparison} />
       )}

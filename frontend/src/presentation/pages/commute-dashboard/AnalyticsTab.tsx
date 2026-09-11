@@ -1,17 +1,17 @@
 import type { RouteAnalyticsResponse } from '@infrastructure/api/commute-api.client';
 import { RouteAnalyticsCard } from './RouteAnalyticsCard';
+import { TabLoadError } from './TabLoadError';
 
 interface AnalyticsTabProps {
   routeAnalytics: RouteAnalyticsResponse[];
   analyticsError?: string;
+  onRetry?: () => void;
 }
 
-export function AnalyticsTab({ routeAnalytics, analyticsError }: AnalyticsTabProps): JSX.Element {
+export function AnalyticsTab({ routeAnalytics, analyticsError, onRetry }: AnalyticsTabProps): JSX.Element {
   return (
     <div className="tab-content" role="tabpanel" id="tabpanel-analytics" aria-labelledby="tab-analytics">
-      {analyticsError && (
-        <p className="muted" role="alert" style={{ margin: '0 0 0.75rem' }}>{analyticsError}</p>
-      )}
+      {analyticsError && <TabLoadError message={analyticsError} onRetry={onRetry} />}
       {/* Analytics Summary */}
       <section className="analytics-summary-section">
         <h2>경로 분석 점수</h2>
