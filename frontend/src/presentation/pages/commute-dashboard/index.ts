@@ -13,3 +13,4 @@ export { RouteComparisonChart } from './RouteComparisonChart';
 export { DetailedRouteComparison } from './DetailedRouteComparison';
 export { LoadMoreButton } from './LoadMoreButton';
 export type { StopwatchRecord } from './types';
+export { TabLoadError } from './TabLoadError';

@@ -18,6 +18,7 @@ import { BriefingSection } from './BriefingSection';
 import { PatternInsightsCard } from './PatternInsightsCard';
 import { DelayAlertBanner } from './DelayAlertBanner';
 import { NeighborSection } from './NeighborSection';
+import { LoadErrorNotice } from '@presentation/components/LoadErrorNotice';
 
 export function HomePage(): JSX.Element {
   const data = useHomeData();
@@ -73,9 +74,11 @@ export function HomePage(): JSX.Element {
         <ModeBadge mode={mode} onToggle={toggleMode} />
       </header>
 
-      {data.streak != null && (
+      {data.streak != null ? (
         <StreakBadge streak={data.streak} />
-      )}
+      ) : data.streakError ? (
+        <LoadErrorNotice message={data.streakError} onRetry={data.retryLoad} />
+      ) : null}
 
       <MissionQuickCard />
 
@@ -85,6 +88,7 @@ export function HomePage(): JSX.Element {
         error={data.weeklyReportError}
         weekOffset={data.weekOffset}
         onWeekChange={data.setWeekOffset}
+        onRetry={data.retryLoad}
       />
 
       {data.activeRoute && (

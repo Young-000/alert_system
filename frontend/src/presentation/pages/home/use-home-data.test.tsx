@@ -42,8 +42,16 @@ vi.mock('@infrastructure/query/use-air-quality-query', () => ({
 vi.mock('@infrastructure/query/use-commute-stats-query', () => ({
   useCommuteStatsQuery: () => ({ ...idleQuery, data: null }),
 }));
+// 스트릭은 실패 경로를 따로 재현해야 해서 error/refetch를 테스트가 쥔다.
+let mockStreakError: Error | null = null;
+const mockStreakRefetch = vi.fn();
 vi.mock('@infrastructure/query/use-streak-query', () => ({
-  useStreakQuery: () => ({ ...idleQuery, data: null }),
+  useStreakQuery: () => ({
+    isLoading: false,
+    data: null,
+    error: mockStreakError,
+    refetch: mockStreakRefetch,
+  }),
 }));
 vi.mock('@infrastructure/query/use-weekly-report-query', () => ({
   useWeeklyReportQuery: () => ({ ...idleQuery, data: null }),
@@ -177,5 +185,37 @@ describe('useHomeData — 전제가 사라진 추천을 화면에 남기지 않�
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(result.current.departurePrediction).toEqual(CONFIDENT_PREDICTION);
+  });
+});
+
+describe('useHomeData — 스트릭 조회 실패를 빈 상태로 위장하지 않는다', () => {
+  beforeEach(() => {
+    mockStreakError = null;
+    mockStreakRefetch.mockClear();
+  });
+
+  it('스트릭 조회가 실패하면 문구를 내보낸다', () => {
+    mockStreakError = new Error('boom');
+    const { result } = renderHomeData();
+
+    expect(result.current.streak).toBeNull();
+    expect(result.current.streakError).toBe('스트릭 정보를 불러올 수 없습니다');
+  });
+
+  // 대조군 — 데이터가 없을 뿐인 신규 사용자는 실패가 아니다.
+  it('실패가 아니면 문구가 비어 있다', () => {
+    const { result } = renderHomeData();
+
+    expect(result.current.streak).toBeNull();
+    expect(result.current.streakError).toBe('');
+  });
+
+  it('다시 시도가 스트릭도 다시 부른다', () => {
+    mockStreakError = new Error('boom');
+    const { result } = renderHomeData();
+
+    result.current.retryLoad();
+
+    expect(mockStreakRefetch).toHaveBeenCalled();
   });
 });

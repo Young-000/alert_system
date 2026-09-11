@@ -62,6 +62,7 @@ export interface UseHomeDataReturn {
   nextAlert: { time: string; label: string } | null;
   commuteStats: CommuteStatsResponse | null;
   streak: StreakResponse | null;
+  streakError: string;
   weeklyReport: WeeklyReportResponse | null;
   weeklyReportLoading: boolean;
   weeklyReportError: string;
@@ -105,6 +106,10 @@ export function useHomeData(): UseHomeDataReturn {
   const routes = useMemo(() => routesQuery.data ?? [], [routesQuery.data]);
   const commuteStats = statsQuery.data ?? null;
   const streak = streakQuery.data ?? null;
+  // 스트릭은 실패해도 화면에서 배지가 사라질 뿐이라, 알리지 않으면 "스트릭이 끊겼다"로
+  // 읽힌다 — 이 앱의 재방문 동기가 조회 실패로 지워진 것처럼 보이는 자리다.
+  // 주간 리포트와 같은 계약으로 실패를 문구로 내보낸다.
+  const streakError = streakQuery.error ? '스트릭 정보를 불러올 수 없습니다' : '';
   const weeklyReport = weeklyReportQuery.data ?? null;
   const weeklyReportLoading = weeklyReportQuery.isLoading;
   const weeklyReportError = weeklyReportQuery.error ? '주간 리포트를 불러올 수 없습니다' : '';
@@ -285,6 +290,7 @@ export function useHomeData(): UseHomeDataReturn {
     nextAlert,
     commuteStats,
     streak,
+    streakError,
     weeklyReport,
     weeklyReportLoading,
     weeklyReportError,
@@ -293,12 +299,15 @@ export function useHomeData(): UseHomeDataReturn {
     isDefaultLocation: userLocation.isDefault,
     isCommuteStarting,
     handleStartCommute,
+    // 스트릭·주간 리포트는 `retry: false`라 스스로 다시 시도하지 않는다.
+    // 재시도는 이 버튼이 유일한 경로이므로 둘 다 여기에 포함해야 한다.
     retryLoad: useCallback(() => {
       void alertsQuery.refetch();
       void routesQuery.refetch();
       void statsQuery.refetch();
+      void streakQuery.refetch();
       void weeklyReportQuery.refetch();
-    }, [alertsQuery, routesQuery, statsQuery, weeklyReportQuery]),
+    }, [alertsQuery, routesQuery, statsQuery, streakQuery, weeklyReportQuery]),
     navigate,
   };
 }

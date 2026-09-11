@@ -2,23 +2,24 @@ import type { BehaviorAnalytics, UserPattern } from '@infrastructure/api/behavio
 import { EmptyState } from '../../components/EmptyState';
 import { StatCard } from '../../components/StatCard';
 import { MIN_DATA_FOR_BEHAVIOR } from './types';
+import { TabLoadError } from './TabLoadError';
 
 interface BehaviorTabProps {
   behaviorAnalytics: BehaviorAnalytics | null;
   behaviorPatterns: UserPattern[];
   behaviorError?: string;
+  onRetry?: () => void;
 }
 
 export function BehaviorTab({
   behaviorAnalytics,
   behaviorPatterns,
   behaviorError,
+  onRetry,
 }: BehaviorTabProps): JSX.Element {
   return (
     <div className="tab-content" role="tabpanel" id="tabpanel-behavior" aria-labelledby="tab-behavior">
-      {behaviorError && (
-        <p className="muted" role="alert" style={{ margin: '0 0 0.75rem' }}>{behaviorError}</p>
-      )}
+      {behaviorError && <TabLoadError message={behaviorError} onRetry={onRetry} />}
       {behaviorAnalytics?.hasEnoughData ? (
         <>
           <section className="stats-section stats-compact">

@@ -4,7 +4,7 @@ import { useMyComparison } from '@infrastructure/query/use-insights-query';
 
 export function MyComparisonSection(): JSX.Element {
   const { isLoggedIn } = useAuth();
-  const { data, isLoading, error } = useMyComparison(isLoggedIn);
+  const { data, isLoading, error, refetch } = useMyComparison(isLoggedIn);
 
   if (!isLoggedIn) {
     return (
@@ -41,6 +41,9 @@ export function MyComparisonSection(): JSX.Element {
         <p className="insight-comparison-error" role="alert">
           비교 데이터를 불러올 수 없습니다
         </p>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => void refetch()}>
+          다시 시도
+        </button>
       </section>
     );
   }
