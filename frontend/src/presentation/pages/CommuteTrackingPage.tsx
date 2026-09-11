@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@presentation/hooks/useAuth';
 import { getApiErrorStatus } from '@infrastructure/query/error-utils';
+import { queryKeys } from '@infrastructure/query/query-keys';
 import {
   getCommuteApiClient,
   type RouteResponse,
@@ -15,6 +17,35 @@ export function CommuteTrackingPage(): JSX.Element {
   const [searchParams] = useSearchParams();
   const { userId } = useAuth();
   const commuteApi = getCommuteApiClient();
+  const queryClient = useQueryClient();
+
+  /**
+   * 세션 완료가 서버에서 바꾼 것들을 캐시에서 지운다.
+   *
+   * 완료 한 번이 네 갈래를 함께 바꾼다 — 기록 통계·스트릭(+마일스톤)·주간 리포트·
+   * 분석 요약. 서버는 `completeSession` 응답과 같은 요청 안에서 이걸 갱신하는데
+   * (`commute.controller` -> `UpdateStreakUseCase.recordCompletion`), 화면이
+   * 캐시를 그대로 두면 `홈으로`를 눌러도 출근 전 숫자가 그대로 남는다.
+   * 조회 훅들이 staleTime 5~15분 + `refetchOnWindowFocus: false`라 마운트해도
+   * 다시 받아오지 않기 때문이다 — 방금 채운 스트릭이 어제 값으로 보이고,
+   * 주간 진행 막대가 제자리다.
+   *
+   * 각 훅의 staleTime 주석("세션 완료 시 invalidate", "통계는 트래킹 완료 후에만
+   * 변함")이 전제하던 무효화가 바로 이것이다.
+   *
+   * 키는 전부 접두사(`.all`)로 지운다. 통계는 홈 7일·리포트 30일로 days가 갈리고
+   * 주간 리포트는 weekOffset마다, 스트릭은 배지(milestones)까지 키가 따로 있어서
+   * 특정 키만 지우면 화면마다 다른 숫자가 남는다.
+   *
+   * 취소(`cancelSession`)에는 부르지 않는다 — 취소는 완료 기록을 만들지 않아
+   * 서버 통계가 그대로다. 거기까지 지우면 바뀐 것도 없이 네 갈래를 다시 받는다.
+   */
+  const invalidateCompletionCaches = useCallback((): void => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.commuteStats.all });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.streak.all });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.weeklyReport.all });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.analyticsSummary.all });
+  }, [queryClient]);
 
   // State from navigation (홈에서 전달)
   const navState = location.state as {
@@ -189,8 +220,19 @@ export function CommuteTrackingPage(): JSX.Element {
         const recordedIds = new Set(session.checkpointRecords.map(r => r.checkpointId));
         const unrecorded = route.checkpoints.filter(cp => !recordedIds.has(cp.id));
 
+        // 자동 기록은 보조 단계다 — 실패해도 완료를 막지 않는다.
+        //
+        // Promise.all로 묶으면 한 건만 실패해도 아래 completeSession에 닿지 못한다.
+        // 그런데 그때 성공한 기록은 이미 서버에 남아 있고, 이 화면의 `session`은
+        // 갱신되지 않아 `recordedIds`가 옛 상태 그대로다. 그래서 다시 `도착`을 눌러도
+        // 같은 체크포인트를 또 보내고, 서버는 이번엔 400 'Checkpoint already recorded'로
+        // 거절한다 — 한 번 부분 실패한 세션은 이 화면에서 영영 완료되지 않고,
+        // 안내만 "네트워크 연결을 확인해주세요"로 반복된다(실제로는 네트워크가 멀쩡하다).
+        //
+        // 서버의 completeSession은 체크포인트가 다 기록돼 있기를 요구하지 않고,
+        // 여기서 채우는 값도 `actualWaitTime: 0` 자리값이다. 완료를 막을 근거가 없다.
         if (unrecorded.length > 0) {
-          await Promise.all(unrecorded.map(cp =>
+          await Promise.allSettled(unrecorded.map(cp =>
             commuteApi.recordCheckpoint({
               sessionId: session.id,
               checkpointId: cp.id,
@@ -202,6 +244,7 @@ export function CommuteTrackingPage(): JSX.Element {
 
       const completed = await commuteApi.completeSession({ sessionId: session.id });
       setSession(completed);
+      invalidateCompletionCaches();
     } catch (err) {
       const message = getApiErrorStatus(err) === 401
         ? '로그인이 만료되었습니다. 다시 로그인해주세요.'

@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryKeys } from '@infrastructure/query/query-keys';
 import { CommuteTrackingPage } from './CommuteTrackingPage';
 import {
   commuteApiClient,
@@ -38,11 +40,15 @@ vi.mock('@presentation/hooks/useAuth', () => ({
 const mockCommuteApi = commuteApiClient as Mocked<typeof commuteApiClient>;
 const mockGetCommuteApi = getCommuteApiClient as MockedFunction<typeof getCommuteApiClient>;
 
+let testQueryClient: QueryClient;
+
 function renderPage(): ReturnType<typeof render> {
   return render(
-    <MemoryRouter>
-      <CommuteTrackingPage />
-    </MemoryRouter>
+    <QueryClientProvider client={testQueryClient}>
+      <MemoryRouter>
+        <CommuteTrackingPage />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -132,6 +138,9 @@ const mockCompletedSession = {
 describe('CommuteTrackingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    testQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    });
     vi.useFakeTimers({ shouldAdvanceTime: true });
     localStorage.clear();
     mockLocationState = null;
@@ -279,6 +288,169 @@ describe('CommuteTrackingPage', () => {
     expect(screen.getByText('42')).toBeInTheDocument(); // duration
     expect(screen.getByText('분')).toBeInTheDocument();
     expect(screen.getByText('홈으로')).toBeInTheDocument();
+  });
+
+  // --- 완료 직전 자동 기록(best-effort)과 재시도 ---
+  //
+  // `도착`을 누르면 아직 기록되지 않은 체크포인트를 먼저 자동 기록하고 세션을 완료한다.
+  // 이 자동 기록은 `actualWaitTime: 0` 자리값을 채우는 보조 단계일 뿐이고,
+  // 서버의 completeSession은 체크포인트가 다 기록돼 있기를 요구하지 않는다.
+  // 그런데 이걸 Promise.all로 묶으면 한 건만 실패해도 완료 자체가 막힌다.
+  it('should still complete the session when one auto-record fails', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'route-1' };
+    mockCommuteApi.recordCheckpoint.mockImplementation(({ checkpointId }) =>
+      checkpointId === 'cp-2'
+        ? Promise.reject(new Error('API Error 500: {"message":"boom"}'))
+        : Promise.resolve(mockInProgressSession),
+    );
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('도착')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('도착'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('출근 완료!')).toBeInTheDocument();
+    });
+    expect(mockCommuteApi.completeSession).toHaveBeenCalledWith({ sessionId: 'session-1' });
+  });
+
+  // 재시도 경로. 앞선 시도에서 일부가 이미 서버에 기록됐다면 서버는 그 체크포인트에
+  // 400 'Checkpoint already recorded'를 준다. 화면의 session 상태는 갱신되지 않으므로
+  // 다시 눌러도 같은 체크포인트를 또 보낸다 — 이걸 실패로 취급하면 이 화면에서는
+  // 세션을 영영 완료할 수 없고, 안내는 계속 "네트워크 연결을 확인해주세요"라고 말한다.
+  it('should complete the session when every checkpoint is already recorded', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'route-1' };
+    mockCommuteApi.recordCheckpoint.mockRejectedValue(
+      new Error('API Error 400: {"message":"Checkpoint already recorded for this session"}'),
+    );
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('도착')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('도착'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('출근 완료!')).toBeInTheDocument();
+    });
+  });
+
+  // 대조군: 완료 요청 자체가 실패하면 지금처럼 실패라고 말해야 한다.
+  // 위 두 건이 '무조건 완료된 척'으로 번지지 않았는지 고정한다.
+  it('should show an error when the completion request itself fails', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'route-1' };
+    mockCommuteApi.completeSession.mockRejectedValue(
+      new Error('API Error 500: {"message":"boom"}'),
+    );
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('도착')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('도착'));
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('기록 완료에 실패했습니다. 네트워크 연결을 확인해주세요.'),
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText('출근 완료!')).not.toBeInTheDocument();
+  });
+
+  // --- 세션 완료 후 캐시 무효화 ---
+  //
+  // 완료 응답은 서버에서 스트릭·기록·주간 리포트를 함께 바꾼다
+  // (commute.controller: completeSession -> recordCompletion). 그런데 이 화면이
+  // 캐시를 건드리지 않으면 홈은 출근 전 숫자를 그대로 그린다 — 조회 훅들이
+  // staleTime 5~15분에 refetchOnWindowFocus: false 라서 `홈으로`를 눌러도
+  // 다시 받아오지 않는다. 훅 주석이 "세션 완료 시 invalidate"라고 약속한 그 무효화다.
+  it('should invalidate stats/streak/report caches after completing a session', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'route-1' };
+    const invalidateSpy = vi.spyOn(testQueryClient, 'invalidateQueries');
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('도착')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('도착'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('출근 완료!')).toBeInTheDocument();
+    });
+
+    const invalidatedKeys = invalidateSpy.mock.calls.map(
+      ([arg]) => JSON.stringify((arg as { queryKey: unknown }).queryKey),
+    );
+
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.commuteStats.all));
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.streak.all));
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.weeklyReport.all));
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.analyticsSummary.all));
+  });
+
+  // 대조군: 완료하지 않고 취소하면 서버 통계는 그대로다. 취소까지 무효화하면
+  // 홈이 바뀐 것도 없는데 매번 네 갈래를 다시 받아온다.
+  it('should not invalidate stats caches when cancelling a session', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockLocationState = { routeId: 'route-1' };
+    const invalidateSpy = vi.spyOn(testQueryClient, 'invalidateQueries');
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('도착')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('기록 취소'));
+
+    await waitFor(() => {
+      expect(screen.getByText('취소하기')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('취소하기'));
+    });
+
+    await waitFor(() => {
+      expect(mockCommuteApi.cancelSession).toHaveBeenCalledWith('session-1');
+    });
+
+    const invalidatedKeys = invalidateSpy.mock.calls.map(
+      ([arg]) => JSON.stringify((arg as { queryKey: unknown }).queryKey),
+    );
+    expect(invalidatedKeys).not.toContain(JSON.stringify(queryKeys.commuteStats.all));
   });
 
   it('should show comparison text when duration differs from expected', async () => {
