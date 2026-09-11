@@ -153,6 +153,10 @@ export default function HomeScreen(): React.JSX.Element {
             returnMinutes={departure.returnMinutes}
             isLoading={departure.isLoading}
             error={departure.error}
+            // 홈의 "다시 시도"(retryLoad)도 당겨서 새로고침(onRefresh)도
+            // `useHomeData.fetchAllData`만 부른다 — 스마트 출발은 별개 훅이라
+            // 어느 쪽으로도 되살아나지 않는다. 되부르는 길은 이것 하나다.
+            onRetry={() => void departure.refresh()}
           />
         )}
 

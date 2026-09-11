@@ -17,6 +17,11 @@ type SmartDepartureCardProps = {
   isLoading: boolean;
   /** 조회 실패 사유. 있으면 설정이 없는 척하지 않는다. */
   error: string | null;
+  /**
+   * 조회 실패에서 되부르는 길. 필수로 둔다 — 옵셔널이면 홈이 넘기지 않아도
+   * 타입이 통과해서, 카드가 실패 문구만 띄우고 끝나는 상태로 되돌아간다.
+   */
+  onRetry: () => void;
 };
 
 type CardState = 'relaxed' | 'warning' | 'urgent' | 'past' | 'departed' | 'empty';
@@ -118,6 +123,7 @@ export function SmartDepartureCard({
   returnMinutes,
   isLoading,
   error,
+  onRetry,
 }: SmartDepartureCardProps): React.JSX.Element {
   const router = useRouter();
 
@@ -160,6 +166,10 @@ export function SmartDepartureCard({
 
   // 조회 실패 — 빈 상태로 위장하지 않는다. 설정이 없다고 말하면 이미 설정한
   // 사용자가 다시 만들게 되고, 서버는 409로 거절한다.
+  //
+  // 다음 행동은 재조회다. 설정 화면으로 보내면 길이 끊긴다 — 그 화면이 보는 것은
+  // `GET /smart-departure/settings`인데 여기서 실패한 것은 `GET /smart-departure/today`라,
+  // 설정은 멀쩡히 뜨고 이 카드만 실패로 남는다.
   if (cardStateKind === 'error') {
     return (
       <View style={[styles.card, { borderColor: colors.gray200 }]}>
@@ -171,11 +181,11 @@ export function SmartDepartureCard({
         </Text>
         <Pressable
           style={styles.retryButton}
-          onPress={handleSetup}
+          onPress={onRetry}
           accessibilityRole="button"
-          accessibilityLabel="스마트 출발 설정 열기"
+          accessibilityLabel="다시 시도"
         >
-          <Text style={styles.retryButtonText}>설정 확인하기</Text>
+          <Text style={styles.retryButtonText}>다시 시도</Text>
         </Pressable>
       </View>
     );

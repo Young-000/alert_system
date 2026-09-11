@@ -7,6 +7,7 @@ import {
   useWeeklyStatsQuery,
 } from '@infrastructure/query';
 import type { MissionWithRecord, MissionScore } from '@infrastructure/api';
+import { LoadErrorNotice } from '../components/LoadErrorNotice';
 import {
   formatTodayKST,
   getKstDayOfWeek,
@@ -267,7 +268,11 @@ export function MissionsPage(): JSX.Element {
     refetch: refetchDaily,
   } = useDailyStatusQuery();
 
-  const { data: weeklyStats } = useWeeklyStatsQuery();
+  const {
+    data: weeklyStats,
+    error: weeklyError,
+    refetch: refetchWeekly,
+  } = useWeeklyStatsQuery();
 
   const toggleMutation = useToggleCheckMutation();
 
@@ -446,10 +451,18 @@ export function MissionsPage(): JSX.Element {
           ) : null}
 
           {/* Weekly overview */}
+          {/* 조회 실패도 data=undefined다. 그대로 두면 "이번 주"가 통째로 사라져
+              어제까지 있던 기록이 지워진 것처럼 보인다 — 실패는 실패라고 말하고
+              되부를 길을 하나 남긴다. 로딩 중에는 여전히 아무것도 그리지 않는다. */}
           {weeklyStats ? (
             <WeeklyOverview
               dailyScores={weeklyStats.dailyScores}
               weeklyRate={weeklyStats.completionRate}
+            />
+          ) : weeklyError ? (
+            <LoadErrorNotice
+              message="주간 통계를 불러오지 못했어요."
+              onRetry={() => void refetchWeekly()}
             />
           ) : null}
         </>
