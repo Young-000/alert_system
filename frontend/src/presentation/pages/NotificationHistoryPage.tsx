@@ -131,6 +131,14 @@ export function NotificationHistoryPage(): JSX.Element {
   }, [userId]);
 
   /**
+   * 기간 버튼에는 disabled가 없어 연달아 누르면 요청이 여러 개 동시에 뜬다.
+   * 이 ref가 마지막으로 보낸 요청을 기억해, 늦게 도착한 옛 응답이 화면을
+   * 덮어쓰지 못하게 막는다 — effect 안이었다면 cleanup이 하던 일이지만
+   * 재시도 버튼과 공유하려고 밖으로 뺀 함수라 스스로 들고 있어야 한다.
+   */
+  const statsRequestRef = useRef(0);
+
+  /**
    * 발송 통계 조회. 기간 필터 변경과 재시도가 같은 경로를 탄다.
    *
    * 실패하면 화면에 남은 숫자를 **지운다.** 이전 기간의 숫자를 그대로 두면
@@ -139,16 +147,21 @@ export function NotificationHistoryPage(): JSX.Element {
    */
   const loadStats = useCallback(async (period: PeriodFilter): Promise<void> => {
     if (!userId) return;
+    const requestId = ++statsRequestRef.current;
+    const isLatestRequest = (): boolean => requestId === statsRequestRef.current;
     setIsStatsLoading(true);
     try {
       const result = await notificationApiClient.getStats(PERIOD_DAYS[period]);
+      if (!isLatestRequest()) return;
       setStats(result);
       setStatsError('');
     } catch {
+      if (!isLatestRequest()) return;
       setStats(null);
       setStatsError(STATS_LOAD_FAILED);
     } finally {
-      setIsStatsLoading(false);
+      // 뒤처진 요청이 스피너를 내리면 진행 중인 최신 조회가 다 끝난 것처럼 보인다.
+      if (isLatestRequest()) setIsStatsLoading(false);
     }
   }, [userId]);
 

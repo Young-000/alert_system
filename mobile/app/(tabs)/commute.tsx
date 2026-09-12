@@ -48,6 +48,7 @@ export default function CommuteScreen(): React.JSX.Element {
     isLoading: isHistoryLoading,
     isRefreshing: isHistoryRefreshing,
     error: historyError,
+    statsError,
     refresh: refreshHistory,
   } = useNotificationHistory();
 
@@ -227,7 +228,11 @@ export default function CommuteScreen(): React.JSX.Element {
               />
             ) : (
               <>
-                <NotificationStatsSummary stats={stats} />
+                <NotificationStatsSummary
+                  stats={stats}
+                  error={statsError}
+                  onRetry={() => void refreshHistory()}
+                />
                 {historyItems.length === 0 ? (
                   <EmptyHistoryView />
                 ) : (
