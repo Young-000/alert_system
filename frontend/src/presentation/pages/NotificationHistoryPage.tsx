@@ -43,6 +43,12 @@ const PERIOD_DAYS: Record<PeriodFilter, number> = {
   '30d': 30,
 };
 
+/**
+ * 같은 화면의 기록 실패 문구('알림 기록을 불러올 수 없습니다.')와 어미를 맞춘다 —
+ * 한 화면 안에서 문체가 갈리면 그 자리에서 기계가 쓴 글처럼 읽힌다.
+ */
+const STATS_LOAD_FAILED = '발송 통계를 불러올 수 없습니다.';
+
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   success: { label: '발송 완료', className: 'status-success' },
   fallback: { label: '대체 발송', className: 'status-warning' },
@@ -80,6 +86,9 @@ export function NotificationHistoryPage(): JSX.Element {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [stats, setStats] = useState<NotificationStatsDto | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
+  // 통계는 기록과 독립된 하위 요청이다. 실패를 여기 담지 않으면 카드가 조용히
+  // 사라지기만 해서 "아직 발송된 알림이 없다"와 구분되지 않는다.
+  const [statsError, setStatsError] = useState('');
 
   const isFilterActive = typeFilter !== '' || periodFilter !== 'all';
 
@@ -121,6 +130,32 @@ export function NotificationHistoryPage(): JSX.Element {
     }
   }, [userId]);
 
+  /**
+   * 발송 통계 조회. 기간 필터 변경과 재시도가 같은 경로를 탄다.
+   *
+   * 실패하면 화면에 남은 숫자를 **지운다.** 이전 기간의 숫자를 그대로 두면
+   * 사용자가 방금 고른 기간의 값으로 읽는다 — 틀린 숫자를 보여주느니
+   * 못 불러왔다고 말하는 편이 정확하다.
+   */
+  const loadStats = useCallback(async (period: PeriodFilter): Promise<void> => {
+    if (!userId) return;
+    setIsStatsLoading(true);
+    try {
+      const result = await notificationApiClient.getStats(PERIOD_DAYS[period]);
+      setStats(result);
+      setStatsError('');
+    } catch {
+      setStats(null);
+      setStatsError(STATS_LOAD_FAILED);
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, [userId]);
+
+  const retryStats = useCallback((): void => {
+    void loadStats(periodFilter);
+  }, [loadStats, periodFilter]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -146,6 +181,9 @@ export function NotificationHistoryPage(): JSX.Element {
 
       if (statsResult.status === 'fulfilled') {
         setStats(statsResult.value);
+        setStatsError('');
+      } else {
+        setStatsError(STATS_LOAD_FAILED);
       }
 
       setIsLoading(false);
@@ -164,23 +202,9 @@ export function NotificationHistoryPage(): JSX.Element {
       return;
     }
     if (!userId) return;
-    let isMounted = true;
 
-    const loadStats = async (): Promise<void> => {
-      setIsStatsLoading(true);
-      try {
-        const result = await notificationApiClient.getStats(PERIOD_DAYS[periodFilter]);
-        if (isMounted) setStats(result);
-      } catch {
-        // stats fetch failure is non-critical; keep existing stats
-      } finally {
-        if (isMounted) setIsStatsLoading(false);
-      }
-    };
-
-    loadStats();
-    return () => { isMounted = false; };
-  }, [userId, periodFilter]);
+    void loadStats(periodFilter);
+  }, [userId, periodFilter, loadStats]);
 
   if (!userId) {
     return (
@@ -215,7 +239,12 @@ export function NotificationHistoryPage(): JSX.Element {
         </div>
       )}
 
-      <NotificationStats stats={stats} isLoading={isStatsLoading} />
+      <NotificationStats
+        stats={stats}
+        isLoading={isStatsLoading}
+        error={statsError}
+        onRetry={retryStats}
+      />
 
       {logs.length > 0 && (
         <div className="notif-filter-section">

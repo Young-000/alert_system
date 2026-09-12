@@ -19,6 +19,11 @@ describe('NotificationHistoryPage', () => {
     vi.clearAllMocks();
     localStorage.setItem('userId', 'user-1');
     mockNotificationApiClient.getHistory.mockResolvedValue({ items: [], total: 0 });
+    // `vi.clearAllMocks()`는 호출 기록만 지우고 구현은 남긴다 — 앞 테스트의
+    // `mockRejectedValue`가 그대로 살아 다음 테스트를 실행 순서에 따라 흔든다.
+    mockNotificationApiClient.getStats.mockResolvedValue({
+      total: 0, success: 0, fallback: 0, failed: 0, successRate: 100,
+    });
   });
 
   afterEach(() => {
@@ -263,5 +268,94 @@ describe('NotificationHistoryPage', () => {
     expect(screen.getByText('첫번째 알림')).toBeInTheDocument();
     expect(mockNotificationApiClient.getHistory).toHaveBeenCalledTimes(2);
     expect(mockNotificationApiClient.getHistory).toHaveBeenLastCalledWith(20, 1);
+  });
+
+  it('초기 로드에서 통계만 실패하면 사유와 다시 시도를 보여준다', async () => {
+    mockNotificationApiClient.getHistory.mockResolvedValue({ items: [], total: 0 });
+    mockNotificationApiClient.getStats.mockRejectedValue(new Error('network'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('발송 통계를 불러올 수 없습니다.')).toBeInTheDocument();
+    });
+    // 기록 조회는 성공했으므로 기록 쪽 실패 문구를 띄우면 거짓말이다
+    expect(
+      screen.queryByText('알림 기록을 불러올 수 없습니다.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('통계 조회가 성공하면 실패 문구를 보여주지 않는다', async () => {
+    mockNotificationApiClient.getHistory.mockResolvedValue({ items: [], total: 0 });
+    mockNotificationApiClient.getStats.mockResolvedValue({
+      total: 0, success: 0, fallback: 0, failed: 0, successRate: 100,
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('알림 기록이 없어요')).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText('발송 통계를 불러올 수 없습니다.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('통계 다시 시도는 통계만 다시 조회한다', async () => {
+    mockNotificationApiClient.getHistory.mockResolvedValue({ items: [], total: 0 });
+    mockNotificationApiClient.getStats.mockRejectedValue(new Error('network'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('발송 통계를 불러올 수 없습니다.')).toBeInTheDocument();
+    });
+
+    const historyCallsBefore = mockNotificationApiClient.getHistory.mock.calls.length;
+    mockNotificationApiClient.getStats.mockResolvedValue({
+      total: 4, success: 4, fallback: 0, failed: 0, successRate: 100,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '발송 통계 다시 불러오기' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-stats')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('발송 통계를 불러올 수 없습니다.')).not.toBeInTheDocument();
+    // 통계만 다시 부른다 — 기록은 이미 화면에 있고 다시 받을 이유가 없다
+    expect(mockNotificationApiClient.getHistory.mock.calls.length).toBe(historyCallsBefore);
+  });
+
+  it('기간 필터 변경 중 통계 조회가 실패하면 이전 기간 숫자를 남겨두지 않는다', async () => {
+    mockNotificationApiClient.getHistory.mockResolvedValue({
+      items: [{
+        id: 'log-1',
+        alertId: 'alert-1',
+        alertName: '출근 알림',
+        alertTypes: ['weather'],
+        status: 'success',
+        summary: '맑음',
+        sentAt: new Date().toISOString(),
+      }],
+      total: 1,
+    });
+    mockNotificationApiClient.getStats.mockResolvedValue({
+      total: 99, success: 99, fallback: 0, failed: 0, successRate: 100,
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('99건')).toBeInTheDocument();
+    });
+
+    mockNotificationApiClient.getStats.mockRejectedValue(new Error('network'));
+    fireEvent.click(screen.getByRole('button', { name: '최근 7일' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('발송 통계를 불러올 수 없습니다.')).toBeInTheDocument();
+    });
+    // 99건은 '전체' 기간의 숫자다. '최근 7일'이 선택된 화면에 그대로 두면 7일치로 읽힌다.
+    expect(screen.queryByText('99건')).not.toBeInTheDocument();
   });
 });

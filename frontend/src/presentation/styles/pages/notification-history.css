@@ -241,3 +241,24 @@
   border-radius: 4px;
 }
 
+
+/* 통계 조회 실패 — 사유 한 줄 + 행동 하나.
+   카드 안에 경고 아이콘까지 얹으면 같은 화면의 기록 실패 배너와 모양이 겹쳐
+   무엇이 실패했는지가 오히려 흐려진다. */
+.notif-stats-card--error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notif-stats-error-text {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+/* 터치 타겟 44px (체크리스트 6-6) */
+.notif-stats-retry {
+  flex-shrink: 0;
+  min-height: 44px;
+}
