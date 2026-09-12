@@ -22,12 +22,24 @@ export default function SettingsScreen(): React.JSX.Element {
     usePushNotifications({ enabled: isLoggedIn });
   // `error`를 버리면 조회 실패가 "장소 0개"로 위장된다 — 장소를 등록해 둔
   // 사용자가 "장소를 등록하면 자동 감지가 시작됩니다"를 읽게 된다.
-  const { places, error: placesError } = usePlaces();
+  // `refresh`까지 받는다. 설정 탭에는 당겨서 새로고침(`refreshControl`)이 없고
+  // `usePlaces`는 포커스·AppState 재조회를 하지 않아서, 이걸 섹션에 넘기지
+  // 않으면 조회가 한 번 실패한 뒤 앱을 다시 켜는 것 말고 되돌릴 방법이 없다.
+  // `/places`에서 되살려도 훅 인스턴스가 달라 이 탭은 낡은 채로 남는다.
+  const {
+    places,
+    isLoading: isPlacesLoading,
+    isRefreshing: isPlacesRetrying,
+    error: placesError,
+    refresh: refreshPlaces,
+  } = usePlaces();
   const activePlacesCount = places.filter((place) => place.isActive).length;
   const {
     settings: smartDepartureSettings,
     isLoading: isSmartDepartureLoading,
+    isRefreshing: isSmartDepartureRetrying,
     error: smartDepartureError,
+    refresh: refreshSmartDeparture,
     toggleSetting: toggleSmartDeparture,
   } = useSmartDeparture();
   const {
@@ -111,6 +123,9 @@ export default function SettingsScreen(): React.JSX.Element {
             placesCount={places.length}
             activePlacesCount={activePlacesCount}
             placesError={placesError}
+            isPlacesLoading={isPlacesLoading}
+            isPlacesRetrying={isPlacesRetrying}
+            onRetryPlaces={() => void refreshPlaces()}
             offlineCount={offlineCount}
             onToggle={handleGeofenceToggle}
           />
@@ -122,6 +137,8 @@ export default function SettingsScreen(): React.JSX.Element {
             settings={smartDepartureSettings}
             isLoading={isSmartDepartureLoading}
             error={smartDepartureError}
+            isRetrying={isSmartDepartureRetrying}
+            onRetry={() => void refreshSmartDeparture()}
             onToggle={(id) => notifyIfToggleFailed(toggleSmartDeparture(id))}
           />
         )}
