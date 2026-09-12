@@ -358,4 +358,65 @@ describe('NotificationHistoryPage', () => {
     // 99건은 '전체' 기간의 숫자다. '최근 7일'이 선택된 화면에 그대로 두면 7일치로 읽힌다.
     expect(screen.queryByText('99건')).not.toBeInTheDocument();
   });
+
+  /**
+   * 기간 버튼에는 disabled가 없다. 빠르게 두 번 누르면 두 요청이 동시에 뜨고,
+   * `loadStats`에는 순서 가드가 없어 **늦게 도착한 옛 응답이 최신 기간의 숫자를
+   * 덮어쓴다.** 화면에는 '최근 30일'이 선택돼 있는데 숫자는 7일치가 뜨고,
+   * 사용자가 그걸 알아챌 방법이 없다.
+   */
+  it('기간을 연달아 바꾸면 늦게 도착한 이전 기간 응답이 화면을 덮어쓰지 않는다', async () => {
+    mockNotificationApiClient.getHistory.mockResolvedValue({
+      items: [{
+        id: 'log-1',
+        alertId: 'alert-1',
+        alertName: '출근 알림',
+        alertTypes: ['weather'],
+        status: 'success',
+        summary: '맑음',
+        sentAt: new Date().toISOString(),
+      }],
+      total: 1,
+    });
+    mockNotificationApiClient.getStats.mockResolvedValue({
+      total: 99, success: 99, fallback: 0, failed: 0, successRate: 100,
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('99건')).toBeInTheDocument();
+    });
+
+    // 7일 요청은 응답을 붙잡아 두고, 30일 요청만 먼저 끝낸다.
+    let resolveSevenDay: (() => void) | undefined;
+    mockNotificationApiClient.getStats.mockImplementation((days?: number) => {
+      if (days === 7) {
+        return new Promise((resolve) => {
+          resolveSevenDay = () => resolve({
+            total: 7, success: 7, fallback: 0, failed: 0, successRate: 100,
+          });
+        });
+      }
+      return Promise.resolve({
+        total: 30, success: 30, fallback: 0, failed: 0, successRate: 100,
+      });
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '최근 7일' }));
+    fireEvent.click(screen.getByRole('button', { name: '최근 30일' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('30건')).toBeInTheDocument();
+    });
+
+    // 뒤늦게 도착하는 7일치 응답
+    resolveSevenDay?.();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '최근 30일' })).toHaveAttribute('aria-pressed', 'true');
+    });
+    expect(screen.queryByText('7건')).not.toBeInTheDocument();
+    expect(screen.getByText('30건')).toBeInTheDocument();
+  });
 });
