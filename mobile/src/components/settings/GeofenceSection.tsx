@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import { colors } from '@/constants/colors';
+import { shouldOfferLoadRetry } from '@/utils/settings-load-retry';
 
 type GeofenceSectionProps = {
   isEnabled: boolean;
@@ -20,6 +21,15 @@ type GeofenceSectionProps = {
   activePlacesCount: number;
   /** 장소 조회가 실패했을 때의 사유. 있으면 장소 수를 신뢰할 수 없다. */
   placesError: string | null;
+  isPlacesLoading: boolean;
+  /** 다시 받아오는 중이면 버튼을 잠그고 문구를 바꾼다. */
+  isPlacesRetrying: boolean;
+  /**
+   * 장소를 다시 받아온다. 옵셔널이 아니라 **필수**로 둔다 — 이 리포지토리의
+   * 모바일 검증 수단은 `tsc`와 순수 로직 테스트뿐이라(RN 렌더 테스트 없음),
+   * 옵셔널이면 미배선이 조용히 통과해 같은 막다른 상태로 되돌아간다.
+   */
+  onRetryPlaces: () => void;
   offlineCount: number;
   onToggle: (value: boolean) => void;
 };
@@ -64,6 +74,9 @@ export function GeofenceSection({
   placesCount,
   activePlacesCount,
   placesError,
+  isPlacesLoading,
+  isPlacesRetrying,
+  onRetryPlaces,
   offlineCount,
   onToggle,
 }: GeofenceSectionProps): React.JSX.Element {
@@ -84,6 +97,15 @@ export function GeofenceSection({
   // 켜는 쪽만 조건을 건다 — 감지할 장소가 없으면 켤 이유가 없으니까.
   const canToggle =
     isEnabled || (permissionStatus === 'always' && activePlacesCount > 0);
+
+  // 실패 문구가 화면에 실제로 떠 있을 때만 버튼을 건다. 권한 안내가 실패
+  // 문구를 덮는 자리(`getStatusText`가 권한을 먼저 본다)에서는 걸지 않는다 —
+  // 화면이 권한을 말하는데 버튼이 장소 재조회를 하면 둘이 다른 말을 한다.
+  const canRetryPlaces = shouldOfferLoadRetry({
+    loadError: placesError,
+    isLoading: isPlacesLoading,
+    isSupersededByOtherNotice: permissionStatus !== 'always',
+  });
 
   return (
     <View style={styles.container}>
@@ -113,6 +135,28 @@ export function GeofenceSection({
             />
           )}
         </View>
+
+        {/* 조회 실패에서 빠져나갈 길. 설정 탭에는 당겨서 새로고침이 없고
+            두 훅 모두 포커스 재조회를 하지 않아, 이 버튼이 유일한 회복 수단이다.
+            문구는 위 `description`이 이미 말했으므로 여기서 반복하지 않는다. */}
+        {canRetryPlaces && (
+          <>
+            <View style={styles.separator} />
+            <Pressable
+              style={styles.retryRow}
+              onPress={onRetryPlaces}
+              disabled={isPlacesRetrying}
+              accessibilityRole="button"
+              accessibilityLabel="장소 다시 불러오기"
+              accessibilityState={{ disabled: isPlacesRetrying }}
+            >
+              <Text style={styles.retryIcon}>↻</Text>
+              <Text style={styles.retryLabel}>
+                {isPlacesRetrying ? '불러오는 중…' : '다시 시도'}
+              </Text>
+            </Pressable>
+          </>
+        )}
 
         <View style={styles.separator} />
 
@@ -217,6 +261,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.gray400,
     fontWeight: '600',
+  },
+  retryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    // 터치 타겟 최소 44px (체크리스트 6-6)
+    minHeight: 44,
+  },
+  retryIcon: {
+    fontSize: 16,
+    marginRight: 12,
+    color: colors.primary,
+  },
+  retryLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.primary,
   },
   offlineRow: {
     flexDirection: 'row',

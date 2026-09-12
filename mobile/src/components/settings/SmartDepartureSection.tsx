@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import { colors } from '@/constants/colors';
+import { shouldOfferLoadRetry } from '@/utils/settings-load-retry';
 
 import type { SmartDepartureSettingDto } from '@/types/smart-departure';
 
@@ -17,6 +18,13 @@ type SmartDepartureSectionProps = {
   settings: SmartDepartureSettingDto[];
   isLoading: boolean;
   error: string | null;
+  /** 다시 받아오는 중이면 버튼을 잠그고 문구를 바꾼다. */
+  isRetrying: boolean;
+  /**
+   * 설정을 다시 받아온다. 옵셔널이 아니라 **필수** — 옵셔널이면 미배선이
+   * `tsc`를 조용히 통과해 회복 수단이 없는 상태로 되돌아간다.
+   */
+  onRetry: () => void;
   onToggle: (id: string) => void;
 };
 
@@ -44,10 +52,15 @@ export function SmartDepartureSection({
   settings,
   isLoading,
   error,
+  isRetrying,
+  onRetry,
   onToggle,
 }: SmartDepartureSectionProps): React.JSX.Element {
   const router = useRouter();
   const statusText = getStatusText(settings, error);
+  // 바로 위 GeofenceSection과 같은 규칙을 쓴다. 이 섹션에는 실패 문구를
+  // 덮는 상위 안내가 없어 `isSupersededByOtherNotice`는 해당하지 않는다.
+  const canRetry = shouldOfferLoadRetry({ loadError: error, isLoading });
   const commute = settings.find((s) => s.departureType === 'commute');
   const returnSetting = settings.find((s) => s.departureType === 'return');
 
@@ -75,6 +88,28 @@ export function SmartDepartureSection({
             <Text style={styles.chevron}>{'>'}</Text>
           )}
         </Pressable>
+
+        {/* 조회 실패에서 빠져나갈 길. 전용 화면(`/smart-departure`)에도 재시도가
+            있지만 훅 인스턴스가 화면별로 따로라, 거기서 되살려도 이 섹션은
+            낡은 채로 남는다. 문구는 위 `description`이 이미 말했다. */}
+        {canRetry && (
+          <>
+            <View style={styles.separator} />
+            <Pressable
+              style={styles.retryRow}
+              onPress={onRetry}
+              disabled={isRetrying}
+              accessibilityRole="button"
+              accessibilityLabel="스마트 출발 설정 다시 불러오기"
+              accessibilityState={{ disabled: isRetrying }}
+            >
+              <Text style={styles.retryIcon}>↻</Text>
+              <Text style={styles.retryLabel}>
+                {isRetrying ? '불러오는 중…' : '다시 시도'}
+              </Text>
+            </Pressable>
+          </>
+        )}
 
         {/* Commute Toggle */}
         {commute && (
@@ -191,6 +226,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.gray400,
     fontWeight: '600',
+  },
+  retryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    // 터치 타겟 최소 44px (체크리스트 6-6)
+    minHeight: 44,
+  },
+  retryIcon: {
+    fontSize: 16,
+    marginRight: 12,
+    color: colors.primary,
+  },
+  retryLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.primary,
   },
   separator: {
     height: 1,
