@@ -1,4 +1,11 @@
 import { ApiClient } from './api-client';
+import {
+  isEngineOffResponse,
+  toInsightsResponse,
+  toPredictionResponse,
+  type WireInsights,
+  type WirePrediction,
+} from './behavior-response-adapter';
 
 // ========== Types ==========
 
@@ -96,7 +103,12 @@ export interface InsightsSummary {
   totalRecords: number;
   tier: PredictionTier;
   averageDeparture: string;
-  overallStdDev: number;
+  /**
+   * 서버 `overallStats`에 전체 표준편차가 없다(`prediction-engine.service.ts:356-362`).
+   * 요일별 `stdDevMinutes`는 요일 안의 흩어짐이라 전체 편차로 합칠 수 없다.
+   * 없는 값을 지어내지 않고 null로 두고, 화면은 이 칸을 그리지 않는다.
+   */
+  overallStdDev: number | null;
   confidence: number;
 }
 
@@ -144,12 +156,20 @@ export class BehaviorApiClient {
     return result.patterns;
   }
 
-  async getPrediction(userId: string): Promise<PredictionResponse> {
-    return this.apiClient.get<PredictionResponse>(`/behavior/predictions/${userId}`);
+  async getPrediction(userId: string): Promise<PredictionResponse | null> {
+    const payload = await this.apiClient.get<WirePrediction | { error: string }>(
+      `/behavior/predictions/${userId}`,
+    );
+    if (isEngineOffResponse(payload)) return null;
+    return toPredictionResponse(payload as WirePrediction);
   }
 
-  async getInsights(userId: string): Promise<InsightsResponse> {
-    return this.apiClient.get<InsightsResponse>(`/behavior/insights/${userId}`);
+  async getInsights(userId: string): Promise<InsightsResponse | null> {
+    const payload = await this.apiClient.get<WireInsights | { error: string }>(
+      `/behavior/insights/${userId}`,
+    );
+    if (isEngineOffResponse(payload)) return null;
+    return toInsightsResponse(payload as WireInsights);
   }
 }
 
