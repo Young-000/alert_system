@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { subwayApiClient, busApiClient, type SubwayStation, type BusStop } from '@infrastructure/api';
 import type { LocalTransportMode, GroupedStation, SelectedStop } from './types';
+import { isSearchableStationQuery } from '../station-search-query';
 
 interface UseStationSearchReturn {
   searchQuery: string;
@@ -44,7 +45,7 @@ export function useStationSearch(
     const requestId = ++latestRequestRef.current;
     const isStale = (): boolean => latestRequestRef.current !== requestId;
 
-    if (!query || query.length < 1) {
+    if (!isSearchableStationQuery(query)) {
       setSubwayResults([]);
       setBusResults([]);
       // 위에서 요청 번호를 올려 진행 중이던 검색을 stale로 만들었으므로

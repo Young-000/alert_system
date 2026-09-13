@@ -63,4 +63,27 @@ describe('StationSearchStep (route-setup)', () => {
     expect(screen.getByText('경유지는 최소 2개 필요합니다.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument();
   });
+
+  it('검색어가 한 글자면 "검색 결과가 없습니다"라고 말하지 않는다', () => {
+    // 서버는 두 글자 미만이면 조회 자체를 하지 않고 빈 배열을 준다
+    // (search-subway-stations.use-case.ts:14). 그 빈 배열을 "그런 역이 없다"로
+    // 옮기면, 아직 묻지도 않은 것을 없다고 단정하게 된다.
+    renderStep({ searchQuery: '강' });
+
+    expect(screen.queryByText('검색 결과가 없습니다')).not.toBeInTheDocument();
+  });
+
+  it('검색어가 한 글자면 몇 글자부터 검색되는지 알려준다', () => {
+    // dead-end 금지 — 지금 할 수 있는 일 하나를 남긴다.
+    renderStep({ searchQuery: '강' });
+
+    expect(screen.getByText('두 글자 이상 입력해주세요')).toBeInTheDocument();
+  });
+
+  it('공백을 빼면 두 글자가 안 되는 검색어도 마찬가지다', () => {
+    // 붙여넣기로 들어온 앞뒤 공백. 서버는 trim 후에 길이를 센다.
+    renderStep({ searchQuery: '강 ' });
+
+    expect(screen.queryByText('검색 결과가 없습니다')).not.toBeInTheDocument();
+  });
 });
