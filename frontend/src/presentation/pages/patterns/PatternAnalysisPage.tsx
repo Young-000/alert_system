@@ -93,10 +93,16 @@ function OverviewTab({
             <span className="patterns-summary-label">총 기록</span>
             <span className="patterns-summary-value">{insights.summary.totalRecords}회</span>
           </div>
-          <div className="patterns-summary-item">
-            <span className="patterns-summary-label">편차</span>
-            <span className="patterns-summary-value">{insights.summary.overallStdDev}분</span>
-          </div>
+          {/*
+            전체 편차는 서버 응답에 없다(`behavior-api.client.ts` InsightsSummary 주석).
+            값이 없을 때 칸만 남기면 "편차 분"이 되므로 아예 그리지 않는다.
+          */}
+          {insights.summary.overallStdDev !== null && (
+            <div className="patterns-summary-item">
+              <span className="patterns-summary-label">편차</span>
+              <span className="patterns-summary-value">{insights.summary.overallStdDev}분</span>
+            </div>
+          )}
         </div>
       </section>
 

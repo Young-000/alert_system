@@ -78,18 +78,28 @@ function DayOfWeekChart({ stats }: { stats: DayOfWeekStats[] }): JSX.Element {
   );
 }
 
+/**
+ * 날씨 비교의 기준은 **서버가 정한다** — 맑은 날 평균이고, 그 차이가 `comparedToNormal`이다
+ * (`get-commute-stats.use-case.ts:295-317`). 같은 값을 쓰는 화면이 이미 있다
+ * (`commute-dashboard/OverviewTab.tsx:60-63`).
+ *
+ * 화면에서 기준을 다시 계산하면 안 된다. 조건별 평균을 표본 수 없이 평균내면
+ * 드문 악천후 하루가 기준을 끌어올려 **흔한 날씨가 "기준보다 빠르다"로 뒤집힌다** —
+ * 맑음 40분(50회)·비 45분(2회)·눈 70분(1회)이면 기준이 51.7분이 되어 비가 -7분이 된다.
+ * 서버는 이 역전을 이미 한 번 고쳤는데(같은 파일 283-285행 주석) 화면이 되살리고 있었다.
+ * 바로 옆 인사이트 문장("비 오는 날 평균 5분 더 걸려요")과도 반대 방향을 가리켰다.
+ */
 function WeatherImpactSection({ impacts }: { impacts: WeatherImpact[] }): JSX.Element {
   if (impacts.length === 0) {
     return <p className="report-empty-hint">날씨별 데이터가 없어요</p>;
   }
 
-  const baseline = impacts.reduce((sum, w) => sum + w.averageDuration, 0) / impacts.length;
-
   return (
     <div className="report-weather-impacts" aria-label="날씨별 영향">
+      <p className="report-empty-hint">맑은 날과 비교한 차이예요</p>
       {impacts.map((impact) => {
-        const diff = impact.averageDuration - baseline;
-        const diffText = diff > 0 ? `+${Math.round(diff)}분` : `${Math.round(diff)}분`;
+        const diff = impact.comparedToNormal;
+        const diffText = diff > 0 ? `+${diff}분` : `${diff}분`;
         const isWorse = diff > 2;
         const isBetter = diff < -2;
 
@@ -102,7 +112,7 @@ function WeatherImpactSection({ impacts }: { impacts: WeatherImpact[] }): JSX.El
                 isWorse ? 'report-weather-diff--worse' : ''
               } ${isBetter ? 'report-weather-diff--better' : ''}`}
             >
-              {Math.abs(diff) > 0.5 ? diffText : '-'}
+              {diff !== 0 ? diffText : '-'}
             </span>
             <span className="report-weather-count">{impact.sampleCount}회</span>
           </div>
