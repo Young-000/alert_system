@@ -1,5 +1,6 @@
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import type { TransportItem, GroupedStation } from './types';
+import { isSearchableStationQuery } from '../station-search-query';
 
 interface StationSearchStepProps {
   readonly transportTypes: ('subway' | 'bus')[];
@@ -374,7 +375,8 @@ function SearchSection({
             );
           })}
         </div>
-      ) : searchQuery.length >= 2 && !isSearching ? (
+      ) : /* 훅이 검색을 보낸 기준과 같아야 한다 — 공백만 채운 검색어에 '없다'고 답하지 않는다. */
+      isSearchableStationQuery(searchQuery) && !isSearching ? (
         <div className="empty-state" role="status">
           <span className="empty-icon" aria-hidden="true">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -388,6 +390,11 @@ function SearchSection({
             <br />
             다른 이름으로 검색해보세요.
           </p>
+        </div>
+      ) : searchQuery.trim().length > 0 ? (
+        /* 검색이 시작되지 않는 길이. 빈 화면을 두지 않고 언제부터 되는지 말한다. */
+        <div className="empty-state" role="status">
+          <p className="empty-desc">두 글자 이상 입력해주세요</p>
         </div>
       ) : null}
     </>

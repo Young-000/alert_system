@@ -153,4 +153,42 @@ describe('useStationSearch', () => {
     expect(searchStations).toHaveBeenLastCalledWith('강남');
     expect(result.current.subwayResults).toHaveLength(1);
   });
+
+  it('두 글자 미만이면 서버에 묻지 않는다', async () => {
+    // 서버는 trim 후 두 글자 미만이면 조회 없이 빈 배열을 준다
+    // (search-subway-stations.use-case.ts:14). 그 빈 배열이 화면에서
+    // "검색 결과가 없습니다"로 읽히므로, 애초에 보내지 않는다.
+    const { result } = renderHook(() => useStationSearch('subway', [], vi.fn()));
+
+    act(() => result.current.handleSearchChange('강'));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(searchStations).not.toHaveBeenCalled();
+  });
+
+  it('공백을 빼면 두 글자가 안 되는 검색어도 보내지 않는다', async () => {
+    const { result } = renderHook(() => useStationSearch('subway', [], vi.fn()));
+
+    act(() => result.current.handleSearchChange('강 '));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(searchStations).not.toHaveBeenCalled();
+  });
+
+  it('두 글자가 되면 그때 보낸다', async () => {
+    // 대조군 — 상한을 올려 정상 검색까지 막지 않았는지 본다.
+    searchStations.mockResolvedValue([station('강남', '2호선')]);
+    const { result } = renderHook(() => useStationSearch('subway', [], vi.fn()));
+
+    act(() => result.current.handleSearchChange('강남'));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    await waitFor(() => expect(searchStations).toHaveBeenCalledWith('강남'));
+  });
 });

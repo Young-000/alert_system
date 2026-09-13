@@ -2,6 +2,7 @@ import type { LocalTransportMode, SelectedStop, GroupedStation, SetupStep } from
 import type { BusStop } from '@infrastructure/api';
 import type { RouteType } from '@infrastructure/api/commute-api.client';
 import { RouteSoFar } from './RouteSoFar';
+import { isSearchableStationQuery } from '../station-search-query';
 
 interface StationSearchStepProps {
   currentTransport: LocalTransportMode;
@@ -167,9 +168,16 @@ export function StationSearchStep({
           </ul>
         )}
 
-        {searchQuery && !isSearching && !searchError && groupedSubwayResults.length === 0 && busResults.length === 0 && (
+        {isSearchableStationQuery(searchQuery) && !isSearching && !searchError && groupedSubwayResults.length === 0 && busResults.length === 0 && (
           <div className="apple-no-results">
             검색 결과가 없습니다
+          </div>
+        )}
+
+        {/* 서버가 조회를 시작하지 않는 길이. '없다'가 아니라 '언제부터 되는지'를 말한다. */}
+        {!!searchQuery && !isSearchableStationQuery(searchQuery) && (
+          <div className="apple-search-hint">
+            <p>두 글자 이상 입력해주세요</p>
           </div>
         )}
 

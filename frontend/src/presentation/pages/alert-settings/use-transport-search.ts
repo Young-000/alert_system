@@ -6,6 +6,7 @@ import {
 import type { SubwayStation, BusStop } from '@infrastructure/api';
 import type { TransportItem, GroupedStation } from './types';
 import { SEARCH_DEBOUNCE_MS, MAX_SEARCH_RESULTS } from './types';
+import { isSearchableStationQuery } from '../station-search-query';
 
 interface TransportSearchState {
   searchQuery: string;
@@ -44,7 +45,7 @@ export function useTransportSearch(
 
   // Unified search for subway + bus (with grouping for 2-step selection)
   useEffect(() => {
-    const shouldSearch = searchQuery.trim().length >= 2;
+    const shouldSearch = isSearchableStationQuery(searchQuery);
 
     const controller = new AbortController();
 
