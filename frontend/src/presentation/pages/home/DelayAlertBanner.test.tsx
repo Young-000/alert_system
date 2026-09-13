@@ -52,6 +52,49 @@ describe('DelayAlertBanner', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  // 이 배너는 지연이 있을 때만 뜬다. 그래서 배너의 부재가 곧 "지연 없음"이라는
+  // 신호가 된다(홈에서 지연 상태를 말하는 자리는 여기뿐이다).
+  // 조회에 실패했을 때도 똑같이 사라지면, 실제로 지연 중인 경로를 정상이라고
+  // 말하는 셈이 된다. 백엔드도 실시간 정보를 못 받으면 'unavailable'로 알린다.
+  it('tells the user when the delay status could not be loaded', () => {
+    mockUseRouteDelayStatus.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
+    renderBanner();
+
+    expect(screen.getByTestId('delay-alert-banner')).toBeInTheDocument();
+    expect(screen.getByText('지연 정보를 불러오지 못했습니다')).toBeInTheDocument();
+  });
+
+  it('retries the delay status query when the retry button is clicked', () => {
+    const refetch = vi.fn();
+    mockUseRouteDelayStatus.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch,
+    });
+    renderBanner();
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  // 조회 중에는 아직 실패가 아니다.
+  it('renders nothing while loading even if a previous error is set', () => {
+    mockUseRouteDelayStatus.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: true,
+      refetch: vi.fn(),
+    });
+    const { container } = renderBanner();
+    expect(container.firstChild).toBeNull();
+  });
+
   it('shows yellow banner for minor delay', () => {
     mockUseRouteDelayStatus.mockReturnValue({
       data: makeDelayStatus({
