@@ -77,6 +77,20 @@
   padding: 0.25rem 0;
 }
 
+/* 조회 실패 안내. 같은 화면의 .tips-error와 같은 계열로 둔다 —
+   둘 다 "못 불러왔다 + 다시 시도"를 말하는 자리다. */
+.neighbor-error {
+  text-align: center;
+  padding: 0.5rem 0;
+  color: var(--error);
+  font-size: 0.8rem;
+}
+
+.neighbor-section .neighbor-error + .btn {
+  display: block;
+  margin: 0 auto;
+}
+
 /* ========== CHECKPOINT TIPS ========== */
 
 .checkpoint-tips {

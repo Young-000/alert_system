@@ -5,17 +5,25 @@ interface NeighborSectionProps {
 }
 
 export function NeighborSection({ routeId }: NeighborSectionProps): JSX.Element | null {
-  const { data, isLoading, isError } = useNeighborStats(routeId);
+  const { data, isLoading, isError, refetch } = useNeighborStats(routeId);
 
-  if (isLoading || !data) return null;
+  // 로딩 중에는 아직 실패가 아니다 — 조회가 끝나기 전에 실패 문구가 스쳐 보이면 안 된다.
+  if (isLoading) return null;
 
+  // 실패 검사가 `!data`보다 앞에 와야 한다. 조회에 실패하면 data는 undefined로
+  // 들어오므로, 순서가 뒤집히면 아래 실패 문구는 도달할 수 없는 코드가 된다.
   if (isError) {
     return (
       <section className="neighbor-section" aria-label="경로 이웃 정보">
-        <p className="neighbor-error muted">이웃 정보를 불러올 수 없습니다</p>
+        <p className="neighbor-error">이웃 정보를 불러올 수 없습니다</p>
+        <button type="button" className="btn btn-sm" onClick={() => void refetch()}>
+          다시 시도
+        </button>
       </section>
     );
   }
+
+  if (!data) return null;
 
   // Hide entirely if user has no route
   if (data.dataStatus === 'no_route') return null;

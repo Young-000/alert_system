@@ -42,10 +42,44 @@ function getDelayedSegments(segments: readonly DelaySegmentResponse[]): DelaySeg
 }
 
 export function DelayAlertBanner({ routeId }: DelayAlertBannerProps): JSX.Element | null {
-  const { data, isLoading } = useRouteDelayStatus(routeId);
+  const { data, isLoading, isError, refetch } = useRouteDelayStatus(routeId);
   const [expanded, setExpanded] = useState(false);
 
-  if (isLoading || !data) return null;
+  if (isLoading) return null;
+
+  // 이 배너는 지연이 있을 때만 뜬다 — 그래서 배너가 없다는 것 자체가 사용자에게
+  // "지연 없음"으로 읽힌다(홈에서 지연을 말하는 자리는 여기뿐이다).
+  // 조회 실패까지 같은 모습으로 두면 실제로 지연 중인 경로를 정상이라고 말하게 된다.
+  // 백엔드도 실시간 정보를 못 받으면 'unavailable'로 알린다 — 같은 계약을 따른다.
+  if (isError) {
+    return (
+      <section
+        className="delay-banner delay-banner--unavailable"
+        role="alert"
+        aria-live="polite"
+        data-testid="delay-alert-banner"
+      >
+        <div className="delay-banner-header">
+          <span className="delay-banner-icon" aria-hidden="true">{'\u{2139}\u{FE0F}'}</span>
+          <div className="delay-banner-content">
+            <h3 className="delay-banner-title">지연 정보를 불러오지 못했습니다</h3>
+            <p className="delay-banner-subtitle">
+              지금은 경로 지연 여부를 확인할 수 없어요
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (!data) return null;
 
   const config = STATUS_CONFIG[data.overallStatus];
   if (!config.show) return null;
