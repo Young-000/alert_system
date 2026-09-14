@@ -317,7 +317,7 @@
   gap: 12px;
   padding: 16px;
   margin-bottom: 24px;
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-secondary) 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-subtle) 100%);
   border: 1px solid var(--primary);
   border-radius: var(--radius-lg);
 }
@@ -374,3 +374,10 @@
   transition: width 0.3s ease;
 }
 
+
+/* 로그인 콜백 상태 카드.
+   .stack 이 flex column 이라 text-align 만으로는 아이콘(SVG)이 가운데로 오지 않는다. */
+.auth-status {
+  align-items: center;
+  text-align: center;
+}

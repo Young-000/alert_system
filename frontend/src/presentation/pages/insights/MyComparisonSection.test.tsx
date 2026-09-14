@@ -206,4 +206,56 @@ describe('MyComparisonSection', () => {
       expect(mockCommuteApiClient.getMyComparison.mock.calls.length).toBeGreaterThan(callsBefore);
     });
   });
+  // 기록이 0건인데 "N분 빠름"이라고 말하면 없는 근거로 판정하는 것이 된다.
+  // 지역(regionId)은 집 주소만 있으면 정해지므로(insights.service.ts getUserRegionId)
+  // 출퇴근을 한 번도 기록하지 않은 사용자도 이 분기에 들어온다.
+  it('기록이 0건이면 판정 대신 기록 유도를 표시한다', async () => {
+    localStorage.setItem('userId', 'test-user');
+    mockCommuteApiClient.getMyComparison.mockResolvedValue({
+      userId: 'test-user',
+      userAvgDurationMinutes: 0,
+      userSessionCount: 0,
+      regionId: 'region-1',
+      regionName: '강남/역삼 지역',
+      regionAvgDurationMinutes: 42,
+      regionMedianDurationMinutes: 40,
+      regionUserCount: 12,
+      diffMinutes: -42,
+      diffPercent: 0,
+      fasterThanRegion: true,
+    });
+
+    renderSection();
+
+    await waitFor(() => {
+      expect(screen.getByText(/출퇴근을 기록하면/)).toBeInTheDocument();
+    });
+    expect(screen.getByText('경로 설정하기')).toBeInTheDocument();
+    expect(screen.queryByText('42분 빠름')).not.toBeInTheDocument();
+  });
+
+  // 두 평균이 동시에 0이면 막대 폭이 0/0 = NaN% 가 된다.
+  it('두 평균이 모두 0이어도 NaN 폭을 만들지 않는다', async () => {
+    localStorage.setItem('userId', 'test-user');
+    mockCommuteApiClient.getMyComparison.mockResolvedValue({
+      userId: 'test-user',
+      userAvgDurationMinutes: 0,
+      userSessionCount: 0,
+      regionId: 'region-1',
+      regionName: '강남/역삼 지역',
+      regionAvgDurationMinutes: 0,
+      regionMedianDurationMinutes: 0,
+      regionUserCount: 12,
+      diffMinutes: 0,
+      diffPercent: 0,
+      fasterThanRegion: false,
+    });
+
+    const { container } = renderSection();
+
+    await waitFor(() => {
+      expect(screen.getByText(/출퇴근을 기록하면/)).toBeInTheDocument();
+    });
+    expect(container.innerHTML).not.toContain('NaN');
+  });
 });

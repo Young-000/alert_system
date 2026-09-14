@@ -1801,7 +1801,7 @@ a[aria-disabled="true"],
   margin: 24px auto;
   max-width: 400px;
   text-align: center;
-  background: var(--bg-secondary);
+  background: var(--bg-subtle);
   border-radius: var(--radius-lg);
   animation: fadeIn 0.3s ease;
 }
@@ -1814,13 +1814,13 @@ a[aria-disabled="true"],
 
 .loading-container p {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--ink);
   font-weight: 500;
 }
 
 .loading-container .muted {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--ink-muted);
   font-weight: 400;
 }
 
@@ -2512,17 +2512,17 @@ a[aria-disabled="true"],
   justify-content: center;
   gap: 8px;
   font-size: 0.95rem;
-  color: var(--text);
+  color: var(--ink);
   margin-bottom: 8px;
 }
 
 .footer-divider {
-  color: var(--text-muted);
+  color: var(--ink-muted);
 }
 
 .footer-copyright {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--ink-muted);
   margin: 0;
 }
 
@@ -2797,7 +2797,7 @@ a[aria-disabled="true"],
   font-weight: 600;
   color: white;
   background-color: var(--line-color, #666);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   white-space: nowrap;
 }
 
@@ -3037,7 +3037,7 @@ button.nav-back-btn {
 }
 
 .history-time-flow .history-start-time {
-  color: var(--ink-primary);
+  color: var(--ink);
   font-weight: 500;
 }
 
@@ -3046,7 +3046,7 @@ button.nav-back-btn {
 }
 
 .history-time-flow .history-end-time {
-  color: var(--ink-primary);
+  color: var(--ink);
   font-weight: 500;
 }
 
