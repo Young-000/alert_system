@@ -1,4 +1,5 @@
 import type { Alert, AlertType } from '@infrastructure/api';
+import type { RouteResponse } from '@infrastructure/api/commute-api.client';
 import type { TransportItem, Routine } from './types';
 import { TRANSPORT_NOTIFY_OFFSET_MIN } from './types';
 import { normalizeCronForComparison } from './cron-utils';
@@ -48,6 +49,41 @@ export function findDuplicateAlert(
       );
     }) ?? null
   );
+}
+
+/**
+ * 경로에서 알림에 쓸 역/정류장을 뽑는다. **연결 ID가 있는 체크포인트만** 뽑는다.
+ *
+ * 온보딩이 만드는 경로는 이름이 그냥 '지하철역'이고 연결 ID가 없다
+ * (`OnboardingPage.tsx:176-181`). 서버도 이를 허용한다 —
+ * `CreateCheckpointDto.linkedStationId`는 `@IsOptional()`이다(`commute.dto.ts:56`).
+ *
+ * 규칙을 한 곳에 두는 이유는 `findDuplicateAlert`와 같다. 예전에는 목록을 그리는 쪽이
+ * `checkpointType`만 보고, 가져오는 쪽만 연결 ID를 봤다. 그래서 온보딩만 마친
+ * 사용자에게 "사용 →" 버튼이 보였고, 눌러도 아무 일이 일어나지 않았다.
+ */
+export function extractTransportsFromRoute(route: RouteResponse): TransportItem[] {
+  const transports: TransportItem[] = [];
+
+  for (const checkpoint of route.checkpoints) {
+    if (checkpoint.checkpointType === 'subway' && checkpoint.linkedStationId) {
+      transports.push({
+        type: 'subway',
+        id: checkpoint.linkedStationId,
+        name: checkpoint.name,
+        detail: checkpoint.lineInfo || '',
+      });
+    } else if (checkpoint.checkpointType === 'bus_stop' && checkpoint.linkedBusStopId) {
+      transports.push({
+        type: 'bus',
+        id: checkpoint.linkedBusStopId,
+        name: checkpoint.name,
+        detail: '',
+      });
+    }
+  }
+
+  return transports;
 }
 
 interface TimeOfDay {

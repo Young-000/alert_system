@@ -18,6 +18,7 @@ export {
   generateAlertName,
   getNotificationTimes,
   getEffectiveTransports,
+  extractTransportsFromRoute,
 } from './alert-utils';
 export {
   cronToHuman,

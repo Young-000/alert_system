@@ -1,4 +1,5 @@
 import type { RouteResponse } from '@infrastructure/api/commute-api.client';
+import { extractTransportsFromRoute } from './alert-utils';
 
 interface TransportTypeStepProps {
   readonly transportTypes: ('subway' | 'bus')[];
@@ -19,13 +20,19 @@ export function TransportTypeStep({
   onHideRouteImport,
   onImportFromRoute,
 }: TransportTypeStepProps): JSX.Element {
+  // 배너·목록·가져오기가 같은 규칙을 본다. 연결 ID가 없는 경로(온보딩이 만든 경로)를
+  // 여기서 걸러내지 않으면 "사용 →"이 보이는데 눌러도 아무 일이 일어나지 않는다.
+  const importableRoutes = savedRoutes.filter(
+    (route) => extractTransportsFromRoute(route).length > 0,
+  );
+
   return (
     <section className="wizard-step">
       <h1>어떤 교통수단을 이용하세요?</h1>
       <p className="muted">복수 선택 가능해요</p>
 
       {/* 경로에서 가져오기 옵션 */}
-      {savedRoutes.length > 0 && !showRouteImport && (
+      {importableRoutes.length > 0 && !showRouteImport && (
         <div className="route-import-banner">
           <span className="import-icon" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -61,10 +68,10 @@ export function TransportTypeStep({
               &times;
             </button>
           </div>
-          {savedRoutes.map(route => {
-            const subwayStops = route.checkpoints.filter(c => c.checkpointType === 'subway');
-            const busStops = route.checkpoints.filter(c => c.checkpointType === 'bus_stop');
-            if (subwayStops.length === 0 && busStops.length === 0) return null;
+          {importableRoutes.map(route => {
+            const importable = extractTransportsFromRoute(route);
+            const subwayStops = importable.filter(t => t.type === 'subway');
+            const busStops = importable.filter(t => t.type === 'bus');
 
             return (
               <button
@@ -79,9 +86,9 @@ export function TransportTypeStep({
                 <div className="route-import-info">
                   <span className="route-name">{route.name}</span>
                   <span className="route-stops">
-                    {subwayStops.map(s => s.name).join(', ')}
+                    {subwayStops.map(t => t.name).join(', ')}
                     {subwayStops.length > 0 && busStops.length > 0 ? ' · ' : ''}
-                    {busStops.map(s => s.name).join(', ')}
+                    {busStops.map(t => t.name).join(', ')}
                   </span>
                 </div>
                 <span className="route-action">사용 &rarr;</span>
