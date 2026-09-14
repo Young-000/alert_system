@@ -100,7 +100,7 @@ export function AppTab({
               <span className="item-label">알림 발송 기록</span>
               <span className="item-value item-value-small">발송 내역 확인</span>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </Link>
         </div>
 

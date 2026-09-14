@@ -1442,7 +1442,7 @@ section.page {
   font-size: 1rem;
   font-weight: 700;
   margin: 0 0 12px 0;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .transit-list {
@@ -1501,7 +1501,7 @@ section.page {
 
 .arrival-route {
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .arrival-dest {
@@ -1593,7 +1593,7 @@ section.page {
 }
 
 .insight-text {
-  color: var(--text-muted);
+  color: var(--ink-muted);
   line-height: 1.4;
 }
 

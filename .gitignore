@@ -66,6 +66,8 @@ database.sqlite
 !frontend/public/**/*.png
 !mobile/assets/**/*.png
 !mobile/assets/widget-preview/**/*.png
+# UI 변경의 머지 게이트는 실화면 캡처다 — 개발 부산물이 아니라 증거라 커밋한다.
+!docs/ux-evidence/**/*.png
 
 # Temporary checklists
 *CHECKLIST*.md

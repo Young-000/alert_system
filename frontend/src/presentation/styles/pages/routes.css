@@ -455,7 +455,7 @@
   font-size: 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--bg-elevated);
+  background: var(--bg-card);
   transition: border-color 0.2s;
 }
 
@@ -466,7 +466,7 @@
 
 /* 경로 시각화 */
 .preview-route-visual {
-  background: var(--bg-elevated);
+  background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -534,7 +534,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: var(--bg-elevated);
+  background: var(--bg-card);
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
 }
@@ -601,7 +601,7 @@
 }
 
 .checkpoint-card {
-  background: var(--bg-elevated);
+  background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 1rem;
   border: 1px solid var(--border);
@@ -746,7 +746,7 @@
 }
 
 .station-result-btn:hover {
-  background: var(--bg-elevated);
+  background: var(--bg-card);
 }
 
 .station-result-btn strong {
@@ -756,7 +756,7 @@
 .station-line {
   font-size: 0.8rem;
   color: var(--ink-muted);
-  background: var(--bg-elevated);
+  background: var(--bg-card);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-sm);
 }
@@ -1351,7 +1351,7 @@
 
 .btn-close:hover {
   background: var(--bg-subtle);
-  color: var(--ink-primary);
+  color: var(--ink);
 }
 
 .custom-route-form h3 {
@@ -1849,7 +1849,7 @@
 }
 
 .apple-add-btn.secondary {
-  background: var(--bg-secondary);
+  background: var(--bg-subtle);
   border-style: solid;
   border-width: 1px;
   border-color: var(--border);
@@ -1859,8 +1859,8 @@
 }
 
 .apple-add-btn.secondary:hover {
-  background: var(--bg-hover);
-  color: var(--ink-primary);
+  background: var(--bg-card-hover);
+  color: var(--ink);
 }
 
 .add-icon {
@@ -3231,7 +3231,7 @@
 .quick-select-section {
   margin-bottom: 20px;
   padding: 16px;
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-secondary) 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-subtle) 100%);
   border-radius: var(--radius-lg);
   border: 1px solid var(--primary);
   border-opacity: 0.3;

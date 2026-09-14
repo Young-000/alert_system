@@ -48,7 +48,10 @@ export function MyComparisonSection(): JSX.Element {
     );
   }
 
-  if (!data || data.regionId === null) {
+  // 지역은 집 주소만으로 정해지므로(서버 getUserRegionId) 기록이 0건인 사용자도
+  // regionId를 받는다. 그대로 그리면 "0분 → N분 빠름"이라는 근거 없는 판정이 되고
+  // 지역 평균까지 0이면 막대 폭이 0/0 = NaN% 가 된다. 기록 수가 판정의 전제다.
+  if (!data || data.regionId === null || data.userSessionCount === 0) {
     return (
       <section className="insight-comparison" aria-label="나의 출퇴근 비교">
         <h3 className="insight-section-title">나의 출퇴근 vs 지역 평균</h3>

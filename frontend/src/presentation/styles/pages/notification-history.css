@@ -165,7 +165,7 @@
 .notif-stats-value {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--ink-primary);
+  color: var(--ink);
 }
 
 .notif-stats-rate--green {
