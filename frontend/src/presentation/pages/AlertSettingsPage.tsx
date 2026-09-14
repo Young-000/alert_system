@@ -18,6 +18,7 @@ import {
   generateAlertName,
   getNotificationTimes,
   getEffectiveTransports,
+  extractTransportsFromRoute,
   AlertList,
   DeleteConfirmModal,
   EditAlertModal,
@@ -202,26 +203,10 @@ export function AlertSettingsPage(): JSX.Element {
   const shouldShowWizard = (alertCrud.alerts.length === 0 && !alertCrud.loadError) || wizard.showWizard;
 
   // Import from route handler
+  // 규칙은 `extractTransportsFromRoute` 한 곳에 있다 — 목록을 그리는 쪽
+  // (`TransportTypeStep`)이 같은 함수를 보므로 여기에 닿는 경로는 항상 비어 있지 않다.
   const importFromRoute = (route: RouteResponse): void => {
-    const transports: TransportItem[] = [];
-
-    for (const checkpoint of route.checkpoints) {
-      if (checkpoint.checkpointType === 'subway' && checkpoint.linkedStationId) {
-        transports.push({
-          type: 'subway',
-          id: checkpoint.linkedStationId,
-          name: checkpoint.name,
-          detail: checkpoint.lineInfo || '',
-        });
-      } else if (checkpoint.checkpointType === 'bus_stop' && checkpoint.linkedBusStopId) {
-        transports.push({
-          type: 'bus',
-          id: checkpoint.linkedBusStopId,
-          name: checkpoint.name,
-          detail: '',
-        });
-      }
-    }
+    const transports: TransportItem[] = extractTransportsFromRoute(route);
 
     if (transports.length > 0) {
       transportSearch.setSelectedTransports(transports);

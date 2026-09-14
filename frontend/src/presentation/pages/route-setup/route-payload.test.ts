@@ -143,3 +143,60 @@ describe('buildUpdateRouteDto', () => {
     expect('isPreferred' in dto ? dto.isPreferred : undefined).toBeUndefined();
   });
 });
+
+// ---------- 연결되지 않은 체크포인트: 자리표시자 id를 링크로 싣지 않는다 ----------
+
+describe('buildCheckpoints — 연결 ID가 없는 정거장', () => {
+  /**
+   * 온보딩은 역 이름이 '지하철역'인 체크포인트를 **연결 ID 없이** 만든다
+   * (`OnboardingPage.tsx:176-181`). 그 경로를 수정 모드로 열면 화면은 빠진 id를
+   * `cp-${index}`로 메운다(`RouteSetupPage.tsx:459`).
+   *
+   * 그 값을 그대로 실어 보내면 서버가 요청 전체를 거절한다 —
+   * `linkedStationId`는 `@IsUUID`다(`commute.dto.ts:56-58`, UpdateCheckpointDto도 상속).
+   * 온보딩만 마친 사용자는 경로 이름조차 고칠 수 없었다.
+   */
+  const placeholderStop: SelectedStop = {
+    id: 'cp-0',
+    uniqueKey: 'edit-0-1-0',
+    name: '지하철역',
+    line: '',
+    transportMode: 'subway',
+    checkpointId: 'cp-station',
+  };
+
+  it('UUID가 아닌 지하철 id는 linkedStationId로 싣지 않는다', () => {
+    const result = buildCheckpoints([placeholderStop], 'morning', existingCheckpoints);
+    expect(result[1].linkedStationId).toBeUndefined();
+  });
+
+  it('UUID가 아닌 버스 id는 linkedBusStopId로 싣지 않는다', () => {
+    const result = buildCheckpoints(
+      [{ ...placeholderStop, transportMode: 'bus', name: '버스 정류장' }],
+      'morning',
+      existingCheckpoints,
+    );
+    expect(result[1].linkedBusStopId).toBeUndefined();
+  });
+
+  it('연결이 없어도 이름·유형·체크포인트 id는 그대로 보존한다', () => {
+    const result = buildCheckpoints([placeholderStop], 'morning', existingCheckpoints);
+    expect(result[1].name).toBe('지하철역');
+    expect(result[1].checkpointType).toBe('subway');
+    // 행을 유지해야 도착 기록(CASCADE)이 살아남는다.
+    expect(result[1].id).toBe('cp-station');
+  });
+
+  it('대조군 — 실제 역 id(UUID)는 그대로 싣는다', () => {
+    const linked: SelectedStop = {
+      id: '11111111-2222-4333-8444-555555555555',
+      uniqueKey: 'edit-linked-1-0',
+      name: '강남역',
+      line: '2호선',
+      transportMode: 'subway',
+      checkpointId: 'cp-station',
+    };
+    const result = buildCheckpoints([linked], 'morning', existingCheckpoints);
+    expect(result[1].linkedStationId).toBe('11111111-2222-4333-8444-555555555555');
+  });
+});

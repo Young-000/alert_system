@@ -24,6 +24,24 @@ export function resolvePreferredFlag(params: {
 }
 
 /**
+ * 서버가 연결 ID로 받아주는 형태. `linkedStationId`/`linkedBusStopId`에는
+ * `@IsUUID`가 걸려 있어(`commute.dto.ts:56-62`) 다른 형태를 실으면 요청 전체가 400이다.
+ */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * 실제 역/정류장과 연결된 id만 돌려준다.
+ *
+ * 온보딩이 만드는 경로의 정거장에는 연결 ID가 없다(`OnboardingPage.tsx:176-181` —
+ * 이름도 그냥 '지하철역'이다). 그 경로를 수정 모드로 열면 화면이 빠진 id를
+ * `cp-${index}`로 메우는데(`RouteSetupPage.tsx:459`), 그 값을 그대로 실어 보내면
+ * 서버가 400으로 거절한다 — 온보딩만 마친 사용자는 경로 이름조차 고칠 수 없었다.
+ */
+function linkedIdOrUndefined(id: string): string | undefined {
+  return UUID_PATTERN.test(id) ? id : undefined;
+}
+
+/**
  * 선택된 정거장들로 저장용 체크포인트 목록을 만든다.
  *
  * 수정 저장에서는 기존 체크포인트 id를 반드시 실어 보내야 한다 — id가 없으면
@@ -63,8 +81,10 @@ export function buildCheckpoints(
       sequenceOrder: seq++,
       name: stop.name,
       checkpointType: stop.transportMode === 'subway' ? 'subway' : 'bus_stop',
-      linkedStationId: stop.transportMode === 'subway' ? stop.id : undefined,
-      linkedBusStopId: stop.transportMode === 'bus' ? stop.id : undefined,
+      linkedStationId:
+        stop.transportMode === 'subway' ? linkedIdOrUndefined(stop.id) : undefined,
+      linkedBusStopId:
+        stop.transportMode === 'bus' ? linkedIdOrUndefined(stop.id) : undefined,
       lineInfo: stop.line,
       transportMode: stop.transportMode,
     });

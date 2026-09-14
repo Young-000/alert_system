@@ -37,6 +37,53 @@ function renderPage(): ReturnType<typeof render> {
   );
 }
 
+
+/** 온보딩이 만드는 경로 — 역 이름만 있고 연결 ID가 없다 (`OnboardingPage.tsx:176-181`). */
+function onboardingRoute(id: string, name: string) {
+  return {
+    id,
+    userId: 'user-1',
+    name,
+    routeType: 'morning',
+    isPreferred: true,
+    totalTransferTime: 0,
+    pureMovementTime: 0,
+    checkpoints: [
+      {
+        id: `${id}-cp-1`,
+        sequenceOrder: 1,
+        name: '지하철역',
+        checkpointType: 'subway',
+        expectedWaitTime: 5,
+        totalExpectedTime: 0,
+        isTransferRelated: false,
+      },
+    ],
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+  };
+}
+
+/** 역 검색으로 만든 경로 — 연결 ID가 붙어 있어 알림으로 가져올 수 있다. */
+function linkedRoute(id: string, name: string) {
+  return {
+    ...onboardingRoute(id, name),
+    checkpoints: [
+      {
+        id: `${id}-cp-1`,
+        sequenceOrder: 1,
+        name: '강남역',
+        checkpointType: 'subway',
+        linkedStationId: 'S1',
+        lineInfo: '2호선',
+        expectedWaitTime: 0,
+        totalExpectedTime: 0,
+        isTransferRelated: false,
+      },
+    ],
+  };
+}
+
 describe('AlertSettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -660,5 +707,87 @@ describe('AlertSettingsPage', () => {
     // (남으면 백엔드가 날씨 알림에 "출근길 출발 준비하세요"를 붙인다:
     //  notification-message-builder.service.ts:288)
     expect(dto.routeId).toBeUndefined();
+  });
+  /**
+   * 온보딩이 만드는 경로는 역/정류장에 **연결 ID가 없다**. 이름만 '지하철역'인
+   * 체크포인트다(`OnboardingPage.tsx:176-181`, 서버 DTO도 `@IsOptional()`:
+   * `commute.dto.ts:56-58`).
+   *
+   * 그런데 이 화면의 경로 목록은 `checkpointType`만 보고 렌더했다
+   * (`TransportTypeStep.tsx:65-67`). 가져오기(`importFromRoute`)는 연결 ID가 있어야
+   * 담으므로(`AlertSettingsPage.tsx:209,216`), 목록에는 보이는데 누르면 **아무 일도
+   * 일어나지 않는다** — 온보딩만 마친 사용자가 정확히 이 상태다.
+   */
+  it('가져올 역이 없는 경로는 "경로에서 가져오기"를 띄우지 않는다', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
+    mockCommuteApiClient.getUserRoutes.mockResolvedValue([
+      onboardingRoute('route-onboarding', '출근길'),
+    ] as never);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '교통 알림 선택' }));
+    fireEvent.click(screen.getByText('다음 →'));
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 교통수단을 이용하세요?')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('저장된 경로에서 가져오기')).not.toBeInTheDocument();
+  });
+
+  it('가져올 수 있는 경로만 목록에 남는다', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
+    mockCommuteApiClient.getUserRoutes.mockResolvedValue([
+      onboardingRoute('route-onboarding', '온보딩 경로'),
+      linkedRoute('route-linked', '강남 출근길'),
+    ] as never);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '교통 알림 선택' }));
+    fireEvent.click(screen.getByText('다음 →'));
+    await screen.findByText('어떤 교통수단을 이용하세요?');
+
+    // 대조군 — 연결된 경로가 하나라도 있으면 배너는 그대로 뜬다.
+    fireEvent.click(screen.getByText('선택'));
+
+    expect(await screen.findByText('강남 출근길')).toBeInTheDocument();
+    expect(screen.queryByText('온보딩 경로')).not.toBeInTheDocument();
+  });
+
+  it('목록에 남은 경로는 누르면 실제로 다음 단계로 넘어간다', async () => {
+    localStorage.setItem('userId', 'user-1');
+    mockAlertApiClient.getAlertsByUser.mockResolvedValue([]);
+    mockCommuteApiClient.getUserRoutes.mockResolvedValue([
+      linkedRoute('route-linked', '강남 출근길'),
+    ] as never);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('어떤 정보를 받고 싶으세요?')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '교통 알림 선택' }));
+    fireEvent.click(screen.getByText('다음 →'));
+    await screen.findByText('어떤 교통수단을 이용하세요?');
+
+    fireEvent.click(screen.getByText('선택'));
+    fireEvent.click(await screen.findByText('강남 출근길'));
+
+    await waitFor(() => {
+      expect(screen.getByText('하루 루틴을 알려주세요')).toBeInTheDocument();
+    });
   });
 });
