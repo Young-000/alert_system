@@ -355,4 +355,89 @@ describe('SendNotificationUseCase', () => {
 
     expect(busApiClient.getBusArrival).not.toHaveBeenCalled();
   });
+
+  /**
+   * `0 7,18 * * *`(출근+퇴근)는 웹 편집 모달이 일부러 보존하는 정식 형태다
+   * (`cron-utils.ts:62` — 시각 하나만 고쳐도 나머지 시각을 지우지 않는다).
+   * EventBridge도 두 시각 모두에 발화한다(`cron(0 7,18 ? * * *)`).
+   *
+   * 그런데 발송 경로는 크론의 **첫 시각**만 읽어 아침/저녁을 정했다. 18시 발화가
+   * 아침 템플릿으로 나간다 — 같은 알림톡이 아니라 **승인된 다른 템플릿**이다.
+   */
+  describe('아침/저녁 템플릿 선택 (하루 두 번 울리는 알림)', () => {
+    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+    /** 주어진 KST 시각(시)에 발송이 일어나도록 시계를 고정한다. */
+    function freezeAtKstHour(hour: number): void {
+      const kstNoonBase = Date.UTC(2026, 8, 16, hour, 30) - KST_OFFSET_MS;
+      jest.useFakeTimers().setSystemTime(new Date(kstNoonBase));
+    }
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    async function sendWeatherAlertAt(schedule: string, kstHour: number): Promise<void> {
+      const user = new User('user@example.com', 'John Doe', '01012345678', undefined, {
+        address: 'Seoul',
+        lat: 37.5665,
+        lng: 126.978,
+      });
+      const alert = new Alert(user.id, '출퇴근 알림', schedule, [AlertType.WEATHER]);
+
+      alertRepository.findById.mockResolvedValue(alert);
+      userRepository.findById.mockResolvedValue(user);
+      weatherApiClient.getWeatherWithForecast.mockResolvedValue(
+        new Weather('Seoul', 15, 'Clear', 60, 10),
+      );
+      solapiService.sendWeatherAlert.mockResolvedValue();
+
+      freezeAtKstHour(kstHour);
+      await useCase.execute(alert.id);
+    }
+
+    it('18시 발화는 저녁 템플릿으로 나간다', async () => {
+      await sendWeatherAlertAt('0 7,18 * * *', 18);
+
+      expect(solapiService.sendWeatherAlert).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'evening',
+      );
+    });
+
+    it('같은 알림의 7시 발화는 아침 템플릿으로 나간다', async () => {
+      await sendWeatherAlertAt('0 7,18 * * *', 7);
+
+      expect(solapiService.sendWeatherAlert).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'morning',
+      );
+    });
+
+    it('하루 한 번 울리는 알림은 종전 판정을 유지한다', async () => {
+      await sendWeatherAlertAt('0 8 * * *', 8);
+
+      expect(solapiService.sendWeatherAlert).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'morning',
+      );
+    });
+
+    /**
+     * 재시도로 발송이 예정 시각을 넘겨도 템플릿은 **예정된 시각**을 따른다.
+     * 현재 시각만 보면 11:55 알림의 3분 뒤 재시도가 저녁 템플릿으로 뒤집힌다.
+     */
+    it('예정 시각을 조금 넘겨 발송돼도 예정 시각 기준을 따른다', async () => {
+      await sendWeatherAlertAt('55 11 * * *', 12);
+
+      expect(solapiService.sendWeatherAlert).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'morning',
+      );
+    });
+  });
 });

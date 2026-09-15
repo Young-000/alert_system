@@ -25,6 +25,7 @@ import {
 import { CalculateDepartureUseCase } from '@application/use-cases/calculate-departure.use-case';
 import { BriefingAdviceService } from '@application/services/briefing-advice.service';
 import { BriefingResponseDto } from '@application/dto/briefing.dto';
+import { parseCronHours } from '@domain/utils/cron-hours';
 
 const DEFAULT_LAT = 37.5665;
 const DEFAULT_LNG = 126.9780;
@@ -68,6 +69,13 @@ function parseCronDaysOfWeek(schedule: string): ReadonlySet<number> {
   }
 
   return days.size > 0 ? days : ALL_DAYS_OF_WEEK;
+}
+
+/** 자정 기준 분 → "HH:mm". 위젯에 찍히는 문자열이다. */
+function formatMinutesOfDay(minutesOfDay: number): string {
+  const hour = Math.floor(minutesOfDay / 60);
+  const minute = minutesOfDay % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
 @Injectable()
@@ -228,24 +236,29 @@ export class WidgetDataService {
     const kstDayOfWeek = kstNow.getUTCDay();
     const kstMinutes = kstNow.getUTCHours() * 60 + kstNow.getUTCMinutes();
 
-    let earliest: { alert: Alert; minutesUntil: number; dayOffset: number } | null = null;
+    let earliest: {
+      alert: Alert;
+      minutesUntil: number;
+      dayOffset: number;
+      alertMinutes: number;
+    } | null = null;
 
     for (const alert of enabledAlerts) {
-      const [hourStr, minuteStr] = alert.notificationTime!.split(':');
-      const alertMinutes = parseInt(hourStr, 10) * 60 + parseInt(minuteStr, 10);
       const activeDays = parseCronDaysOfWeek(alert.schedule);
 
-      const dayOffset = this.findNextActiveDayOffset(
-        activeDays,
-        kstDayOfWeek,
-        alertMinutes > kstMinutes,
-      );
-      if (dayOffset === null) continue;
+      for (const alertMinutes of this.candidateMinutesOfDay(alert)) {
+        const dayOffset = this.findNextActiveDayOffset(
+          activeDays,
+          kstDayOfWeek,
+          alertMinutes > kstMinutes,
+        );
+        if (dayOffset === null) continue;
 
-      const minutesUntil = dayOffset * MINUTES_PER_DAY + alertMinutes - kstMinutes;
+        const minutesUntil = dayOffset * MINUTES_PER_DAY + alertMinutes - kstMinutes;
 
-      if (!earliest || minutesUntil < earliest.minutesUntil) {
-        earliest = { alert, minutesUntil, dayOffset };
+        if (!earliest || minutesUntil < earliest.minutesUntil) {
+          earliest = { alert, minutesUntil, dayOffset, alertMinutes };
+        }
       }
     }
 
@@ -253,7 +266,7 @@ export class WidgetDataService {
 
     const dto = new WidgetNextAlertDto();
     dto.time = this.formatAlertTime(
-      earliest.alert.notificationTime!,
+      formatMinutesOfDay(earliest.alertMinutes),
       earliest.dayOffset,
       kstDayOfWeek,
     );
@@ -263,15 +276,41 @@ export class WidgetDataService {
   }
 
   /**
+   * 이 알림이 하루 중 발화하는 분(자정 기준) 전부.
+   *
+   * `alert.notificationTime`은 크론의 **첫 시각**만 담는다
+   * (`alert.entity.ts:152`). 그것만 보면 `0 7,18 * * *`(출근+퇴근)의 저녁
+   * 발화가 위젯에서 통째로 사라져, 오전 발화가 지난 뒤에도 "내일 07:00"이라
+   * 말한다. 분 필드는 모든 시각에 공통 적용된다.
+   */
+  private candidateMinutesOfDay(alert: Alert): number[] {
+    const [hourStr, minuteStr] = alert.notificationTime!.split(':');
+    const minute = parseInt(minuteStr, 10);
+    const firstHour = parseInt(hourStr, 10);
+    if (!Number.isFinite(minute) || !Number.isFinite(firstHour)) return [];
+
+    const scheduledHours = parseCronHours(alert.schedule);
+    const hours = scheduledHours.length > 0 ? scheduledHours : [firstHour];
+
+    return hours.map((hour) => hour * 60 + minute);
+  }
+
+  /**
    * Days ahead (0 = today) until the alert's next active weekday.
    * Today only counts when the alert time has not passed yet.
+   *
+   * offset 6까지만 훑으면 **주 1회 알림이 그날 시각을 넘긴 순간 사라진다.**
+   * `0 8 * * 1`(월요일만)을 월요일 09:00에 보면 오늘은 이미 지났고 화~일요일은
+   * 활성일이 아니라 후보가 없다 — 실제로는 7일 뒤에 울리는데 위젯에는
+   * 아무것도 뜨지 않는다. 모바일과 같이 다음 주 같은 요일(offset 7)까지 본다
+   * (`mobile/src/utils/alert-schedule.ts:34`).
    */
   private findNextActiveDayOffset(
     activeDays: ReadonlySet<number>,
     kstDayOfWeek: number,
     isStillUpcomingToday: boolean,
   ): number | null {
-    for (let offset = 0; offset < DAYS_PER_WEEK; offset++) {
+    for (let offset = 0; offset <= DAYS_PER_WEEK; offset++) {
       if (offset === 0 && !isStillUpcomingToday) continue;
       if (activeDays.has((kstDayOfWeek + offset) % DAYS_PER_WEEK)) return offset;
     }
@@ -285,7 +324,12 @@ export class WidgetDataService {
   ): string {
     if (dayOffset === 0) return timeStr;
     if (dayOffset === 1) return `내일 ${timeStr}`;
-    return `${DAY_NAMES_KR[(kstDayOfWeek + dayOffset) % DAYS_PER_WEEK]} ${timeStr}`;
+
+    const dayLabel = DAY_NAMES_KR[(kstDayOfWeek + dayOffset) % DAYS_PER_WEEK];
+    // offset 7 = 오늘과 같은 요일. "월 08:00"이라고만 하면 월요일에 보는
+    // 사용자가 오늘로 오해한다 (`mobile/src/utils/alert-schedule.ts:52`).
+    if (dayOffset === DAYS_PER_WEEK) return `다음 주 ${dayLabel} ${timeStr}`;
+    return `${dayLabel} ${timeStr}`;
   }
 
   private buildAlertLabel(alert: Alert): string {
