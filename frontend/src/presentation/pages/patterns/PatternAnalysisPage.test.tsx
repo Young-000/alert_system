@@ -242,6 +242,73 @@ describe('PatternAnalysisPage', () => {
     expect(await screen.findByText('평균 08:00')).toBeInTheDocument();
   });
 
+  /**
+   * 표본 수가 요일마다 다를 때의 기준선.
+   *
+   * 요일 평균들을 단순히 더해 나누면 **3회 기록된 요일과 45회 기록된 요일이 같은 무게**를
+   * 갖는다. 그러면 같은 페이지의 개요 탭이 "평균 출발 시간"이라고 말하는 값
+   * (서버가 전체 기록으로 낸 평균)과 요일 탭의 "평균"이 서로 다른 시각이 된다.
+   */
+  const UNEVEN_SAMPLES = {
+    ...SERVER_INSIGHTS,
+    dayOfWeek: {
+      ...SERVER_INSIGHTS.dayOfWeek,
+      segments: [
+        { day: 1, dayName: '월요일', avgDepartureTime: '08:00', sampleCount: 45, stdDevMinutes: 4 },
+        { day: 2, dayName: '화요일', avgDepartureTime: '08:10', sampleCount: 45, stdDevMinutes: 3 },
+        { day: 3, dayName: '수요일', avgDepartureTime: '08:15', sampleCount: 2, stdDevMinutes: 5 },
+        { day: 5, dayName: '금요일', avgDepartureTime: '09:00', sampleCount: 8, stdDevMinutes: 9 },
+      ],
+      mostConsistentDay: 2,
+      mostVariableDay: 5,
+    },
+    // 가중 평균 48960/100 = 489.6분 → 08:10. 서버도 같은 모집단을 보므로 같은 값을 준다.
+    overallStats: { ...SERVER_INSIGHTS.overallStats, avgDepartureTime: '08:10' },
+  };
+
+  it('요일 탭의 평균 기준선이 표본 수를 반영한다', async () => {
+    // 단순 평균은 (480+490+495+540)/4 = 501.25분 → "08:21"이 되어,
+    // 개요 탭이 말하는 평균(08:10)과 같은 페이지에서 11분 어긋난다.
+    mockBehaviorApi.getInsights.mockResolvedValue(toInsightsResponse(UNEVEN_SAMPLES));
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    // 개요 탭이 먼저 말하는 평균.
+    expect(screen.getByText('08:10')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    // 요일 탭의 기준선도 같은 값이어야 한다.
+    expect(await screen.findByText('평균 08:10')).toBeInTheDocument();
+  });
+
+  it('표본이 적은 요일이 기준선을 밀어 올려 판정을 뒤집지 않는다', async () => {
+    // 수요일(08:15)은 사용자의 실제 평균(08:10)보다 **늦다**. 기준선을 단순 평균
+    // (08:21)으로 잡으면 같은 막대가 "일찍"으로 칠해진다 — 판정이 반대로 뒤집힌다.
+    mockBehaviorApi.getInsights.mockResolvedValue(toInsightsResponse(UNEVEN_SAMPLES));
+
+    render(
+      <TestProviders>
+        <PatternAnalysisPage />
+      </TestProviders>,
+    );
+
+    await screen.findByText('출발 패턴 요약');
+    fireEvent.click(screen.getByRole('tab', { name: '요일별' }));
+
+    await screen.findByText('요일별 출발 시간');
+    const wednesday = screen.getByLabelText(/수요일: 08:15/);
+    const bar = wednesday.querySelector('.patterns-bar');
+
+    expect(bar).toHaveClass('patterns-bar--late');
+    expect(bar).not.toHaveClass('patterns-bar--early');
+  });
+
   it('요일별 막대는 각 요일의 출발 시각을 그대로 보여준다', async () => {
     // 대조군: 평균 계산을 고치면서 개별 요일 표기를 바꾸지 않았다는 증거. 485분 = 08:05.
     render(
