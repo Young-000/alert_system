@@ -18,6 +18,8 @@ import { RuleCategory } from '@domain/entities/notification-rule.entity';
 import { IRuleEngine, RULE_ENGINE } from '@domain/services/rule-engine.service';
 import { ISmartMessageBuilder, SMART_MESSAGE_BUILDER } from '@application/services/smart-message-builder.service';
 import { INotificationRuleRepository, NOTIFICATION_RULE_REPOSITORY } from '@domain/repositories/notification-rule.repository';
+import { parseCronHours, resolveFiringHour } from '@domain/utils/cron-hours';
+import { getHoursKST } from '@domain/utils/kst-date';
 import { RecommendBestRouteUseCase } from './recommend-best-route.use-case';
 import { Repository } from 'typeorm';
 import { NotificationLogEntity } from '@infrastructure/persistence/typeorm/notification-log.entity';
@@ -263,10 +265,21 @@ export class SendNotificationUseCase {
     }
   }
 
+  /**
+   * 아침/저녁 중 어느 승인 템플릿으로 보낼지.
+   *
+   * `alert.notificationTime`은 크론의 **첫 시각**만 담는다
+   * (`alert.entity.ts:152`). 그래서 `0 7,18 * * *`(출근+퇴근)의 18시 발화가
+   * 아침 템플릿으로 나갔다 — 문구만 어긋나는 게 아니라 Solapi에 **다른
+   * 템플릿 ID**로 발송된다(`solapi.service.ts:160`).
+   */
   private determineTimeType(alert: Alert): AlertTimeType {
-    const time = alert.notificationTime || '08:00';
-    const hour = parseInt(time.split(':')[0], 10);
-    return hour < 12 ? 'morning' : 'evening';
+    const hour = resolveFiringHour(parseCronHours(alert.schedule), getHoursKST());
+    if (hour !== null) return hour < 12 ? 'morning' : 'evening';
+
+    // 시각 필드를 숫자로 못 읽는 스케줄("08:00" 형식 포함)은 종전 경로 그대로.
+    const fallback = parseInt((alert.notificationTime || '08:00').split(':')[0], 10);
+    return Number.isFinite(fallback) && fallback < 12 ? 'morning' : 'evening';
   }
 
   private async sendNotification(
