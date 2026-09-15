@@ -143,9 +143,26 @@ function OverviewTab({
 function ByDayTab({ insights }: { insights: InsightsResponse }): JSX.Element {
   const segments = insights.dayOfWeek.segments;
 
+  /**
+   * 막대의 기준선이 되는 평균. **표본 수로 가중한다.**
+   *
+   * 요일 평균들을 그냥 더해 나누면 2회 기록된 요일과 45회 기록된 요일이 같은 무게를
+   * 갖는다. 그러면 두 가지가 한꺼번에 어긋난다.
+   *  · 같은 페이지의 개요 탭은 "평균 출발 시간"으로 서버가 **전체 기록**으로 낸 값을
+   *    보여준다(`insights.summary.averageDeparture`). 여기서 무게를 무시하면 한 화면이
+   *    서로 다른 두 평균을 말한다.
+   *  · `DayBar`는 이 값과의 차이로 막대를 "일찍/늦게"로 칠한다. 기준선이 밀려 올라가면
+   *    실제로는 평균보다 늦은 요일이 "일찍"으로 뒤집힌다.
+   *
+   * `sampleCount`가 전부 0이면(표본 수를 모르는 응답) 나눌 수 없으므로 단순 평균으로
+   * 물러난다 — 기준선이 없는 것보다는 낫다.
+   */
   const { avgMinutes, maxDev } = useMemo(() => {
     if (segments.length === 0) return { avgMinutes: 0, maxDev: 1 };
-    const avg = segments.reduce((s, seg) => s + seg.avgMinutes, 0) / segments.length;
+    const totalSamples = segments.reduce((s, seg) => s + seg.sampleCount, 0);
+    const avg = totalSamples > 0
+      ? segments.reduce((s, seg) => s + seg.avgMinutes * seg.sampleCount, 0) / totalSamples
+      : segments.reduce((s, seg) => s + seg.avgMinutes, 0) / segments.length;
     const dev = Math.max(...segments.map((seg) => Math.abs(seg.avgMinutes - avg)), 1);
     return { avgMinutes: avg, maxDev: dev };
   }, [segments]);
