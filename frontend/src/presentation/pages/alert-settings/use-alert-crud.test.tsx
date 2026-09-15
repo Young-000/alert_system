@@ -448,3 +448,50 @@ describe('useAlertCrud — 빠른 프리셋과 위저드의 규칙 일치', () =
     expect(mockCreateAlert).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * 모바일(`useAlerts`)은 목록을 울리는 시각 순으로 정렬해 왔는데 웹에는 정렬이 없어
+ * 같은 알림이 두 클라이언트에서 다른 순서로 보였다. 웹을 모바일 규칙에 맞춘다.
+ */
+describe('useAlertCrud — 목록 순서', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    routesStub.current = { data: [], isError: false, refetch: vi.fn() };
+  });
+
+  const withSchedule = (id: string, schedule: string): Alert =>
+    ({ ...alertOn, id, schedule }) as Alert;
+
+  it('먼저 울리는 알림이 위로 온다 — 서버가 준 순서와 무관하게', async () => {
+    mockGetAlertsByUser.mockResolvedValue([
+      withSchedule('evening', '0 18 * * *'),
+      withSchedule('dawn', '30 6 * * *'),
+      withSchedule('morning', '0 8 * * *'),
+    ]);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(3));
+    expect(result.current.alerts.map((a) => a.id)).toEqual([
+      'dawn',
+      'morning',
+      'evening',
+    ]);
+  });
+
+  // 같은 시각끼리는 서버 순서(생성 시각 오름차순)를 흐트러뜨리지 않아야
+  // 모바일과 최종 순서가 같아진다.
+  it('같은 시각이면 서버가 준 순서를 유지한다', async () => {
+    mockGetAlertsByUser.mockResolvedValue([
+      withSchedule('first', '0 8 * * *'),
+      withSchedule('second', '0 8 * * *'),
+    ]);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useAlertCrud(USER_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.alerts).toHaveLength(2));
+    expect(result.current.alerts.map((a) => a.id)).toEqual(['first', 'second']);
+  });
+});

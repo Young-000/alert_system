@@ -23,8 +23,14 @@ export class PostgresAlertRepository implements IAlertRepository {
     return entity ? this.toDomain(entity) : undefined;
   }
 
+  // `/alerts` 목록의 순서를 정하는 것은 이 쿼리다 — 프론트(AlertList)는 받은 배열을
+  // 그대로 렌더한다. order를 빼면 Postgres가 물리적 행 순서로 돌려주므로, 알림을
+  // 토글해 UPDATE가 행을 옮기는 순간 목록이 재배열돼 보인다.
   async findByUserId(userId: string): Promise<Alert[]> {
-    const entities = await this.repository.find({ where: { userId } });
+    const entities = await this.repository.find({
+      where: { userId },
+      order: { createdAt: 'ASC' },
+    });
     return entities.map((entity) => this.toDomain(entity));
   }
 

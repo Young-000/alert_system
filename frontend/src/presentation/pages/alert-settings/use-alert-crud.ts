@@ -13,6 +13,7 @@ import {
   cronToHuman,
   cronToTimeInput,
   applyTimeToCron,
+  cronToSortMinutes,
 } from './cron-utils';
 import { findDuplicateAlert, QUICK_WEATHER_PRESET } from './alert-utils';
 import { TOAST_DURATION_MS } from './types';
@@ -83,10 +84,17 @@ export function useAlertCrud(userId: string): AlertCrudState & AlertCrudActions 
     void routesQuery.refetch();
   }, [alertsQuery, routesQuery]);
 
-  // Sync query data to local state when query data changes
+  // Sync query data to local state when query data changes.
+  // 모바일(`mobile/src/hooks/useAlerts.ts`)은 목록을 울리는 시각 순으로 정렬해 왔는데
+  // 웹에는 정렬이 없어 같은 알림이 두 클라이언트에서 다른 순서로 보였다.
+  // 정렬은 안정적이라 같은 시각끼리는 서버 순서(생성 시각 오름차순)가 유지된다.
   useEffect(() => {
     if (alertsQuery.data) {
-      setAlerts(alertsQuery.data);
+      setAlerts(
+        [...alertsQuery.data].sort(
+          (a, b) => cronToSortMinutes(a.schedule) - cronToSortMinutes(b.schedule),
+        ),
+      );
     }
   }, [alertsQuery.data]);
 
