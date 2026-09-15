@@ -1,4 +1,10 @@
-import { cronToHuman, cronToTimeInput, applyTimeToCron, normalizeCronForComparison } from './cron-utils';
+import {
+  cronToHuman,
+  cronToTimeInput,
+  applyTimeToCron,
+  normalizeCronForComparison,
+  cronToSortMinutes,
+} from './cron-utils';
 
 describe('cronToHuman', () => {
   it('매일 정각 패턴을 올바르게 변환한다', () => {
@@ -186,5 +192,31 @@ describe('숫자로 읽을 수 없는 시각 필드', () => {
 
   it('5필드가 아니면 매일로 폴백한다', () => {
     expect(applyTimeToCron('invalid', '09:05')).toBe('5 9 * * *');
+  });
+});
+
+/**
+ * 알림 목록의 순서를 정하는 키다. 모바일(`mobile/src/utils/cron.ts`의 `parseCronTime`)이
+ * 이미 같은 규칙으로 목록을 정렬하고 있었는데 웹에는 정렬이 아예 없어서, 같은 사용자의
+ * 같은 알림이 두 클라이언트에서 다른 순서로 보였다. 규칙을 모바일에 맞춘다.
+ */
+describe('cronToSortMinutes', () => {
+  it('정각 알림은 시각을 분으로 환산한다', () => {
+    expect(cronToSortMinutes('0 7 * * *')).toBe(7 * 60);
+  });
+
+  it('분이 있는 알림도 함께 반영한다', () => {
+    expect(cronToSortMinutes('30 7 * * *')).toBe(7 * 60 + 30);
+  });
+
+  // 출근+퇴근처럼 시각이 여럿이면 목록에서는 먼저 울리는 시각을 기준으로 놓는다.
+  it('시각이 여럿이면 가장 이른 시각을 쓴다 — 나열 순서와 무관하게', () => {
+    expect(cronToSortMinutes('0 18,7 * * *')).toBe(7 * 60);
+  });
+
+  // 못 읽는 스케줄을 임의의 큰 값으로 밀면 모바일과 순서가 갈린다.
+  it('읽을 수 없는 시각은 모바일과 같이 0으로 본다', () => {
+    expect(cronToSortMinutes('0 */2 * * *')).toBe(0);
+    expect(cronToSortMinutes('invalid')).toBe(0);
   });
 });

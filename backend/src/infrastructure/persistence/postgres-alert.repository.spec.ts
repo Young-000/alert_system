@@ -87,3 +87,36 @@ describeDb('PostgresAlertRepository', () => {
     expect(found).toBeUndefined();
   });
 });
+
+/**
+ * 위 describeDb 블록은 Postgres 실물이 있어야 돌아간다(RUN_DB_TESTS).
+ * 아래는 DB 없이 조회 옵션 계약만 고정하는 블록이다 — `/alerts` 목록의 순서는
+ * 서버가 정하는데, 프론트에 정렬이 없어서(AlertList가 받은 배열을 그대로 map)
+ * 여기서 order를 빠뜨리면 화면 순서가 Postgres의 물리적 행 순서에 끌려간다.
+ * 알림을 토글하면 UPDATE가 행을 옮길 수 있어 목록이 재배열돼 보인다.
+ * InMemory 구현(Map)은 삽입순을 보장하므로 이 결함을 재현하지 못한다.
+ */
+describe('PostgresAlertRepository — 조회 정렬 계약', () => {
+  const createRepository = (): {
+    repository: PostgresAlertRepository;
+    find: jest.Mock;
+  } => {
+    const find = jest.fn().mockResolvedValue([]);
+    const dataSource = {
+      getRepository: jest.fn().mockReturnValue({ find }),
+    } as unknown as DataSource;
+
+    return { repository: new PostgresAlertRepository(dataSource), find };
+  };
+
+  it('findByUserId는 생성 시각 오름차순으로 정렬해 조회한다', async () => {
+    const { repository, find } = createRepository();
+
+    await repository.findByUserId('user-1');
+
+    expect(find).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
+      order: { createdAt: 'ASC' },
+    });
+  });
+});

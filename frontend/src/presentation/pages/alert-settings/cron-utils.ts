@@ -256,3 +256,28 @@ function parseDayOfWeek(field: string): string {
 
   return dayLabels.length > 0 ? dayLabels.join(',') : field;
 }
+
+/**
+ * 알림 목록의 정렬 키 — **먼저 울리는 알림이 위로** 온다.
+ *
+ * 순서를 서버에 맡길 수 없다. 스케줄은 크론 문자열이라 SQL로 시각 정렬이 불가능하고,
+ * 서버는 생성 순서(`createdAt`)까지만 보장한다. 그래서 모바일
+ * (`mobile/src/utils/cron.ts`의 `parseCronTime`)이 화면에서 시각 순으로 다시 정렬해 왔는데,
+ * 웹에는 그 정렬이 없어 **같은 알림 목록이 두 클라이언트에서 다른 순서로** 보였다.
+ *
+ * 읽을 수 없는 시각(`*​/2`·범위)은 모바일과 똑같이 0으로 둔다 — 여기서 웹만
+ * "맨 뒤로 보내기" 같은 더 나은 규칙을 쓰면 고치려던 불일치가 되살아난다.
+ * 동률은 정렬이 안정적이라 서버 순서(`createdAt` 오름차순)가 그대로 유지된다.
+ */
+export function cronToSortMinutes(cron: string): number {
+  if (!cron || typeof cron !== 'string') return 0;
+
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return 0;
+
+  const hours = parseNumericList(parts[1]);
+  const minute = parseMinute(parts[0]);
+  if (hours === null || minute === null) return 0;
+
+  return Math.min(...hours) * 60 + minute;
+}
