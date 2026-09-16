@@ -20,6 +20,7 @@ import { SmartDepartureSettingForm } from '@/components/smart-departure/SmartDep
 import { colors } from '@/constants/colors';
 import { useRoutes } from '@/hooks/useRoutes';
 import { useSmartDeparture } from '@/hooks/useSmartDeparture';
+import { ROUTE_SETUP_PATH } from '@/utils/route-cta';
 import { canAddSetting } from '@/utils/smart-departure-cta';
 import { notifyIfToggleFailed } from '@/utils/toggle-feedback';
 
@@ -261,7 +262,7 @@ export default function SmartDepartureScreen(): React.JSX.Element {
             </Text>
             <Pressable
               style={styles.emptyRouteButton}
-              onPress={() => router.push('/(tabs)/commute')}
+              onPress={() => router.push(ROUTE_SETUP_PATH)}
               accessibilityRole="button"
               accessibilityLabel="경로 설정하러 가기"
             >

@@ -3,13 +3,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { colors } from '@/constants/colors';
+import { ROUTE_SETUP_PATH } from '@/utils/route-cta';
 
 export function EmptyRouteCard(): React.JSX.Element {
   const router = useRouter();
 
   const handlePress = (): void => {
-    // Navigate to routes/settings tab for route setup
-    router.push('/settings');
+    // 설정 탭에는 경로 생성 수단이 없다. 도착지 판단은 `route-cta`가 정본이다.
+    router.push(ROUTE_SETUP_PATH);
   };
 
   return (
