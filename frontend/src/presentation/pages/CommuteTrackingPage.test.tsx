@@ -180,7 +180,13 @@ describe('CommuteTrackingPage', () => {
 
   // --- Redirect when no route ---
 
-  it('should redirect to home when no routeId and no active session', async () => {
+  // 이 경로로 오는 사람은 "트래킹 시작하기"를 누른 사람이다
+  // (통근 통계 빈 상태 · 행동 분석 빈 상태 · 패턴 분석 빈 상태 · 온보딩 완료 화면 —
+  //  넷 다 location.state 없이 /commute 로 보낸다).
+  // 홈으로 돌려보내면 경로가 없는 사람에게는 시작할 수단이 아예 없다
+  // (홈의 시작 버튼은 activeRoute 가 있어야 뜬다). 경로 화면이 다음 행동이 있는 곳이고,
+  // 하단 탭도 /commute 를 '경로' 탭으로 묶고 있다(BottomNavigation matchPaths).
+  it('should redirect to the route list when no routeId and no active session', async () => {
     localStorage.setItem('userId', 'test-user-id');
     mockCommuteApi.getInProgressSession.mockResolvedValue(null);
 
@@ -189,11 +195,30 @@ describe('CommuteTrackingPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith('/routes', { replace: true });
     });
+    expect(mockNavigate).not.toHaveBeenCalledWith('/', { replace: true });
   });
 
-  it('should redirect to home when navigation routeId no longer exists', async () => {
+  it('should still resume an in-progress session instead of redirecting', async () => {
+    localStorage.setItem('userId', 'test-user-id');
+    mockCommuteApi.getInProgressSession.mockResolvedValue(mockInProgressSession);
+    mockCommuteApi.getUserRoutes.mockResolvedValue([mockRoute]);
+
+    await act(async () => {
+      renderPage();
+    });
+
+    await waitFor(() => {
+      expect(mockCommuteApi.getInProgressSession).toHaveBeenCalled();
+    });
+    expect(mockNavigate).not.toHaveBeenCalledWith('/routes', { replace: true });
+  });
+
+  // 삭제된 경로도 같은 상황이다 — 여기서는 트래킹을 시작할 수 없다.
+  // 사용자가 온 곳이 경로 목록(RouteCard 가 state.routeId 를 만드는 유일한 자리)이므로
+  // 그 목록으로 돌려보내면 무엇이 사라졌는지 보이고 다른 경로를 바로 고를 수 있다.
+  it('should redirect to the route list when navigation routeId no longer exists', async () => {
     localStorage.setItem('userId', 'test-user-id');
     mockLocationState = { routeId: 'deleted-route-id' };
     mockCommuteApi.getUserRoutes.mockResolvedValue([mockRoute]);
@@ -203,7 +228,7 @@ describe('CommuteTrackingPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith('/routes', { replace: true });
     });
     expect(mockCommuteApi.startSession).not.toHaveBeenCalled();
   });
