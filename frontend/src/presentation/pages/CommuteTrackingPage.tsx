@@ -112,8 +112,10 @@ export function CommuteTrackingPage(): JSX.Element {
             if (isMounted) setSession(newSession);
             return;
           }
-          // 경로가 삭제된 경우: dead-end 방지를 위해 홈으로
-          if (isMounted) navigate('/', { replace: true });
+          // 경로가 삭제된 경우: 그 경로를 고른 곳이 경로 목록이므로 목록으로 돌려보낸다.
+          // 아래 "경로 없음"과 같은 상황이라 같은 곳으로 보낸다 — 트래킹을 시작할 수
+          // 없을 때 다음 행동이 있는 화면은 홈이 아니라 경로 화면이다.
+          if (isMounted) navigate('/routes', { replace: true });
           return;
         }
 
@@ -132,9 +134,15 @@ export function CommuteTrackingPage(): JSX.Element {
           }
         }
 
-        // No route provided and no active session
+        // No route provided and no active session.
+        // 여기로 오는 사람은 "트래킹 시작하기"를 누른 사람이다 — 통근 통계·행동 분석·
+        // 패턴 분석의 빈 상태와 온보딩 완료 화면이 전부 routeId 없이 /commute 로 보낸다.
+        // 홈으로 돌려보내면 경로가 없는 사람에게는 시작할 수단이 없다(홈의 시작 버튼은
+        // activeRoute 가 있어야 뜬다). 경로 화면에는 둘 다 있다 — 경로가 있으면 골라서
+        // 바로 트래킹으로 가고, 없으면 "경로 추가"가 있다. 하단 탭도 /commute 를
+        // '경로' 탭으로 묶는다(BottomNavigation matchPaths).
         if (isMounted) {
-          navigate('/', { replace: true });
+          navigate('/routes', { replace: true });
         }
       } catch {
         if (isMounted) setError('데이터를 불러오는데 실패했습니다.');
