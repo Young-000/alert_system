@@ -173,10 +173,44 @@ export class CalculateDepartureUseCase {
   }
 
   /**
+   * 오늘 사용자에게 **보여줘도 되는** 스냅샷.
+   *
+   * 스냅샷은 계산 시점의 설정으로 만들어지고, 그 뒤 설정이 바뀌어도 행은 남는다 —
+   * `toggleSetting`·`updateSetting`은 스냅샷을 지우지 않고, `calculateForToday`는
+   * 활성 설정만 다시 쓸 뿐 남은 행을 걷어내지 않는다. 그대로 내보내면 사용자가
+   * 꺼 둔 출발이 모바일 카드에 계속 뜨고, 잠금화면 Live Activity까지 자동으로
+   * 시작된다 (`useSmartDepartureToday`).
+   *
+   * 설정을 **삭제**한 경우는 여기서 걸 필요가 없다 — FK가 받는다
+   * (`setting_id ... ON DELETE CASCADE`). 행이 남는 두 경우만 거른다:
+   * 설정을 껐을 때, 그리고 오늘이 활성 요일에서 빠졌을 때.
+   *
+   * 판정 기준은 `calculateForToday`가 스냅샷을 만들 때 쓴 것과 같다 —
+   * 쓰기와 읽기가 다른 기준을 쓰면 다시 갈라진다.
+   */
+  private async findServableTodaySnapshots(
+    userId: string,
+  ): Promise<SmartDepartureSnapshot[]> {
+    const [snapshots, activeSettings] = await Promise.all([
+      this.snapshotRepo.findTodayByUserId(userId),
+      this.settingRepo.findActiveByUserId(userId),
+    ]);
+
+    const dayOfWeek = getDayOfWeekKST();
+    const servableSettingIds = new Set(
+      activeSettings
+        .filter((setting) => setting.activeDays.includes(dayOfWeek))
+        .map((setting) => setting.id),
+    );
+
+    return snapshots.filter((s) => servableSettingIds.has(s.settingId));
+  }
+
+  /**
    * Get today's departure info for a user (commute + return).
    */
   async getTodayDeparture(userId: string): Promise<SmartDepartureTodayResponseDto> {
-    const snapshots = await this.snapshotRepo.findTodayByUserId(userId);
+    const snapshots = await this.findServableTodaySnapshots(userId);
     const response = new SmartDepartureTodayResponseDto();
 
     for (const snapshot of snapshots) {
@@ -196,7 +230,7 @@ export class CalculateDepartureUseCase {
    * Returns the most relevant departure (upcoming or most recent).
    */
   async getWidgetDepartureData(userId: string): Promise<WidgetDepartureDto | null> {
-    const snapshots = await this.snapshotRepo.findTodayByUserId(userId);
+    const snapshots = await this.findServableTodaySnapshots(userId);
     if (snapshots.length === 0) return null;
 
     // Find the next relevant snapshot (scheduled/notified, closest to now)
