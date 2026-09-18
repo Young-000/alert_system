@@ -99,7 +99,7 @@ export function useDeleteMissionMutation() {
 export function useReorderMissionMutation() {
   const qc = useQueryClient();
 
-  return useMutation<Mission, Error, { id: string; sortOrder: number }>({
+  return useMutation<Pick<Mission, 'id' | 'sortOrder'>, Error, { id: string; sortOrder: number }>({
     mutationFn: ({ id, sortOrder }: { id: string; sortOrder: number }) =>
       missionApiClient.reorder(id, sortOrder),
     onSuccess: () => {
@@ -114,7 +114,7 @@ export function useReorderMissionMutation() {
 export function useToggleActiveMutation() {
   const qc = useQueryClient();
 
-  return useMutation<Mission, Error, string>({
+  return useMutation<Pick<Mission, 'id' | 'isActive'>, Error, string>({
     mutationFn: (id: string) => missionApiClient.toggleActive(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.missions.all });
