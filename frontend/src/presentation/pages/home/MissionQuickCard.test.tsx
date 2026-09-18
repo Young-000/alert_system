@@ -18,17 +18,12 @@ function missionItem(id: string, title: string, isCompleted: boolean): MissionWi
   return {
     mission: {
       id,
-      userId: 'user-1',
       title,
       emoji: '📌',
       missionType: 'commute',
-      isActive: true,
-      sortOrder: 0,
-      createdAt: '2026-08-05T00:00:00.000Z',
-      updatedAt: '2026-08-05T00:00:00.000Z',
     },
-    record: null,
     isCompleted,
+    completedAt: null,
   };
 }
 

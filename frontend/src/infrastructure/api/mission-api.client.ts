@@ -4,31 +4,41 @@ import type { ApiClient } from './api-client';
 
 export type MissionType = 'commute' | 'return';
 
+/**
+ * 서버(`MissionController`)가 실제로 내려주는 6개 필드뿐이다.
+ *
+ * 컨트롤러는 도메인 객체를 그대로 직렬화하지 않고 필드를 골라 담는다
+ * (`mission.controller.ts` getMissions/createMission/updateMission).
+ * 예전에는 여기에 `userId`·`createdAt`·`updatedAt`이 함께 선언돼 있었는데,
+ * 서버가 보내지 않는 필드라 읽으면 런타임에 `undefined`가 나온다.
+ * 타입이 서버보다 넓으면 그 오용이 **컴파일을 통과한다** — 계약은
+ * `backend/src/presentation/controllers/mission.controller.spec.ts`가 고정한다.
+ */
 export type Mission = {
   id: string;
-  userId: string;
   title: string;
   emoji: string;
   missionType: MissionType;
   isActive: boolean;
   sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
 };
 
+/** `POST /missions/daily/:missionId/check` 응답 — 서버는 이 3개만 내려준다. */
 export type DailyMissionRecord = {
-  id: string;
-  userId: string;
   missionId: string;
-  date: string;
   isCompleted: boolean;
   completedAt: string | null;
 };
 
+/**
+ * `GET /missions/daily`의 항목. 서버는 기록을 **평탄화해서** 내려주므로
+ * `record` 중첩 객체는 존재하지 않는다 — 완료 여부는 `isCompleted`를 직접 읽는다.
+ * 중첩된 `mission`도 목록용 4개 필드뿐이다(`isActive`·`sortOrder` 없음).
+ */
 export type MissionWithRecord = {
-  mission: Mission;
-  record: DailyMissionRecord | null;
+  mission: Pick<Mission, 'id' | 'title' | 'emoji' | 'missionType'>;
   isCompleted: boolean;
+  completedAt: string | null;
 };
 
 export type DailyStatus = {
@@ -45,9 +55,8 @@ export type DailyStatus = {
   streakDay: number;
 };
 
+/** 일일 점수 — 주간·월간 통계의 `dailyScores` 원소와 같은 모양이다(id·userId 없음). */
 export type MissionScore = {
-  id: string;
-  userId: string;
   date: string;
   totalMissions: number;
   completedMissions: number;
@@ -98,12 +107,20 @@ export class MissionApiClient {
     await this.apiClient.delete(`/missions/${id}`);
   }
 
-  async toggleActive(id: string): Promise<Mission> {
-    return this.apiClient.patch<Mission>(`/missions/${id}/toggle`, {});
+  /** 서버는 바뀐 필드만 돌려준다 — 미션 전체가 아니다. */
+  async toggleActive(id: string): Promise<Pick<Mission, 'id' | 'isActive'>> {
+    return this.apiClient.patch<Pick<Mission, 'id' | 'isActive'>>(
+      `/missions/${id}/toggle`,
+      {},
+    );
   }
 
-  async reorder(id: string, sortOrder: number): Promise<Mission> {
-    return this.apiClient.patch<Mission>(`/missions/${id}/reorder`, { sortOrder });
+  /** 서버는 바뀐 필드만 돌려준다 — 미션 전체가 아니다. */
+  async reorder(id: string, sortOrder: number): Promise<Pick<Mission, 'id' | 'sortOrder'>> {
+    return this.apiClient.patch<Pick<Mission, 'id' | 'sortOrder'>>(
+      `/missions/${id}/reorder`,
+      { sortOrder },
+    );
   }
 
   async getDailyStatus(): Promise<DailyStatus> {

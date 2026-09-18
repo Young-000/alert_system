@@ -28,17 +28,12 @@ const mockDailyStatus: DailyStatus = {
     {
       mission: {
         id: 'mission-1',
-        userId: 'user-1',
         title: '물 마시기',
         emoji: '💧',
         missionType: 'commute',
-        isActive: true,
-        sortOrder: 1,
-        createdAt: '2026-08-01T00:00:00Z',
-        updatedAt: '2026-08-01T00:00:00Z',
       },
-      record: null,
       isCompleted: false,
+      completedAt: null,
     },
   ],
   returnMissions: [],
