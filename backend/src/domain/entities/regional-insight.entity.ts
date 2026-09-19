@@ -1,6 +1,10 @@
 export type TrendDirection = 'improving' | 'stable' | 'worsening';
 
-const MINIMUM_USERS = 5;
+/**
+ * 지역 집계를 공개하기 위한 최소 사용자 수(k-익명성). 이 수 미만이면
+ * 평균·중앙값·시간대 분포가 사실상 개인 기록이 된다.
+ */
+export const MINIMUM_USERS = 5;
 const STALE_THRESHOLD_DAYS = 30;
 
 /**

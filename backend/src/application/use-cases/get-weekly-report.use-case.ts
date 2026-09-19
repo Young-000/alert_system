@@ -47,9 +47,17 @@ export class GetWeeklyReportUseCase {
     );
 
     // 4. 스트릭 주간 현황 조회
+    //    저장된 weeklyCount는 마지막 기록 시점의 주 것이라 새 주가 시작되면 낡는다.
+    //    GET /streak(홈 배지)과 같은 보정을 걸지 않으면 홈 한 화면에서
+    //    배지는 0/5, 주간 리포트는 3/5로 두 숫자가 갈린다.
     const streak = await this.streakRepository.findByUserId(userId);
-    const streakWeeklyCount = streak?.weeklyCount ?? 0;
+    streak?.ensureWeeklyCountCurrent(todayKST);
     const streakWeeklyGoal = streak?.weeklyGoal ?? 5;
+
+    //    스트릭은 이번 주 집계 하나뿐이다. 지난주 리포트에 그 값을 실으면
+    //    "2월 2주차" 헤더 아래에 이번 주 기록이 표시된다. 이번 주가 아니면
+    //    null을 넘겨 그 주의 기록일 수로 세게 한다.
+    const streakWeeklyCount = weekOffset === 0 ? (streak?.weeklyCount ?? 0) : null;
 
     // 5. 순수 함수로 리포트 빌드
     return buildWeeklyReport(
