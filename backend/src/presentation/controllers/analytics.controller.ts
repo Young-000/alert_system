@@ -259,9 +259,12 @@ export class AnalyticsController {
   }
 
   private async validateRouteOwnership(userId: string, routeIds: string[]): Promise<void> {
-    const userAnalytics = await this.calculateAnalyticsUseCase.executeForUser(userId);
-    const userRouteIds = new Set(userAnalytics.map((a) => a.routeId));
-    const unauthorizedIds = routeIds.filter((id) => !userRouteIds.has(id));
+    // 경로의 userId 를 직접 본다. 분석 계산 결과로 판정하면 계산이 실패한 경로가
+    // 주인에게 403으로 돌아오고, 조회 한 번이 전 경로의 분석 저장을 일으킨다.
+    const unauthorizedIds = await this.calculateAnalyticsUseCase.findUnownedRouteIds(
+      routeIds,
+      userId,
+    );
     if (unauthorizedIds.length > 0) {
       throw new ForbiddenException('다른 사용자의 경로에 접근할 수 없습니다.');
     }

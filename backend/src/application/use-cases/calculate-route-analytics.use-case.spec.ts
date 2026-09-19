@@ -231,4 +231,51 @@ describe('CalculateRouteAnalyticsUseCase', () => {
       expect(results).toHaveLength(2);
     });
   });
+
+  /**
+   * 소유권은 경로 자체가 답을 갖고 있다(`route.userId`). 분석 계산 결과로 대신
+   * 판정하면, 한 경로의 계산이 실패한 순간 그 경로가 목록에서 빠지면서
+   * **주인에게 "다른 사용자의 경로"라는 403이 나간다** — 장애가 권한 거부로 위장한다.
+   */
+  describe('findUnownedRouteIds', () => {
+    it('본인 경로만 있으면 빈 배열을 돌려준다', async () => {
+      mockRouteRepository.findById.mockResolvedValue(mockRoute);
+
+      const result = await useCase.findUnownedRouteIds(['route-1'], 'user-1');
+
+      expect(result).toEqual([]);
+    });
+
+    it('다른 사용자의 경로 id를 골라낸다', async () => {
+      const othersRoute = new CommuteRoute('user-2', '남의 경로', RouteType.MORNING, {
+        id: 'route-9',
+        totalExpectedDuration: 30,
+        checkpoints: mockRoute.checkpoints,
+      });
+      mockRouteRepository.findById.mockResolvedValue(othersRoute);
+
+      const result = await useCase.findUnownedRouteIds(['route-9'], 'user-1');
+
+      expect(result).toEqual(['route-9']);
+    });
+
+    it('존재하지 않는 경로 id도 골라낸다', async () => {
+      mockRouteRepository.findById.mockResolvedValue(null);
+
+      const result = await useCase.findUnownedRouteIds(['ghost'], 'user-1');
+
+      expect(result).toEqual(['ghost']);
+    });
+
+    it('소유권 확인에 분석을 계산하지 않는다 (읽기 경로에 쓰기 금지)', async () => {
+      mockRouteRepository.findById.mockResolvedValue(mockRoute);
+
+      await useCase.findUnownedRouteIds(['route-1'], 'user-1');
+
+      // 예전에는 executeForUser 로 전 경로 분석을 재계산하고 저장까지 했다.
+      expect(mockSessionRepository.findByRouteId).not.toHaveBeenCalled();
+      expect(mockAnalyticsRepository.save).not.toHaveBeenCalled();
+      expect(mockRouteRepository.findByUserId).not.toHaveBeenCalled();
+    });
+  });
 });

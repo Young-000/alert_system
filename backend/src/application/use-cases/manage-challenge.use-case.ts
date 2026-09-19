@@ -9,6 +9,7 @@ import {
   ChallengeRepository,
   TemplateMap,
 } from '@domain/repositories/challenge.repository';
+import { ChallengeTemplate } from '@domain/entities/challenge-template.entity';
 import { UserChallenge } from '@domain/entities/user-challenge.entity';
 import {
   MAX_ACTIVE_CHALLENGES,
@@ -27,8 +28,7 @@ export class ManageChallengeUseCase {
 
   async getTemplates(userId: string): Promise<TemplateWithStatus[]> {
     const templates = await this.challengeRepo.findAllTemplates();
-    const activeChallenges =
-      await this.challengeRepo.findActiveChallengesByUserId(userId);
+    const activeChallenges = await this.expireDueChallenges(userId, new Date());
     const badges = await this.challengeRepo.findBadgesByUserId(userId);
 
     const activeTemplateIds = new Set(
@@ -51,6 +51,13 @@ export class ManageChallengeUseCase {
     if (!template) {
       throw new NotFoundException('챌린지 템플릿을 찾을 수 없습니다.');
     }
+
+    // 정원과 중복은 '지금 살아 있는' 도전만 기준이어야 한다. 마감이 지난 행은
+    // DB에 아직 status='active'로 남아 있으므로, 세기 전에 실패로 기록한다.
+    // 건너뛰기만 하면 부분 유니크 인덱스
+    // (user_challenges_user_template_active_unique, status='active')에 걸려
+    // 23505가 그대로 500으로 나간다.
+    await this.expireDueChallenges(userId, new Date());
 
     const activeCount = await this.challengeRepo.countActiveChallenges(userId);
     if (activeCount >= MAX_ACTIVE_CHALLENGES) {
@@ -104,40 +111,48 @@ export class ManageChallengeUseCase {
   }
 
   async getActiveChallenges(userId: string): Promise<ActiveChallengeDetail[]> {
-    const activeChallenges =
-      await this.challengeRepo.findActiveChallengesByUserId(userId);
-    const now = new Date();
+    const stillActive = await this.expireDueChallenges(userId, new Date());
     const details: ActiveChallengeDetail[] = [];
 
     // Batch fetch all templates (N+1 → 1 query)
-    const templateMap = await this.loadTemplateMap(activeChallenges);
+    const templateMap = await this.loadTemplateMap(stillActive);
 
-    for (const challenge of activeChallenges) {
-      // Lazy expiry check
+    for (const challenge of stillActive) {
+      const template = templateMap.get(challenge.challengeTemplateId);
+      if (!template) continue;
+
+      details.push(this.toDetail(challenge, template));
+    }
+
+    return details;
+  }
+
+  /**
+   * 마감이 지난 도전을 실패로 기록하고, 아직 살아 있는 도전만 돌려준다.
+   *
+   * 만료는 도메인 규칙(`UserChallenge.checkExpiry`)이고, 이 프로젝트에는
+   * 만료를 돌리는 배치가 없다 — 읽을 때 처리한다. 그래서 **활성 도전을 읽는
+   * 모든 경로가 같은 함수를 타야 한다.** 한 경로만 적용하면 같은 화면에서
+   * 답이 갈린다 (진행 중 목록은 비었는데 템플릿 카드는 "진행 중"으로 잠김).
+   */
+  private async expireDueChallenges(
+    userId: string,
+    now: Date,
+  ): Promise<UserChallenge[]> {
+    const challenges =
+      await this.challengeRepo.findActiveChallengesByUserId(userId);
+
+    const stillActive: UserChallenge[] = [];
+    for (const challenge of challenges) {
       const checked = challenge.checkExpiry(now);
       if (checked.status === 'failed') {
         await this.challengeRepo.saveChallenge(checked);
         continue;
       }
-
-      const template = templateMap.get(checked.challengeTemplateId);
-      if (!template) continue;
-
-      details.push({
-        id: checked.id,
-        template,
-        status: checked.status,
-        startedAt: checked.startedAt,
-        deadlineAt: checked.deadlineAt,
-        currentProgress: checked.currentProgress,
-        targetProgress: checked.targetProgress,
-        progressPercent: checked.progressPercent,
-        daysRemaining: checked.daysRemaining,
-        isCloseToCompletion: checked.isCloseToCompletion,
-      });
+      stillActive.push(checked);
     }
 
-    return details;
+    return stillActive;
   }
 
   async getChallengeHistory(
@@ -155,27 +170,22 @@ export class ManageChallengeUseCase {
 
     // Batch fetch all templates (N+1 → 1 query)
     const templateMap = await this.loadTemplateMap(challenges);
+    const now = new Date();
 
     for (const challenge of challenges) {
       const template = templateMap.get(challenge.challengeTemplateId);
       if (!template) continue;
 
-      details.push({
-        id: challenge.id,
-        template,
-        status: challenge.status,
-        startedAt: challenge.startedAt,
-        deadlineAt: challenge.deadlineAt,
-        currentProgress: challenge.currentProgress,
-        targetProgress: challenge.targetProgress,
-        progressPercent: challenge.progressPercent,
-        daysRemaining: challenge.daysRemaining,
-        isCloseToCompletion: challenge.isCloseToCompletion,
-      });
+      // 히스토리는 마감이 지난 도전을 '진행 중'으로 보여주면 안 된다. 기록은
+      // 활성 목록 경로가 맡으므로 여기서는 표시만 도메인 규칙에 맞춘다
+      // (페이지 단위 읽기에 쓰기를 섞지 않는다).
+      const checked = challenge.checkExpiry(now);
 
-      if (challenge.status === 'completed') totalCompleted++;
-      if (challenge.status === 'failed') totalFailed++;
-      if (challenge.status === 'abandoned') totalAbandoned++;
+      details.push(this.toDetail(checked, template));
+
+      if (checked.status === 'completed') totalCompleted++;
+      if (checked.status === 'failed') totalFailed++;
+      if (checked.status === 'abandoned') totalAbandoned++;
     }
 
     const totalFinished = totalCompleted + totalFailed + totalAbandoned;
@@ -193,6 +203,24 @@ export class ManageChallengeUseCase {
         totalAbandoned,
         completionRate,
       },
+    };
+  }
+
+  private toDetail(
+    challenge: UserChallenge,
+    template: ChallengeTemplate,
+  ): ActiveChallengeDetail {
+    return {
+      id: challenge.id,
+      template,
+      status: challenge.status,
+      startedAt: challenge.startedAt,
+      deadlineAt: challenge.deadlineAt,
+      currentProgress: challenge.currentProgress,
+      targetProgress: challenge.targetProgress,
+      progressPercent: challenge.progressPercent,
+      daysRemaining: challenge.daysRemaining,
+      isCloseToCompletion: challenge.isCloseToCompletion,
     };
   }
 

@@ -62,6 +62,8 @@ describe('AnalyticsController', () => {
       execute: jest.fn(),
       executeForUser: jest.fn(),
       compareRoutes: jest.fn(),
+      // 소유권은 경로의 userId 로 판정한다. 기본값 = 전부 본인 소유(빈 목록).
+      findUnownedRouteIds: jest.fn().mockResolvedValue([]),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -76,7 +78,6 @@ describe('AnalyticsController', () => {
 
   describe('getRouteAnalytics', () => {
     it('자신의 경로 분석 조회 성공', async () => {
-      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([mockAnalytics]);
       calculateAnalyticsUseCase.execute.mockResolvedValue(mockAnalytics);
 
       const result = await controller.getRouteAnalytics('route-1', mockRequest(OWNER_ID));
@@ -88,7 +89,7 @@ describe('AnalyticsController', () => {
     });
 
     it('다른 사용자의 경로 분석 조회 시 ForbiddenException', async () => {
-      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([]); // route-1이 없음
+      calculateAnalyticsUseCase.findUnownedRouteIds.mockResolvedValue(['route-1']);
 
       await expect(
         controller.getRouteAnalytics('route-1', mockRequest(OWNER_ID)),
@@ -96,7 +97,6 @@ describe('AnalyticsController', () => {
     });
 
     it('응답 DTO 변환이 올바른지 확인', async () => {
-      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([mockAnalytics]);
       calculateAnalyticsUseCase.execute.mockResolvedValue(mockAnalytics);
 
       const result = await controller.getRouteAnalytics('route-1', mockRequest(OWNER_ID));
@@ -112,7 +112,6 @@ describe('AnalyticsController', () => {
 
   describe('recalculateRouteAnalytics', () => {
     it('자신의 경로 분석 재계산 성공', async () => {
-      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([mockAnalytics]);
       calculateAnalyticsUseCase.execute.mockResolvedValue(mockAnalytics);
 
       const result = await controller.recalculateRouteAnalytics('route-1', mockRequest(OWNER_ID));
@@ -122,7 +121,7 @@ describe('AnalyticsController', () => {
     });
 
     it('다른 사용자의 경로 재계산 시 ForbiddenException', async () => {
-      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([]);
+      calculateAnalyticsUseCase.findUnownedRouteIds.mockResolvedValue(['route-1']);
 
       await expect(
         controller.recalculateRouteAnalytics('route-1', mockRequest(OWNER_ID)),
@@ -201,7 +200,7 @@ describe('AnalyticsController', () => {
     });
 
     it('다른 사용자의 경로 비교 시 ForbiddenException', async () => {
-      calculateAnalyticsUseCase.executeForUser.mockResolvedValue([]);
+      calculateAnalyticsUseCase.findUnownedRouteIds.mockResolvedValue(['route-2']);
 
       await expect(
         controller.compareRoutes('route-1,route-2', mockRequest(OWNER_ID)),
