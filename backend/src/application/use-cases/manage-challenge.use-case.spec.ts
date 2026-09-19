@@ -70,7 +70,9 @@ describe('ManageChallengeUseCase', () => {
       findAllTemplates: jest.fn(),
       findTemplateById: jest.fn(),
       findTemplatesByIds: jest.fn().mockResolvedValue([]),
-      findActiveChallengesByUserId: jest.fn(),
+      // 실제 리포지토리는 언제나 배열을 준다. 기본값을 두지 않으면 만료 스윕이
+      // undefined 를 순회해 '계약 위반'이 아니라 픽스처 결함으로 터진다.
+      findActiveChallengesByUserId: jest.fn().mockResolvedValue([]),
       findChallengeById: jest.fn(),
       findActiveByUserAndTemplate: jest.fn(),
       countActiveChallenges: jest.fn(),
@@ -286,6 +288,127 @@ describe('ManageChallengeUseCase', () => {
       expect(result[2].template.id).toBe('weekly-4');
       expect(result[2].isJoined).toBe(false);
       expect(result[2].isCompleted).toBe(false);
+    });
+  });
+
+  /**
+   * 마감이 지난 도전은 도메인 규칙상 이미 '실패'다(`UserChallenge.checkExpiry`).
+   * 그 규칙을 `getActiveChallenges`만 적용하고 나머지 읽기 경로가 적용하지 않으면
+   * **같은 화면 안에서 답이 갈린다** — 진행 중 목록은 비어 있는데 템플릿 카드는
+   * "진행 중"으로 잠겨 있고, 다시 참여하려 하면 409가 난다.
+   *
+   * 모바일 도전 화면은 두 조회를 `Promise.all`로 **동시에** 쏜다
+   * (`mobile/src/hooks/useChallenges.ts:78`). 활성 목록이 만료를 기록하기 전에
+   * 템플릿 조회가 옛 상태를 읽으므로, 순서에 기대면 안 된다.
+   */
+  describe('만료된 도전의 처리 (읽기 경로 전체)', () => {
+    const pastDeadline = (): Date => new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    it('getTemplates: 마감이 지난 도전은 isJoined 로 세지 않는다', async () => {
+      const template = makeTemplate({ id: 'time-under-40' });
+      const expired = makeActiveChallenge({
+        templateId: 'time-under-40',
+        deadlineAt: pastDeadline(),
+      });
+
+      challengeRepo.findAllTemplates.mockResolvedValue([template]);
+      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([expired]);
+      challengeRepo.findBadgesByUserId.mockResolvedValue([]);
+
+      const result = await useCase.getTemplates(userId);
+
+      // 화면은 isJoined 로 '도전 시작' 버튼을 잠근다 (app/challenges.tsx:119).
+      expect(result[0].isJoined).toBe(false);
+    });
+
+    it('getTemplates: 마감이 지난 도전을 실패로 기록한다', async () => {
+      const template = makeTemplate({ id: 'time-under-40' });
+      const expired = makeActiveChallenge({
+        templateId: 'time-under-40',
+        deadlineAt: pastDeadline(),
+      });
+
+      challengeRepo.findAllTemplates.mockResolvedValue([template]);
+      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([expired]);
+      challengeRepo.findBadgesByUserId.mockResolvedValue([]);
+
+      await useCase.getTemplates(userId);
+
+      expect(challengeRepo.saveChallenge).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'challenge-1', status: 'failed' }),
+      );
+    });
+
+    it('joinChallenge: 마감이 지난 도전은 정원(3)에 세지 않는다', async () => {
+      const template = makeTemplate({ id: 'streak-3d' });
+      const expired = [1, 2, 3].map((n) =>
+        makeActiveChallenge({
+          id: `expired-${n}`,
+          templateId: `old-${n}`,
+          deadlineAt: pastDeadline(),
+        }),
+      );
+
+      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findActiveChallengesByUserId.mockResolvedValue(expired);
+      // 만료 처리가 끝난 뒤의 실제 DB 상태 — 세 건 모두 'failed' 가 되어 0건이다.
+      challengeRepo.countActiveChallenges.mockResolvedValue(0);
+      challengeRepo.findActiveByUserAndTemplate.mockResolvedValue(null);
+
+      const result = await useCase.joinChallenge(userId, 'streak-3d');
+
+      expect(result.challengeTemplateId).toBe('streak-3d');
+      // 세는 쪽이 아니라 '세기 전에 만료를 기록했는가'가 계약이다.
+      expect(challengeRepo.saveChallenge).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'expired-1', status: 'failed' }),
+      );
+      expect(challengeRepo.saveChallenge).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'expired-3', status: 'failed' }),
+      );
+    });
+
+    it('joinChallenge: 같은 템플릿의 마감 지난 도전을 정리한 뒤 다시 참여시킨다', async () => {
+      const template = makeTemplate({ id: 'time-under-40' });
+      const expired = makeActiveChallenge({
+        id: 'expired-same',
+        templateId: 'time-under-40',
+        deadlineAt: pastDeadline(),
+      });
+
+      challengeRepo.findTemplateById.mockResolvedValue(template);
+      challengeRepo.findActiveChallengesByUserId.mockResolvedValue([expired]);
+      challengeRepo.countActiveChallenges.mockResolvedValue(0);
+      // 만료 기록 후에는 status='active' 부분 유니크 인덱스에 걸리는 행이 없다.
+      challengeRepo.findActiveByUserAndTemplate.mockResolvedValue(null);
+
+      const result = await useCase.joinChallenge(userId, 'time-under-40');
+
+      expect(result.status).toBe('active');
+      expect(challengeRepo.saveChallenge).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'expired-same', status: 'failed' }),
+      );
+    });
+
+    it('getChallengeHistory: 마감이 지난 도전을 실패로 표시하고 통계에 센다', async () => {
+      const template = makeTemplate({ id: 'time-under-40' });
+      const expired = makeActiveChallenge({
+        id: 'ch-expired',
+        templateId: 'time-under-40',
+        deadlineAt: pastDeadline(),
+      });
+
+      challengeRepo.findChallengeHistory.mockResolvedValue({
+        challenges: [expired],
+        totalCount: 1,
+      });
+      challengeRepo.findTemplatesByIds.mockResolvedValue([template]);
+
+      const result = await useCase.getChallengeHistory(userId, 20, 0);
+
+      expect(result.challenges[0].status).toBe('failed');
+      expect(result.stats.totalFailed).toBe(1);
+      // 끝난 도전이 분모에 들어가야 완료율이 맞는다.
+      expect(result.stats.completionRate).toBe(0);
     });
   });
 

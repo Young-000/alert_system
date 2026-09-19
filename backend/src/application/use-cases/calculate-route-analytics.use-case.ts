@@ -71,6 +71,37 @@ export class CalculateRouteAnalyticsUseCase {
   }
 
   /**
+   * 주어진 id 중 이 사용자가 소유하지 않은 경로만 골라낸다.
+   *
+   * 소유권의 답은 경로 자체가 들고 있다(`route.userId`). 예전에는 컨트롤러가
+   * `executeForUser`로 **전 경로 분석을 재계산·저장한 뒤** 그 결과 집합에
+   * 들어 있는지로 판정했는데, 두 가지가 잘못이었다.
+   *  · 한 경로의 계산이 실패하면(`Promise.allSettled`의 rejected 분기) 그 경로가
+   *    집합에서 빠져 **주인에게 "다른 사용자의 경로" 403**이 나갔다 — 장애가
+   *    권한 거부로 위장한다.
+   *  · 단순 조회 한 번이 사용자의 모든 경로에 대해 세션 조회와 분석 저장을
+   *    일으켰다 (읽기 경로의 쓰기).
+   */
+  async findUnownedRouteIds(
+    routeIds: string[],
+    userId: string,
+  ): Promise<string[]> {
+    if (!this.routeRepository) {
+      throw new Error('Route repository not available');
+    }
+
+    const unowned: string[] = [];
+    for (const routeId of routeIds) {
+      const route = await this.routeRepository.findById(routeId);
+      if (!route || route.userId !== userId) {
+        unowned.push(routeId);
+      }
+    }
+
+    return unowned;
+  }
+
+  /**
    * 사용자의 모든 경로 분석 계산
    */
   async executeForUser(userId: string): Promise<RouteAnalytics[]> {
