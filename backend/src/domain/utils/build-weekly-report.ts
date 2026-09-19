@@ -161,7 +161,13 @@ export function buildWeeklyReport(
   previousWeekSessions: readonly CommuteSession[],
   weekStartDate: string,
   weekEndDate: string,
-  streakWeeklyCount: number,
+  /**
+   * 스트릭 테이블의 이번 주 기록일 수. 이 리포트가 이번 주가 아니면 null —
+   * 스트릭은 "이번 주" 집계 하나만 들고 있어 다른 주에는 답이 없다.
+   * null이면 그 주의 기록일 수(daysWithData)로 센다. 스트릭이 날마다 한 번씩
+   * 세는 것과 같은 기준이다(`CommuteStreak.recordCompletion`은 하루 한 번만 증가).
+   */
+  streakWeeklyCount: number | null,
   streakWeeklyGoal: number,
 ): WeeklyReportResponseDto {
   // 1. 완료 세션만 필터
@@ -233,7 +239,7 @@ export function buildWeeklyReport(
     changePercentage,
     trend,
     insights,
-    streakWeeklyCount,
+    streakWeeklyCount: streakWeeklyCount ?? daysWithData.length,
     streakWeeklyGoal,
   };
 }

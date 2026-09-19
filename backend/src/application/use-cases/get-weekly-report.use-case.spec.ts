@@ -94,12 +94,54 @@ describe('GetWeeklyReportUseCase', () => {
     const streak = new CommuteStreak('user-1', {
       weeklyCount: 3,
       weeklyGoal: 5,
+      weekStartDate: '2026-02-16', // 이번 주(월)
     });
     mockStreakRepo.findByUserId.mockResolvedValue(streak);
 
     const result = await useCase.execute('user-1', 0);
 
     expect(result.streakWeeklyCount).toBe(3);
+    expect(result.streakWeeklyGoal).toBe(5);
+  });
+
+  it('새 주가 시작되면 스트릭 주간 카운트를 0으로 되돌린다', async () => {
+    // 저장된 값은 지난주 것이다. GET /streak(홈 배지)은 ensureWeeklyCountCurrent로
+    // 0을 주는데 리포트가 3을 주면 같은 화면에서 두 숫자가 갈린다.
+    const streak = new CommuteStreak('user-1', {
+      weeklyCount: 3,
+      weeklyGoal: 5,
+      weekStartDate: '2026-02-09', // 지난주(월)
+    });
+    mockStreakRepo.findByUserId.mockResolvedValue(streak);
+
+    const result = await useCase.execute('user-1', 0);
+
+    expect(result.streakWeeklyCount).toBe(0);
+    expect(result.streakWeeklyGoal).toBe(5);
+  });
+
+  it('지난주 리포트에는 이번 주 스트릭 값이 아니라 그 주의 기록일 수를 싣는다', async () => {
+    const streak = new CommuteStreak('user-1', {
+      weeklyCount: 3,
+      weeklyGoal: 5,
+      weekStartDate: '2026-02-16', // 이번 주 집계 — 지난주 리포트와 무관하다
+    });
+    mockStreakRepo.findByUserId.mockResolvedValue(streak);
+
+    // 지난주(2026-02-09~15)에 이틀 기록 (같은 날 2건은 하루로 센다)
+    const lastWeekSessions = [
+      createSession(new Date('2026-02-09T08:00:00+09:00'), 40),
+      createSession(new Date('2026-02-10T08:00:00+09:00'), 45),
+      createSession(new Date('2026-02-10T18:00:00+09:00'), 50),
+    ];
+    mockSessionRepo.findByUserIdInDateRange
+      .mockResolvedValueOnce(lastWeekSessions)
+      .mockResolvedValueOnce([]);
+
+    const result = await useCase.execute('user-1', 1);
+
+    expect(result.totalRecordedDays).toBe(2);
+    expect(result.streakWeeklyCount).toBe(2);
     expect(result.streakWeeklyGoal).toBe(5);
   });
 

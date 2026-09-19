@@ -131,11 +131,33 @@ describe('InsightsService', () => {
       expect(result.monthTrendDirection).toBeDefined();
     });
 
+    it('임계값과 같은 5명 지역은 그대로 공개한다', async () => {
+      const mockInsight = createMockInsight('grid_37.50_127.00', '경계 지역', 5, 30);
+      mockInsightRepo.findByRegionId.mockResolvedValue(mockInsight);
+
+      const result = await service.getRegionById('grid_37.50_127.00');
+
+      expect(result.userCount).toBe(5);
+    });
+
     it('존재하지 않는 지역에 대해 NotFoundException을 던진다', async () => {
       mockInsightRepo.findByRegionId.mockResolvedValue(null);
 
       await expect(
         service.getRegionById('nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('프라이버시 임계값 미달 지역은 없는 지역과 똑같이 취급한다', async () => {
+      // 목록(getRegions)은 minUserCount 5로 걸러내므로 이 격자는 화면에 링크가 없다.
+      // 그런데 regionId는 좌표에서 만든 격자키라 누구나 만들어 볼 수 있고,
+      // 이 엔드포인트는 @Public()이다. 4명짜리 격자의 평균 통근시간을 그대로 주면
+      // 사실상 개인 통근 기록이 로그인 없이 읽힌다.
+      const mockInsight = createMockInsight('grid_37.50_127.00', '소규모 지역', 4, 20);
+      mockInsightRepo.findByRegionId.mockResolvedValue(mockInsight);
+
+      await expect(
+        service.getRegionById('grid_37.50_127.00'),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -161,6 +183,15 @@ describe('InsightsService', () => {
 
       await expect(
         service.getRegionTrends('nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('프라이버시 임계값 미달 지역은 없는 지역과 똑같이 취급한다', async () => {
+      const mockInsight = createMockInsight('grid_37.50_127.00', '소규모 지역', 4, 20);
+      mockInsightRepo.findByRegionId.mockResolvedValue(mockInsight);
+
+      await expect(
+        service.getRegionTrends('grid_37.50_127.00'),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -189,6 +220,16 @@ describe('InsightsService', () => {
 
       await expect(
         service.getRegionPeakHours('nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('프라이버시 임계값 미달 지역은 없는 지역과 똑같이 취급한다', async () => {
+      // 시간대 분포는 표본이 적을수록 개인 출발 시각에 가까워진다.
+      const mockInsight = createMockInsight('grid_37.50_127.00', '소규모 지역', 4, 20);
+      mockInsightRepo.findByRegionId.mockResolvedValue(mockInsight);
+
+      await expect(
+        service.getRegionPeakHours('grid_37.50_127.00'),
       ).rejects.toThrow(NotFoundException);
     });
   });

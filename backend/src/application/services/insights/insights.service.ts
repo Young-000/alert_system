@@ -6,7 +6,11 @@ import {
   REGIONAL_INSIGHT_REPOSITORY,
   InsightSortBy,
 } from '@domain/repositories/regional-insight.repository';
-import { classifyTrend } from '@domain/entities/regional-insight.entity';
+import {
+  classifyTrend,
+  MINIMUM_USERS,
+  RegionalInsight,
+} from '@domain/entities/regional-insight.entity';
 import { CommuteSessionEntity } from '@infrastructure/persistence/typeorm/commute-session.entity';
 import { UserPlaceEntity } from '@infrastructure/persistence/typeorm/user-place.entity';
 import {
@@ -33,6 +37,25 @@ export class InsightsService {
   ) {}
 
   /**
+   * 공개 가능한 지역만 돌려준다.
+   *
+   * regionId는 좌표에서 만든 격자키(`grid_37.50_127.00`)라 누구나 만들어 볼 수 있고,
+   * 상세 엔드포인트 셋은 전부 `@Public()`이다. 목록(`getRegions`)은 `MINIMUM_USERS`
+   * 미만 격자를 빼는데 상세는 빼지 않아, 사람이 적은 격자의 평균·중앙값·시간대 분포가
+   * 로그인 없이 읽혔다. 표본이 적을수록 그 값은 개인의 통근 기록에 가까워진다.
+   *
+   * 임계값 미달을 "없음"과 같은 404로 답하는 것은 의도적이다. 따로 구분해 주면
+   * "이 격자에 사람이 1~4명 있다"는 사실 자체가 새어 나간다.
+   */
+  private async findDisplayableRegion(regionId: string): Promise<RegionalInsight> {
+    const insight = await this.insightRepo.findByRegionId(regionId);
+    if (!insight || !insight.meetsPrivacyThreshold()) {
+      throw new NotFoundException('지역 데이터를 찾을 수 없습니다.');
+    }
+    return insight;
+  }
+
+  /**
    * Get list of regions with summary stats.
    */
   async getRegions(options: {
@@ -48,9 +71,9 @@ export class InsightsService {
         sortBy: options.sortBy,
         limit,
         offset,
-        minUserCount: 5,
+        minUserCount: MINIMUM_USERS,
       }),
-      this.insightRepo.countAll(5),
+      this.insightRepo.countAll(MINIMUM_USERS),
     ]);
 
     const regions: RegionSummaryDto[] = insights.map((i) => ({
@@ -81,10 +104,7 @@ export class InsightsService {
    * Get detailed stats for a specific region.
    */
   async getRegionById(regionId: string): Promise<RegionDetailDto> {
-    const insight = await this.insightRepo.findByRegionId(regionId);
-    if (!insight) {
-      throw new NotFoundException('지역 데이터를 찾을 수 없습니다.');
-    }
+    const insight = await this.findDisplayableRegion(regionId);
 
     return {
       regionId: insight.regionId,
@@ -109,10 +129,7 @@ export class InsightsService {
    * Get trend data for a specific region.
    */
   async getRegionTrends(regionId: string): Promise<RegionTrendDto> {
-    const insight = await this.insightRepo.findByRegionId(regionId);
-    if (!insight) {
-      throw new NotFoundException('지역 데이터를 찾을 수 없습니다.');
-    }
+    const insight = await this.findDisplayableRegion(regionId);
 
     return {
       regionId: insight.regionId,
@@ -130,10 +147,7 @@ export class InsightsService {
    * Get peak hour distribution for a specific region.
    */
   async getRegionPeakHours(regionId: string): Promise<PeakHoursDto> {
-    const insight = await this.insightRepo.findByRegionId(regionId);
-    if (!insight) {
-      throw new NotFoundException('지역 데이터를 찾을 수 없습니다.');
-    }
+    const insight = await this.findDisplayableRegion(regionId);
 
     // Fill in all 24 hours with 0 as default
     const distribution: Record<number, number> = {};
