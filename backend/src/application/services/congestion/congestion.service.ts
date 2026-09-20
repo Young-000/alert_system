@@ -9,6 +9,7 @@ import {
 } from '@domain/repositories/commute-route.repository';
 import {
   CongestionLevel,
+  MINIMUM_SAMPLES,
   TIME_SLOT_LABELS,
   TimeSlot,
 } from '@domain/entities/segment-congestion.entity';
@@ -43,9 +44,13 @@ export class CongestionService {
     const timeSlot = options.timeSlot || detectCurrentTimeSlot();
     const limit = options.limit ?? 50;
 
+    // 경로 오버레이가 `hasMinimumSamples()`로 감추는 구간은 목록에도 실으면 안 된다.
+    // 같은 구간이 목록에서는 '매우혼잡'으로 보이고 내 경로 화면에서는 판정이
+    // 비어 있으면, 둘 중 하나는 반드시 틀린 값이다.
     const segments = await this.congestionRepo.findByTimeSlot(timeSlot, {
       level: options.level,
       limit,
+      minSampleCount: MINIMUM_SAMPLES,
     });
 
     const segmentDtos: CongestionSegmentDto[] = segments.map((s) => ({

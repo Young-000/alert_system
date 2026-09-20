@@ -1,5 +1,9 @@
 import { CongestionService } from './congestion.service';
-import { SegmentCongestion, TimeSlot } from '@domain/entities/segment-congestion.entity';
+import {
+  SegmentCongestion,
+  TimeSlot,
+  MINIMUM_SAMPLES,
+} from '@domain/entities/segment-congestion.entity';
 import { ISegmentCongestionRepository } from '@domain/repositories/segment-congestion.repository';
 import { ICommuteRouteRepository } from '@domain/repositories/commute-route.repository';
 import { CommuteRoute, RouteType, CheckpointType, RouteCheckpoint } from '@domain/entities/commute-route.entity';
@@ -74,8 +78,20 @@ describe('CongestionService', () => {
 
       expect(mockCongestionRepo.findByTimeSlot).toHaveBeenCalledWith(
         'morning_rush',
-        { level: 'high', limit: 10 },
+        { level: 'high', limit: 10, minSampleCount: MINIMUM_SAMPLES },
       );
+    });
+
+    // 경로 오버레이(getRouteCongestion)는 표본이 모자란 구간의 혼잡도를 감춘다.
+    // 목록도 같은 기준이어야 한다 — 같은 구간이 목록에서는 '매우혼잡'으로 보이고
+    // 내 경로 화면에서는 판정이 비어 있으면, 둘 중 하나는 반드시 틀린 값이다.
+    it('표본이 모자란 구간을 목록에 싣지 않도록 임계값을 조회에 건다', async () => {
+      mockCongestionRepo.findByTimeSlot.mockResolvedValue([]);
+
+      await service.getSegments({ timeSlot: 'morning_rush' });
+
+      const options = mockCongestionRepo.findByTimeSlot.mock.calls[0][1];
+      expect(options?.minSampleCount).toBe(MINIMUM_SAMPLES);
     });
   });
 
