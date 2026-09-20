@@ -33,7 +33,12 @@ export const CONGESTION_LEVEL_LABELS: Record<CongestionLevel, string> = {
   severe: '매우혼잡',
 };
 
-const MINIMUM_SAMPLES = 3;
+/**
+ * Minimum samples before a segment's congestion level is trustworthy enough
+ * to show. Read paths must all apply this — the route overlay hides
+ * sub-threshold segments, so the list has to leave them out too.
+ */
+export const MINIMUM_SAMPLES = 3;
 const STALE_THRESHOLD_DAYS = 30;
 
 export class SegmentCongestion {

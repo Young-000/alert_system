@@ -8,7 +8,12 @@ export interface ISegmentCongestionRepository {
 
   findByTimeSlot(
     timeSlot: TimeSlot,
-    options?: { level?: CongestionLevel; limit?: number },
+    options?: {
+      level?: CongestionLevel;
+      limit?: number;
+      /** Drop segments below this sample count (applied in the query, so `limit` counts displayable rows). */
+      minSampleCount?: number;
+    },
   ): Promise<SegmentCongestion[]>;
 
   findBySegmentKeys(

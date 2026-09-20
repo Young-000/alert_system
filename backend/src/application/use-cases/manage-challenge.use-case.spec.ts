@@ -103,6 +103,35 @@ describe('ManageChallengeUseCase', () => {
       expect(challengeRepo.saveChallenge).toHaveBeenCalled();
     });
 
+    // 목록(`findAllTemplates`)은 isActive=true 만 내보낸다. 참여도 같은 기준이어야
+    // 한다 — 아니면 내려간 챌린지가 목록에 없는 채로 정원 한 칸을 계속 차지한다.
+    // '없음'과 같은 404로 답하는 것은 의도적이다. 따로 구분해 주면 내려간
+    // 챌린지가 존재한다는 사실 자체가 새어 나간다.
+    it('내려간(비활성) 템플릿이면 참여할 수 없다', async () => {
+      challengeRepo.findTemplateById.mockResolvedValue(
+        makeTemplate({ isActive: false }),
+      );
+      challengeRepo.countActiveChallenges.mockResolvedValue(0);
+      challengeRepo.findActiveByUserAndTemplate.mockResolvedValue(null);
+
+      await expect(
+        useCase.joinChallenge(userId, 'time-under-40'),
+      ).rejects.toThrow(NotFoundException);
+      expect(challengeRepo.saveChallenge).not.toHaveBeenCalled();
+    });
+
+    it('활성 템플릿은 그대로 참여된다', async () => {
+      challengeRepo.findTemplateById.mockResolvedValue(
+        makeTemplate({ isActive: true }),
+      );
+      challengeRepo.countActiveChallenges.mockResolvedValue(0);
+      challengeRepo.findActiveByUserAndTemplate.mockResolvedValue(null);
+
+      await expect(
+        useCase.joinChallenge(userId, 'time-under-40'),
+      ).resolves.toBeDefined();
+    });
+
     it('존재하지 않는 템플릿이면 404 NotFoundException을 던진다', async () => {
       challengeRepo.findTemplateById.mockResolvedValue(null);
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { SegmentCongestionEntity } from '../typeorm/segment-congestion.entity';
 import { ISegmentCongestionRepository } from '@domain/repositories/segment-congestion.repository';
 import {
@@ -28,11 +28,20 @@ export class SegmentCongestionRepositoryImpl implements ISegmentCongestionReposi
 
   async findByTimeSlot(
     timeSlot: TimeSlot,
-    options?: { level?: CongestionLevel; limit?: number },
+    options?: {
+      level?: CongestionLevel;
+      limit?: number;
+      minSampleCount?: number;
+    },
   ): Promise<SegmentCongestion[]> {
     const where: Record<string, unknown> = { timeSlot };
     if (options?.level) {
       where['congestionLevel'] = options.level;
+    }
+    // 하한은 조회 조건으로 건다. 가져온 뒤에 거르면 `take`가 걸러지기 전 행에
+    // 걸려, 보여줄 수 있는 구간이 더 있는데도 목록이 짧게 잘린다.
+    if (options?.minSampleCount !== undefined) {
+      where['sampleCount'] = MoreThanOrEqual(options.minSampleCount);
     }
 
     const entities = await this.repository.find({

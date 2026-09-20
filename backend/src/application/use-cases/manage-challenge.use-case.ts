@@ -47,8 +47,11 @@ export class ManageChallengeUseCase {
     userId: string,
     templateId: string,
   ): Promise<UserChallenge> {
+    // 목록(`findAllTemplates`)은 isActive=true 만 내보낸다. 참여도 같은 기준으로
+    // 막아야 한다 — 아니면 내려간 챌린지가 목록에 없는 채로 정원 한 칸을 계속
+    // 차지한다. 내려간 템플릿을 '없음'과 같은 404로 답하는 것은 의도적이다.
     const template = await this.challengeRepo.findTemplateById(templateId);
-    if (!template) {
+    if (!template || !template.isActive) {
       throw new NotFoundException('챌린지 템플릿을 찾을 수 없습니다.');
     }
 
