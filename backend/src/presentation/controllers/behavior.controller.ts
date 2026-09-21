@@ -32,8 +32,14 @@ import {
   EnhancedPatternAnalysisService,
 } from '@application/services/enhanced-pattern-analysis.service';
 import { BehaviorEventType } from '@domain/entities/behavior-event.entity';
-import { IUserPatternRepository } from '@domain/repositories/user-pattern.repository';
-import { ICommuteRecordRepository } from '@domain/repositories/commute-record.repository';
+import {
+  IUserPatternRepository,
+  USER_PATTERN_REPOSITORY,
+} from '@domain/repositories/user-pattern.repository';
+import {
+  ICommuteRecordRepository,
+  COMMUTE_RECORD_REPOSITORY,
+} from '@domain/repositories/commute-record.repository';
 import { UserPattern } from '@domain/entities/user-pattern.entity';
 import { CommuteRecord } from '@domain/entities/commute-record.entity';
 import { AuthenticatedRequest } from '@infrastructure/auth/authenticated-request';
@@ -55,10 +61,10 @@ export class BehaviorController {
     @Optional()
     private readonly predictOptimalDepartureUseCase: PredictOptimalDepartureUseCase | null,
     @Optional()
-    @Inject('USER_PATTERN_REPOSITORY')
+    @Inject(USER_PATTERN_REPOSITORY)
     private readonly userPatternRepository: IUserPatternRepository | null,
     @Optional()
-    @Inject('COMMUTE_RECORD_REPOSITORY')
+    @Inject(COMMUTE_RECORD_REPOSITORY)
     private readonly commuteRecordRepository: ICommuteRecordRepository | null,
     @Optional()
     @Inject(PredictionEngineService)

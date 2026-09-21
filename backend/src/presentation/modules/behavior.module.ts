@@ -15,7 +15,7 @@ import { FeatureEngineeringService } from '@application/services/feature-enginee
 import { EnhancedPatternAnalysisService } from '@application/services/enhanced-pattern-analysis.service';
 import { PredictionEngineService } from '@application/services/prediction-engine.service';
 import { TrackBehaviorUseCase } from '@application/use-cases/track-behavior.use-case';
-import { PredictOptimalDepartureUseCase, USER_PATTERN_REPOSITORY as PREDICT_USER_PATTERN_REPO } from '@application/use-cases/predict-optimal-departure.use-case';
+import { PredictOptimalDepartureUseCase } from '@application/use-cases/predict-optimal-departure.use-case';
 import { AlertEntity } from '@infrastructure/persistence/typeorm/alert.entity';
 import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-alert.repository';
 
@@ -65,10 +65,6 @@ import { PostgresAlertRepository } from '@infrastructure/persistence/postgres-al
     {
       provide: 'ALERT_REPOSITORY',
       useClass: PostgresAlertRepository,
-    },
-    {
-      provide: PREDICT_USER_PATTERN_REPO,
-      useClass: UserPatternRepositoryImpl,
     },
   ],
   exports: [

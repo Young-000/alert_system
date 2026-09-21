@@ -6,6 +6,10 @@ import { PredictOptimalDepartureUseCase } from '@application/use-cases/predict-o
 import { PredictionEngineService } from '@application/services/prediction-engine.service';
 import { EnhancedPatternAnalysisService } from '@application/services/enhanced-pattern-analysis.service';
 import { BehaviorEventType } from '@domain/entities/behavior-event.entity';
+// 실제 모듈이 쓰는 토큰과 같은 것을 써야 한다 — 픽스처가 문자열 토큰을 제공하면
+// 컨트롤러의 주입이 테스트 안에서만 성공해 모듈의 어긋남을 영원히 가린다.
+import { USER_PATTERN_REPOSITORY } from '@domain/repositories/user-pattern.repository';
+import { COMMUTE_RECORD_REPOSITORY } from '@domain/repositories/commute-record.repository';
 
 describe('BehaviorController', () => {
   let controller: BehaviorController;
@@ -56,8 +60,8 @@ describe('BehaviorController', () => {
       providers: [
         { provide: TrackBehaviorUseCase, useValue: trackBehaviorUseCase },
         { provide: PredictOptimalDepartureUseCase, useValue: predictOptimalDepartureUseCase },
-        { provide: 'USER_PATTERN_REPOSITORY', useValue: mockUserPatternRepo },
-        { provide: 'COMMUTE_RECORD_REPOSITORY', useValue: mockCommuteRecordRepo },
+        { provide: USER_PATTERN_REPOSITORY, useValue: mockUserPatternRepo },
+        { provide: COMMUTE_RECORD_REPOSITORY, useValue: mockCommuteRecordRepo },
         { provide: PredictionEngineService, useValue: mockPredictionEngine },
         { provide: EnhancedPatternAnalysisService, useValue: mockEnhancedAnalysis },
       ],

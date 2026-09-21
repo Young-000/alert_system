@@ -1,6 +1,9 @@
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
 import { getDayOfWeekKST, getHoursKST } from '@domain/utils/kst-date';
-import { IUserPatternRepository } from '../../domain/repositories/user-pattern.repository';
+import {
+  IUserPatternRepository,
+  USER_PATTERN_REPOSITORY,
+} from '../../domain/repositories/user-pattern.repository';
 import { IAlertRepository } from '../../domain/repositories/alert.repository';
 import { PatternType, DEFAULT_PATTERNS } from '../../domain/entities/user-pattern.entity';
 import { PredictionEngineService, PredictionResult } from '../services/prediction-engine.service';
@@ -25,8 +28,6 @@ export interface CurrentConditions {
   isSnowing?: boolean;
   temperature?: number;
 }
-
-export const USER_PATTERN_REPOSITORY = Symbol('USER_PATTERN_REPOSITORY');
 
 @Injectable()
 export class PredictOptimalDepartureUseCase {
