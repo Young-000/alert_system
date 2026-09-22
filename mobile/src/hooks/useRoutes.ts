@@ -164,26 +164,34 @@ export function useRoutes(): UseRoutesReturn {
       if (togglingIds.current.has(id)) return true;
       togglingIds.current.add(id);
 
+      // 화면에 그릴 값과 서버에 보낼 값은 하나여야 한다. 따로 구하면
+      // 앞의 것은 setState의 prev를, 뒤의 것은 closure의 routes를 읽어 갈린다.
+      const nextPreferred = !routes.find((r) => r.id === id)?.isPreferred;
+
       // Optimistic UI update
       setRoutes((prev) =>
         sortRoutes(
           prev.map((r) =>
-            r.id === id ? { ...r, isPreferred: !r.isPreferred } : r,
+            r.id === id ? { ...r, isPreferred: nextPreferred } : r,
           ),
         ),
       );
 
       try {
-        await routeService.updateRoute(id, {
-          isPreferred: !routes.find((r) => r.id === id)?.isPreferred,
-        });
+        await routeService.updateRoute(id, { isPreferred: nextPreferred });
+        // 서버는 대표를 세울 때 **같은 타입의 기존 대표를 내린다**
+        // (`manage-route.use-case.ts`의 becomesPreferred 분기). 그 해제는
+        // 탭한 행 하나만 뒤집는 이 화면이 알 수 없으므로, 재조회하지 않으면
+        // 같은 출근/퇴근 타입에 ★가 둘 남고 둘 다 목록 맨 위로 올라온다.
+        // 생성·수정이 `saveThenReload`로 밟는 순서와 같은 이유다.
+        await fetchRoutes();
         return true;
       } catch {
         // Rollback on failure
         setRoutes((prev) =>
           sortRoutes(
             prev.map((r) =>
-              r.id === id ? { ...r, isPreferred: !r.isPreferred } : r,
+              r.id === id ? { ...r, isPreferred: !nextPreferred } : r,
             ),
           ),
         );
@@ -192,7 +200,7 @@ export function useRoutes(): UseRoutesReturn {
         togglingIds.current.delete(id);
       }
     },
-    [routes],
+    [routes, fetchRoutes],
   );
 
   return {
