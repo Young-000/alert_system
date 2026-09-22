@@ -403,6 +403,108 @@ describe('RouteSetupPage', () => {
     });
   });
 
+  // 경로를 지우면 서버는 그 경로를 쓰던 스마트 출발 설정까지 함께 지운다
+  // (`smart_departure_settings.route_id ... ON DELETE CASCADE`,
+  // `20260726_add_missing_entity_tables.sql:90`). 그런데 설정 캐시는
+  // staleTime 5분이라, 지우지 않으면 설정 탭이 이미 없어진 설정을 계속 그린다.
+  //
+  // 화면에 남는 피해는 "알 수 없는 경로" 카드 한 장이 아니다. 그 탭은 이미 등록된
+  // 유형을 추가 목록에서 빼기 때문에(`availableTypes`), 유령 설정이 출근·퇴근을
+  // 차지한 동안 사용자는 **다시 만들 수 없다** — 둘 다 그러면 `+ 추가` 버튼 자체가
+  // 사라져 빠져나갈 길이 없다.
+  it('삭제가 성공하면 스마트 출발 설정 캐시도 무효화한다', async () => {
+    const userId = 'test-user-id';
+    localStorage.setItem('userId', userId);
+    mockCommuteApi.getUserRoutes.mockResolvedValue([createMockRoute()]);
+    mockCommuteApi.deleteRoute.mockResolvedValue(undefined);
+
+    renderPage();
+
+    // 설정 탭이 이미 읽어둔 캐시가 있는 상태를 재현한다
+    testQueryClient.setQueryData(queryKeys.smartDeparture.settings, [
+      { id: 'setting-1', routeId: 'route-1', departureType: 'commute' },
+    ]);
+
+    await waitFor(() => {
+      expect(screen.getByText('강남 출근길')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('경로 삭제')).toBeInTheDocument();
+    });
+
+    const confirmBtn = screen
+      .getAllByRole('button', { name: '삭제' })
+      .find((btn) => btn.classList.contains('btn-danger'));
+    fireEvent.click(confirmBtn!);
+
+    await waitFor(() => {
+      expect(mockCommuteApi.deleteRoute).toHaveBeenCalledWith('route-1');
+    });
+
+    await waitFor(() => {
+      expect(
+        testQueryClient.getQueryState(queryKeys.smartDeparture.settings)?.isInvalidated
+      ).toBe(true);
+    });
+  });
+
+  // 경로를 지우면 그 경로로 측정한 기록(`commute_sessions`)과 경로 분석
+  // (`route_analytics`)도 DB에서 함께 사라진다 —
+  // `20260208_add_commute_tracking_tables.sql:76` · `20260205_add_route_analytics.sql:10`.
+  // 기록 통계·주간 리포트는 세션에서, 분석 요약은 경로 분석에서 나오므로 셋 다 값이 달라진다.
+  //
+  // 이 셋은 staleTime 15분에 `refetchOnWindowFocus: false`라(`use-report-query.ts`)
+  // 탭을 옮겼다 돌아와도 되돌아오지 않는다. 지우지 않으면 리포트 화면이 15분 동안
+  // 삭제된 경로의 기록을 계속 더해 보여준다.
+  //
+  // 스트릭은 뺀다 — `commute_streaks`는 사용자당 1행이고 경로를 참조하지 않아
+  // (`20260726_add_missing_entity_tables.sql:173-197`) 경로 삭제로 바뀌지 않는다.
+  it('삭제가 성공하면 기록 통계·주간 리포트·분석 요약 캐시도 무효화한다', async () => {
+    const userId = 'test-user-id';
+    localStorage.setItem('userId', userId);
+    mockCommuteApi.getUserRoutes.mockResolvedValue([createMockRoute()]);
+    mockCommuteApi.deleteRoute.mockResolvedValue(undefined);
+
+    renderPage();
+
+    // 리포트 화면이 이미 읽어둔 캐시가 있는 상태를 재현한다
+    testQueryClient.setQueryData(queryKeys.commuteStats.byUser(userId, 30), { totalTrips: 12 });
+    testQueryClient.setQueryData(queryKeys.weeklyReport.byUser(userId, 0), { totalSessions: 5 });
+    testQueryClient.setQueryData(queryKeys.analyticsSummary.byUser(userId), { totalTrips: 12 });
+
+    await waitFor(() => {
+      expect(screen.getByText('강남 출근길')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('삭제'));
+    await waitFor(() => {
+      expect(screen.getByText('경로 삭제')).toBeInTheDocument();
+    });
+
+    const confirmBtn = screen
+      .getAllByRole('button', { name: '삭제' })
+      .find((btn) => btn.classList.contains('btn-danger'));
+    fireEvent.click(confirmBtn!);
+
+    await waitFor(() => {
+      expect(mockCommuteApi.deleteRoute).toHaveBeenCalledWith('route-1');
+    });
+
+    await waitFor(() => {
+      expect(
+        testQueryClient.getQueryState(queryKeys.commuteStats.byUser(userId, 30))?.isInvalidated
+      ).toBe(true);
+      expect(
+        testQueryClient.getQueryState(queryKeys.weeklyReport.byUser(userId, 0))?.isInvalidated
+      ).toBe(true);
+      expect(
+        testQueryClient.getQueryState(queryKeys.analyticsSummary.byUser(userId))?.isInvalidated
+      ).toBe(true);
+    });
+  });
+
   it('should cancel delete when cancel button is clicked', async () => {
     localStorage.setItem('userId', 'test-user-id');
     mockCommuteApi.getUserRoutes.mockResolvedValue([createMockRoute()]);
