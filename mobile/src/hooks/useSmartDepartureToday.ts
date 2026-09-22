@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { smartDepartureService } from '@/services/smart-departure.service';
+import { resolveTrafficDelay } from '@/utils/traffic-delay';
 import { useAuth } from './useAuth';
 import { useLiveActivity } from './useLiveActivity';
 
@@ -221,12 +222,9 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
         estimatedTravelMin: snapshot.estimatedTravelMin,
         status,
         minutesUntilDeparture: Math.max(0, minutesUntil),
-        hasTrafficDelay: snapshot.realtimeAdjustmentMin
-          ? snapshot.realtimeAdjustmentMin > 5
-          : false,
-        trafficDelayMessage: snapshot.realtimeAdjustmentMin
-          ? `+${snapshot.realtimeAdjustmentMin}분 지연`
-          : undefined,
+        // 지연 판정은 서버가 정한 기준 하나만 쓴다 — 여기서 다시 계산하면
+        // 같은 순간 위젯과 Live Activity가 서로 다른 답을 낸다.
+        ...resolveTrafficDelay(snapshot.realtimeAdjustmentMin),
       });
     }
   }, [
