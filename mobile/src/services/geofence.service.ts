@@ -61,8 +61,36 @@ async function addToOfflineQueue(event: RecordCommuteEventDto): Promise<void> {
   await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
 }
 
-async function clearOfflineQueue(): Promise<void> {
-  await AsyncStorage.removeItem(OFFLINE_QUEUE_KEY);
+/**
+ * 이벤트의 동일성 키. 서버가 디바운스 판정에 쓰는 세 값과 같다
+ * (`process-commute-event.use-case`의 findRecent).
+ */
+function eventKey(event: RecordCommuteEventDto): string {
+  return `${event.placeId}|${event.eventType}|${event.triggeredAt}`;
+}
+
+/**
+ * 업로드가 끝난 이벤트만 큐에서 뺀다.
+ *
+ * 큐 전체를 `removeItem`하면 안 된다. 업로드는 네트워크를 기다리는 동안 여러 번
+ * await하고, 그 사이 백그라운드 지오펜스 태스크가 같은 키에 이벤트를 적재한다
+ * (`defineGeofenceTask`의 addToOfflineQueue). 통째로 지우면 그 이벤트는 **서버에
+ * 올라간 적도 없이** 사라진다 — 출근 exit 하나가 유실되면 그날 자동 세션 자체가
+ * 만들어지지 않는다.
+ */
+async function removeFromOfflineQueue(
+  uploaded: RecordCommuteEventDto[],
+): Promise<void> {
+  const uploadedKeys = new Set(uploaded.map(eventKey));
+  const remaining = (await getOfflineQueue()).filter(
+    (event) => !uploadedKeys.has(eventKey(event)),
+  );
+
+  if (remaining.length === 0) {
+    await AsyncStorage.removeItem(OFFLINE_QUEUE_KEY);
+    return;
+  }
+  await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
 }
 
 // ─── Event Handling ─────────────────────────────────
@@ -180,25 +208,33 @@ export const geofenceService = {
     const queue = await getOfflineQueue();
     if (queue.length === 0) return 0;
 
-    try {
-      // Batch in chunks of MAX_BATCH_SIZE
-      const batches: RecordCommuteEventDto[][] = [];
-      for (let i = 0; i < queue.length; i += MAX_BATCH_SIZE) {
-        batches.push(queue.slice(i, i + MAX_BATCH_SIZE));
-      }
+    // Batch in chunks of MAX_BATCH_SIZE
+    const batches: RecordCommuteEventDto[][] = [];
+    for (let i = 0; i < queue.length; i += MAX_BATCH_SIZE) {
+      batches.push(queue.slice(i, i + MAX_BATCH_SIZE));
+    }
 
-      let totalProcessed = 0;
+    // 올라간 배치를 따로 모은다. 중간 배치가 실패했을 때 큐를 통째로 남기면
+    // 다음 동기화가 이미 올린 이벤트를 다시 올린다 — 오프라인 큐의 이벤트는
+    // triggeredAt이 이미 오래됐으므로 서버의 5분 디바운스에 걸리지 않고 재처리된다.
+    const uploaded: RecordCommuteEventDto[] = [];
+    let totalProcessed = 0;
+
+    try {
       for (const batch of batches) {
         const result = await commuteEventService.batchUpload({ events: batch });
         totalProcessed += result.processed;
+        uploaded.push(...batch);
       }
-
-      await clearOfflineQueue();
-      return totalProcessed;
     } catch {
-      // Keep queue intact on failure
-      return 0;
+      // 남은 배치는 큐에 그대로 두고 다음 동기화에 맡긴다.
+    } finally {
+      if (uploaded.length > 0) {
+        await removeFromOfflineQueue(uploaded);
+      }
     }
+
+    return totalProcessed;
   },
 
   /**
