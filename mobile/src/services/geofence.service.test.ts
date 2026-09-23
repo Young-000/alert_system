@@ -112,3 +112,62 @@ describe('geofenceService.syncOfflineEvents 큐 회계', () => {
     expect(readQueue()).toEqual(events.slice(50));
   });
 });
+
+describe('geofenceService.syncOfflineEvents 동시 호출', () => {
+  beforeEach(() => {
+    store.clear();
+    batchUpload.mockReset();
+  });
+
+  it('동시에 부른 두 호출이 같은 큐를 두 번 올리지 않는다', async () => {
+    seedQueue([event('2026-09-23T00:00:00.000Z')]);
+
+    // 업로드가 네트워크를 기다리는 동안 두 번째 호출이 들어온다. `useGeofence`는
+    // 화면마다 인스턴스가 따로 생기고(설정 탭·장소 화면) 각자 AppState 리스너를
+    // 등록하므로, 포그라운드 복귀 한 번에 두 호출이 겹칠 수 있다.
+    //
+    // 모든 호출이 **같은** 게이트를 기다리게 한다. 호출마다 리졸버를 따로 들면
+    // 나중 호출의 프라미스를 풀어줄 방법이 없어 단정 대신 타임아웃으로 빨개진다 —
+    // 실패 이유가 바뀌므로 Red 로 쓸 수 없다.
+    let openGate: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      openGate = resolve;
+    });
+    let started = 0;
+    batchUpload.mockImplementation(async () => {
+      started++;
+      await gate;
+      return { processed: 1, ignored: 0, failed: 0, results: [], failures: [] };
+    });
+
+    const first = geofenceService.syncOfflineEvents();
+    await vi.waitFor(() => expect(started).toBe(1));
+    const second = geofenceService.syncOfflineEvents();
+
+    openGate?.();
+    await Promise.all([first, second]);
+
+    // 두 번 올리면 같은 이벤트가 서버에 두 행으로 남는다. 오프라인 큐의 이벤트는
+    // triggeredAt이 이미 오래됐으므로 서버의 5분 디바운스가 걷어내지 못한다.
+    expect(batchUpload).toHaveBeenCalledTimes(1);
+  });
+
+  it('앞선 동기화가 끝난 뒤의 호출은 다시 올린다', async () => {
+    seedQueue([event('2026-09-23T00:00:00.000Z')]);
+    batchUpload.mockResolvedValue({
+      processed: 1,
+      ignored: 0,
+      failed: 0,
+      results: [],
+      failures: [],
+    });
+
+    await geofenceService.syncOfflineEvents();
+    seedQueue([event('2026-09-23T01:00:00.000Z', 'place-2')]);
+    await geofenceService.syncOfflineEvents();
+
+    // 중복 방지는 진행 중인 동안만이다. 영구 래치가 되면 이후 쌓인 이벤트가
+    // 영영 못 올라간다.
+    expect(batchUpload).toHaveBeenCalledTimes(2);
+  });
+});

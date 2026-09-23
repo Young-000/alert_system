@@ -155,6 +155,46 @@ export function defineGeofenceTask(): void {
   });
 }
 
+// ─── Offline Sync ───────────────────────────────────
+
+/**
+ * 진행 중인 동기화. 겹친 호출은 이 프라미스를 함께 기다린다.
+ */
+let inFlightSync: Promise<number> | null = null;
+
+async function runOfflineSync(): Promise<number> {
+  const queue = await getOfflineQueue();
+  if (queue.length === 0) return 0;
+
+  // Batch in chunks of MAX_BATCH_SIZE
+  const batches: RecordCommuteEventDto[][] = [];
+  for (let i = 0; i < queue.length; i += MAX_BATCH_SIZE) {
+    batches.push(queue.slice(i, i + MAX_BATCH_SIZE));
+  }
+
+  // 올라간 배치를 따로 모은다. 중간 배치가 실패했을 때 큐를 통째로 남기면
+  // 다음 동기화가 이미 올린 이벤트를 다시 올린다 — 오프라인 큐의 이벤트는
+  // triggeredAt이 이미 오래됐으므로 서버의 5분 디바운스에 걸리지 않고 재처리된다.
+  const uploaded: RecordCommuteEventDto[] = [];
+  let totalProcessed = 0;
+
+  try {
+    for (const batch of batches) {
+      const result = await commuteEventService.batchUpload({ events: batch });
+      totalProcessed += result.processed;
+      uploaded.push(...batch);
+    }
+  } catch {
+    // 남은 배치는 큐에 그대로 두고 다음 동기화에 맡긴다.
+  } finally {
+    if (uploaded.length > 0) {
+      await removeFromOfflineQueue(uploaded);
+    }
+  }
+
+  return totalProcessed;
+}
+
 // ─── Geofence Service ───────────────────────────────
 
 export { readAndClearLiveActivityEvent };
@@ -203,38 +243,23 @@ export const geofenceService = {
   /**
    * Sync offline events to server.
    * Returns the number of events successfully synced.
+   *
+   * 진행 중인 동기화가 있으면 그 프라미스를 그대로 돌려준다. `useGeofence`는
+   * 화면마다 인스턴스가 생기고(설정 탭·장소 화면) 각자 AppState 리스너를 등록하므로
+   * 포그라운드 복귀 한 번에 두 호출이 겹친다. 둘 다 같은 큐를 읽어 올리면 서버에
+   * 같은 이벤트가 두 행으로 남는다 — 오프라인 큐의 이벤트는 triggeredAt이 이미
+   * 오래됐으므로 서버의 5분 디바운스(`findRecent`)가 걷어내지 못한다.
+   *
+   * 영구 래치가 아니라 **진행 중인 동안만**이다. 끝나면 다시 받아야 그 뒤에 쌓인
+   * 이벤트가 올라간다.
    */
   async syncOfflineEvents(): Promise<number> {
-    const queue = await getOfflineQueue();
-    if (queue.length === 0) return 0;
+    if (inFlightSync) return inFlightSync;
 
-    // Batch in chunks of MAX_BATCH_SIZE
-    const batches: RecordCommuteEventDto[][] = [];
-    for (let i = 0; i < queue.length; i += MAX_BATCH_SIZE) {
-      batches.push(queue.slice(i, i + MAX_BATCH_SIZE));
-    }
-
-    // 올라간 배치를 따로 모은다. 중간 배치가 실패했을 때 큐를 통째로 남기면
-    // 다음 동기화가 이미 올린 이벤트를 다시 올린다 — 오프라인 큐의 이벤트는
-    // triggeredAt이 이미 오래됐으므로 서버의 5분 디바운스에 걸리지 않고 재처리된다.
-    const uploaded: RecordCommuteEventDto[] = [];
-    let totalProcessed = 0;
-
-    try {
-      for (const batch of batches) {
-        const result = await commuteEventService.batchUpload({ events: batch });
-        totalProcessed += result.processed;
-        uploaded.push(...batch);
-      }
-    } catch {
-      // 남은 배치는 큐에 그대로 두고 다음 동기화에 맡긴다.
-    } finally {
-      if (uploaded.length > 0) {
-        await removeFromOfflineQueue(uploaded);
-      }
-    }
-
-    return totalProcessed;
+    inFlightSync = runOfflineSync().finally(() => {
+      inFlightSync = null;
+    });
+    return inFlightSync;
   },
 
   /**

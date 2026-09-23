@@ -58,7 +58,6 @@ export function useGeofence(): UseGeofenceReturn {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
-  const syncAttempted = useRef(false);
   const geofenceCallbackRef = useRef<GeofenceEventCallback | null>(null);
 
   // Check geofencing state on mount
@@ -75,18 +74,24 @@ export function useGeofence(): UseGeofenceReturn {
     void checkState();
   }, []);
 
-  // Auto-sync offline events when app comes to foreground
+  // 포그라운드로 돌아올 때마다 오프라인 큐를 비운다.
+  //
+  // 예전에는 `syncAttempted` ref로 마운트당 한 번만 돌렸다. 그 ref는 언마운트 전까지
+  // 내려가지 않아서, 첫 복귀 이후에 쌓인 이벤트는 앱을 껐다 켜기 전까지 올라갈 경로가
+  // 아예 없었다 — 설정 화면의 "전송 대기 중인 이벤트 N건"은 표시뿐이라 수동 전송
+  // 버튼이 없고, 이 훅이 내보내는 `syncOfflineEvents`는 어느 화면도 쓰지 않는다.
+  //
+  // 겹친 호출은 서비스가 막는다: 화면마다 훅 인스턴스가 따로 생겨(설정 탭·장소 화면)
+  // 각자 리스너를 등록하는데, `geofence.service`의 진행 중 프라미스를 함께 기다린다.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active' && !syncAttempted.current) {
-        syncAttempted.current = true;
+      if (nextState === 'active') {
         void syncOfflineIfNeeded();
       }
     });
 
     return () => {
       subscription.remove();
-      syncAttempted.current = false;
     };
   }, []);
 
