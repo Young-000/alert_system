@@ -36,7 +36,16 @@ export type BatchCommuteEventsDto = {
 export type BatchCommuteEventsResponse = {
   processed: number;
   ignored: number;
+  /** 영구 실패해 건너뛴 이벤트 수(삭제된 장소 등). 클라이언트는 큐에서 버려도 된다. */
+  failed: number;
   results: CommuteEventResponse[];
+  failures: BatchEventFailure[];
+};
+
+export type BatchEventFailure = {
+  placeId: string;
+  triggeredAt: string;
+  reason: string;
 };
 
 export type CommuteEvent = {

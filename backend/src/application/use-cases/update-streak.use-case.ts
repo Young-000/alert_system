@@ -88,13 +88,12 @@ export class UpdateStreakUseCase {
       throw new Error('Streak repository not available');
     }
 
-    let streak = await this.streakRepository.findByUserId(userId);
-
-    if (!streak) {
-      streak = CommuteStreak.createNew(userId);
-    }
-
-    const isNew = !streak.id;
+    // 저장 경로는 **조회 결과**로 정한다. 같은 파일의 recordCompletion 과 같은 기준이다.
+    // 엔티티의 id 로 판정하면(`!streak.id`) 엔티티가 id 를 미리 채우도록 바뀌는 순간
+    // 새 스트릭에 update 가 나가 없는 행을 고치고 조용히 아무 일도 일어나지 않는다.
+    const existing = await this.streakRepository.findByUserId(userId);
+    const isNew = !existing;
+    const streak = existing ?? CommuteStreak.createNew(userId);
 
     if (dto.weeklyGoal !== undefined) streak.weeklyGoal = dto.weeklyGoal;
     if (dto.excludeWeekends !== undefined) streak.excludeWeekends = dto.excludeWeekends;
