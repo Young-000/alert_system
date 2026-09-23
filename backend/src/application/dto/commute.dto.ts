@@ -11,6 +11,7 @@ import {
   IsNotEmpty,
   IsUUID,
   ArrayMinSize,
+  ArrayMaxSize,
   MaxLength,
   Matches,
 } from 'class-validator';
@@ -23,6 +24,8 @@ import { INT4_MAX, NON_BLANK, NON_BLANK_MESSAGE } from './column-limits';
  * 상한이 없으면 검증을 통과한 값이 INSERT까지 내려가고 Postgres가
  * `value too long for type character varying(n)`으로 끊어 400이 아니라 500이 된다.
  */
+// 실제 출퇴근 경로는 3~5개다. 배치 이벤트(commute-event.dto)와 같은 상한을 쓴다.
+const MAX_CHECKPOINTS = 50;
 const MAX_ROUTE_NAME = 100; // commute_routes.name VARCHAR(100)
 const MAX_CHECKPOINT_NAME = 100; // route_checkpoints.name VARCHAR(100)
 const MAX_LINKED_BUS_STOP_ID = 100; // route_checkpoints.linked_bus_stop_id VARCHAR(100)
@@ -112,6 +115,11 @@ export class CreateRouteDto {
 
   @IsArray({ message: '체크포인트 목록은 배열이어야 합니다.' })
   @ArrayMinSize(1, { message: '최소 하나의 체크포인트가 필요합니다.' })
+  // 원소 하나가 route_checkpoints 한 행이 된다 — 상한이 없으면 요청 하나가
+  // 임의 개수의 행을 만든다. 배치 이벤트(commute-event.dto)와 같은 50으로 맞춘다.
+  @ArrayMaxSize(MAX_CHECKPOINTS, {
+    message: `체크포인트는 최대 ${MAX_CHECKPOINTS}개까지 가능합니다.`,
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateCheckpointDto)
   checkpoints: CreateCheckpointDto[];
@@ -152,6 +160,10 @@ export class UpdateRouteDto {
   @IsOptional()
   @IsArray()
   @ArrayMinSize(1, { message: '최소 하나의 체크포인트가 필요합니다.' })
+  // 생성과 같은 상한.
+  @ArrayMaxSize(MAX_CHECKPOINTS, {
+    message: `체크포인트는 최대 ${MAX_CHECKPOINTS}개까지 가능합니다.`,
+  })
   @ValidateNested({ each: true })
   @Type(() => UpdateCheckpointDto)
   checkpoints?: UpdateCheckpointDto[];

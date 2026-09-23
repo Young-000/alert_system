@@ -9,7 +9,13 @@ import {
   Max,
   IsArray,
   ArrayMinSize,
+  ArrayMaxSize,
 } from 'class-validator';
+
+// 상한은 원소 도메인이 정한다 — 0~6(요일 7개)·0~30(사전 알림 31개)을 넘는 길이는
+// 전부 중복이다. 읽는 쪽이 includes()만 쓰므로 중복은 동작을 바꾸지 않고 컬럼만 부풀린다.
+const MAX_ACTIVE_DAYS = 7;
+const MAX_PRE_ALERTS = 31;
 
 // ----- Request DTOs -----
 
@@ -36,6 +42,9 @@ export class CreateSmartDepartureSettingDto {
   @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(MAX_ACTIVE_DAYS, {
+    message: `요일은 최대 ${MAX_ACTIVE_DAYS}개까지 지정할 수 있습니다.`,
+  })
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(6, { each: true })
@@ -43,6 +52,9 @@ export class CreateSmartDepartureSettingDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(MAX_PRE_ALERTS, {
+    message: `사전 알림은 최대 ${MAX_PRE_ALERTS}개까지 지정할 수 있습니다.`,
+  })
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(30, { each: true })
@@ -70,6 +82,9 @@ export class UpdateSmartDepartureSettingDto {
   @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(MAX_ACTIVE_DAYS, {
+    message: `요일은 최대 ${MAX_ACTIVE_DAYS}개까지 지정할 수 있습니다.`,
+  })
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(6, { each: true })
@@ -77,6 +92,9 @@ export class UpdateSmartDepartureSettingDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(MAX_PRE_ALERTS, {
+    message: `사전 알림은 최대 ${MAX_PRE_ALERTS}개까지 지정할 수 있습니다.`,
+  })
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(30, { each: true })
