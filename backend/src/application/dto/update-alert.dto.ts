@@ -5,6 +5,7 @@ import {
   MaxLength,
   IsArray,
   ArrayMinSize,
+  ArrayMaxSize,
   IsEnum,
   IsUUID,
   Validate,
@@ -18,6 +19,8 @@ import {
   MAX_SCHEDULE_LENGTH,
   MAX_BUS_STOP_ID_LENGTH,
 } from './create-alert.dto';
+
+const ALERT_TYPE_COUNT = Object.keys(AlertType).length;
 
 export class UpdateAlertDto {
   @IsOptional()
@@ -44,6 +47,10 @@ export class UpdateAlertDto {
   // 건너뛰어지는데(:135·143·155·176) schedule·enabled는 그대로라 크론은 정시에
   // 발화한다. 결과: 내용이 하나도 없는 알림톡이 건당 과금되며 나간다.
   @ArrayMinSize(1, { message: '최소 하나의 알림 타입이 필요합니다.' })
+  // 생성과 같은 상한 — 하한과 마찬가지로 한쪽만 막으면 수정으로 우회된다.
+  @ArrayMaxSize(ALERT_TYPE_COUNT, {
+    message: `알림 유형은 최대 ${ALERT_TYPE_COUNT}개까지 가능합니다.`,
+  })
   @IsEnum(AlertType, { each: true, message: '올바른 알림 유형이 아닙니다.' })
   alertTypes?: AlertType[];
 

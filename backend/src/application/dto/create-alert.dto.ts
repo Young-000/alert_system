@@ -7,6 +7,7 @@ import {
   IsUUID,
   IsBoolean,
   ArrayMinSize,
+  ArrayMaxSize,
   IsIn,
   Validate,
   ValidatorConstraint,
@@ -81,6 +82,11 @@ export class CreateAlertDto {
 
   @IsArray()
   @ArrayMinSize(1, { message: '최소 하나의 알림 타입이 필요합니다.' })
+  // 상한은 원소 도메인이 정한다 — AlertType은 4종뿐이라 그보다 긴 배열은 전부 중복이다.
+  // 읽는 쪽이 includes()만 쓰므로 중복은 동작을 바꾸지 않고 컬럼만 부풀린다.
+  @ArrayMaxSize(ALERT_TYPES.length, {
+    message: `알림 타입은 최대 ${ALERT_TYPES.length}개까지 가능합니다.`,
+  })
   @IsIn(ALERT_TYPES, { each: true, message: '유효한 알림 타입이 아닙니다.' })
   alertTypes: AlertType[];
 
