@@ -1,6 +1,10 @@
 import * as SecureStore from 'expo-secure-store';
 import { widgetSyncService } from './widget-sync.service';
 
+import { CredentialStorageError } from '@/utils/credential-storage-error';
+
+export { CredentialStorageError } from '@/utils/credential-storage-error';
+
 const KEYS = {
   ACCESS_TOKEN: 'accessToken',
   USER_ID: 'userId',
@@ -9,8 +13,26 @@ const KEYS = {
   PHONE_NUMBER: 'phoneNumber',
 } as const;
 
+/** 저장된 자격증명 키를 전부 지운다. 접근이 막힌 저장소에는 지울 것도 없다. */
+async function clearStoredKeys(): Promise<void> {
+  await Promise.all(
+    Object.values(KEYS).map((key) =>
+      SecureStore.deleteItemAsync(key).catch(() => {
+        // SecureStore 접근 불가 시 무시 (시뮬레이터 제한)
+      }),
+    ),
+  );
+}
+
 export const tokenService = {
-  /** 로그인 성공 시 토큰 + 사용자 정보 저장 */
+  /**
+   * 로그인 성공 시 토큰 + 사용자 정보 저장.
+   *
+   * 다섯 번의 쓰기는 원자적이지 않다. 중간에 실패하면 **반쯤 쓰인 자격증명**이
+   * 남아, 다음 실행의 `restoreSession`이 토큰은 찾고 이름·연락처는 빈 세션을
+   * 복원한다(`AuthContext.tsx`의 `getUserData()`가 빠진 값을 `''`로 채운다).
+   * 그래서 실패하면 전부 지우고, 화면이 사유를 말할 수 있는 오류를 던진다.
+   */
   async saveAuthData(data: {
     accessToken: string;
     userId: string;
@@ -18,11 +40,16 @@ export const tokenService = {
     name: string;
     phoneNumber: string;
   }): Promise<void> {
-    await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, data.accessToken);
-    await SecureStore.setItemAsync(KEYS.USER_ID, data.userId);
-    await SecureStore.setItemAsync(KEYS.USER_EMAIL, data.email);
-    await SecureStore.setItemAsync(KEYS.USER_NAME, data.name);
-    await SecureStore.setItemAsync(KEYS.PHONE_NUMBER, data.phoneNumber);
+    try {
+      await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, data.accessToken);
+      await SecureStore.setItemAsync(KEYS.USER_ID, data.userId);
+      await SecureStore.setItemAsync(KEYS.USER_EMAIL, data.email);
+      await SecureStore.setItemAsync(KEYS.USER_NAME, data.name);
+      await SecureStore.setItemAsync(KEYS.PHONE_NUMBER, data.phoneNumber);
+    } catch {
+      await clearStoredKeys();
+      throw new CredentialStorageError();
+    }
 
     // Sync auth token to shared Keychain for widget extension
     void widgetSyncService.syncAuthToken(data.accessToken);
@@ -60,13 +87,7 @@ export const tokenService = {
 
   /** 로그아웃 시 모든 데이터 삭제 */
   async clearAll(): Promise<void> {
-    await Promise.all(
-      Object.values(KEYS).map((key) =>
-        SecureStore.deleteItemAsync(key).catch(() => {
-          // SecureStore 접근 불가 시 무시 (시뮬레이터 제한)
-        }),
-      ),
-    );
+    await clearStoredKeys();
 
     // Clear shared Keychain token and widget data for widget extension
     void widgetSyncService.clearAuthToken();

@@ -1,4 +1,5 @@
 import { serverMessage } from '@/utils/api-error';
+import { CredentialStorageError } from '@/utils/credential-storage-error';
 import { apiClient, ApiError } from './api-client';
 
 import type { AuthResponse, LoginDto, RegisterDto, UserProfile } from '@/types/auth';
@@ -19,6 +20,12 @@ export const authService = {
 
 /** API 에러를 사용자 친화적 메시지로 변환 */
 export function toUserMessage(error: unknown): string {
+  // 서버 인증은 성공했고 기기 저장에서 실패한 경우다. 일반 오류로 접으면
+  // 화면이 비밀번호를 의심하게 만든다 — 사유와 다음 행동을 그대로 쓴다.
+  if (error instanceof CredentialStorageError) {
+    return error.message;
+  }
+
   if (error instanceof ApiError) {
     // 서버가 보낸 메시지가 있으면 그게 가장 정확하다.
     const fromServer = serverMessage(error);
