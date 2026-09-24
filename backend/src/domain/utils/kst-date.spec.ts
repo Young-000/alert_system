@@ -14,6 +14,8 @@ import {
   getMinutesKST,
   formatTimeKST,
   formatDateCompactKST,
+  getTodayKST,
+  atTimeKST,
 } from './kst-date';
 
 describe('KST Date Utilities', () => {
@@ -270,6 +272,80 @@ describe('KST Date Utilities', () => {
 
     it('UTC와 KST 날짜가 같은 낮 시간대는 그대로 표기한다', () => {
       expect(formatDateCompactKST(new Date('2026-07-28T03:00:00Z'))).toBe('20260728');
+    });
+  });
+
+  // getTodayKST 와 atTimeKST 는 이 파일의 다른 헬퍼와 달리 toKSTWallClock 을 거치지 않고
+  // 직접 오프셋 산술을 한다. 그래서 서버 TZ 에 가장 민감한데 그동안 스펙이 없었다.
+  //
+  // 러너 TZ 를 가정하지 않는다: 기대값은 Intl 의 'Asia/Seoul' 로 따로 구해 맞춘다.
+  // (이 저장소의 테스트는 로컬 KST, CI 는 UTC 로 돌아 TZ 가 고정돼 있지 않다.
+  //  프로덕션 ECS Fargate 는 UTC 다.)
+  // getTodayKST 와 atTimeKST 는 이 파일의 다른 헬퍼와 달리 toKSTWallClock 을 거치지 않고
+  // 직접 오프셋 산술을 한다. 서버 TZ 에 가장 민감한데 그동안 스펙이 없었다.
+  //
+  // 이 블록이 의미를 가지려면 러너가 UTC 여야 한다 — KST 러너에서는 오프셋 보정을
+  // 통째로 뺀 구현(`formatDateToString(new Date())`)도 그대로 통과한다.
+  // 그래서 jest.global-setup.js 가 TZ 를 프로덕션과 같은 UTC 로 고정한다.
+  describe('getTodayKST', () => {
+    // 기대값은 러너 TZ 와 무관한 Intl 'Asia/Seoul' 로 따로 구한다.
+    const seoulYmd = (iso: string): string =>
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(iso));
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('러너가 프로덕션과 같은 UTC 로 고정돼 있다', () => {
+      expect(new Date().getTimezoneOffset()).toBe(0);
+    });
+
+    it.each([
+      ['UTC 로는 전날 밤이어도 KST 달력 날짜를 돌려준다', '2026-07-26T22:30:00Z'],
+      ['KST 자정 직후를 새 날짜로 넘긴다', '2026-07-26T15:00:00Z'],
+      ['KST 자정 1초 전은 아직 전날이다', '2026-07-26T14:59:59Z'],
+      ['연 경계를 KST 기준으로 넘긴다', '2025-12-31T15:00:00Z'],
+      ['UTC 와 KST 날짜가 같은 낮 시간대는 그대로 돌려준다', '2026-07-28T03:00:00Z'],
+    ])('%s', (_label, iso) => {
+      jest.useFakeTimers().setSystemTime(new Date(iso));
+
+      expect(getTodayKST()).toBe(seoulYmd(iso));
+    });
+
+    it('KST 자정 경계에서 하루가 넘어간다', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-07-26T14:59:59Z'));
+      const before = getTodayKST();
+      jest.setSystemTime(new Date('2026-07-26T15:00:00Z'));
+      const after = getTodayKST();
+
+      expect(before).toBe('2026-07-26');
+      expect(after).toBe('2026-07-27');
+    });
+  });
+
+  describe('atTimeKST', () => {
+    it('KST 벽시계 시각을 절대 시각으로 옮긴다', () => {
+      // KST 08:00 = 같은 날 UTC 전날 23:00
+      expect(atTimeKST('2026-07-27', 8).toISOString()).toBe('2026-07-26T23:00:00.000Z');
+    });
+
+    it('9시 이후는 같은 날 UTC 로 남는다', () => {
+      expect(atTimeKST('2026-07-27', 9).toISOString()).toBe('2026-07-27T00:00:00.000Z');
+    });
+
+    it('분을 함께 받는다', () => {
+      expect(atTimeKST('2026-07-27', 7, 30).toISOString()).toBe('2026-07-26T22:30:00.000Z');
+    });
+
+    it('KST 자정은 UTC 전날 15:00 이다 (toDateKST 와 같은 순간)', () => {
+      expect(atTimeKST('2026-07-27', 0).toISOString()).toBe(
+        toDateKST('2026-07-27').toISOString(),
+      );
     });
   });
 });
