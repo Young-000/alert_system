@@ -19,6 +19,7 @@ import { useBriefingAdvice } from '@/hooks/useBriefingAdvice';
 import { useCommuteMode } from '@/hooks/useCommuteMode';
 import { getModeGreeting } from '@/utils/weather';
 import { buildBriefing } from '@/utils/briefing';
+import { routeTypeForMode } from '@/utils/route';
 import { ModeBadge } from '@/components/home/ModeBadge';
 import { SkeletonCard } from '@/components/SkeletonBox';
 import { BriefingCard } from '@/components/briefing/BriefingCard';
@@ -32,9 +33,11 @@ import { NetworkErrorView } from '@/components/home/NetworkErrorView';
 
 export default function HomeScreen(): React.JSX.Element {
   const router = useRouter();
-  const data = useHomeData();
-  const departure = useSmartDepartureToday();
   const commuteMode = useCommuteMode();
+  // 모드 배지는 사용자 컨트롤이다. 그 선택을 경로 선택까지 내려보내지 않으면
+  // 배지와 인사말만 바뀌고 아래 경로·도착 정보는 출근 경로에 머문다.
+  const data = useHomeData(routeTypeForMode(commuteMode.mode));
+  const departure = useSmartDepartureToday();
   // `error`를 버리면 조회 실패가 "도전 0개"로 위장돼 이미 도전 중인 사용자가
   // "출퇴근 도전을 시작해보세요!"를 읽게 된다.
   const { activeChallenges, error: challengesError } = useChallenges();

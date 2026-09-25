@@ -15,6 +15,8 @@ import {
 import { widgetSyncService } from '@/services/widget-sync.service';
 import { getAqiStatus } from '@/utils/weather';
 import { getActiveRoute } from '@/utils/route';
+
+import type { RouteForceType } from '@/utils/route';
 import { computeNextAlert } from '@/utils/alert-schedule';
 import { resolveHomeLoadError } from '@/utils/home-load-error';
 
@@ -75,7 +77,11 @@ export type UseHomeDataReturn = {
 
 // ─── Hook ─────────────────────────────────────────
 
-export function useHomeData(): UseHomeDataReturn {
+/**
+ * `forceRouteType`은 홈의 모드 배지 선택이다(`routeTypeForMode`가 만든다).
+ * 여기서 `'auto'`로 고정하면 배지를 눌러도 아래 경로·도착 정보가 따라오지 않는다.
+ */
+export function useHomeData(forceRouteType: RouteForceType = 'auto'): UseHomeDataReturn {
   const { user, isLoggedIn } = useAuth();
   const userId = user?.id ?? '';
   const userName = user?.name ?? '';
@@ -104,7 +110,7 @@ export function useHomeData(): UseHomeDataReturn {
   const activeRouteRef = useRef<RouteResponse | null>(null);
 
   // ── Derived ──
-  const activeRoute = getActiveRoute(routes, 'auto');
+  const activeRoute = getActiveRoute(routes, forceRouteType);
   activeRouteRef.current = activeRoute;
 
   const aqiStatus = getAqiStatus(airQuality?.pm10);
