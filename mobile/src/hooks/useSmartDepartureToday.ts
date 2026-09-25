@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { smartDepartureService } from '@/services/smart-departure.service';
+import {
+  LIVE_ACTIVITY_TIMEOUT_MIN,
+  selectLiveSnapshot,
+} from '@/utils/live-snapshot';
 import { resolveTrafficDelay } from '@/utils/traffic-delay';
 import { useAuth } from './useAuth';
 import { useLiveActivity } from './useLiveActivity';
@@ -28,9 +32,6 @@ type UseSmartDepartureTodayReturn = {
 /** Threshold (minutes) to auto-start Live Activity before departure. */
 const LIVE_ACTIVITY_START_THRESHOLD_MIN = 60;
 
-/** Threshold (minutes past departure) to auto-end Live Activity. */
-const LIVE_ACTIVITY_TIMEOUT_MIN = 30;
-
 function calcMinutesUntil(isoDatetime: string): number {
   const targetMs = new Date(isoDatetime).getTime();
   const nowMs = Date.now();
@@ -41,36 +42,6 @@ function determineStatus(minutesUntil: number): LiveActivityStatus {
   if (minutesUntil <= 0) return 'departureNow';
   if (minutesUntil <= 10) return 'departureSoon';
   return 'preparing';
-}
-
-/**
- * 오늘의 스냅샷 중 지금 Live Activity 로 띄워야 할 출발을 고른다.
- *
- * `GET /smart-departure/today` 는 오늘 것이면 이미 지난 출발도 그대로 돌려주므로
- * (`calculate-departure.use-case.ts` `getTodayDeparture` — 시간 필터 없음),
- * `commute ?? return` 로 고르면 출근 설정이 있는 날에는 퇴근이 영영 선택되지 않는다.
- *
- * 규칙은 백엔드 위젯(`getWidgetDepartureData`)과 같다 — 다음 출발, 전부 지났으면 가장 최근 것.
- * 다만 경계는 `>= now` 가 아니라 자동 종료 임계값을 쓴다. 출발 직후 몇 분은
- * 아직 Activity 를 띄워 둬야 하는 구간이라 `>= now` 로 자르면 조기 전환된다.
- */
-export function selectLiveSnapshot(
-  data: SmartDepartureTodayResponse,
-): SmartDepartureSnapshotDto | null {
-  const byDeparture = [data.commute, data.return]
-    .filter((snapshot): snapshot is SmartDepartureSnapshotDto => !!snapshot)
-    .sort(
-      (a, b) =>
-        new Date(a.optimalDepartureAt).getTime() -
-        new Date(b.optimalDepartureAt).getTime(),
-    );
-
-  const live = byDeparture.find(
-    (snapshot) =>
-      calcMinutesUntil(snapshot.optimalDepartureAt) > -LIVE_ACTIVITY_TIMEOUT_MIN,
-  );
-
-  return live ?? byDeparture[byDeparture.length - 1] ?? null;
 }
 
 export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
@@ -159,8 +130,19 @@ export function useSmartDepartureToday(): UseSmartDepartureTodayReturn {
     if (!liveActivity.isSupported || !data) return;
 
     // Determine which snapshot is relevant (commute or return)
-    const snapshot = selectLiveSnapshot(data);
-    if (!snapshot) return;
+    const snapshot = selectLiveSnapshot(data, Date.now());
+
+    // 살아 있는 출발이 하나도 없다 (전부 취소·만료·출발완료). 이 훅이 띄운
+    // Activity 가 남아 있으면 끊는다 — 취소한 출발의 카운트다운이 잠금화면에
+    // 그대로 남는 것을 막는다. 복원된 Activity(settingId 미상)는 건드리지 않는다.
+    if (!snapshot) {
+      if (liveActivity.isActive && startedSettingIdRef.current !== null) {
+        void liveActivity.end();
+        liveActivityStartedRef.current = false;
+        startedSettingIdRef.current = null;
+      }
+      return;
+    }
 
     const minutesUntil = calcMinutesUntil(snapshot.optimalDepartureAt);
     const mode: LiveActivityMode =
