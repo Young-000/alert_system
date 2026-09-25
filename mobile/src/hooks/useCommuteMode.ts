@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AppState } from 'react-native';
 
+import { nextManualMode } from '@/utils/commute-mode';
+
 export type CommuteMode = 'commute' | 'return' | 'night';
 
 type UseCommuteModeReturn = {
@@ -39,12 +41,11 @@ export function useCommuteMode(): UseCommuteModeReturn {
   const mode = manualMode ?? autoMode;
   const isManualOverride = manualMode !== null;
 
+  // 배지 탭은 자동 ⇄ 수동(반대 방향) 두 상태를 오간다. 수동끼리만 뒤집으면
+  // 한 번 누른 뒤로는 시각 판정으로 돌아올 길이 없어져, 오전에 배지를 만진
+  // 사용자가 저녁에도 출근 경로의 도착 시각을 읽는다. 판정은 순수 함수가 갖는다.
   const toggleMode = useCallback(() => {
-    setManualMode((prev) => {
-      const current = prev ?? autoMode;
-      // Toggle between commute <-> return (skip night for manual)
-      return current === 'commute' ? 'return' : 'commute';
-    });
+    setManualMode((prev) => nextManualMode(prev, autoMode));
   }, [autoMode]);
 
   const resetToAuto = useCallback(() => {

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { modeBadgeActionHint } from '@/utils/commute-mode';
+
 import type { CommuteMode } from '@/hooks/useCommuteMode';
 
 type ModeBadgeProps = {
@@ -38,7 +40,7 @@ export function ModeBadge({ mode, isManualOverride, onToggle }: ModeBadgeProps):
       onPress={onToggle}
       style={[styles.badge, { backgroundColor: config.bgColor }]}
       accessibilityRole="button"
-      accessibilityLabel={`${config.label} - \uD0ED\uD558\uC5EC \uC804\uD658`}
+      accessibilityLabel={`${config.label} - ${modeBadgeActionHint(isManualOverride)}`}
     >
       <Text style={styles.emoji}>{config.emoji}</Text>
       <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
