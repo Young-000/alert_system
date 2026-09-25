@@ -1,4 +1,25 @@
+import type { CommuteMode } from '@/hooks/useCommuteMode';
 import type { RouteResponse, TimeContext } from '@/types/home';
+
+/** `getActiveRoute`가 받는 경로 선택 방식. `auto`는 시각으로 판정한다. */
+export type RouteForceType = 'auto' | 'morning' | 'evening';
+
+/**
+ * 홈의 모드 배지(`ModeBadge`) 선택을 경로 선택 방식으로 옮긴다.
+ *
+ * 배지는 탭하면 출근↔퇴근이 바뀌는 **사용자 컨트롤**이다. 이 값을
+ * `getActiveRoute`까지 전달하지 않으면 배지와 인사말만 바뀌고 그 아래 경로·도착
+ * 정보는 시각으로 정한 경로에 머문다 — 오전에 "퇴근 모드"를 눌러도 출근 경로의
+ * 버스 도착 시각이 계속 보인다.
+ *
+ * 매핑은 웹이 정본이다(`frontend/.../HomePage.tsx`의 모드 동기화 useEffect).
+ * 야간은 강제하지 않고 시각 판정에 맡긴다 — 웹과 같다.
+ */
+export function routeTypeForMode(mode: CommuteMode): RouteForceType {
+  if (mode === 'commute') return 'morning';
+  if (mode === 'return') return 'evening';
+  return 'auto';
+}
 
 /**
  * Determines the commute context based on current hour.
@@ -17,7 +38,7 @@ export function getTimeContext(hour?: number): TimeContext {
  */
 export function getActiveRoute(
   routes: RouteResponse[],
-  forceType?: 'auto' | 'morning' | 'evening',
+  forceType?: RouteForceType,
 ): RouteResponse | null {
   if (routes.length === 0) return null;
 
