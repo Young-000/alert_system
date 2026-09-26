@@ -2,6 +2,9 @@ import type { CommuteHistoryResponse } from '@infrastructure/api/commute-api.cli
 import { EmptyState } from '../../components/EmptyState';
 import { LoadMoreButton } from './LoadMoreButton';
 
+const timeFormatter = new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' });
+const dateFormatter = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
+
 interface HistoryTabProps {
   history: CommuteHistoryResponse;
   onLoadMore: () => Promise<void>;
@@ -22,15 +25,9 @@ export function HistoryTab({ history, onLoadMore }: HistoryTabProps): JSX.Elemen
         ) : (
           <div className="history-list-enhanced">
             {history.sessions.map((session) => {
-              const startTime = new Date(session.startedAt).toLocaleTimeString('ko-KR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+              const startTime = timeFormatter.format(new Date(session.startedAt));
               const endTime = session.completedAt
-                ? new Date(session.completedAt).toLocaleTimeString('ko-KR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
+                ? timeFormatter.format(new Date(session.completedAt))
                 : null;
               const routeType = (session.routeName || '').includes('출근') ? 'morning' : 'evening';
 
@@ -38,11 +35,7 @@ export function HistoryTab({ history, onLoadMore }: HistoryTabProps): JSX.Elemen
                 <div key={session.id} className="history-card">
                   <div className="history-card-header">
                     <div className="history-date-badge">
-                      {new Date(session.startedAt).toLocaleDateString('ko-KR', {
-                        month: 'short',
-                        day: 'numeric',
-                        weekday: 'short',
-                      })}
+                      {dateFormatter.format(new Date(session.startedAt))}
                     </div>
                     <span className={`history-route-type-badge ${routeType}`}>
                       {routeType === 'morning' ? '출근' : '퇴근'}
