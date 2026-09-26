@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { getBriefingContextLabel } from './briefing-advice';
+import { generateAdvices, getBriefingContextLabel } from './briefing-advice';
 import { getTimeContext } from './route';
+
+import type { AdviceWeatherInput, BriefingAdvice } from '@/types/briefing';
 
 /**
  * 브리핑 라벨은 `getTimeContext`와 **같은 경계**를 써야 한다.
@@ -40,5 +42,128 @@ describe('getBriefingContextLabel', () => {
     expect(getBriefingContextLabel(12)).toBe('퇴근 브리핑');
     expect(getBriefingContextLabel(17)).toBe('퇴근 브리핑');
     expect(getBriefingContextLabel(5)).toBe('내일 출근 브리핑');
+  });
+});
+
+/**
+ * 강수확률 조언은 **출퇴근 구간의 예보**에서 나와야 한다.
+ *
+ * `getMaxRainProbability`는 오전(6~14)·오후(12~21) 창을 나눠 그 구간만 보겠다고
+ * 적어 두었다. 그런데 백엔드가 내려주는 `time`은 `"09:00"` 꼴이고
+ * (`backend/src/domain/entities/weather.entity.ts:2` 주석이 형식을 명시한다),
+ * `new Date('09:00')`은 Invalid Date라 `getHours()`가 NaN이 된다. 비교가 전부
+ * false가 되어 창이 항상 비고, 매번 폴백(하루 전체 최댓값)으로 떨어진다.
+ *
+ * 결과: 아침 출근 브리핑이 밤 소나기 확률로 "우산 필수"를 띄운다.
+ */
+describe('generateAdvices — 강수확률 구간 필터', () => {
+  const weatherAt = (
+    hourly: { time: string; rainProbability: number }[],
+  ): AdviceWeatherInput => ({
+    temperature: 18,
+    condition: 'Clouds',
+    forecast: {
+      maxTemp: 20,
+      minTemp: 15,
+      hourlyForecasts: hourly.map((h) => ({
+        time: h.time,
+        temperature: 18,
+        condition: 'Clouds',
+        rainProbability: h.rainProbability,
+      })),
+    },
+  });
+
+  const umbrellaOf = (advices: BriefingAdvice[]) =>
+    advices.find((a) => a.category === 'umbrella');
+
+  it('아침에는 밤 예보를 우산 근거로 쓰지 않는다', () => {
+    const advices = generateAdvices(
+      weatherAt([
+        { time: '09:00', rainProbability: 10 },
+        { time: '20:00', rainProbability: 80 },
+      ]),
+      null,
+      null,
+      8,
+    );
+
+    expect(umbrellaOf(advices)).toBeUndefined();
+  });
+
+  it('저녁에는 오전 예보를 우산 근거로 쓰지 않는다', () => {
+    const advices = generateAdvices(
+      weatherAt([
+        { time: '08:00', rainProbability: 90 },
+        { time: '18:00', rainProbability: 10 },
+      ]),
+      null,
+      null,
+      14,
+    );
+
+    expect(umbrellaOf(advices)).toBeUndefined();
+  });
+
+  it('구간 안의 확률이 60% 이상이면 우산 필수', () => {
+    const advices = generateAdvices(
+      weatherAt([
+        { time: '09:00', rainProbability: 70 },
+        { time: '23:00', rainProbability: 0 },
+      ]),
+      null,
+      null,
+      8,
+    );
+
+    expect(umbrellaOf(advices)?.message).toBe('우산 필수 (강수확률 70%)');
+  });
+
+  it('구간 안의 확률이 40~59%면 권유 문구', () => {
+    const advices = generateAdvices(
+      weatherAt([{ time: '13:00', rainProbability: 45 }]),
+      null,
+      null,
+      8,
+    );
+
+    expect(umbrellaOf(advices)?.message).toBe('우산 챙기면 좋겠어요');
+  });
+
+  it('구간에 걸리는 예보가 없으면 하루 전체 최댓값으로 폴백한다', () => {
+    const advices = generateAdvices(
+      weatherAt([{ time: '22:00', rainProbability: 50 }]),
+      null,
+      null,
+      8,
+    );
+
+    expect(umbrellaOf(advices)?.message).toBe('우산 챙기면 좋겠어요');
+  });
+
+  it('예보가 비어 있으면 우산 조언이 없다', () => {
+    const advices = generateAdvices(weatherAt([]), null, null, 8);
+
+    expect(umbrellaOf(advices)).toBeUndefined();
+  });
+
+  it('현재 시각을 넘기지 않으면 실제 시각을 쓴다', () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 8, 26, 8, 0, 0));
+
+      const advices = generateAdvices(
+        weatherAt([
+          { time: '09:00', rainProbability: 10 },
+          { time: '20:00', rainProbability: 80 },
+        ]),
+        null,
+        null,
+      );
+
+      expect(umbrellaOf(advices)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
