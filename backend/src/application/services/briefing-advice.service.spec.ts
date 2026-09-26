@@ -266,6 +266,20 @@ describe('BriefingAdviceService', () => {
       expect(umbrella!.message).toContain('뇌우');
     });
 
+    it('진눈깨비(Sleet)면 우산 조언을 반환한다', () => {
+      // 기상청 PTY 2·6 -> 'Sleet'. 'rain'/'snow' 어디에도 안 걸려 조언이 통째로 비어 있었다.
+      const result = service.generate(
+        buildInput({
+          weather: buildWeather({ condition: 'Sleet' }),
+        }),
+      );
+
+      const umbrella = findAdviceByCategory(result.advices, 'umbrella');
+      expect(umbrella).toBeDefined();
+      expect(umbrella!.severity).toBe('warning');
+      expect(umbrella!.message).toContain('우산');
+    });
+
     it('눈 예보가 있으면 미끄럼 주의 warning 조언을 반환한다', () => {
       const result = service.generate(
         buildInput({

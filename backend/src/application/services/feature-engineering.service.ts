@@ -64,10 +64,12 @@ export class FeatureEngineeringService {
   ): WeatherFeatures {
     const condition = (weatherCondition ?? '').toLowerCase();
     const comfortableTemp = 15;
+    // 진눈깨비(sleet)는 비이면서 눈이다 — 한글형 '진눈깨비'가 '비'·'눈'에 걸리는 것과 맞춘다.
+    const isSleet = condition.includes('sleet');
 
     return {
-      isRaining: condition.includes('rain') || condition.includes('비'),
-      isSnowing: condition.includes('snow') || condition.includes('눈'),
+      isRaining: condition.includes('rain') || condition.includes('비') || isSleet,
+      isSnowing: condition.includes('snow') || condition.includes('눈') || isSleet,
       temperatureDeviation: temperature !== undefined
         ? temperature - comfortableTemp
         : 0,

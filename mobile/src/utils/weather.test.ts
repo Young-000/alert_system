@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { getAqiStatus, resolveAqiDisplay } from './weather';
+import {
+  getAqiStatus,
+  getWeatherAdvice,
+  getWeatherType,
+  resolveAqiDisplay,
+  translateCondition,
+} from './weather';
+
+import type { WeatherData } from '@/types/home';
 
 describe('resolveAqiDisplay', () => {
   it('미세먼지 값이 있으면 배지로 보여준다', () => {
@@ -30,5 +38,36 @@ describe('resolveAqiDisplay', () => {
       kind: 'value',
       label: '매우나쁨',
     });
+  });
+});
+
+describe('진눈깨비(기상청 PTY 2·6) — 백엔드가 만드는 condition 어휘', () => {
+  it('한글로 옮긴다 (영문 Sleet 가 화면에 새지 않는다)', () => {
+    expect(translateCondition('Sleet')).toBe('진눈깨비');
+  });
+
+  it('비로 분류한다 — 기본값으로 떨어지지 않는다', () => {
+    expect(getWeatherType('Sleet')).toBe('rainy');
+    expect(getWeatherType('진눈깨비')).toBe('rainy');
+  });
+
+  it('우산 조언을 준다', () => {
+    const weather: WeatherData = {
+      location: '서울',
+      temperature: 3,
+      condition: 'Sleet',
+      humidity: 70,
+      windSpeed: 2,
+      conditionKr: '진눈깨비',
+      conditionEmoji: '🌨️',
+    };
+    expect(getWeatherAdvice(weather, getAqiStatus(20))).toBe('우산을 챙기세요');
+  });
+
+  it('기존 분류를 바꾸지 않는다', () => {
+    expect(getWeatherType('Rain')).toBe('rainy');
+    expect(getWeatherType('Snow')).toBe('snowy');
+    expect(getWeatherType('Clear')).toBe('sunny');
+    expect(getWeatherType('Overcast')).toBe('cloudy');
   });
 });

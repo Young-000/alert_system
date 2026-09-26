@@ -349,3 +349,28 @@ describe('buildAdvicesFromData', () => {
     }
   });
 });
+
+describe('진눈깨비(Sleet) — 백엔드가 만드는 condition 어휘', () => {
+  it('우산 조언을 준다 (rain/snow 어디에도 안 걸려 조언이 비던 값)', () => {
+    const advices = buildAdvicesFromData(
+      makeWeather({ condition: 'Sleet', conditionKr: '진눈깨비', temperature: 3 }),
+      makeAirQuality(),
+    );
+    expect(advices.some((a) => a.text === '진눈깨비, 우산 챙기세요')).toBe(true);
+  });
+
+  it('기존 비/눈 조언을 바꾸지 않는다', () => {
+    const rain = buildAdvicesFromData(
+      makeWeather({ condition: 'Rain', conditionKr: '비', temperature: 12 }),
+      makeAirQuality(),
+    );
+    expect(rain.some((a) => a.text === '우산 챙기세요')).toBe(true);
+
+    const snow = buildAdvicesFromData(
+      makeWeather({ condition: 'Snow', conditionKr: '눈', temperature: -2 }),
+      makeAirQuality(),
+    );
+    expect(snow.some((a) => a.text === '눈 예보, 미끄럼 주의')).toBe(true);
+  });
+});
+

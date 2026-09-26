@@ -92,6 +92,11 @@ function addRainAdvice(advices: AdviceChip[], weather: WeatherData): void {
     return;
   }
 
+  if (condition.includes('sleet')) {
+    advices.push({ emoji: '\uD83C\uDF28\uFE0F', text: '\uc9c4\ub208\uae68\ube44, \uc6b0\uc0b0 \uCC59\uAE30\uC138\uC694', severity: 'warning' });
+    return;
+  }
+
   if (condition.includes('snow')) {
     advices.push({ emoji: '\u2744\uFE0F', text: '\uB208 \uC608\uBCF4, \uBBF8\uB044\uB7FC \uC8FC\uC758', severity: 'warning' });
     return;

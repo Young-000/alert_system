@@ -236,6 +236,18 @@ function generatePrecipitationAdvices(
     ];
   }
 
+  // Sleet (진눈깨비 = 비+눈). 'snow'/'rain' 어디에도 안 걸리므로 먼저 본다.
+  if (condition.includes('sleet')) {
+    return [
+      {
+        category: 'umbrella',
+        severity: 'warning',
+        icon: '🌨️',
+        message: '진눈깨비 예보, 우산 챙기세요',
+      },
+    ];
+  }
+
   // Snow
   if (condition.includes('snow')) {
     return [

@@ -61,6 +61,23 @@ describe('NotificationMessageBuilderService', () => {
 
   // ─── isRainyCondition ─────────────────────────
 
+  describe('isRainyCondition — 진눈깨비(기상청 PTY 2·6)', () => {
+    it('영문 Sleet을 강수로 본다', () => {
+      expect(service.isRainyCondition('Sleet')).toBe(true);
+    });
+
+    it('한글 진눈깨비와 판정이 같다', () => {
+      expect(service.isRainyCondition('진눈깨비')).toBe(
+        service.isRainyCondition('Sleet'),
+      );
+    });
+
+    it('맑음은 여전히 강수가 아니다', () => {
+      expect(service.isRainyCondition('Clear')).toBe(false);
+      expect(service.isRainyCondition('맑음')).toBe(false);
+    });
+  });
+
   describe('isRainyCondition', () => {
     it.each([
       ['비', true],

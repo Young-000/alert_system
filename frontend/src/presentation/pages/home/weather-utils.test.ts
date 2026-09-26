@@ -12,6 +12,7 @@ import {
   HOT_TEMP_THRESHOLD,
   TEMP_DIFF_THRESHOLD,
   HIGH_HUMIDITY_THRESHOLD,
+  translateCondition,
 } from './weather-utils';
 import type { WeatherData } from '@infrastructure/api';
 
@@ -390,3 +391,30 @@ describe('체크리스트 저장소 접근', () => {
     expect(getCheckedItems()).toEqual(new Set(['umbrella', 'mask']));
   });
 });
+
+describe('진눈깨비(Sleet) — 백엔드가 만드는 condition 어휘', () => {
+  it('한글로 옮긴다 (영문 Sleet 가 화면에 새지 않는다)', () => {
+    expect(translateCondition('Sleet')).toBe('진눈깨비');
+  });
+
+  it('비로 분류한다 — 기본값으로 떨어지지 않는다', () => {
+    expect(getWeatherType('Sleet')).toBe('rainy');
+    expect(getWeatherType('진눈깨비')).toBe('rainy');
+  });
+
+  it('우산 준비물을 넣어 준다', () => {
+    const items = getWeatherChecklist(
+      buildWeather({ condition: 'Sleet', temperature: 3 }),
+      { label: '좋음', className: 'aqi-good' },
+    );
+    expect(items.map((i) => i.id)).toContain('umbrella');
+  });
+
+  it('기존 분류를 바꾸지 않는다', () => {
+    expect(getWeatherType('Rain')).toBe('rainy');
+    expect(getWeatherType('Snow')).toBe('snowy');
+    expect(getWeatherType('Clear')).toBe('sunny');
+    expect(getWeatherType('Overcast')).toBe('cloudy');
+  });
+});
+

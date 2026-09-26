@@ -32,6 +32,7 @@ const CONDITION_KR_MAP: Record<string, string> = {
   'overcast clouds': '흐림',
   overcast: '흐림',
   rain: '비',
+  sleet: '진눈깨비',
   'light rain': '가벼운 비',
   'moderate rain': '비',
   'heavy rain': '폭우',
@@ -60,7 +61,10 @@ export function getWeatherType(condition: string): WeatherType {
   const c = condition.toLowerCase();
   if (c.includes('clear') || c.includes('sunny') || c === '맑음') return 'sunny';
   if (c.includes('cloud') || c === '구름많음' || c.includes('overcast') || c === '흐림') return 'cloudy';
-  if (c.includes('rain') || c === '비' || c.includes('thunder') || c === '뇌우') return 'rainy';
+  // 진눈깨비는 'rain'/'snow' 어디에도 안 걸린다. 비로 본다 — 우산이 필요한 강수이고,
+  // 백엔드도 isRaining 을 참으로 준다 (feature-engineering.service.ts).
+  if (c.includes('rain') || c === '비' || c.includes('thunder') || c === '뇌우'
+    || c.includes('sleet') || c === '진눈깨비') return 'rainy';
   if (c.includes('snow') || c === '눈') return 'snowy';
   return 'default';
 }
