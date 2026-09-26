@@ -167,3 +167,25 @@ describe('generateAdvices — 강수확률 구간 필터', () => {
     }
   });
 });
+
+describe('진눈깨비(Sleet) — 백엔드가 만드는 condition 어휘', () => {
+  // 기상청 PTY 2·6 -> 'Sleet'. 'rain'/'snow' 어디에도 안 걸려 조언이 통째로 비어 있었다.
+  const weatherOf = (condition: string, temperature: number): AdviceWeatherInput => ({
+    temperature,
+    condition,
+  });
+
+  const messageOf = (condition: string, temperature: number) =>
+    generateAdvices(weatherOf(condition, temperature), null, null, 8).find(
+      (a) => a.category === 'umbrella',
+    )?.message;
+
+  it('진눈깨비면 우산 조언을 준다', () => {
+    expect(messageOf('Sleet', 3)).toBe('진눈깨비 예보, 우산 챙기세요');
+  });
+
+  it('기존 비/눈 조언을 바꾸지 않는다', () => {
+    expect(messageOf('Rain', 10)).toBe('우산 챙기세요');
+    expect(messageOf('Snow', -2)).toBe('눈 예보, 미끄럼 주의');
+  });
+});

@@ -214,6 +214,17 @@ export class BriefingAdviceService {
       return advices;
     }
 
+    // Sleet check (진눈깨비 = 비+눈. 'snow'/'rain' 어디에도 안 걸리므로 먼저 본다)
+    if (condition.includes('sleet')) {
+      advices.push({
+        category: 'umbrella',
+        severity: 'warning',
+        icon: '🌨️',
+        message: '진눈깨비 예보, 우산 챙기세요',
+      });
+      return advices;
+    }
+
     // Snow check
     if (condition.includes('snow')) {
       advices.push({
@@ -251,7 +262,7 @@ export class BriefingAdviceService {
   }
 
   private isRainyCondition(condition: string): boolean {
-    const rainyKeywords = ['rain', 'drizzle', '비', '소나기', '이슬비'];
+    const rainyKeywords = ['rain', 'drizzle', 'sleet', '비', '소나기', '이슬비'];
     return rainyKeywords.some((keyword) =>
       condition.toLowerCase().includes(keyword.toLowerCase()),
     );

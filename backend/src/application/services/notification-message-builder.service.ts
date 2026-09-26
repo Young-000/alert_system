@@ -108,7 +108,8 @@ export class NotificationMessageBuilderService {
   }
 
   isRainyCondition(condition: string): boolean {
-    const rainyKeywords = ['비', '눈', '소나기', '뇌우', '이슬비', 'rain', 'snow', 'drizzle'];
+    // 'sleet' = 기상청 PTY 2·6(비/눈). 한글형 '진눈깨비'는 '비'·'눈'으로 이미 걸린다.
+    const rainyKeywords = ['비', '눈', '소나기', '뇌우', '이슬비', 'rain', 'snow', 'sleet', 'drizzle'];
     return rainyKeywords.some(keyword => condition.toLowerCase().includes(keyword.toLowerCase()));
   }
 
@@ -266,6 +267,7 @@ export class NotificationMessageBuilderService {
       if (temp >= 28) return '더위 주의, 수분 섭취하세요';
 
       const condition = weather.condition.toLowerCase();
+      if (condition.includes('sleet')) return '진눈깨비 예보, 우산 챙기세요';
       if (condition.includes('rain') || condition.includes('drizzle')) {
         return '비 예보, 우산 챙기세요';
       }

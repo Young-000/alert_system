@@ -56,6 +56,29 @@ describe('FeatureEngineeringService', () => {
     });
   });
 
+  describe('extractWeatherFeatures — 진눈깨비(기상청 PTY 2·6)', () => {
+    // 'Sleet'는 'rain'/'snow' 어디에도 안 걸린다. 한글형 '진눈깨비'는 '비'·'눈'에 걸려
+    // 참이 되므로, 두 경로가 같은 판정을 내야 한다.
+    it('영문 Sleet은 비이면서 눈이다', () => {
+      const f = service.extractWeatherFeatures('Sleet');
+      expect(f.isRaining).toBe(true);
+      expect(f.isSnowing).toBe(true);
+    });
+
+    it('한글 진눈깨비와 판정이 같다', () => {
+      const en = service.extractWeatherFeatures('Sleet');
+      const kr = service.extractWeatherFeatures('진눈깨비');
+      expect(en.isRaining).toBe(kr.isRaining);
+      expect(en.isSnowing).toBe(kr.isSnowing);
+    });
+
+    it('맑음은 비도 눈도 아니다 (기존 동작 유지)', () => {
+      const f = service.extractWeatherFeatures('Clear');
+      expect(f.isRaining).toBe(false);
+      expect(f.isSnowing).toBe(false);
+    });
+  });
+
   describe('extractWeatherFeatures', () => {
     it('비 조건을 감지한다', () => {
       expect(service.extractWeatherFeatures('rain').isRaining).toBe(true);

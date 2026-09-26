@@ -406,8 +406,11 @@ export class PredictionEngineService {
     if (!conditions) return;
 
     const weatherStr = (conditions.weather ?? '').toLowerCase();
-    const isRaining = weatherStr.includes('rain') || weatherStr.includes('비');
-    const isSnowing = weatherStr.includes('snow') || weatherStr.includes('눈');
+    // 진눈깨비(sleet)는 비이면서 눈이다. 한글형 '진눈깨비'는 '비'·'눈'에 이미 걸리므로
+    // 영문형에 'sleet'를 더해 두 경로의 판정을 일치시킨다.
+    const isSleet = weatherStr.includes('sleet');
+    const isRaining = weatherStr.includes('rain') || weatherStr.includes('비') || isSleet;
+    const isSnowing = weatherStr.includes('snow') || weatherStr.includes('눈') || isSleet;
 
     if (isSnowing) {
       const impact = -DEFAULT_PATTERNS.weatherImpact.snow;
