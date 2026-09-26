@@ -35,17 +35,20 @@ const CATEGORY_ORDER: Record<AdviceCategory, number> = {
  * and transit data. Returns at most 4 advices sorted by severity.
  *
  * Pure function: no side effects, no external API calls.
+ * `nowHour`를 넘기지 않으면 현재 시각을 읽는다 — 테스트는 항상 넘길 것.
  */
 export function generateAdvices(
   weather: AdviceWeatherInput | null,
   airQuality: AdviceAirQualityInput | null,
   transit: AdviceTransitInput | null,
+  nowHour?: number,
 ): BriefingAdvice[] {
   const advices: BriefingAdvice[] = [];
+  const hour = nowHour ?? new Date().getHours();
 
   if (weather) {
     advices.push(...generateWeatherAdvices(weather));
-    advices.push(...generatePrecipitationAdvices(weather));
+    advices.push(...generatePrecipitationAdvices(weather, hour));
   }
 
   if (airQuality) {
@@ -217,6 +220,7 @@ function getClothingAdvice(temp: number): BriefingAdvice {
 
 function generatePrecipitationAdvices(
   weather: AdviceWeatherInput,
+  nowHour: number,
 ): BriefingAdvice[] {
   const condition = weather.condition.toLowerCase();
 
@@ -273,7 +277,7 @@ function generatePrecipitationAdvices(
   }
 
   // Rain probability from forecast
-  const maxRainProb = getMaxRainProbability(weather);
+  const maxRainProb = getMaxRainProbability(weather, nowHour);
   if (maxRainProb >= 60) {
     return [
       {
@@ -298,15 +302,40 @@ function generatePrecipitationAdvices(
   return [];
 }
 
-function getMaxRainProbability(weather: AdviceWeatherInput): number {
+/**
+ * 예보 시각의 "시"를 뽑는다.
+ *
+ * 백엔드는 `"09:00"` 꼴로 내려준다 — 형식은
+ * `backend/src/domain/entities/weather.entity.ts:2` 주석이 명시하고,
+ * `weather-api.client.ts:192`가 그렇게 조립한다. 이걸 `new Date()`에 넣으면
+ * Invalid Date라 `getHours()`가 NaN이 되고, 구간 비교가 전부 false로 떨어져
+ * 필터가 통째로 죽는다. 형식이 ISO로 바뀌어도 견디도록 폴백을 둔다.
+ *
+ * 시각을 읽을 수 없으면 `null` — 호출부가 그 항목을 구간에서 제외한다.
+ */
+function parseForecastHour(time: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  if (match) {
+    const hour = Number(match[1]);
+    return hour >= 0 && hour <= 23 ? hour : null;
+  }
+
+  const parsed = new Date(time);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getHours();
+}
+
+function getMaxRainProbability(
+  weather: AdviceWeatherInput,
+  nowHour: number,
+): number {
   if (!weather.forecast?.hourlyForecasts?.length) return 0;
 
-  const hour = new Date().getHours();
-  const isMorning = hour >= 6 && hour < 12;
+  const isMorning = nowHour >= 6 && nowHour < 12;
 
   // Filter relevant time slots
   const relevantForecasts = weather.forecast.hourlyForecasts.filter((f) => {
-    const forecastHour = new Date(f.time).getHours();
+    const forecastHour = parseForecastHour(f.time);
+    if (forecastHour === null) return false;
     if (isMorning) {
       // Morning: check 6~14 range
       return forecastHour >= 6 && forecastHour <= 14;
