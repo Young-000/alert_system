@@ -71,6 +71,8 @@ database.sqlite
 
 # Temporary checklists
 *CHECKLIST*.md
+# 예외: e2e 자동 리뷰 크론의 필수 입력. macOS 는 대소문자를 무시해 위 규칙이 이 파일까지 걸러 한 번도 추적되지 않았다(9/27 사고로 소실)
+!.claude/e2e-auto-checklist.md
 
 # Local MCP config
 .mcp.json
